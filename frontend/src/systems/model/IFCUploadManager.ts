@@ -223,20 +223,9 @@ export class IFCUploadManager {
    * Download model blob from backend
    */
   private async downloadModel(modelId: string): Promise<Blob> {
-    const client = this.ifcService['client'];
-    const token = client.getToken();
-    const baseURL = client.getBaseURL();
-    const url = `${baseURL}/api/v1/ifc/${modelId}/download`;
-
-    const response = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    });
-
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.status}`);
-    }
-
-    return response.blob();
+    // Use tenantService for download (simpler, uses correct endpoint)
+    const { tenantService } = await import('../../api/v1/services/tenant.service');
+    return tenantService.downloadIFCModel(modelId);
   }
 
   /**

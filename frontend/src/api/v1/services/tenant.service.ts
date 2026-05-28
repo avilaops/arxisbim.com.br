@@ -404,6 +404,17 @@ class TenantService {
     return response.json();
   }
 
+  async downloadIFCModel(modelId: string): Promise<Blob> {
+    const token = localStorage.getItem('arxisvr_token');
+    const response = await fetch(`${API_BASE_URL}/api/v1/ifc-models/${modelId}/download`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+    });
+    if (!response.ok) throw new Error('Failed to download IFC model');
+    return response.blob();
+  }
+
   async updateIFCModel(modelId: string, data: {
     name?: string;
     discipline?: string;

@@ -151,4 +151,28 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: 'Failed to delete IFC model' });
     }
   });
+
+  // Download IFC model
+  fastify.get('/ifc-models/:modelId/download', async (request, reply) => {
+    const { modelId } = request.params as { modelId: string };
+    try {
+      const model = await db.select().from(ifcModels).where(eq(ifcModels.id, modelId)).limit(1);
+      if (!model || model.length === 0) {
+        return reply.status(404).send({ error: 'IFC model not found' });
+      }
+
+      // Get file from storage
+      const storageKey = model[0].fileUrl.replace('/api/v1/storage/', '');
+      const fileStream = await storageService.download(storageKey);
+
+      // Set headers for download
+      reply.header('Content-Type', 'application/ifc');
+      reply.header('Content-Disposition', `attachment; filename="${model[0].originalName}"`);
+
+      return reply.send(fileStream);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to download IFC model' });
+    }
+  });
 }

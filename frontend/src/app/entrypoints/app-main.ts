@@ -746,7 +746,19 @@ async function loadIfcModels() {
         const modelId = item.getAttribute('data-model-id');
         const model = currentIfcModels.find((entry) => entry.id === modelId);
         if (model) {
-          console.log('Modelo selecionado:', model);
+          console.log('Carregando modelo:', model);
+          
+          // Download and load model using IFCUploadManager
+          if (viewerHost?.ifcUploadManager) {
+            try {
+              await viewerHost.ifcUploadManager.loadModelIntoScene(model);
+            } catch (err) {
+              console.error('Erro ao carregar modelo:', err);
+              alert('Erro ao carregar modelo: ' + err.message);
+            }
+          } else {
+            console.error('IFCUploadManager não inicializado');
+          }
         }
       });
     });
