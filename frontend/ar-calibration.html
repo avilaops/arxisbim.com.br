@@ -545,9 +545,35 @@
       cancelButtonEl.disabled = false;
 
       try {
-        // TODO: Initialize AR calibration
-        // This would integrate with MarkerCalibration.ts
-        simulateCalibration();
+        // Initialize AR calibration with MarkerCalibration
+        const { MarkerCalibration } = await import('./src/features/ar/xr/ar/MarkerCalibration.ts');
+        const { MarkerRegistry } = await import('./src/features/ar/xr/ar/MarkerRegistry.ts');
+
+        // Create camera and registry
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        const registry = new MarkerRegistry({ projectId: 'default' });
+
+        // Initialize calibrator
+        const calibrator = new MarkerCalibration(camera, registry);
+        await calibrator.initialize('arjs');
+
+        // Start calibration
+        const anchor = await calibrator.calibrate({
+          markerId: 'default-marker',
+          onProgress: (progress) => {
+            updateProgress(progress.progress * 100, progress.message);
+          },
+          onComplete: (result) => {
+            console.log('Calibration completed:', result);
+            showSuccess('Calibração concluída com sucesso!');
+          },
+          onError: (error) => {
+            showError('Erro na calibração', error.message);
+          }
+        });
+
+        // Cleanup
+        calibrator.dispose();
       } catch (error) {
         showError('Erro ao iniciar calibração', error.message);
         calibrating = false;

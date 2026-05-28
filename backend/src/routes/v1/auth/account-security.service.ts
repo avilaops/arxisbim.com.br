@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import { users } from '../../../shared/database/schema/tenants.js';
 import { authTokens } from '../../../shared/database/schema/observability.js';
 import { observabilityService } from '../../../core/observability/service.js';
+import { emailService } from '../../../core/email/email.service.js';
 
 const VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 horas
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -48,8 +49,9 @@ export class AccountSecurityService {
       metadata: { email },
     }).catch(err => console.error('Failed to log audit:', err));
 
-    // TODO: Enviar email de verificação
-    // Por enquanto, retornar o token
+    // Enviar email de verificação
+    await emailService.sendEmailVerification(email, userId, verificationToken, tenantId);
+
     return verificationToken;
   }
 

@@ -83,13 +83,19 @@ await server.register(helmet, {
 } as any);
 
 // Rate limiting
+const redisConfig = process.env.REDIS_URL ? {
+  host: new URL(process.env.REDIS_URL).hostname,
+  port: parseInt(new URL(process.env.REDIS_URL).port) || 6379,
+  password: new URL(process.env.REDIS_URL).password || undefined,
+} : undefined;
+
 await server.register(rateLimit, {
   global: true,
   max: 100,
   timeWindow: '1 minute',
   cache: 10000,
   allowList: ['127.0.0.1'],
-  redis: undefined, // TODO: Add Redis for distributed rate limiting
+  redis: redisConfig,
 } as any);
 
 // Multipart for file uploads

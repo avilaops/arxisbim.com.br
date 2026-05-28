@@ -214,8 +214,13 @@ export class StorageService {
    * @param path Caminho do arquivo
    */
   async getFileMetadata(path: string): Promise<FileMetadata> {
-    // TODO: Implementar obtenção de metadados
-    throw new Error('Not implemented');
+    const stat = await minioClient.statObject(BUCKET, path);
+    return {
+      size: stat.size,
+      lastModified: stat.lastModified,
+      contentType: (stat as any).contentType || 'application/octet-stream',
+      metadata: stat.metaData as Record<string, any>,
+    };
   }
 
 
