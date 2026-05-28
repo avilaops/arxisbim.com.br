@@ -152,6 +152,35 @@ export interface TimelineSimulation {
   createdAt: string;
 }
 
+export interface MeetingRoom {
+  id: string;
+  projectId: string;
+  roomUrl: string;
+  meetingCode: string;
+  hostUserId: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface MeetingParticipant {
+  id: string;
+  roomId: string;
+  userId: string;
+  userName: string;
+  avatarUrl?: string;
+  joinedAt: string;
+  isHost: boolean;
+}
+
+export interface MeetingMessage {
+  id: string;
+  roomId: string;
+  userId: string;
+  userName: string;
+  content: string;
+  timestamp: string;
+}
+
 class TenantService {
   private getAuthHeaders() {
     const token = localStorage.getItem('arxisvr_token');
@@ -684,6 +713,86 @@ class TenantService {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete simulation');
+  }
+
+  // Virtual Meetings (XR Avatars)
+  async createMeetingRoom(projectId: string, data: {
+    settings?: {
+      maxParticipants?: number;
+      allowRecording?: boolean;
+      allowChat?: boolean;
+    };
+    avatarSettings?: {
+      defaultAvatar?: string;
+      allowCustomAvatars?: boolean;
+    };
+  }): Promise<MeetingRoom> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ projectId, ...data }),
+    });
+    if (!response.ok) throw new Error('Failed to create meeting room');
+    return response.json();
+  }
+
+  async getMeetingRoom(roomId: string): Promise<MeetingRoom> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/${roomId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch meeting room');
+    return response.json();
+  }
+
+  async getMeetingRoomByCode(code: string): Promise<MeetingRoom> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/code/${code}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch meeting room by code');
+    return response.json();
+  }
+
+  async getProjectMeetingRooms(projectId: string): Promise<MeetingRoom[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/project/${projectId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch project meeting rooms');
+    return response.json();
+  }
+
+  async getMeetingParticipants(roomId: string): Promise<MeetingParticipant[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/${roomId}/participants`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch meeting participants');
+    return response.json();
+  }
+
+  async getMeetingMessages(roomId: string, limit = 50): Promise<MeetingMessage[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/${roomId}/messages?limit=${limit}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch meeting messages');
+    return response.json();
+  }
+
+  async getMeetingMediaConfig(roomId: string, userName?: string): Promise<any> {
+    const url = userName
+      ? `${API_BASE_URL}/api/v1/meetings/${roomId}/media-config?userName=${encodeURIComponent(userName)}`
+      : `${API_BASE_URL}/api/v1/meetings/${roomId}/media-config`;
+    const response = await fetch(url, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch meeting media config');
+    return response.json();
+  }
+
+  async endMeetingRoom(roomId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/meetings/${roomId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to end meeting room');
   }
 }
 
