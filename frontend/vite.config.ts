@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 3000,
     minify: 'esbuild',
     target: 'esnext',
     rollupOptions: {
