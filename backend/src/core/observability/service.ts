@@ -4,13 +4,9 @@
  */
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { db } from '../../shared/database/db.js';
 import { auditLogs, metrics, errorLogs, performanceMetrics } from '../../shared/database/schema/observability.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
-
-const sql = postgres(process.env.DATABASE_URL!);
-const db = drizzle(sql);
 
 // =====================================
 // TYPES
@@ -57,8 +53,11 @@ export interface PerformanceMetricData {
 
 class ObservabilityService {
   private systemTenantReady?: Promise<void>;
+  private dbAvailable = true;
 
   private async ensureSystemTenant(): Promise<void> {
+    if (!this.dbAvailable) return;
+
     if (!this.systemTenantReady) {
       this.systemTenantReady = db
         .insert(tenants)
@@ -71,7 +70,8 @@ class ObservabilityService {
         .then(() => undefined)
         .catch((error) => {
           this.systemTenantReady = undefined;
-          throw error;
+          this.dbAvailable = false;
+          console.warn('Database not available for observability:', error.message);
         });
     }
 
@@ -82,6 +82,8 @@ class ObservabilityService {
    * Log de auditoria
    */
   async logAudit(data: AuditLogData): Promise<void> {
+    if (!this.dbAvailable) return;
+
     try {
       await db.insert(auditLogs).values({
         tenantId: data.tenantId,
@@ -92,6 +94,7 @@ class ObservabilityService {
         metadata: data.metadata,
       } as any);
     } catch (error) {
+      this.dbAvailable = false;
       console.error('Failed to log audit:', error);
     }
   }
@@ -102,6 +105,8 @@ class ObservabilityService {
   async recordMetric(data: MetricData): Promise<void>;
   async recordMetric(metricName: string, value: number, labels?: Record<string, string>): Promise<void>;
   async recordMetric(dataOrName: MetricData | string, value?: number, labels?: Record<string, string>): Promise<void> {
+    if (!this.dbAvailable) return;
+
     if (typeof dataOrName === 'string') {
       await this.ensureSystemTenant();
     }
@@ -125,6 +130,7 @@ class ObservabilityService {
         labels: data.labels,
       } as any);
     } catch (error) {
+      this.dbAvailable = false;
       console.error('Failed to record metric:', error);
     }
   }
@@ -135,6 +141,8 @@ class ObservabilityService {
   async logError(data: ErrorLogData): Promise<void>;
   async logError(error: Error, context?: Record<string, any>): Promise<void>;
   async logError(dataOrError: ErrorLogData | Error, context?: Record<string, any>): Promise<void> {
+    if (!this.dbAvailable) return;
+
     const data: ErrorLogData = dataOrError instanceof Error
       ? {
           errorMessage: dataOrError.message,
@@ -155,6 +163,7 @@ class ObservabilityService {
         severity: data.severity || 'error',
       } as any);
     } catch (error) {
+      this.dbAvailable = false;
       console.error('Failed to log error:', error);
     }
   }
@@ -163,6 +172,8 @@ class ObservabilityService {
    * Registrar métrica de performance
    */
   async recordPerformance(data: PerformanceMetricData): Promise<void> {
+    if (!this.dbAvailable) return;
+
     try {
       await db.insert(performanceMetrics).values({
         tenantId: data.tenantId,
@@ -172,6 +183,7 @@ class ObservabilityService {
         metadata: data.metadata,
       } as any);
     } catch (error) {
+      this.dbAvailable = false;
       console.error('Failed to record performance:', error);
     }
   }
