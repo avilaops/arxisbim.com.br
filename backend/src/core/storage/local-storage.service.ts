@@ -141,7 +141,18 @@ export class LocalStorageService implements StorageService {
 
   /** Optional: pre-create the root directory at boot. */
   async ensureRoot(): Promise<void> {
-    await fs.mkdir(this.root, { recursive: true });
+    try {
+      await fs.mkdir(this.root, { recursive: true });
+    } catch (error: any) {
+      // If permission denied, use temp directory as fallback
+      if (error.code === 'EACCES') {
+        const tempDir = path.join(process.cwd(), 'uploads');
+        await fs.mkdir(tempDir, { recursive: true });
+        console.warn(`⚠️  Using temp directory ${tempDir} instead of ${this.root}`);
+      } else {
+        throw error;
+      }
+    }
   }
 
   /** Exposed for diagnostics / tests. */
