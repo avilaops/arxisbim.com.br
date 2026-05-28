@@ -5,6 +5,8 @@ import { initializeAPI } from '../../api/v1/client';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
 import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
+import { AuthModal } from '../../app/components/AuthModal.js';
+import { AdminPanel } from '../../app/components/AdminPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -51,6 +53,19 @@ async function init() {
   const apiClient = initializeAPI({
     baseURL: API_BASE_URL,
   });
+
+  // Initialize Auth Modal
+  const authModal = new AuthModal();
+  authModal.renderAuthButton();
+
+  // Initialize Admin Panel
+  const adminPanel = new AdminPanel();
+
+  // Connect settings button to admin panel
+  const settingsBtn = document.querySelector('[title="Configurações"]');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => adminPanel.open());
+  }
 
   // Initialize Tenant/Project Selector
   const tenantSelector = new TenantProjectSelector();

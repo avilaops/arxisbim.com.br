@@ -192,6 +192,28 @@ class TenantProjectSelector {
       `;
     }
 
+    if (this.selectedCompany) {
+      html += `
+        <button
+          id="create-project-btn"
+          ${this.loading ? 'disabled' : ''}
+          style="
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: ${this.loading ? 'not-allowed' : 'pointer'};
+            font-size: 13px;
+            margin-top: 8px;
+          "
+        >
+          + Criar Projeto
+        </button>
+      `;
+    }
+
     html += '</div>';
     container.innerHTML = html;
 
@@ -209,6 +231,39 @@ class TenantProjectSelector {
     const projectSelect = document.getElementById('project-select');
     if (projectSelect) {
       projectSelect.addEventListener('change', (e) => this.handleProjectChange(e.target.value));
+    }
+
+    const createProjectBtn = document.getElementById('create-project-btn');
+    if (createProjectBtn) {
+      createProjectBtn.addEventListener('click', () => this.handleCreateProject());
+    }
+  }
+
+  async handleCreateProject() {
+    const name = prompt('Nome do projeto:');
+    if (!name) return;
+
+    const description = prompt('Descrição (opcional):') || undefined;
+
+    this.loading = true;
+    this.error = null;
+    this.render();
+
+    try {
+      const newProject = await tenantService.createProject(this.selectedTenant, this.selectedCompany, {
+        name,
+        description,
+      });
+      this.selectedProject = newProject.id;
+      localStorage.setItem('arxisvr_project_id', newProject.id);
+      window.dispatchEvent(new CustomEvent('project-changed', { detail: { projectId: newProject.id } }));
+      await this.loadProjects(this.selectedCompany);
+    } catch (err) {
+      this.error = 'Failed to create project';
+      console.error('Failed to create project:', err);
+    } finally {
+      this.loading = false;
+      this.render();
     }
   }
 }

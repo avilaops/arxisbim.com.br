@@ -90,6 +90,24 @@ export interface IFCModel {
   updatedAt: string;
 }
 
+export interface FederatedModel {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  models: Array<{
+    ifcModelId: string;
+    transformation?: {
+      position: { x: number; y: number; z: number };
+      rotation: { x: number; y: number; z: number };
+      scale: { x: number; y: number; z: number };
+    };
+    visible?: boolean;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 class TenantService {
   private getAuthHeaders() {
     const token = localStorage.getItem('arxisvr_token');
@@ -346,6 +364,113 @@ class TenantService {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete IFC model');
+  }
+
+  // Federated Models
+  async getFederatedModels(projectId: string): Promise<FederatedModel[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/federated-models`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch federated models');
+    return response.json();
+  }
+
+  async getFederatedModel(federatedId: string): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch federated model');
+    return response.json();
+  }
+
+  async createFederatedModel(projectId: string, data: {
+    name: string;
+    description?: string;
+    modelReferences: Array<{
+      ifcModelId: string;
+      position?: { x: number; y: number; z: number };
+      rotation?: { x: number; y: number; z: number };
+      scale?: { x: number; y: number; z: number };
+      visible?: boolean;
+    }>;
+  }): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/federated-models`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create federated model');
+    return response.json();
+  }
+
+  async updateFederatedModel(federatedId: string, data: {
+    name?: string;
+    description?: string;
+    models?: Array<{
+      ifcModelId: string;
+      transformation?: {
+        position: { x: number; y: number; z: number };
+        rotation: { x: number; y: number; z: number };
+        scale: { x: number; y: number; z: number };
+      };
+      visible?: boolean;
+    }>;
+  }): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update federated model');
+    return response.json();
+  }
+
+  async deleteFederatedModel(federatedId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete federated model');
+  }
+
+  async addModelToFederated(federatedId: string, data: {
+    ifcModelId: string;
+    position?: { x: number; y: number; z: number };
+    rotation?: { x: number; y: number; z: number };
+    scale?: { x: number; y: number; z: number };
+    visible?: boolean;
+  }): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}/models`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to add model to federated model');
+    return response.json();
+  }
+
+  async removeModelFromFederated(federatedId: string, ifcModelId: string): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}/models/${ifcModelId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to remove model from federated model');
+    return response.json();
+  }
+
+  async updateModelTransform(federatedId: string, ifcModelId: string, data: {
+    position?: { x: number; y: number; z: number };
+    rotation?: { x: number; y: number; z: number };
+    scale?: { x: number; y: number; z: number };
+    visible?: boolean;
+  }): Promise<FederatedModel> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/federated-models/${federatedId}/models/${ifcModelId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update model transform');
+    return response.json();
   }
 }
 
