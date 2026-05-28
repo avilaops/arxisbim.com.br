@@ -52,7 +52,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Validation error',
-        details: validation.error.errors,
+        details: validation.error.issues,
       });
     }
 
@@ -90,7 +90,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Validation error',
-        details: validation.error.errors,
+        details: validation.error.issues,
       });
     }
 
@@ -134,7 +134,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Validation error',
-        details: validation.error.errors,
+        details: validation.error.issues,
       });
     }
 

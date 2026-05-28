@@ -58,7 +58,7 @@ export async function notificationsRoutes(fastify: FastifyInstance) {
       if (!validation.success) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: validation.error.errors,
+          details: validation.error.issues,
         });
       }
 
@@ -251,7 +251,7 @@ export async function notificationsRoutes(fastify: FastifyInstance) {
       if (!validation.success) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: validation.error.errors,
+          details: validation.error.issues,
         });
       }
 

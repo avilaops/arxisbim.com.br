@@ -139,7 +139,7 @@ export class IfcController {
       if (error instanceof ZodError) {
         return reply.code(400).send({ 
           error: 'Validation error', 
-          details: error.errors 
+          details: error.issues 
         });
       }
       throw error;

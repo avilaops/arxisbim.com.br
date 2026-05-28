@@ -39,7 +39,7 @@ export class FederationController {
       if (error instanceof ZodError) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: error.errors,
+          details: error.issues,
         });
       }
 
@@ -128,7 +128,7 @@ export class FederationController {
       if (error instanceof ZodError) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: error.errors,
+          details: error.issues,
         });
       }
 
@@ -165,7 +165,7 @@ export class FederationController {
       if (error instanceof ZodError) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: error.errors,
+          details: error.issues,
         });
       }
 
@@ -236,7 +236,7 @@ export class FederationController {
       if (error instanceof ZodError) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: error.errors,
+          details: error.issues,
         });
       }
 
@@ -278,7 +278,7 @@ export class FederationController {
       if (error instanceof ZodError) {
         return reply.code(400).send({
           error: 'Validation error',
-          details: error.errors,
+          details: error.issues,
         });
       }
 
