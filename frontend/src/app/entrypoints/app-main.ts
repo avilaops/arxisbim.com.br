@@ -4,6 +4,7 @@ import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
 import { initializeAPI } from '../../api/v1/client';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
+import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -49,6 +50,18 @@ async function init() {
   // Permitir acesso anônimo para demonstração
   const apiClient = initializeAPI({
     baseURL: API_BASE_URL,
+  });
+
+  // Initialize Tenant/Project Selector
+  const tenantSelector = new TenantProjectSelector();
+  await tenantSelector.init();
+
+  // Listen for project changes
+  window.addEventListener('project-changed', (e: any) => {
+    const { projectId } = e.detail;
+    PROJECT_ID = projectId;
+    console.log('Project changed to:', projectId);
+    loadIfcModels();
   });
 
   const appEl = document.getElementById('app');
