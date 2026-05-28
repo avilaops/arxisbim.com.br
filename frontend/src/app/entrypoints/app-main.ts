@@ -3,6 +3,7 @@ import { IFCSimpleLoader } from '../../loaders/IFCSimpleLoader';
 import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
 import { initializeAPI } from '../../api/v1/client';
 import { getIfcService } from '../../api/v1/services/index';
+import { tenantService } from '../../api/v1/services/tenant.service';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -32,8 +33,8 @@ declare global {
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
 const SIGNIN_URL = 'https://signin.avilaops.com';
-const PROJECT_ID = '123e4567-e89b-12d3-a456-426614174000';
-localStorage.setItem('arxisvr_project_id', PROJECT_ID);
+let PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '123e4567-e89b-12d3-a456-426614174000';
+let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 
 let viewerHost: ViewerHost | null = null;
 let ifcLoader: IFCSimpleLoader | null = null;
@@ -399,31 +400,15 @@ function setupNavigation() {
       switch (view) {
         case 'ifc':
           // Show IFC Project Panel
-          if (viewerHost) {
-            try {
-              const { IFCProjectPanel } = await import('../../systems/model/IFCProjectPanel');
-              const panel = new IFCProjectPanel({
-                mountPoint: document.getElementById('left-sidebar'),
-                viewerHost
-              });
-              console.log('IFC Project Panel loaded');
-            } catch (err) {
-              console.error('Failed to load IFC Project Panel:', err);
-            }
+          console.log('IFC view activated - loading models from backend');
+          if (PROJECT_ID && hasAuthToken()) {
+            loadIfcModels();
           }
           break;
 
         case 'bim4d':
           // Load BIM 4D scheduling features
-          if (viewerHost) {
-            try {
-              const { BIM4DManager } = await import('../../features/bim-4d/bim/4d');
-              const manager = new BIM4DManager(viewerHost.scene, viewerHost.camera);
-              console.log('BIM 4D Manager loaded');
-            } catch (err) {
-              console.error('Failed to load BIM 4D Manager:', err);
-            }
-          }
+          console.log('BIM 4D view activated');
           break;
 
         case 'ar':
@@ -460,11 +445,21 @@ function setupIfcUpload() {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file && viewerHost && ifcLoader) {
           try {
-            await ifcLoader.load(file);
-            console.log('IFC carregado:', file.name);
-            loadedIfcModelId = file.name;
-            // Update IFC list
-            await loadIfcModels();
+            // Upload to backend if authenticated and project selected
+            if (hasAuthToken() && PROJECT_ID) {
+              const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
+              console.log('IFC uploaded to backend:', uploadedModel);
+              // Load the file locally for viewing
+              await ifcLoader.load(file);
+              loadedIfcModelId = uploadedModel.id;
+              // Update IFC list
+              await loadIfcModels();
+            } else {
+              // Load locally without backend
+              await ifcLoader.load(file);
+              console.log('IFC carregado localmente:', file.name);
+              loadedIfcModelId = file.name;
+            }
           } catch (err) {
             console.error('Erro ao carregar IFC:', err);
             alert('Erro ao carregar arquivo IFC');
@@ -497,11 +492,21 @@ function setupDragDropIfc() {
     const file = (e as any).dataTransfer?.files[0];
     if (file && file.name.endsWith('.ifc') && viewerHost && ifcLoader) {
       try {
-        await ifcLoader.load(file);
-        console.log('IFC carregado via drag-drop:', file.name);
-        loadedIfcModelId = file.name;
-        // Update IFC list
-        await loadIfcModels();
+        // Upload to backend if authenticated and project selected
+        if (hasAuthToken() && PROJECT_ID) {
+          const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
+          console.log('IFC uploaded to backend via drag-drop:', uploadedModel);
+          // Load the file locally for viewing
+          await ifcLoader.load(file);
+          loadedIfcModelId = uploadedModel.id;
+          // Update IFC list
+          await loadIfcModels();
+        } else {
+          // Load locally without backend
+          await ifcLoader.load(file);
+          console.log('IFC carregado localmente via drag-drop:', file.name);
+          loadedIfcModelId = file.name;
+        }
       } catch (err) {
         console.error('Erro ao carregar IFC:', err);
         alert('Erro ao carregar arquivo IFC');
@@ -597,10 +602,17 @@ function setupGravityControls(viewerHost: ViewerHost) {
 
 async function loadIfcModels() {
   try {
-    const ifcService = getIfcService();
-    // const models = await ifcService.listModels();
-    const models: any[] = [];
-    currentIfcModels = models;
+    let models: any[] = [];
+    
+    // Load IFC models from backend API
+    if (PROJECT_ID && hasAuthToken()) {
+      try {
+        models = await tenantService.getIFCModels(PROJECT_ID);
+        currentIfcModels = models;
+      } catch (err) {
+        console.warn('Failed to load models from API, using empty list:', err);
+      }
+    }
     
     const ifcList = document.getElementById('ifc-list');
     if (!ifcList) return;
