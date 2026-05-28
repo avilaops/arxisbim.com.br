@@ -28,6 +28,8 @@
         "vitest": "^2.0.0",
         "@vitest/ui": "^2.0.0",
         "jsdom": "^24.0.0",
-        "esbuild": "^0.28.0"
+        "esbuild": "^0.28.0",
+        "@testing-library/dom": "^10.0.0",
+        "@testing-library/jest-dom": "^6.0.0"
                         }
 }
