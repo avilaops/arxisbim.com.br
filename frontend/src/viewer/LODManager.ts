@@ -12,6 +12,8 @@ export interface LODConfig {
   distanceThreshold: number;
   enabled: boolean;
   autoMode: boolean;
+  useFrustum: boolean;
+  frustumPadding: number;
 }
 
 export interface LODSection {
@@ -37,6 +39,8 @@ class LODManager {
       distanceThreshold: 100,
       enabled: true,
       autoMode: true,
+      useFrustum: true,
+      frustumPadding: 10,
     };
   }
 
@@ -117,7 +121,7 @@ class LODManager {
   }
 
   /**
-   * Atualiza LODs baseado na posição da câmera
+   * Atualiza LODs baseado na posição da câmera e frustum
    */
   updateLODs(): void {
     if (!this.config.enabled || !this.config.autoMode) {
@@ -127,6 +131,12 @@ class LODManager {
     const cameraPosition = new THREE.Vector3();
     this.camera.getWorldPosition(cameraPosition);
 
+    // Calcular frustum da câmera
+    const frustum = new THREE.Frustum();
+    const projScreenMatrix = new THREE.Matrix4();
+    projScreenMatrix.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
+
     this.sections.forEach(section => {
       if (!section.loaded) {
         return;
@@ -135,6 +145,20 @@ class LODManager {
       const center = new THREE.Vector3();
       section.boundingBox.getCenter(center);
       const distance = cameraPosition.distanceTo(center);
+
+      // Verificar se está no frustum (com padding)
+      let inFrustum = true;
+      if (this.config.useFrustum) {
+        const paddedBox = section.boundingBox.clone();
+        paddedBox.expandByScalar(this.config.frustumPadding);
+        inFrustum = frustum.intersectsBox(paddedBox);
+      }
+
+      // Se não está no frustum, descarregar
+      if (!inFrustum && this.config.useFrustum) {
+        this.unloadSection(section.id);
+        return;
+      }
 
       // Determinar LOD baseado na distância
       let targetLOD: LODLevel = 'lod2';

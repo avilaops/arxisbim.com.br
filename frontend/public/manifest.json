@@ -1,0 +1,33 @@
+{
+  "name": "Arxisvr BIM Viewer",
+  "short_name": "Arxisvr",
+  "description": "Visualizador BIM colaborativo com suporte a IFC e GLB",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#2196F3",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Novo Projeto",
+      "short_name": "Novo",
+      "description": "Criar novo projeto BIM",
+      "url": "/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
