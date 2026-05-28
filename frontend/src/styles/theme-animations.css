@@ -1,0 +1,321 @@
+/* ArxisVR - Global Theme Styles */
+/* Animações e transições suaves para o sistema de temas */
+
+/* CSS Variables (atualizadas dinamicamente pelo ThemeManager) */
+:root {
+  /* Colors */
+  --bg-primary: #0f1217;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1d2430;
+  --fg-primary: #ffffff;
+  --fg-secondary: #cccccc;
+  --fg-muted: #888888;
+  --color-primary: #6f8f7c;
+  --color-secondary: #8c959f;
+  --color-accent: #d0d7de;
+  --border-color: #2a3441;
+  --border-light: rgba(208, 215, 222, 0.18);
+  --shadow: rgba(0, 0, 0, 0.22);
+  --success: #6f8f7c;
+  --warning: #ffaa00;
+  --error: #ff4444;
+  --info: #7d9ccf;
+  
+  /* Transitions */
+  --transition-fast: all 0.15s ease;
+  --transition: all 0.3s ease;
+  --transition-slow: all 0.6s ease;
+  
+  /* Hover */
+  --hover: rgba(208, 215, 222, 0.08);
+  --active: rgba(111, 143, 124, 0.16);
+}
+
+/* Smooth transitions for all themed elements */
+* {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Animação de fade in para painéis */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Aplicar animações */
+#bottom-toolbar {
+  animation: slideInFromBottom 0.5s ease;
+}
+
+#theme-selector-panel {
+  animation: fadeIn 0.3s ease;
+}
+
+#layer-panel {
+  animation: slideInFromLeft 0.4s ease;
+}
+
+#properties-panel {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Hover effects com transição */
+button {
+  transition: var(--transition-fast);
+}
+
+button:hover {
+  box-shadow: none;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Tema items com hover suave */
+[class*="theme-item"] {
+  transition: var(--transition);
+}
+
+[class*="theme-item"]:hover {
+  box-shadow: none;
+}
+
+/* Loading animation para temas */
+.theme-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Scrollbar customizado (tema aware) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Focus states */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Notificações com entrada suave */
+.notification {
+  animation: slideInFromBottom 0.4s ease;
+}
+
+.notification.exit {
+  animation: fadeOut 0.4s ease forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Color picker com zoom */
+#color-picker-panel {
+  animation: fadeIn 0.3s ease, pulse 0.5s ease;
+}
+
+/* Tema items grid com stagger animation */
+.themes-grid > * {
+  animation: fadeIn 0.3s ease;
+  animation-fill-mode: backwards;
+}
+
+.themes-grid > *:nth-child(1) { animation-delay: 0.05s; }
+.themes-grid > *:nth-child(2) { animation-delay: 0.1s; }
+.themes-grid > *:nth-child(3) { animation-delay: 0.15s; }
+.themes-grid > *:nth-child(4) { animation-delay: 0.2s; }
+.themes-grid > *:nth-child(5) { animation-delay: 0.25s; }
+.themes-grid > *:nth-child(6) { animation-delay: 0.3s; }
+
+/* Backdrop blur suave */
+.panel-with-blur {
+  backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.3s ease;
+}
+
+.panel-with-blur.active {
+  backdrop-filter: blur(10px);
+}
+
+/* Destaque discreto para elementos importantes (compatibilidade com classe legada) */
+.glow {
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+/* Tema switcher com flip animation */
+.theme-switch {
+  animation: flipIn 0.6s ease;
+}
+
+@keyframes flipIn {
+  from {
+    transform: perspective(400px) rotateX(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(400px) rotateX(0);
+    opacity: 1;
+  }
+}
+
+/* Loading spinner para operações assíncronas */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--bg-secondary);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Smooth color transitions for 3D scene */
+canvas {
+  transition: filter 0.6s ease;
+}
+
+/* Accessibility - reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  #bottom-toolbar {
+    left: 10px;
+    bottom: 10px;
+    gap: 5px;
+    padding: 6px 10px;
+  }
+  
+  #theme-selector-panel {
+    width: calc(100vw - 40px);
+    max-width: 400px;
+    left: 20px;
+    bottom: 70px;
+    transform: none;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: currentColor;
+    --border-light: currentColor;
+  }
+  
+  button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* Dark mode system preference */
+@media (prefers-color-scheme: dark) {
+  /* Já gerenciado pelo ThemeManager */
+}
+
+@media (prefers-color-scheme: light) {
+  /* Já gerenciado pelo ThemeManager */
+}

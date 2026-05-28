@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Arxis VR - Visualize seus projetos de engenharia em realidade aumentada. A maior plataforma de AR para AEC da América Latina.">
+  
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <title>Arxis VR - Engenharia Civil em Realidade Aumentada</title>
+  
+  <!-- Lucide Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
+  
+  <!-- DM Sans Font (Luma style) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ========== RESET & BASE ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Palette: Lu.ma Premium Light System */
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-panel: rgba(255, 255, 255, 0.78);
+      --bg-panel-solid: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --bg-card-hover: rgba(255, 255, 255, 0.95);
+      
+      --text-primary: #1A1A1A;
+      --text-secondary: #8E8E93;
+      --text-muted: #AEAEB2;
+      
+      --border-color: rgba(0, 0, 0, 0.06);
+      --border-hover: rgba(0, 0, 0, 0.12);
+      
+      --accent-blue: #007AFF;
+      --accent-purple: #C4B5F4;
+      --accent-purple-light: #EDE9FF;
+      --accent-green: #34C759;
+      --accent-red: #FF3B30;
+      --accent-yellow: #FF9500;
+      
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.08);
+      
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+      letter-spacing: -0.1px;
+    }
+
+    /* Force Lucide icons to have ultra-thin, elegant strokes (Lu.ma style) */
+    .lucide {
+      stroke-width: 1.4px !important;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* ========== HEADER ========== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 20px 4%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      transition: var(--transition);
+      backdrop-filter: blur(20px);
+    }
+
+    .header.scrolled {
+      background-color: rgba(255, 255, 255, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      padding: 15px 4%;
+      box-shadow: var(--shadow-md);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000000;
+      text-decoration: none;
+      letter-spacing: -0.6px;
+    }
+
+    .logo span {
+      color: var(--accent-purple);
+    }
+
+    .nav {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .nav a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      transition: var(--transition);
+      letter-spacing: 0.5px;
+      padding: 8px 16px;
+      border-radius: 50px;
+    }
+
+    .nav a:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: #000000;
+    }
+
+    .btn-ar {
+      background: #000000;
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-ar:hover {
+      background: #222222;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      transform: scale(0.97);
+    }
+
+    .btn-ar:active {
+      transform: scale(0.97);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .hamburger span {
+      width: 25px;
+      height: 3px;
+      background-color: #000000;
+      transition: var(--transition);
+    }
+
+    /* ========== HERO SECTION ========== */
+    .hero {
+      height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: var(--bg-app);
+    }
+
+    .hero-3d-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      opacity: 0.8;
+    }
+
+    .hero-3d-canvas canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.4;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.8) 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 20px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-purple-light);
+      border: 1px solid var(--accent-purple);
+      color: #000000;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 7vw, 72px);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: #000000;
+      color: #ffffff;
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+      background: #222222;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      transform: scale(0.97);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--text-primary);
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      border: 1px solid var(--border-color);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(0, 0, 0, 0.15);
+      transform: scale(0.97);
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.97);
+    }
+
+    /* ========== SECTIONS ========== */
+    .section {
+      padding: 100px 4%;
+      position: relative;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.8px;
+      color: #000000;
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 60px;
+      max-width: 700px;
+    }
+
+    /* ========== PROJECTS CAROUSEL ========== */
+    .projects-carousel {
+      position: relative;
+      margin-bottom: 60px;
+    }
+
+    .carousel-container {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 20px;
+      transition: transform 0.5s ease;
+      padding: 10px 0;
+    }
+
+    .project-card {
+      flex: 0 0 calc(25% - 15px);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      z-index: 10;
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    .project-image {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .project-card:hover .project-image {
+      filter: brightness(0.9);
+    }
+
+    .project-info {
+      padding: 20px;
+      position: relative;
+    }
+
+    .project-category {
+      font-size: 12px;
+      color: var(--accent-purple);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .project-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+
+    .project-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-view-ar {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-view-ar:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+      transform: scale(0.97);
+    }
+
+    .btn-view-ar:active {
+      transform: scale(0.97);
+    }
+
+    .carousel-button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: #000000;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .carousel-button:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+
+    .carousel-button.prev {
+      left: -25px;
+    }
+
+    .carousel-button.next {
+      right: -25px;
+    }
+
+    /* ========== HOW IT WORKS ========== */
+    .how-it-works {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    .workflow-step {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      transition: var(--transition);
+    }
+
+    .workflow-step:hover {
+      border-color: var(--accent-purple);
+      background: #ffffff;
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .workflow-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--accent-purple-light);
+      border: 1px solid var(--accent-purple);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 24px;
+      color: #000000;
+    }
+
+    .workflow-step h3 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .workflow-step p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .workflow-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: #000000;
+      border-radius: 50%;
+      line-height: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    /* ========== FEATURES ========== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      padding: 32px;
+      border-radius: 22px;
+      transition: var(--transition);
+      border: 1px solid var(--border-color);
+    }
+
+    .feature-card:hover {
+      background: #ffffff;
+      border-color: var(--accent-purple);
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 20px;
+      color: var(--accent-purple);
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    /* ========== PRICING ========== */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: var(--bg-card);
+      border-radius: 22px;
+      padding: 40px;
+      border: 1px solid var(--border-color);
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .pricing-card:hover {
+      border-color: var(--accent-purple);
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pricing-card.featured {
+      border-color: #000000;
+      background: #ffffff;
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -15px;
+      right: 30px;
+      background: #000000;
+      color: #ffffff;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .pricing-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+
+    .pricing-description {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .pricing-price {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+
+    .pricing-price span {
+      font-size: 18px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 30px 0;
+    }
+
+    .pricing-features li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+
+    .pricing-features li i {
+      color: var(--accent-green);
+      font-size: 16px;
+    }
+
+    .btn-plan {
+      width: 100%;
+      padding: 16px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-plan:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+      transform: scale(0.97);
+    }
+
+    .btn-plan:active {
+      transform: scale(0.97);
+    }
+
+    .pricing-card.featured .btn-plan {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+
+    .pricing-card.featured .btn-plan:hover {
+      background: #222222;
+    }
+
+    /* ========== FOOTER ========== */
+    .footer {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 60px 4%;
+      border-top: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-section h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 12px;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 14px;
+    }
+
+    .footer-links a:hover {
+      color: #000000;
+    }
+
+    .app-badges {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .app-badge {
+      display: inline-block;
+      background: #ffffff;
+      padding: 10px 20px;
+      border-radius: 50px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .app-badge:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .social-link {
+      width: 40px;
+      height: 40px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 18px;
+    }
+
+    .social-link:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-color);
+      padding-top: 30px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ========== MODAL ========== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+
+    .modal.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+      background: var(--bg-panel-solid);
+      border-radius: 22px;
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+      position: relative;
+      animation: slideUp 0.4s ease;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: #000000;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+
+    .modal-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--accent-purple-light);
+      border: 1px solid var(--accent-purple);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+      color: #000000;
+    }
+
+    .modal h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      text-align: center;
+      color: #000000;
+      font-weight: 700;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .qr-code {
+      width: 200px;
+      height: 200px;
+      background: #ffffff;
+      margin: 0 auto 30px;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #333;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* ========== ANIMATIONS ========== */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 1024px) {
+      .project-card {
+        flex: 0 0 calc(33.333% - 14px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 70%;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding: 100px 40px;
+        transition: var(--transition);
+        align-items: flex-start;
+        border-left: 1px solid var(--border-color);
+      }
+
+      .nav.active {
+        right: 0;
+      }
+
+      .nav a {
+        font-size: 18px;
+      }
+
+      .hamburger {
+        display: flex;
+        z-index: 1001;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+      }
+
+      .project-card {
+        flex: 0 0 calc(50% - 10px);
+      }
+
+      .carousel-button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+
+      .section {
+        padding: 60px 4%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .project-card {
+        flex: 0 0 100%;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        padding: 30px 20px;
+      }
+    }
+
+    /* ========== LOADING SKELETON ========== */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.03) 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ========== UTILITY CLASSES ========== */
+    .gradient-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #F5F5F7 0%, #EDE9FF 50%, #F5F5F7 100%);
+      opacity: 0.6;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-40 {
+      margin-top: 40px;
+    }
+
+    .qr-placeholder {
+      text-align: center;
+    }
+
+    .qr-icon {
+      font-size: 120px;
+      color: var(--text-secondary);
+    }
+
+    .qr-text {
+      margin-top: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .flex-1 {
+      flex: 1;
+    }
+
+    .gray-icon {
+      color: var(--text-muted);
+    }
+
+    .footer-copyright {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header" id="header">
+    <a href="#" class="logo">Arxis<span>VR</span> Build</a>
+    
+    <nav class="nav" id="nav">
+      <a href="#home">Início</a>
+      <a href="#projects">Projetos</a>
+      <a href="#how-it-works">Como Funciona</a>
+      <a href="#pricing">Planos</a>
+      <a href="#contact">Contato</a>
+      <button class="btn-ar" onclick="openARModal()">
+        <i class="fas fa-cube"></i>
+        Experimentar AR
+      </button>
+    </nav>
+
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="home">
+    <!-- Canvas 3D Background -->
+    <div id="hero-3d-canvas" class="hero-3d-canvas"></div>
+    
+    <div class="hero-overlay"></div>
+    
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fas fa-vr-cardboard"></i>
+        Compatível com ArxisVR - Maior plataforma de AR para AEC da América Latina
+      </div>
+      
+      <h1 class="hero-title">
+        Veja seus projetos em <span>escala real</span> antes da construção
+      </h1>
+      
+      <p class="hero-subtitle">
+        Transforme modelos BIM em experiências de realidade aumentada imersivas. 
+        Visualize, colabore e valide projetos de engenharia civil no canteiro de obras.
+      </p>
+      
+      <div class="hero-buttons">
+        <a href="/viewer.html" class="btn-primary">
+          <i class="fas fa-cube"></i>
+          Abrir Viewer 3D
+        </a>
+        <a href="#projects" class="btn-secondary">
+          <i class="fas fa-play"></i>
+          Ver Projetos
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS SECTION -->
+  <section class="section" id="projects">
+    <h2 class="section-title">Projetos em Destaque</h2>
+    <p class="section-subtitle">
+      Explore nosso portfólio de obras revolucionárias visualizadas em AR
+    </p>
+
+    <div class="projects-carousel">
+      <button class="carousel-button prev" onclick="scrollCarousel('prev')" aria-label="Projeto anterior" title="Ver projeto anterior">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="carousel-container">
+        <div class="carousel-track" id="carousel-track">
+          <!-- Project Cards -->
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Residencial</div>
+              <h3 class="project-title">Residencial Alto Padrão</h3>
+              <p class="project-description">Complexo residencial de alto padrão com 250 unidades</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Residencial Alto Padrão')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Comercial</div>
+              <h3 class="project-title">Torre Empresarial Ávila</h3>
+              <p class="project-description">Edifício corporativo de 40 andares no centro financeiro</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Torre Empresarial Ávila')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Infraestrutura</div>
+              <h3 class="project-title">Viaduto Imigrantes SP</h3>
+              <p class="project-description">Obra de arte especial com 1,2km de extensão</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Viaduto Imigrantes')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Industrial</div>
+              <h3 class="project-title">Centro Logístico Amazon</h3>
+              <p class="project-description">Complexo industrial de 120.000m² automatizado</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Centro Logístico')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Residencial</div>
+              <h3 class="project-title">Condomínio Jardim Europa</h3>
+              <p class="project-description">Residências de luxo com infraestrutura completa</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Condomínio Jardim Europa')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1448630360428-65456885c650?w=800&q=80" alt="Projeto" class="project-image">
+            <div class="project-info">
+              <div class="project-category">Institucional</div>
+              <h3 class="project-title">Hospital das Clínicas</h3>
+              <p class="project-description">Complexo hospitalar de 800 leitos</p>
+              <div class="project-actions">
+                <button class="btn-view-ar" onclick="openARModal('Hospital das Clínicas')">
+                  <i class="fas fa-cube"></i>
+                  Visualizar em AR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="carousel-button next" onclick="scrollCarousel('next')" aria-label="Próximo projeto" title="Ver próximo projeto">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section how-it-works" id="how-it-works">
+    <h2 class="section-title">Como a ArxisVR revoluciona a engenharia</h2>
+    <p class="section-subtitle">
+      Do modelo BIM ao canteiro de obras em 3 passos simples
+    </p>
+
+    <div class="workflow-grid">
+      <div class="workflow-step">
+        <div class="workflow-number">1</div>
+        <div class="workflow-icon">
+          <i class="fas fa-upload"></i>
+        </div>
+        <h3>Upload do Modelo</h3>
+        <p>
+          Envie seu modelo BIM diretamente do Revit, SketchUp ou ArchiCAD usando nosso plug-in. 
+          Suporte total para IFC, RVT e SKP.
+        </p>
+      </div>
+
+      <div class="workflow-step">
+        <div class="workflow-number">2</div>
+        <div class="workflow-icon">
+          <i class="fas fa-mobile-alt"></i>
+        </div>
+        <h3>Visualização 1:1</h3>
+        <p>
+          Abra o ArxisVR no seu smartphone ou tablet e escaneie o QR Code do projeto. 
+          Veja o modelo em escala real no canteiro.
+        </p>
+      </div>
+
+      <div class="workflow-step">
+        <div class="workflow-number">3</div>
+        <div class="workflow-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3>Colaboração em Equipe</h3>
+        <p>
+          Até 10 pessoas podem visualizar e interagir com o modelo simultaneamente. 
+          Reuniões AR remotas com ArxisVR TeamPlay.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-center mt-40">
+      <button class="btn-primary" onclick="window.open('https://arxisvr.avila.inc', '_blank')">
+        <i class="fas fa-rocket"></i>
+        Acessar Plataforma ArxisVR
+      </button>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <h2 class="section-title">Diferenciais Tecnológicos</h2>
+    <p class="section-subtitle">
+      A plataforma mais completa de AR para arquitetura, engenharia e construção
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-ruler-combined"></i>
+        </div>
+        <h3>Visualização em Escala Humana</h3>
+        <p>Veja cada detalhe do projeto em tamanho real, identifique problemas antes da execução</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>Detecção de Clash</h3>
+        <p>Identifique interferências entre disciplinas automaticamente no canteiro</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <h3>Modelos 4D</h3>
+        <p>Visualize a sequência construtiva com simulação temporal da obra</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-file-import"></i>
+        </div>
+        <h3>Compatível com IFC</h3>
+        <p>Suporte total para Industry Foundation Classes, padrão internacional BIM</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-users-cog"></i>
+        </div>
+        <h3>Reunião AR Remota</h3>
+        <p>Até 10 pessoas simultaneamente em sessão colaborativa de AR</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <h3>Armazenamento em Nuvem</h3>
+        <p>Seus projetos sempre disponíveis, sincronizados em todos os dispositivos</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section" id="pricing">
+    <h2 class="section-title">Planos e Preços</h2>
+    <p class="section-subtitle">
+      Escolha o plano ideal para seu projeto ou empresa
+    </p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Grátis</div>
+        <div class="pricing-description">Para estudantes e projetos pessoais</div>
+        <div class="pricing-price">R$ 0<span>/mês</span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> 1 projeto ativo</li>
+          <li><i class="fas fa-check"></i> Até 50 MB por modelo</li>
+          <li><i class="fas fa-check"></i> Visualização básica em AR</li>
+          <li><i class="fas fa-check"></i> Suporte por email</li>
+          <li><i class="fas fa-times gray-icon"></i> Colaboração em equipe</li>
+        </ul>
+        <button class="btn-plan">Começar Grátis</button>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-badge">MAIS POPULAR</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-description">Para profissionais e pequenas empresas</div>
+        <div class="pricing-price">R$ 199<span>/mês</span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> Projetos ilimitados</li>
+          <li><i class="fas fa-check"></i> Até 500 MB por modelo</li>
+          <li><i class="fas fa-check"></i> Detecção de clash</li>
+          <li><i class="fas fa-check"></i> Modelos 4D</li>
+          <li><i class="fas fa-check"></i> 3 usuários simultâneos</li>
+          <li><i class="fas fa-check"></i> Suporte prioritário</li>
+        </ul>
+        <button class="btn-plan">Assinar Pro</button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-name">TeamPlay</div>
+        <div class="pricing-description">Para grandes empresas e construtoras</div>
+        <div class="pricing-price">R$ 499<span>/mês</span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> Tudo do Pro +</li>
+          <li><i class="fas fa-check"></i> Modelos ilimitados (até 2 GB)</li>
+          <li><i class="fas fa-check"></i> 10 usuários simultâneos</li>
+          <li><i class="fas fa-check"></i> Reuniões AR remotas</li>
+          <li><i class="fas fa-check"></i> API e integrações</li>
+          <li><i class="fas fa-check"></i> Gerente de conta dedicado</li>
+        </ul>
+        <button class="btn-plan">Assinar TeamPlay</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="contact">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Arxis VR</h3>
+        <p class="footer-copyright">
+          Revolucionando a engenharia civil com realidade aumentada. 
+          A maior plataforma de AR para AEC da América Latina.
+        </p>
+        <div class="app-badges">
+          <a href="#" class="app-badge">
+            <i class="fab fa-apple"></i>
+            App Store
+          </a>
+          <a href="#" class="app-badge">
+            <i class="fab fa-google-play"></i>
+            Google Play
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-section">
+        <h3>Empresa</h3>
+        <ul class="footer-links">
+          <li><a href="#">Sobre Nós</a></li>
+          <li><a href="#">Carreiras</a></li>
+          <li><a href="#">Imprensa</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Parceiros</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Recursos</h3>
+        <ul class="footer-links">
+          <li><a href="https://arxisvr.avila.inc" target="_blank" rel="noopener">Plataforma ArxisVR</a></li>
+          <li><a href="#">Documentação</a></li>
+          <li><a href="#">Tutoriais</a></li>
+          <li><a href="#">API</a></li>
+          <li><a href="#">Suporte</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Legal</h3>
+        <ul class="footer-links">
+          <li><a href="#">Termos de Uso</a></li>
+          <li><a href="#">Política de Privacidade</a></li>
+          <li><a href="#">Cookies</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+        <div class="social-links">
+          <a href="#" class="social-link" aria-label="LinkedIn" title="Siga-nos no LinkedIn"><i class="fab fa-linkedin"></i></a>
+          <a href="#" class="social-link" aria-label="Instagram" title="Siga-nos no Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-link" aria-label="YouTube" title="Inscreva-se no YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="#" class="social-link" aria-label="Twitter" title="Siga-nos no Twitter"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Arxis VR. Todos os direitos reservados. | Desenvolvido com tecnologia de ponta para engenharia civil</p>
+    </div>
+  </footer>
+
+  <!-- AR MODAL -->
+  <div class="modal" id="ar-modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeARModal()">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <div class="modal-icon">
+        <i class="fas fa-cube"></i>
+      </div>
+      
+      <h2 class="modal-title">Visualizar em Realidade Aumentada</h2>
+      <div class="modal-body">
+        <p>
+          Este projeto está disponível no <strong>ArxisVR</strong>. 
+          Baixe o app e escaneie o QR Code abaixo para visualizar o modelo em escala real.
+        </p>
+      </div>
+      
+      <div class="qr-code" id="qr-code-container">
+        <div class="qr-placeholder">
+          <i class="fas fa-qrcode qr-icon"></i>
+          <p class="qr-text">Gerando QR Code...</p>
+        </div>
+      </div>
+      
+      <div class="modal-buttons">
+        <a href="/viewer.html" class="btn-primary flex-1">
+          <i class="fas fa-cube"></i>
+          Abrir Viewer 3D
+        </a>
+        <button class="btn-secondary flex-1" onclick="closeARModal()">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // ========== HEADER SCROLL EFFECT ==========
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('header');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // ========== MOBILE MENU ==========
+    function toggleMenu() {
+      const nav = document.getElementById('nav');
+      const hamburger = document.getElementById('hamburger');
+      nav.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    }
+
+    // Close menu when clicking on a link
+    document.querySelectorAll('.nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        const nav = document.getElementById('nav');
+        const hamburger = document.getElementById('hamburger');
+        nav.classList.remove('active');
+        hamburger.classList.remove('active');
+      });
+    });
+
+    // ========== CAROUSEL ==========
+    let currentIndex = 0;
+    const track = document.getElementById('carousel-track');
+    const cards = document.querySelectorAll('.project-card');
+    const cardsVisible = getCardsVisible();
+
+    function getCardsVisible() {
+      if (window.innerWidth <= 480) return 1;
+      if (window.innerWidth <= 768) return 2;
+      if (window.innerWidth <= 1024) return 3;
+      return 4;
+    }
+
+    function scrollCarousel(direction) {
+      const maxIndex = cards.length - cardsVisible;
+      
+      if (direction === 'next') {
+        currentIndex = Math.min(currentIndex + 1, maxIndex);
+      } else {
+        currentIndex = Math.max(currentIndex - 1, 0);
+      }
+      
+      const cardWidth = cards[0].offsetWidth;
+      const gap = 20;
+      const offset = -(currentIndex * (cardWidth + gap));
+      
+      track.style.transform = `translateX(${offset}px)`;
+    }
+
+    // Update carousel on resize
+    window.addEventListener('resize', () => {
+      currentIndex = 0;
+      track.style.transform = 'translateX(0)';
+    });
+
+    // ========== AR MODAL ==========
+    function openARModal(projectName = 'Projeto') {
+      const modal = document.getElementById('ar-modal');
+      const title = document.getElementById('modal-title');
+      
+      if (projectName !== 'Projeto') {
+        title.textContent = `${projectName} - Visualizar em AR`;
+      }
+      
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeARModal() {
+      const modal = document.getElementById('ar-modal');
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal on outside click
+    document.getElementById('ar-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'ar-modal') {
+        closeARModal();
+      }
+    });
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeARModal();
+      }
+    });
+
+    // ========== SMOOTH SCROLL ==========
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // ========== LAZY LOADING IMAGES ==========
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src || img.src;
+            img.classList.remove('skeleton');
+            imageObserver.unobserve(img);
+          }
+        });
+      });
+
+      document.querySelectorAll('img').forEach(img => {
+        imageObserver.observe(img);
+      });
+    }
+
+    // ========== CONSOLE WELCOME MESSAGE ==========
+    console.log('%c🚀 Arxis VR', 'color: #C4B5F4; font-size: 24px; font-weight: bold;');
+    console.log('%cVisualize projetos de engenharia em realidade aumentada', 'color: #8E8E93; font-size: 14px;');
+    console.log('%chttps://arxisvr.avila.inc', 'color: #007AFF; font-size: 14px;');
+  </script>
+
+  <!-- ArxisVR Data Loader - Carrega dados reais dos projetos IFC -->
+  <script src="/scripts/arxisvr-data-loader.js?v=2026.04.23.01"></script>
+  
+  <!-- Hero 3D Background - Fundo cinemático 3D com Three.js -->
+  <script type="module" src="/scripts/hero-background-3d.js?v=2026.04.23.01"></script>
+</body>
+</html>

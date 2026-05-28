@@ -1,0 +1,44 @@
+{
+  "id": "dark",
+  "name": "Dark",
+  "description": "Deep dark theme - Easy on the eyes",
+  "colors": {
+    "background": "#0d0d0d",
+    "backgroundSecondary": "#121212",
+    "backgroundTertiary": "#1a1a1a",
+    "foreground": "#e0e0e0",
+    "foregroundSecondary": "#b0b0b0",
+    "foregroundMuted": "#707070",
+    "primary": "#4a9eff",
+    "secondary": "#8b5cf6",
+    "accent": "#00d9ff",
+    "error": "#ef4444",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "success": "#10b981",
+    "border": "#2a2a2a",
+    "borderHover": "#3a3a3a",
+    "shadow": "rgba(0, 0, 0, 0.7)",
+    "hover": "#1f1f1f",
+    "active": "#2f2f2f",
+    "focus": "#4a9eff",
+    "disabled": "#555555"
+  },
+  "fonts": {
+    "base": "'Inter', 'Segoe UI', sans-serif",
+    "heading": "'Inter', 'Segoe UI', sans-serif",
+    "monospace": "'Fira Code', 'Consolas', monospace",
+    "sizes": {
+      "small": "12px",
+      "medium": "14px",
+      "large": "16px",
+      "xlarge": "20px"
+    }
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["dark", "deep", "comfortable"]
+  }
+}

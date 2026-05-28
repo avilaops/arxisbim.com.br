@@ -1,0 +1,38 @@
+{
+  "id": "sunset",
+  "name": "Sunset Orange",
+  "description": "Warm sunset-inspired theme",
+  "colors": {
+    "background": "#1a0e0e",
+    "backgroundSecondary": "#2a1818",
+    "backgroundTertiary": "#3a2222",
+    "foreground": "#ffe5cc",
+    "foregroundSecondary": "#d9cab3",
+    "foregroundMuted": "#b3a08a",
+    "primary": "#ff6b6b",
+    "secondary": "#ff8c42",
+    "accent": "#ffa502",
+    "error": "#ee5a6f",
+    "warning": "#ffc048",
+    "info": "#70a1ff",
+    "success": "#7bed9f",
+    "border": "#4a2a2a",
+    "borderHover": "#5a3a3a",
+    "shadow": "rgba(26, 14, 14, 0.7)",
+    "hover": "#2f1c1c",
+    "active": "#3f2828",
+    "focus": "#ff8c42",
+    "disabled": "#5a3a3a"
+  },
+  "fonts": {
+    "base": "'Inter', sans-serif",
+    "heading": "'Inter', sans-serif",
+    "monospace": "'Fira Code', monospace"
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["sunset", "orange", "warm"]
+  }
+}

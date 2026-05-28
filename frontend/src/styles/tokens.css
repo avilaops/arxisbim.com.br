@@ -1,0 +1,374 @@
+/**
+ * Enterprise Design Tokens
+ * Base enterprise para BIM/CAD: clara, silenciosa, corporativa e sem neon/glow.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ========== Palette ========== */
+  --bg-primary: #f5f7fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eef2f6;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f3f4f6;
+  --bg-active: #e5e7eb;
+  --bg-selected: rgba(37, 99, 235, 0.08);
+
+  --panel: #ffffff;
+  --panel-hover: #f9fafb;
+  --panel-active: #eff6ff;
+  --panel-muted: #f9fafb;
+
+  --border: #e5e7eb;
+  --border-muted: #f3f4f6;
+  --border-hover: #d1d5db;
+  --border-focus: #2563eb;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-disabled: #d1d5db;
+  --text-inverse: #ffffff;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-active: #1e40af;
+  --accent-subtle: rgba(37, 99, 235, 0.08);
+  --accent-border: rgba(37, 99, 235, 0.22);
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-subtle: rgba(220, 38, 38, 0.08);
+  --warning: #d97706;
+  --warning-subtle: rgba(217, 119, 6, 0.1);
+  --info: #0284c7;
+  --info-subtle: rgba(2, 132, 199, 0.08);
+  --success: #059669;
+  --success-hover: #047857;
+  --success-subtle: rgba(5, 150, 105, 0.08);
+
+  /* ========== Compatibility aliases ========== */
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f6f8fa;
+  --color-neutral-100: #eaeef2;
+  --color-neutral-200: #d0d7de;
+  --color-neutral-300: #8c959f;
+  --color-neutral-400: #6e7781;
+  --color-neutral-500: #57606a;
+  --color-neutral-600: #424a53;
+  --color-neutral-700: #30363d;
+  --color-neutral-800: #21262d;
+  --color-neutral-900: #0d1117;
+
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: var(--accent);
+  --color-primary-600: var(--accent-active);
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--danger);
+  --color-info: var(--info);
+
+  --border-color: var(--border);
+  --accent-color: var(--accent);
+  --accent-hover-color: var(--accent-hover);
+  --accent-active-color: var(--accent-active);
+  --text-tertiary: var(--text-muted);
+
+  --arxis-darker: var(--bg-primary);
+  --arxis-dark: var(--bg-secondary);
+  --arxis-green: var(--success);
+  --arxis-blue: var(--accent);
+  --arxis-gray: var(--text-secondary);
+
+  /* ========== Corporate dark rail/sidebar ========== */
+  --sidebar-bg: #1f2937;
+  --sidebar-bg-soft: #253244;
+  --sidebar-border: #374151;
+  --sidebar-text: #f9fafb;
+  --sidebar-text-secondary: #d1d5db;
+  --sidebar-text-muted: #9ca3af;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-active: rgba(37, 99, 235, 0.22);
+
+  /* ========== Spacing: compact enterprise scale ========== */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ========== Shape ========== */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-full: 9999px;
+
+  /* ========== Typography ========== */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-family-mono: 'SF Mono', 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.01em;
+  --letter-spacing-label: 0.04em;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.45;
+  --line-height-relaxed: 1.65;
+
+  /* ========== Shadows: subtle enterprise elevation ========== */
+  --shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.08);
+  --shadow-md: 0 4px 10px rgba(17, 24, 39, 0.1);
+  --shadow-lg: 0 10px 24px rgba(17, 24, 39, 0.12);
+  --shadow-xl: 0 20px 40px rgba(17, 24, 39, 0.16);
+
+  /* ========== Component states ========== */
+  --state-hover-bg: var(--panel-hover);
+  --state-selected-bg: var(--bg-selected);
+  --state-selected-border: var(--accent-border);
+  --state-active-bg: var(--bg-active);
+  --state-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.14);
+
+  /* ========== Transitions ========== */
+  --transition-fast: 120ms ease-out;
+  --transition-base: 180ms ease-out;
+  --transition-slow: 260ms ease-out;
+
+  /* ========== Z-Index ========== */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 10000;
+  --z-modal: 10001;
+  --z-popover: 10002;
+  --z-tooltip: 10003;
+
+  /* ========== Layout (AppShell) ========== */
+  --activity-bar-width: 52px;
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 0px;
+  --topbar-height: 54px;
+  --statusbar-height: 28px;
+  --titlebar-height: 35px;
+
+  /* ========== Responsive Breakpoints ========== */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-primary: #0f1217;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1d2430;
+  --bg-elevated: #202734;
+  --bg-hover: #1b222c;
+  --bg-active: #222b37;
+  --bg-selected: rgba(37, 99, 235, 0.16);
+
+  --panel: #151a21;
+  --panel-hover: #1b222c;
+  --panel-active: #202936;
+  --panel-muted: #11161d;
+
+  --border: #2a3441;
+  --border-muted: #222b36;
+  --border-hover: #3a4656;
+  --border-focus: #60a5fa;
+
+  --text-primary: #e6edf3;
+  --text-secondary: #9da7b3;
+  --text-muted: #6b7480;
+  --text-disabled: #4f5864;
+  --text-inverse: #ffffff;
+
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --accent-active: #3b82f6;
+  --accent-subtle: rgba(96, 165, 250, 0.14);
+  --accent-border: rgba(96, 165, 250, 0.34);
+
+  --success: #34d399;
+  --sidebar-bg: #10151b;
+  --sidebar-bg-soft: #151a21;
+  --sidebar-border: #2a3441;
+  --sidebar-text: #e6edf3;
+  --sidebar-text-secondary: #9da7b3;
+  --sidebar-text-muted: #6b7480;
+  --sidebar-hover: #1b222c;
+  --sidebar-active: rgba(96, 165, 250, 0.18);
+
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 18px rgba(0, 0, 0, 0.28);
+  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="high-contrast"] {
+  color-scheme: dark;
+
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --bg-tertiary: #000000;
+  --bg-elevated: #000000;
+  --bg-hover: #000000;
+  --bg-active: #000000;
+  --bg-selected: #ffffff;
+
+  --panel: #000000;
+  --panel-hover: #000000;
+  --panel-active: #000000;
+  --panel-muted: #000000;
+
+  --border: #ffffff;
+  --border-muted: #ffffff;
+  --border-hover: #ffffff;
+  --border-focus: #ffffff;
+
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #ffffff;
+  --text-disabled: #888888;
+  --text-inverse: #000000;
+
+  --accent: #ffff00;
+  --accent-hover: #ffff00;
+  --accent-active: #ffff00;
+  --accent-subtle: rgba(255, 255, 0, 0.3);
+  --accent-border: #ffffff;
+
+  --success: #00ff00;
+  --sidebar-bg: #000000;
+  --sidebar-bg-soft: #000000;
+  --sidebar-border: #ffffff;
+  --sidebar-text: #ffffff;
+  --sidebar-text-secondary: #ffffff;
+  --sidebar-text-muted: #ffffff;
+  --sidebar-hover: #000000;
+  --sidebar-active: #ffffff;
+
+  --shadow-xs: 0 1px 1px rgba(255, 255, 255, 0.3);
+  --shadow-sm: 0 1px 2px rgba(255, 255, 255, 0.4);
+  --shadow-md: 0 2px 6px rgba(255, 255, 255, 0.5);
+  --shadow-lg: 0 8px 18px rgba(255, 255, 255, 0.6);
+  --shadow-xl: 0 12px 28px rgba(255, 255, 255, 0.7);
+}
+
+/* ========== Base Reset ========== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* ========== Focus Visible (accessibility) ========== */
+*:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 2px;
+  box-shadow: var(--state-focus-ring);
+}
+
+/* ========== Selection ========== */
+::selection {
+  background-color: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border: 2px solid var(--bg-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

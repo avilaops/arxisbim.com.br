@@ -1,0 +1,91 @@
+{
+  "suite": "ArxisVR Auth E2E Tests",
+  "timestamp": "2026-05-04T06:59:10.851Z",
+  "environment": {
+    "baseURL": "http://localhost:3001",
+    "nodeVersion": "v24.12.0",
+    "platform": "win32"
+  },
+  "stats": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "duration": 594,
+    "passRate": "100.0"
+  },
+  "results": [
+    {
+      "id": 1,
+      "name": "Health check endpoint",
+      "category": "backend-health",
+      "status": "passed",
+      "duration": 286,
+      "error": null
+    },
+    {
+      "id": 2,
+      "name": "Database connection",
+      "category": "backend-health",
+      "status": "passed",
+      "duration": 5,
+      "error": null
+    },
+    {
+      "id": 3,
+      "name": "User registration",
+      "category": "auth-api",
+      "status": "passed",
+      "duration": 148,
+      "error": null
+    },
+    {
+      "id": 4,
+      "name": "User login",
+      "category": "auth-api",
+      "status": "passed",
+      "duration": 64,
+      "error": null
+    },
+    {
+      "id": 5,
+      "name": "Token verification (via /me)",
+      "category": "auth-api",
+      "status": "passed",
+      "duration": 1,
+      "error": null
+    },
+    {
+      "id": 6,
+      "name": "Token refresh",
+      "category": "auth-api",
+      "status": "passed",
+      "duration": 5,
+      "error": null
+    },
+    {
+      "id": 7,
+      "name": "Invalid login credentials",
+      "category": "auth-validation",
+      "status": "passed",
+      "duration": 74,
+      "error": null
+    },
+    {
+      "id": 8,
+      "name": "Invalid token verification",
+      "category": "auth-validation",
+      "status": "passed",
+      "duration": 4,
+      "error": null
+    },
+    {
+      "id": 9,
+      "name": "Missing required fields",
+      "category": "auth-validation",
+      "status": "passed",
+      "duration": 5,
+      "error": null
+    }
+  ]
+}

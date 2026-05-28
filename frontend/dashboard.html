@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ArxisVR Observability</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- DM Sans Font (Luma style) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
+
+  <style>
+    :root {
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-panel: rgba(255, 255, 255, 0.78);
+      --border-color: rgba(0, 0, 0, 0.06);
+    }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-app);
+      min-height: 100vh;
+      color: #1a1a1a;
+      letter-spacing: -0.1px;
+    }
+    .card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px; /* Luma Smooth Cards */
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.04);
+    }
+    .stat-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(196, 181, 244, 0.2);
+      background: #ffffff;
+    }
+    .refresh-button {
+      transition: all 0.2s;
+    }
+    .refresh-button:hover {
+      background: #222222;
+    }
+    .refresh-button:active {
+      transform: scale(0.97);
+    }
+    .select-pill {
+      border-radius: 50px; /* Luma Pill Style */
+      padding: 8px 20px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .select-pill:focus {
+      border-color: rgba(0,0,0,0.15);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.06);
+      border-radius: 50px;
+    }
+  </style>
+</head>
+<body class="p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-[#000000] tracking-tight flex items-center gap-2">
+          <img src="/logo-icon.svg" alt="" style="width: 28px; height: 28px;">
+          ArxisVR Observability
+        </h1>
+        <p class="text-gray-500 mt-2 font-medium">Dashboard de métricas e monitoramento em tempo real</p>
+      </div>
+      <div class="flex gap-3 items-center">
+        <select id="timeRange" class="select-pill text-sm font-medium text-[#1a1a1a]">
+          <option value="1">Última hora</option>
+          <option value="6">Últimas 6 horas</option>
+          <option value="24" selected>Últimas 24 horas</option>
+          <option value="168">Última semana</option>
+        </select>
+        <button onclick="refreshData()" class="refresh-button btn-primary bg-black text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#222222] transition-all flex items-center gap-2 shadow-sm">
+          <i class="lucide lucide-refresh-cw" style="stroke-width: 1.8px; width: 14px; height: 14px;"></i> Atualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div class="stat-card card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Usuários Ativos</div>
+        <div class="text-3xl font-bold text-black" id="totalUsers">-</div>
+      </div>
+      <div class="stat-card card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Requests</div>
+        <div class="text-3xl font-bold text-black" id="totalRequests">-</div>
+      </div>
+      <div class="stat-card card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Erros</div>
+        <div class="text-3xl font-bold text-red-500" id="totalErrors">-</div>
+      </div>
+      <div class="stat-card card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Sessões Ativas</div>
+        <div class="text-3xl font-bold text-[#8e74e6]" id="activeSessions">-</div>
+      </div>
+      <div class="stat-card card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Taxa de Erro</div>
+        <div class="text-3xl font-bold text-orange-500" id="errorRate">-</div>
+      </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Latência Média</div>
+        <div class="text-2xl font-bold text-black" id="avgDuration">-</div>
+        <div class="text-xs text-gray-400 mt-1">Tempo médio de resposta</div>
+      </div>
+      <div class="card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P50 (Mediana)</div>
+        <div class="text-2xl font-bold text-black" id="p50">-</div>
+        <div class="text-xs text-gray-400 mt-1">50% das requests</div>
+      </div>
+      <div class="card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P95</div>
+        <div class="text-2xl font-bold text-black" id="p95">-</div>
+        <div class="text-xs text-gray-400 mt-1">95% das requests</div>
+      </div>
+      <div class="card p-6">
+        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P99</div>
+        <div class="text-2xl font-bold text-red-500" id="p99">-</div>
+        <div class="text-xs text-gray-400 mt-1">99% das requests</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4">Requests por Hora</h3>
+        <canvas id="requestsChart"></canvas>
+      </div>
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4">Latência (Percentis)</h3>
+        <canvas id="latencyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Recent Actions -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4 flex items-center gap-2">
+          <i class="lucide lucide-activity text-gray-500" style="width: 18px; height: 18px;"></i> Ações Recentes
+        </h3>
+        <div id="recentActions" class="space-y-3 max-h-96 overflow-y-auto">
+          <div class="text-gray-400 text-center py-4">Carregando...</div>
+        </div>
+      </div>
+
+      <!-- Recent Errors -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4 flex items-center gap-2">
+          <i class="lucide lucide-alert-triangle text-gray-500" style="width: 18px; height: 18px;"></i> Erros Recentes
+        </h3>
+        <div id="recentErrors" class="space-y-3 max-h-96 overflow-y-auto">
+          <div class="text-gray-400 text-center py-4">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const token = localStorage.getItem('arxisvr_token');
+
+    let requestsChart, latencyChart;
+
+    async function fetchDashboardData() {
+      const hours = document.getElementById('timeRange').value;
+      
+      try {
+        const response = await fetch(`${API_URL}/api/v1/observability/dashboard?hours=${hours}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+
+        const result = await response.json();
+        updateDashboard(result.data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        showError('Erro ao carregar dados do dashboard. Faça login novamente.');
+      }
+    }
+
+    function updateDashboard(data) {
+      // Update summary cards
+      document.getElementById('totalUsers').textContent = data.summary.totalUsers.toLocaleString();
+      document.getElementById('totalRequests').textContent = data.summary.totalRequests.toLocaleString();
+      document.getElementById('totalErrors').textContent = data.summary.totalErrors.toLocaleString();
+      document.getElementById('activeSessions').textContent = data.summary.activeSessions.toLocaleString();
+      document.getElementById('errorRate').textContent = data.summary.errorRate.toFixed(2) + '%';
+
+      // Update performance metrics
+      document.getElementById('avgDuration').textContent = data.performance.avgDuration.toFixed(0) + 'ms';
+      document.getElementById('p50').textContent = data.performance.p50.toFixed(0) + 'ms';
+      document.getElementById('p95').textContent = data.performance.p95.toFixed(0) + 'ms';
+      document.getElementById('p99').textContent = data.performance.p99.toFixed(0) + 'ms';
+
+      // Update recent actions
+      updateRecentActions(data.recentActions);
+
+      // Update recent errors
+      updateRecentErrors(data.recentErrors);
+
+      // Update charts
+      updateCharts(data.hourlyMetrics, data.performance);
+    }
+
+    function updateRecentActions(actions) {
+      const container = document.getElementById('recentActions');
+      if (!actions || actions.length === 0) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-4">Nenhuma ação recente</div>';
+        return;
+      }
+
+      container.innerHTML = actions.map(action => `
+        <div class="bg-white rounded-xl p-3.5 border border-[rgba(0,0,0,0.05)] shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-semibold text-black">${action.action}</div>
+              <div class="text-xs text-gray-500 mt-0.5">${action.resource || '-'}</div>
+            </div>
+            <div class="text-xs text-gray-400 font-medium">
+              ${new Date(action.timestamp).toLocaleTimeString('pt-BR')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateRecentErrors(errors) {
+      const container = document.getElementById('recentErrors');
+      if (!errors || errors.length === 0) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-4">Nenhum erro recente 🎉</div>';
+        return;
+      }
+
+      container.innerHTML = errors.map(error => `
+        <div class="bg-white rounded-xl p-3.5 border ${error.severity === 'critical' ? 'border-red-100 bg-red-50/40' : 'border-amber-100 bg-amber-50/40'} shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-semibold ${error.severity === 'critical' ? 'text-red-600' : 'text-amber-600'} text-sm">
+                ${error.errorCode || 'ERROR'}
+              </div>
+              <div class="text-xs text-gray-700 mt-1">${error.errorMessage}</div>
+              <div class="text-[11px] text-gray-400 mt-1.5 font-medium">
+                Severidade: <span class="capitalize font-semibold">${error.severity}</span> · ${error.resolved ? '✅ Resolvido' : '⏳ Pendente'}
+              </div>
+            </div>
+            <div class="text-xs text-gray-400 font-medium">
+              ${new Date(error.timestamp).toLocaleTimeString('pt-BR')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateCharts(hourlyMetrics, performance) {
+      // Requests Chart
+      const ctx1 = document.getElementById('requestsChart');
+      if (requestsChart) {
+        requestsChart.destroy();
+      }
+
+      const hours = hourlyMetrics.map(m => new Date(m.hour).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+      const requests = hourlyMetrics.map(m => m.requests);
+
+      requestsChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: hours.reverse(),
+          datasets: [{
+            label: 'Requests',
+            data: requests.reverse(),
+            borderColor: '#000000', /* Luma Black Line */
+            backgroundColor: 'rgba(196, 181, 244, 0.25)', /* Luma Lavender Fill */
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
+              grid: { color: 'rgba(0,0,0,0.04)' },
+            },
+            x: {
+              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
+              grid: { color: 'rgba(0,0,0,0.04)' },
+            },
+          },
+        },
+      });
+
+      // Latency Chart
+      const ctx2 = document.getElementById('latencyChart');
+      if (latencyChart) {
+        latencyChart.destroy();
+      }
+
+      latencyChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Média', 'P50', 'P95', 'P99'],
+          datasets: [{
+            label: 'Latência (ms)',
+            data: [
+              performance.avgDuration,
+              performance.p50,
+              performance.p95,
+              performance.p99,
+            ],
+            backgroundColor: [
+              '#C4B5F4', /* Luma Lavender */
+              '#007AFF', /* iOS Blue */
+              '#FF9500', /* iOS Orange */
+              '#FF3B30', /* iOS Red */
+            ],
+            borderRadius: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
+              grid: { color: 'rgba(0,0,0,0.04)' },
+            },
+            x: {
+              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
+              grid: { display: false },
+            },
+          },
+        },
+      });
+    }
+
+    function showError(message) {
+      alert(message);
+      // Redirecionar para login se não autenticado
+      if (!token) {
+        window.location.href = 'https://signin.avilaops.com';
+      }
+    }
+
+    function refreshData() {
+      fetchDashboardData();
+    }
+
+    // Auto-refresh a cada 30 segundos
+    setInterval(fetchDashboardData, 30000);
+
+    // Carregar dados inicialmente
+    if (!token) {
+      showError('Você precisa fazer login para acessar o dashboard.');
+      window.location.href = 'https://signin.avilaops.com';
+    } else {
+      fetchDashboardData();
+    }
+
+    // Listener para mudança de período
+    document.getElementById('timeRange').addEventListener('change', fetchDashboardData);
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "arxisvr-signaling-server",
+  "version": "1.0.0",
+  "description": "ArxisVR WebRTC Signaling Server para colaboração multiplayer",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "websocket",
+    "arxisvr",
+    "multiplayer"
+  ],
+  "author": "ArxisVR Team",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

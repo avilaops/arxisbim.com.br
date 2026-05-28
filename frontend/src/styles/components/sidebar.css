@@ -1,0 +1,7 @@
+/* sidebar.css: estilos para o menu lateral */
+.sidebar {
+  background: #f4f6f8;
+  border-right: 1px solid #eee;
+  padding: var(--spacing-md);
+  width: 240px;
+}

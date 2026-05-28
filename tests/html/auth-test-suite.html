@@ -1,0 +1,760 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArxisVR - Auth Test Suite</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --blue: #58a6ff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: var(--green);
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge.pending {
+      background: var(--yellow);
+      color: #000;
+    }
+
+    .badge.running {
+      background: var(--blue);
+      color: #000;
+    }
+
+    .badge.success {
+      background: var(--green);
+      color: #000;
+    }
+
+    .badge.error {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .test-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      border-left: 3px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s;
+    }
+
+    .test-item.running {
+      border-left-color: var(--blue);
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .test-item.success {
+      border-left-color: var(--green);
+      background: rgba(63, 185, 80, 0.1);
+    }
+
+    .test-item.error {
+      border-left-color: var(--red);
+      background: rgba(248, 81, 73, 0.1);
+    }
+
+    .test-name {
+      font-size: 14px;
+    }
+
+    .test-status {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .test-status.success {
+      color: var(--green);
+    }
+
+    .test-status.error {
+      color: var(--red);
+    }
+
+    button {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .log-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      margin-right: 8px;
+    }
+
+    .log-level {
+      margin-right: 8px;
+      font-weight: 600;
+    }
+
+    .log-level.info {
+      color: var(--blue);
+    }
+
+    .log-level.success {
+      color: var(--green);
+    }
+
+    .log-level.error {
+      color: var(--red);
+    }
+
+    .log-level.warn {
+      color: var(--yellow);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.3s;
+    }
+
+    pre {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .error-details {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔐 ArxisVR Auth Test Suite</h1>
+      <p class="subtitle">Automated testing for authentication system - Backend + Frontend Integration</p>
+    </header>
+
+    <!-- Statistics -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="total-tests">0</div>
+        <div class="stat-label">Total Tests</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--green)" id="passed-tests">0</div>
+        <div class="stat-label">Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--red)" id="failed-tests">0</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--blue)" id="duration">0s</div>
+        <div class="stat-label">Duration</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="run-all">▶️ Run All Tests</button>
+      <button id="run-backend">🔧 Backend Tests Only</button>
+      <button id="run-frontend">🎨 Frontend Tests Only</button>
+      <button id="clear-logs">🗑️ Clear Logs</button>
+      <button id="reset-data">🔄 Reset Test Data</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress" style="width: 0%"></div>
+    </div>
+
+    <!-- Test Groups -->
+    <div class="grid">
+      <!-- Backend Health Tests -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏥 Backend Health</div>
+          <span class="badge pending" id="health-badge">Pending</span>
+        </div>
+        <div id="health-tests"></div>
+      </div>
+
+      <!-- Auth API Tests -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔑 Auth API</div>
+          <span class="badge pending" id="auth-badge">Pending</span>
+        </div>
+        <div id="auth-tests"></div>
+      </div>
+
+      <!-- Frontend Integration -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚛️ Frontend Integration</div>
+          <span class="badge pending" id="frontend-badge">Pending</span>
+        </div>
+        <div id="frontend-tests"></div>
+      </div>
+
+      <!-- Session Management -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔐 Session Management</div>
+          <span class="badge pending" id="session-badge">Pending</span>
+        </div>
+        <div id="session-tests"></div>
+      </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Test Logs</div>
+        <span class="badge" id="log-count">0 entries</span>
+      </div>
+      <div class="log-container" id="logs"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Configuration
+    const CONFIG = {
+      API_URL: 'http://localhost:3001',
+      TEST_USER: {
+        name: 'Test User',
+        email: 'test-' + Date.now() + '@arxisvr.com',
+        password: 'TestPass123!'
+      }
+    };
+
+    // Test State
+    let testState = {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      running: false,
+      startTime: 0,
+      tokens: {},
+      user: null
+    };
+
+    // Logging
+    function log(level, message, data = null) {
+      const time = new Date().toLocaleTimeString();
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      logEntry.innerHTML = 
+        <span class="log-time">[+ time + ]</span>
+        <span class="log-level + level + ">+ level.toUpperCase() + </span>
+        <span>+ message + </span>
+      ;
+      if (data) {
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(data, null, 2);
+        logEntry.appendChild(pre);
+      }
+      document.getElementById('logs').appendChild(logEntry);
+      document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+      
+      const count = document.getElementById('logs').children.length;
+      document.getElementById('log-count').textContent = count + ' entries';
+    }
+
+    // Update Stats
+    function updateStats() {
+      document.getElementById('total-tests').textContent = testState.total;
+      document.getElementById('passed-tests').textContent = testState.passed;
+      document.getElementById('failed-tests').textContent = testState.failed;
+      
+      const duration = testState.startTime ? ((Date.now() - testState.startTime) / 1000).toFixed(1) : 0;
+      document.getElementById('duration').textContent = duration + 's';
+      
+      const progress = testState.total > 0 ? ((testState.passed + testState.failed) / testState.total * 100) : 0;
+      document.getElementById('progress').style.width = progress + '%';
+    }
+
+    // Test Runner
+    async function runTest(name, fn, container, category) {
+      const testEl = document.createElement('div');
+      testEl.className = 'test-item';
+      testEl.innerHTML = 
+        <span class="test-name">+ name + </span>
+        <span class="test-status">⏳ Pending</span>
+      ;
+      document.getElementById(container).appendChild(testEl);
+      
+      testState.total++;
+      updateStats();
+
+      try {
+        testEl.className = 'test-item running';
+        testEl.querySelector('.test-status').innerHTML = '🔄 Running...';
+        document.getElementById(category + '-badge').className = 'badge running';
+        
+        log('info', Running: + name);
+        
+        const result = await fn();
+        
+        testEl.className = 'test-item success';
+        testEl.querySelector('.test-status').innerHTML = '✅ Passed';
+        testEl.querySelector('.test-status').className = 'test-status success';
+        testState.passed++;
+        
+        log('success', ✅ + name, result);
+        
+        return { success: true, result };
+      } catch (error) {
+        testEl.className = 'test-item error';
+        testEl.querySelector('.test-status').innerHTML = '❌ Failed';
+        testEl.querySelector('.test-status').className = 'test-status error';
+        testState.failed++;
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-details';
+        errorDiv.textContent = error.message;
+        testEl.appendChild(errorDiv);
+        
+        log('error', ❌ + name + :  + error.message, error);
+        
+        return { success: false, error };
+      } finally {
+        updateStats();
+      }
+    }
+
+    // ==================== BACKEND HEALTH TESTS ====================
+    async function testBackendHealth() {
+      const response = await fetch(CONFIG.API_URL + '/health');
+      if (!response.ok) throw new Error('Health check failed');
+      const data = await response.json();
+      if (data.status !== 'healthy') throw new Error('Backend unhealthy');
+      return data;
+    }
+
+    async function testDatabaseConnection() {
+      const response = await fetch(CONFIG.API_URL + '/health');
+      const data = await response.json();
+      if (data.services?.database !== 'up') throw new Error('Database is down');
+      return data.services;
+    }
+
+    // ==================== AUTH API TESTS ====================
+    async function testRegister() {
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(CONFIG.TEST_USER)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
+      }
+      
+      const data = await response.json();
+      if (!data.accessToken || !data.refreshToken) throw new Error('Missing tokens');
+      
+      testState.tokens = {
+        access: data.accessToken,
+        refresh: data.refreshToken
+      };
+      testState.user = data.user;
+      
+      return data;
+    }
+
+    async function testLogin() {
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: CONFIG.TEST_USER.email,
+          password: CONFIG.TEST_USER.password
+        })
+      });
+      
+      if (!response.ok) throw new Error('Login failed');
+      
+      const data = await response.json();
+      if (!data.accessToken) throw new Error('No access token received');
+      
+      testState.tokens.access = data.accessToken;
+      
+      return data;
+    }
+
+    async function testVerifyToken() {
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + testState.tokens.access
+        }
+      });
+      
+      if (!response.ok) throw new Error('Token verification failed');
+      
+      const data = await response.json();
+      if (!data.valid) throw new Error('Token is invalid');
+      
+      return data;
+    }
+
+    async function testRefreshToken() {
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: testState.tokens.refresh })
+      });
+      
+      if (!response.ok) throw new Error('Token refresh failed');
+      
+      const data = await response.json();
+      if (!data.accessToken) throw new Error('No new access token');
+      
+      testState.tokens.access = data.accessToken;
+      
+      return data;
+    }
+
+    async function testLogout() {
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + testState.tokens.access
+        }
+      });
+      
+      if (!response.ok) throw new Error('Logout failed');
+      
+      return { success: true };
+    }
+
+    // ==================== FRONTEND TESTS ====================
+    async function testLocalStorage() {
+      localStorage.setItem('test_key', 'test_value');
+      const value = localStorage.getItem('test_key');
+      if (value !== 'test_value') throw new Error('localStorage not working');
+      localStorage.removeItem('test_key');
+      return { localStorage: 'OK' };
+    }
+
+    async function testEventBus() {
+      let eventReceived = false;
+      const listener = () => { eventReceived = true; };
+      
+      window.addEventListener('test-event', listener);
+      window.dispatchEvent(new CustomEvent('test-event'));
+      window.removeEventListener('test-event', listener);
+      
+      if (!eventReceived) throw new Error('EventBus not working');
+      return { eventBus: 'OK' };
+    }
+
+    // ==================== SESSION TESTS ====================
+    async function testTokenPersistence() {
+      localStorage.setItem('arxisvr_token', testState.tokens.access);
+      const stored = localStorage.getItem('arxisvr_token');
+      if (stored !== testState.tokens.access) throw new Error('Token not persisted');
+      return { persisted: true };
+    }
+
+    async function testSessionRestore() {
+      const token = localStorage.getItem('arxisvr_token');
+      if (!token) throw new Error('No token in storage');
+      
+      const response = await fetch(CONFIG.API_URL + '/api/v1/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      
+      if (!response.ok) throw new Error('Session restore failed');
+      return { restored: true };
+    }
+
+    // ==================== TEST SUITES ====================
+    async function runBackendTests() {
+      log('info', '🔧 Starting Backend Tests...');
+      
+      await runTest('Backend Health Check', testBackendHealth, 'health-tests', 'health');
+      await runTest('Database Connection', testDatabaseConnection, 'health-tests', 'health');
+      
+      document.getElementById('health-badge').className = 'badge success';
+      document.getElementById('health-badge').textContent = 'Complete';
+    }
+
+    async function runAuthTests() {
+      log('info', '🔑 Starting Auth API Tests...');
+      
+      await runTest('User Registration', testRegister, 'auth-tests', 'auth');
+      await runTest('User Login', testLogin, 'auth-tests', 'auth');
+      await runTest('Token Verification', testVerifyToken, 'auth-tests', 'auth');
+      await runTest('Token Refresh', testRefreshToken, 'auth-tests', 'auth');
+      await runTest('User Logout', testLogout, 'auth-tests', 'auth');
+      
+      document.getElementById('auth-badge').className = 'badge success';
+      document.getElementById('auth-badge').textContent = 'Complete';
+    }
+
+    async function runFrontendTests() {
+      log('info', '⚛️ Starting Frontend Tests...');
+      
+      await runTest('LocalStorage Access', testLocalStorage, 'frontend-tests', 'frontend');
+      await runTest('EventBus System', testEventBus, 'frontend-tests', 'frontend');
+      
+      document.getElementById('frontend-badge').className = 'badge success';
+      document.getElementById('frontend-badge').textContent = 'Complete';
+    }
+
+    async function runSessionTests() {
+      log('info', '🔐 Starting Session Tests...');
+      
+      await runTest('Token Persistence', testTokenPersistence, 'session-tests', 'session');
+      await runTest('Session Restore', testSessionRestore, 'session-tests', 'session');
+      
+      document.getElementById('session-badge').className = 'badge success';
+      document.getElementById('session-badge').textContent = 'Complete';
+    }
+
+    async function runAllTests() {
+      if (testState.running) return;
+      
+      testState.running = true;
+      testState.total = 0;
+      testState.passed = 0;
+      testState.failed = 0;
+      testState.startTime = Date.now();
+      
+      // Clear previous results
+      document.getElementById('health-tests').innerHTML = '';
+      document.getElementById('auth-tests').innerHTML = '';
+      document.getElementById('frontend-tests').innerHTML = '';
+      document.getElementById('session-tests').innerHTML = '';
+      
+      log('info', '🚀 Starting Full Test Suite...');
+      
+      try {
+        await runBackendTests();
+        await runAuthTests();
+        await runFrontendTests();
+        await runSessionTests();
+        
+        log('success', '✅ All tests completed!', {
+          total: testState.total,
+          passed: testState.passed,
+          failed: testState.failed,
+          duration: ((Date.now() - testState.startTime) / 1000).toFixed(1) + 's'
+        });
+      } catch (error) {
+        log('error', '❌ Test suite failed', error);
+      } finally {
+        testState.running = false;
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('run-all').addEventListener('click', runAllTests);
+    
+    document.getElementById('run-backend').addEventListener('click', async () => {
+      testState.startTime = Date.now();
+      await runBackendTests();
+      await runAuthTests();
+    });
+    
+    document.getElementById('run-frontend').addEventListener('click', async () => {
+      testState.startTime = Date.now();
+      await runFrontendTests();
+      await runSessionTests();
+    });
+    
+    document.getElementById('clear-logs').addEventListener('click', () => {
+      document.getElementById('logs').innerHTML = '';
+      document.getElementById('log-count').textContent = '0 entries';
+    });
+    
+    document.getElementById('reset-data').addEventListener('click', () => {
+      localStorage.clear();
+      testState = {
+        total: 0,
+        passed: 0,
+        failed: 0,
+        running: false,
+        startTime: 0,
+        tokens: {},
+        user: null
+      };
+      updateStats();
+      log('info', '🔄 Test data reset');
+    });
+
+    // Initial log
+    log('info', '🎯 Auth Test Suite Loaded');
+    log('info', 'API URL: ' + CONFIG.API_URL);
+    log('info', 'Click "Run All Tests" to begin');
+  </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+{
+  "dashboard": {
+    "title": "ArxisVR - System Performance",
+    "tags": ["arxisvr", "performance", "system"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "CPU Usage",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(AVG(CAST(metadata->>'cpu_usage' AS NUMERIC)), 2) as value FROM observability.metrics WHERE metadata->>'cpu_usage' IS NOT NULL AND timestamp > NOW() - INTERVAL '5 minutes'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Memory Usage",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(AVG(CAST(metadata->>'memory_usage' AS NUMERIC)), 2) as value FROM observability.metrics WHERE metadata->>'memory_usage' IS NOT NULL AND timestamp > NOW() - INTERVAL '5 minutes'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "P95 Response Time",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms), 2) as value FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '15 minutes'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "ms"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 500, "color": "yellow"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Requests/sec (1m)",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(COUNT(*)::NUMERIC / 60, 2) as value FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '1 minute'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "reqps"
+        }
+      },
+      {
+        "id": 5,
+        "type": "timeseries",
+        "title": "Response Time Distribution (P50, P95, P99)",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT time_bucket('1 minute', timestamp) as time, PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY response_time_ms) as p50, PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms) as p95, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY response_time_ms) as p99 FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '6 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {"fillOpacity": 10}
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "Throughput (Requests/min)",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT time_bucket('1 minute', timestamp) as time, COUNT(*) as requests FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '6 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"fillOpacity": 20, "lineWidth": 2}
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "timeseries",
+        "title": "Memory Usage Over Time",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT time_bucket('5 minutes', timestamp) as time, ROUND(AVG(CAST(metadata->>'memory_usage' AS NUMERIC)), 2) as memory_pct FROM observability.metrics WHERE metadata->>'memory_usage' IS NOT NULL AND timestamp > NOW() - INTERVAL '24 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "custom": {"fillOpacity": 30}
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "CPU Usage Over Time",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT time_bucket('5 minutes', timestamp) as time, ROUND(AVG(CAST(metadata->>'cpu_usage' AS NUMERIC)), 2) as cpu_pct FROM observability.metrics WHERE metadata->>'cpu_usage' IS NOT NULL AND timestamp > NOW() - INTERVAL '24 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "custom": {"fillOpacity": 30}
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "stat",
+        "title": "Uptime",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT EXTRACT(EPOCH FROM (NOW() - MIN(timestamp)))/3600 as uptime_hours FROM observability.metrics WHERE timestamp > NOW() - INTERVAL '30 days'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "unit": "h"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "decimals": 1
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "table",
+        "title": "Slowest Endpoints (24h)",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT endpoint, COUNT(*) as requests, ROUND(AVG(response_time_ms), 2) as avg_ms, ROUND(MAX(response_time_ms), 2) as max_ms, ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY response_time_ms), 2) as p95_ms FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '24 hours' GROUP BY endpoint ORDER BY avg_ms DESC LIMIT 10",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "avg_ms", "desc": true}]
+        }
+      },
+      {
+        "id": 11,
+        "type": "table",
+        "title": "Error Rate by Endpoint (24h)",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT endpoint, COUNT(*) FILTER (WHERE status_code >= 400) as errors, COUNT(*) as total, ROUND(COUNT(*) FILTER (WHERE status_code >= 400)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) as error_rate_pct FROM observability.metrics WHERE metric_type = 'http_request' AND timestamp > NOW() - INTERVAL '24 hours' GROUP BY endpoint HAVING COUNT(*) FILTER (WHERE status_code >= 400) > 0 ORDER BY error_rate_pct DESC LIMIT 10",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "error_rate_pct", "desc": true}]
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true,
+  "folderUid": "arxisvr"
+}

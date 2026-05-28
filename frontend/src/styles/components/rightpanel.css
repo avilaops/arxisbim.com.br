@@ -1,0 +1,7 @@
+/* rightpanel.css: estilos para o painel lateral direito */
+.right-panel {
+  background: #fafbfc;
+  border-left: 1px solid #eee;
+  padding: var(--spacing-md);
+  width: 320px;
+}

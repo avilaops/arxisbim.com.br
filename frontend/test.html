@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArxisVR Test</title>
+  <!-- DM Sans Font (Luma style) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Palette: Lu.ma Premium Light System */
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --text-primary: #1A1A1A;
+      --text-secondary: #8E8E93;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --accent-green: #34C759;
+      --accent-blue: #007AFF;
+      --accent-red: #FF3B30;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      letter-spacing: -0.1px;
+    }
+    h1 { color: #000000; font-weight: 700; letter-spacing: -0.5px; }
+    h2 { color: #000000; font-weight: 600; letter-spacing: -0.3px; margin-top: 24px; }
+    .success { color: var(--accent-green); font-weight: 500; }
+    .error { color: var(--accent-red); font-weight: 500; }
+    .info { color: var(--accent-blue); font-weight: 500; }
+    pre { 
+      background: var(--bg-card); 
+      padding: 16px; 
+      border-radius: 22px; 
+      border: 1px solid var(--border-color);
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    a { 
+      color: #000000; 
+      text-decoration: none;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+    a:hover {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 ArxisVR - Startup Test</h1>
+  
+  <h2>1. HTML Test</h2>
+  <div class="success">✅ HTML rendering OK</div>
+  
+  <h2>2. JavaScript Test</h2>
+  <div id="js-test" class="error">❌ JavaScript NOT loaded</div>
+  
+  <h2>3. Module Test</h2>
+  <div id="module-test" class="error">❌ ES Modules NOT working</div>
+  
+  <h2>4. Fetch Test (Assets)</h2>
+  <div id="fetch-test">⏳ Testing...</div>
+  
+  <h2>5. Console Logs</h2>
+  <pre id="console-logs">Open browser console (F12) to see detailed logs</pre>
+  
+  <hr>
+  <p><a href="/" style="color: #00ff88;">← Back to ArxisVR App</a></p>
+  
+  <script>
+    // Test 2: Basic JavaScript
+    document.getElementById('js-test').innerHTML = '<span class="success">✅ JavaScript loaded OK</span>';
+    console.log('✅ Test 2: Basic JavaScript working');
+    
+    // Test 3: ES Modules (inline)
+    try {
+      const testModule = () => 'modules work';
+      document.getElementById('module-test').innerHTML = '<span class="success">✅ ES Modules working</span>';
+      console.log('✅ Test 3: ES Modules working');
+    } catch (e) {
+      document.getElementById('module-test').innerHTML = `<span class="error">❌ Modules failed: ${e.message}</span>`;
+      console.error('❌ Test 3:', e);
+    }
+    
+    // Test 4: Fetch assets
+    const testDiv = document.getElementById('fetch-test');
+    Promise.all([
+      fetch('/assets/index-vgmio_DG.js').then(r => ({ file: 'Main JS', ok: r.ok, status: r.status })),
+      fetch('/assets/index-CQYY_WwR.css').then(r => ({ file: 'Main CSS', ok: r.ok, status: r.status })),
+      fetch('/CNAME').then(r => r.text()).then(t => ({ file: 'CNAME', ok: true, content: t.trim() }))
+    ])
+    .then(results => {
+      const html = results.map(r => {
+        if (r.ok) {
+          return `<div class="success">✅ ${r.file}: ${r.status || 'OK'} ${r.content || ''}</div>`;
+        } else {
+          return `<div class="error">❌ ${r.file}: ${r.status}</div>`;
+        }
+      }).join('');
+      testDiv.innerHTML = html;
+      console.log('✅ Test 4: Asset fetch results:', results);
+    })
+    .catch(e => {
+      testDiv.innerHTML = `<span class="error">❌ Fetch failed: ${e.message}</span>`;
+      console.error('❌ Test 4:', e);
+    });
+    
+    // Log important info
+    console.log('📊 Page Info:');
+    console.log('  URL:', window.location.href);
+    console.log('  Pathname:', window.location.pathname);
+    console.log('  Origin:', window.location.origin);
+    console.log('  User Agent:', navigator.userAgent);
+    console.log('  Screen:', `${window.screen.width}x${window.screen.height}`);
+    console.log('  Viewport:', `${window.innerWidth}x${window.innerHeight}`);
+  </script>
+</body>
+</html>

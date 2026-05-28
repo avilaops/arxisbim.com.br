@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-build:
+        patterns:
+          - vite
+          - '@vitejs/*'
+          - typescript
+          - tailwindcss
+      three-viewer:
+        patterns:
+          - three
+          - web-ifc
+          - web-ifc-three
+
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-api:
+        patterns:
+          - fastify
+          - '@fastify/*'
+          - drizzle-orm
+          - drizzle-kit
+          - zod
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

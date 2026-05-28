@@ -1,0 +1,44 @@
+{
+  "id": "highContrast",
+  "name": "High Contrast",
+  "description": "High contrast theme for accessibility (WCAG AAA)",
+  "colors": {
+    "background": "#000000",
+    "backgroundSecondary": "#0a0a0a",
+    "backgroundTertiary": "#141414",
+    "foreground": "#ffffff",
+    "foregroundSecondary": "#f0f0f0",
+    "foregroundMuted": "#b0b0b0",
+    "primary": "#ffff00",
+    "secondary": "#ff00ff",
+    "accent": "#00ffff",
+    "error": "#ff0000",
+    "warning": "#ffaa00",
+    "info": "#0088ff",
+    "success": "#00ff00",
+    "border": "#ffffff",
+    "borderHover": "#ffff00",
+    "shadow": "rgba(0, 0, 0, 0.9)",
+    "hover": "#1a1a1a",
+    "active": "#2a2a2a",
+    "focus": "#ffff00",
+    "disabled": "#888888"
+  },
+  "fonts": {
+    "base": "'Arial', sans-serif",
+    "heading": "'Arial Black', sans-serif",
+    "monospace": "'Courier New', monospace",
+    "sizes": {
+      "small": "14px",
+      "medium": "16px",
+      "large": "18px",
+      "xlarge": "22px"
+    }
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["accessible", "high-contrast", "wcag-aaa"]
+  }
+}

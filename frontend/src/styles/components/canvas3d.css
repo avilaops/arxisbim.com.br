@@ -1,0 +1,6 @@
+/* canvas3d.css: estilos para o canvas 3D */
+.canvas-3d {
+  flex: 1;
+  background: #222;
+  min-height: 100vh;
+}

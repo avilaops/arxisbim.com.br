@@ -1,0 +1,5 @@
+packages: []
+allowBuilds:
+  bcrypt: false
+  core-js: false
+  protobufjs: false

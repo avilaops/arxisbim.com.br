@@ -1,0 +1,44 @@
+{
+  "id": "default",
+  "name": "Default",
+  "description": "ArxisVR default theme - Clean and professional",
+  "colors": {
+    "background": "#1a1a1a",
+    "backgroundSecondary": "#1e1e1e",
+    "backgroundTertiary": "#252525",
+    "foreground": "#ffffff",
+    "foregroundSecondary": "#e0e0e0",
+    "foregroundMuted": "#999999",
+    "primary": "#667eea",
+    "secondary": "#764ba2",
+    "accent": "#00ff88",
+    "error": "#ff4444",
+    "warning": "#ffaa00",
+    "info": "#4488ff",
+    "success": "#00ff88",
+    "border": "#333333",
+    "borderHover": "#444444",
+    "shadow": "rgba(0, 0, 0, 0.5)",
+    "hover": "#2a2a2a",
+    "active": "#3a3a3a",
+    "focus": "#667eea",
+    "disabled": "#666666"
+  },
+  "fonts": {
+    "base": "'Inter', 'Segoe UI', sans-serif",
+    "heading": "'Inter', 'Segoe UI', sans-serif",
+    "monospace": "'Fira Code', 'Consolas', monospace",
+    "sizes": {
+      "small": "12px",
+      "medium": "14px",
+      "large": "16px",
+      "xlarge": "20px"
+    }
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["default", "professional", "clean"]
+  }
+}

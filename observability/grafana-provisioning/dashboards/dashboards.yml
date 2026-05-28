@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'ArxisVR Dashboards'
+    orgId: 1
+    folder: 'ArxisVR'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

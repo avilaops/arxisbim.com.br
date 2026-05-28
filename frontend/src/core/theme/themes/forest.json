@@ -1,0 +1,38 @@
+{
+  "id": "forest",
+  "name": "Forest Green",
+  "description": "Natural forest-inspired theme",
+  "colors": {
+    "background": "#0f1419",
+    "backgroundSecondary": "#1a2332",
+    "backgroundTertiary": "#243447",
+    "foreground": "#d9d7ce",
+    "foregroundSecondary": "#b8b4a3",
+    "foregroundMuted": "#898678",
+    "primary": "#95e1d3",
+    "secondary": "#6bcf7f",
+    "accent": "#7bed9f",
+    "error": "#ff6b6b",
+    "warning": "#feca57",
+    "info": "#48dbfb",
+    "success": "#7bed9f",
+    "border": "#2f4550",
+    "borderHover": "#3d5a6b",
+    "shadow": "rgba(0, 0, 0, 0.6)",
+    "hover": "#1f2e3a",
+    "active": "#2a3e4f",
+    "focus": "#95e1d3",
+    "disabled": "#4a5f6f"
+  },
+  "fonts": {
+    "base": "'Inter', sans-serif",
+    "heading": "'Inter', sans-serif",
+    "monospace": "'Fira Code', monospace"
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["forest", "green", "natural"]
+  }
+}

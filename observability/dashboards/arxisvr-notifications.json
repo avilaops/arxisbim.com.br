@@ -1,0 +1,317 @@
+{
+  "dashboard": {
+    "title": "ArxisVR - Notifications System",
+    "tags": ["arxisvr", "notifications", "realtime"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Total Notifications (24h)",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT COUNT(*) as value FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Unread Notifications",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT COUNT(*) as value FROM notifications WHERE is_read = FALSE",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 500, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Read Rate (24h)",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(COUNT(*) FILTER (WHERE is_read = TRUE)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) as value FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Avg Read Time",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(AVG(EXTRACT(EPOCH FROM (read_at - created_at)) / 60), 2) as value FROM notifications WHERE is_read = TRUE AND created_at > NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "unit": "m"
+        }
+      },
+      {
+        "id": 5,
+        "type": "timeseries",
+        "title": "Notifications Created Over Time",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT DATE_TRUNC('hour', created_at) as time, COUNT(*) as notifications FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"fillOpacity": 20, "lineWidth": 2}
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "Read vs Unread Over Time",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT DATE_TRUNC('hour', created_at) as time, COUNT(*) FILTER (WHERE is_read = TRUE) as read, COUNT(*) FILTER (WHERE is_read = FALSE) as unread FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"fillOpacity": 15}
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "piechart",
+        "title": "Notifications by Type",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT type, COUNT(*) as count FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY type ORDER BY count DESC",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "legend": {"displayMode": "table", "placement": "right"},
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 8,
+        "type": "piechart",
+        "title": "Notifications by Priority",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT priority, COUNT(*) as count FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY priority ORDER BY CASE priority WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 END",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "legend": {"displayMode": "table", "placement": "right"},
+          "pieType": "pie"
+        }
+      },
+      {
+        "id": 9,
+        "type": "gauge",
+        "title": "User Engagement",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT ROUND(COUNT(DISTINCT user_id) FILTER (WHERE read_at IS NOT NULL)::NUMERIC / NULLIF(COUNT(DISTINCT user_id), 0) * 100, 2) as value FROM notifications WHERE created_at > NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "table",
+        "title": "Most Active Users (Notifications Received)",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT u.email, COUNT(*) as total_notifications, COUNT(*) FILTER (WHERE n.is_read = TRUE) as read, COUNT(*) FILTER (WHERE n.is_read = FALSE) as unread FROM notifications n JOIN users u ON n.user_id = u.id WHERE n.created_at > NOW() - INTERVAL '7 days' GROUP BY u.id, u.email ORDER BY total_notifications DESC LIMIT 10",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "total_notifications", "desc": true}]
+        }
+      },
+      {
+        "id": 11,
+        "type": "table",
+        "title": "Recent Critical Notifications",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT u.email as user, n.type, n.title, n.created_at, n.is_read FROM notifications n JOIN users u ON n.user_id = u.id WHERE n.priority = 'critical' AND n.created_at > NOW() - INTERVAL '24 hours' ORDER BY n.created_at DESC LIMIT 20",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true
+        }
+      },
+      {
+        "id": 12,
+        "type": "timeseries",
+        "title": "Response Time (Time to Read)",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT DATE_TRUNC('hour', created_at) as time, ROUND(AVG(EXTRACT(EPOCH FROM (read_at - created_at)) / 60), 2) as avg_minutes FROM notifications WHERE is_read = TRUE AND created_at > NOW() - INTERVAL '24 hours' GROUP BY time ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "custom": {"fillOpacity": 20}
+          }
+        }
+      },
+      {
+        "id": 13,
+        "type": "table",
+        "title": "Notification Preferences Summary",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT notification_type, COUNT(*) as users, COUNT(*) FILTER (WHERE enabled = TRUE) as enabled, COUNT(*) FILTER (WHERE enabled = FALSE) as disabled FROM notification_preferences GROUP BY notification_type ORDER BY users DESC",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "users", "desc": true}]
+        }
+      },
+      {
+        "id": 14,
+        "type": "stat",
+        "title": "WebSocket Connections (Live)",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 34},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT COUNT(*) as value FROM observability.metrics WHERE metric_type = 'websocket_connection' AND metadata->>'namespace' = '/notifications' AND timestamp > NOW() - INTERVAL '5 minutes'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 15,
+        "type": "stat",
+        "title": "Notifications Sent (1h)",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 34},
+        "targets": [
+          {
+            "datasource": "${DS_ARXISVR-OBSERVABILITY}",
+            "rawSql": "SELECT COUNT(*) as value FROM notifications WHERE created_at > NOW() - INTERVAL '1 hour'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true,
+  "folderUid": "arxisvr"
+}

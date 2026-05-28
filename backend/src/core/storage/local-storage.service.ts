@@ -1,0 +1,155 @@
+/**
+ * Local filesystem implementation of StorageService.
+ *
+ * Files live under UPLOAD_DIR (default: ./uploads). Keys are resolved
+ * relative to that root, with forward slashes mapped to OS path separators.
+ *
+ * Backwards-compat: if a key is an absolute filesystem path
+ * (e.g. legacy values written before the storage refactor), it is read
+ * from disk directly. New uploads always write to UPLOAD_DIR/<key>.
+ */
+
+import fs from 'node:fs/promises';
+import { createReadStream, createWriteStream } from 'node:fs';
+import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
+
+import {
+  StorageError,
+  type PresignOptions,
+  type StorageBody,
+  type StorageKey,
+  type StorageObject,
+  type StorageService,
+  type UploadOptions,
+} from './storage.types.js';
+
+function isAbsolutePathish(key: string): boolean {
+  // Detect legacy absolute paths (e.g., D:\AvilaOps\...\uploads\file.ifc).
+  return path.isAbsolute(key);
+}
+
+export class LocalStorageService implements StorageService {
+  readonly driver = 'local' as const;
+  private readonly root: string;
+
+  constructor(root?: string) {
+    const configured = root ?? process.env.UPLOAD_DIR ?? 'uploads';
+    this.root = path.isAbsolute(configured)
+      ? configured
+      : path.resolve(process.cwd(), configured);
+  }
+
+  private resolve(key: StorageKey): string {
+    if (isAbsolutePathish(key)) {
+      // Legacy absolute path; honour it as-is.
+      return key;
+    }
+    return path.join(this.root, key);
+  }
+
+  private async ensureDir(filePath: string): Promise<void> {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+  }
+
+  async upload(key: StorageKey, body: StorageBody, _opts: UploadOptions = {}): Promise<StorageObject> {
+    const target = this.resolve(key);
+    await this.ensureDir(target);
+
+    if (Buffer.isBuffer(body) || typeof body === 'string') {
+      const buf = Buffer.isBuffer(body) ? body : Buffer.from(body, 'utf-8');
+      await fs.writeFile(target, buf);
+      return { key, size: buf.length };
+    }
+
+    // Stream input.
+    const stream = body as Readable;
+    let size = 0;
+    stream.on('data', (chunk: Buffer | string) => {
+      size += typeof chunk === 'string' ? Buffer.byteLength(chunk) : chunk.length;
+    });
+    await pipeline(stream, createWriteStream(target));
+    return { key, size };
+  }
+
+  async download(key: StorageKey): Promise<Buffer> {
+    const target = this.resolve(key);
+    try {
+      return await fs.readFile(target);
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        throw new StorageError(`Object not found: ${key}`, 'NOT_FOUND', err);
+      }
+      throw new StorageError(`Failed to read object ${key}`, 'UNKNOWN', err);
+    }
+  }
+
+  async downloadText(key: StorageKey, encoding: BufferEncoding = 'utf-8'): Promise<string> {
+    const buf = await this.download(key);
+    return buf.toString(encoding);
+  }
+
+  async delete(key: StorageKey): Promise<void> {
+    const target = this.resolve(key);
+    try {
+      await fs.unlink(target);
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') return; // idempotent
+      throw new StorageError(`Failed to delete object ${key}`, 'UNKNOWN', err);
+    }
+  }
+
+  async exists(key: StorageKey): Promise<boolean> {
+    const target = this.resolve(key);
+    try {
+      await fs.access(target);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async stat(key: StorageKey): Promise<StorageObject> {
+    const target = this.resolve(key);
+    try {
+      const s = await fs.stat(target);
+      return { key, size: s.size };
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        throw new StorageError(`Object not found: ${key}`, 'NOT_FOUND', err);
+      }
+      throw new StorageError(`Failed to stat object ${key}`, 'UNKNOWN', err);
+    }
+  }
+
+  async presignGet(key: StorageKey, _opts: PresignOptions = {}): Promise<string> {
+    // Local backend has no public endpoint; return the resolved path
+    // expressed as a file:// URL so consumers can distinguish from a real URL.
+    const target = this.resolve(key);
+    return `file://${target.replace(/\\/g, '/')}`;
+  }
+
+  async presignPut(key: StorageKey, _opts: PresignOptions = {}): Promise<string> {
+    // Direct browser-to-disk uploads are not supported in local mode.
+    // Consumers should POST through the API instead.
+    throw new StorageError(
+      'presignPut is not supported by the local storage driver',
+      'UNKNOWN'
+    );
+  }
+
+  /** Optional: pre-create the root directory at boot. */
+  async ensureRoot(): Promise<void> {
+    await fs.mkdir(this.root, { recursive: true });
+  }
+
+  /** Exposed for diagnostics / tests. */
+  get rootDir(): string {
+    return this.root;
+  }
+}
+
+// Re-export the stream type for consumers that need it.
+export type { Readable };
+export { createReadStream };

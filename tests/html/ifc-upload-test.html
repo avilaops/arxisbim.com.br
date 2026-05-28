@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste IFC Upload - ArxisVR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .auth-section {
+            background: #f7f7f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .auth-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .upload-section {
+            display: none;
+        }
+
+        .upload-section.active {
+            display: block;
+        }
+
+        .file-info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .models-list {
+            margin-top: 30px;
+        }
+
+        .model-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .model-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .model-card p {
+            font-size: 13px;
+            color: #666;
+            margin: 4px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .badge-architecture { background: #3498db; color: white; }
+        .badge-structure { background: #e74c3c; color: white; }
+        .badge-mep_electrical { background: #f39c12; color: white; }
+        .badge-mep_plumbing { background: #1abc9c; color: white; }
+        .badge-mep_hvac { background: #9b59b6; color: white; }
+        .badge-existing { background: #95a5a6; color: white; }
+        .badge-new { background: #27ae60; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Teste IFC Upload</h1>
+        <p class="subtitle">ArxisVR - Sistema de Gerenciamento de Modelos BIM</p>
+
+        <!-- Auth Section -->
+        <div class="auth-section" id="authSection">
+            <h2>1. Autenticação</h2>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" value="test@arxisvr.com" placeholder="Digite seu email">
+            </div>
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="password" value="Test123!@#" placeholder="Digite sua senha">
+            </div>
+            <button onclick="login()">Login</button>
+            <div id="authResult"></div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <h2>2. Upload de Arquivo IFC</h2>
+            
+            <div class="form-group">
+                <label>Arquivo IFC:</label>
+                <input type="file" id="ifcFile" accept=".ifc" onchange="showFileInfo()">
+            </div>
+
+            <div class="form-group">
+                <label>Project ID:</label>
+                <input type="text" id="projectId" value="proj-001" placeholder="ID do projeto">
+            </div>
+
+            <div class="form-group">
+                <label>Disciplina:</label>
+                <select id="discipline">
+                    <option value="architecture">Arquitetura</option>
+                    <option value="structure">Estrutura</option>
+                    <option value="mep_electrical">MEP - Elétrica</option>
+                    <option value="mep_plumbing">MEP - Hidráulica</option>
+                    <option value="mep_hvac">MEP - HVAC</option>
+                    <option value="mep_fire">MEP - Incêndio</option>
+                    <option value="landscape">Paisagismo</option>
+                    <option value="civil">Civil</option>
+                    <option value="other">Outro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Fase:</label>
+                <select id="phase">
+                    <option value="">Selecione (opcional)</option>
+                    <option value="existing">Existente</option>
+                    <option value="demolition">Demolição</option>
+                    <option value="new">Novo</option>
+                    <option value="renovation">Renovação</option>
+                    <option value="future">Futuro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Descrição:</label>
+                <textarea id="description" placeholder="Descrição do modelo (opcional)"></textarea>
+            </div>
+
+            <div id="fileInfo" class="file-info" style="display: none;"></div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <button onclick="uploadIfc()" id="uploadBtn">Upload IFC</button>
+            <div id="uploadResult"></div>
+
+            <div class="models-list">
+                <h2>3. Modelos Carregados</h2>
+                <button onclick="listModels()" style="margin-bottom: 15px;">Listar Modelos do Projeto</button>
+                <div id="modelsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getAuthService } from './src/api/services/auth.service.js';
+        import { getIfcService } from './src/api/services/ifc.service.js';
+
+        const authService = getAuthService();
+        const ifcService = getIfcService();
+
+        let currentToken = null;
+
+        window.login = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('authResult');
+            
+            try {
+                const response = await authService.login(email, password);
+                currentToken = response.token;
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Login realizado com sucesso!<br>
+                        <strong>User:</strong> ${response.user.name}<br>
+                        <strong>Tenant:</strong> ${response.user.tenantId}
+                    </div>
+                `;
+                
+                // Show upload section
+                document.getElementById('uploadSection').classList.add('active');
+                document.getElementById('authSection').style.opacity = '0.7';
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Erro no login: ${error.message}
+                    </div>
+                `;
+            }
+        };
+
+        window.showFileInfo = function() {
+            const file = document.getElementById('ifcFile').files[0];
+            if (file) {
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                document.getElementById('fileInfo').innerHTML = `
+                    <strong>Arquivo selecionado:</strong><br>
+                    Nome: ${file.name}<br>
+                    Tamanho: ${sizeInMB} MB<br>
+                    Tipo: ${file.type || 'application/ifc'}
+                `;
+                document.getElementById('fileInfo').style.display = 'block';
+            }
+        };
+
+        window.uploadIfc = async function() {
+            const fileInput = document.getElementById('ifcFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Selecione um arquivo IFC');
+                return;
+            }
+
+            const projectId = document.getElementById('projectId').value;
+            const discipline = document.getElementById('discipline').value;
+            const phase = document.getElementById('phase').value;
+            const description = document.getElementById('description').value;
+
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const resultDiv = document.getElementById('uploadResult');
+
+            uploadBtn.disabled = true;
+            progressBar.classList.add('active');
+            resultDiv.innerHTML = '';
+
+            try {
+                const result = await ifcService.upload({
+                    file,
+                    projectId,
+                    discipline,
+                    phase: phase || undefined,
+                    description: description || undefined,
+                    onProgress: (progress) => {
+                        progressFill.style.width = progress + '%';
+                    }
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Upload realizado com sucesso!<br>
+                        <strong>ID:</strong> ${result.id}<br>
+                        <strong>Arquivo:</strong> ${result.originalName}<br>
+                        <strong>Tamanho:</strong> ${ifcService.formatFileSize(result.fileSize)}<br>
+                        <strong>Disciplina:</strong> ${ifcService.getDisciplineLabel(result.discipline)}
+                    </div>
+                `;
+
+                // Reset form
+                fileInput.value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('fileInfo').style.display = 'none';
+                
+                // List models
+                listModels();
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Erro no upload: ${error.message}
+                    </div>
+                `;
+            } finally {
+                uploadBtn.disabled = false;
+                progressBar.classList.remove('active');
+                progressFill.style.width = '0%';
+            }
+        };
+
+        window.listModels = async function() {
+            const projectId = document.getElementById('projectId').value;
+            const listDiv = document.getElementById('modelsList');
+            
+            try {
+                const models = await ifcService.listByProject(projectId);
+                
+                if (models.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #999;">Nenhum modelo encontrado para este projeto.</p>';
+                    return;
+                }
+
+                listDiv.innerHTML = models.map(model => `
+                    <div class="model-card">
+                        <h3>${model.originalName}</h3>
+                        <p>
+                            <span class="badge badge-${model.discipline}">${ifcService.getDisciplineLabel(model.discipline)}</span>
+                            ${model.phase ? `<span class="badge badge-${model.phase}">${ifcService.getPhaseLabel(model.phase)}</span>` : ''}
+                        </p>
+                        <p><strong>Tamanho:</strong> ${ifcService.formatFileSize(model.fileSize)}</p>
+                        <p><strong>Upload:</strong> ${new Date(model.createdAt).toLocaleString('pt-BR')}</p>
+                        ${model.metadata?.description ? `<p><strong>Descrição:</strong> ${model.metadata.description}</p>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                listDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Erro ao listar modelos: ${error.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Auto-fill if token exists
+        const existingToken = authService.getToken();
+        if (existingToken) {
+            document.getElementById('uploadSection').classList.add('active');
+            document.getElementById('authSection').style.opacity = '0.7';
+            document.getElementById('authResult').innerHTML = `
+                <div class="result success">
+                    ✅ Já autenticado (token existente)
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    env:
+      PROD_SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+      PROD_SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
+      PROD_SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check deployment secrets
+        id: secrets
+        shell: bash
+        run: |
+          if [ -z "$PROD_SERVER_HOST" ] || [ -z "$PROD_SERVER_USER" ] || [ -z "$PROD_SERVER_SSH_KEY" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Production SSH secrets are not configured; skipping deploy."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Production SSH secrets are configured."
+          fi
+
+      - name: Deploy via SSH
+        id: deploy
+        if: steps.secrets.outputs.configured == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.PROD_SERVER_HOST }}
+          username: ${{ env.PROD_SERVER_USER }}
+          key: ${{ env.PROD_SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            export ARXISVR_REPO_URL="https://github.com/${{ github.repository }}.git"
+            export DEPLOY_BRANCH="${{ github.ref_name }}"
+            BOOTSTRAP_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/scripts/bootstrap-deploy.sh"
+
+            if [ -f /opt/arxisvr/scripts/bootstrap-deploy.sh ]; then
+              bash /opt/arxisvr/scripts/bootstrap-deploy.sh
+            elif command -v curl >/dev/null 2>&1; then
+              curl -fsSL "$BOOTSTRAP_URL" | bash
+            elif command -v wget >/dev/null 2>&1; then
+              wget -qO- "$BOOTSTRAP_URL" | bash
+            else
+              echo "curl or wget is required for first-time bootstrap"
+              exit 1
+            fi
+
+      - name: Deployment summary
+        if: success() && steps.secrets.outputs.configured == 'true'
+        run: |
+          echo "✅ ArxisVR deployed successfully to production."
+          echo "Server: ${{ env.PROD_SERVER_HOST }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+
+      - name: Deployment failure details
+        if: failure() && steps.secrets.outputs.configured == 'true'
+        run: |
+          echo "❌ ArxisVR production deployment failed."
+          echo "Check workflow logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

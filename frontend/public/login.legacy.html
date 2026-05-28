@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Arxis VR</title>
+  
+  <!-- DM Sans Font (Luma style) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'arxis-darker': '#0a0e1a',
+            'arxis-dark': '#151b2d',
+            'arxis-green': '#00ff88',
+            'arxis-blue': '#667eea',
+            'arxis-gray': '#9ca3af'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      /* Palette: Lu.ma Premium Light System */
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-panel: rgba(255, 255, 255, 0.78);
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --text-primary: #1A1A1A;
+      --text-secondary: #8E8E93;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --accent-purple: #C4B5F4;
+      --accent-purple-light: #EDE9FF;
+      --accent-green: #34C759;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-app);
+      letter-spacing: -0.1px;
+    }
+    
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .animated-gradient {
+      background: linear-gradient(-45deg, #F5F5F7, #EDE9FF, #E3F0FF, #F5F5F7);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .input-focus:focus {
+      border-color: #000000;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn-primary {
+      background: #000000;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+      background: #222222;
+      transform: scale(0.97);
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .spinner {
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 2px solid #000000;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body class="animated-gradient min-h-screen flex items-center justify-center p-4">
+  
+  <!-- Login Card -->
+  <div class="w-full max-w-md slide-in">
+    
+    <!-- Logo/Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-white border border-gray-200 rounded-full mb-4 shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-black mb-2">Arxis VR</h1>
+      <p class="text-gray-500 text-sm">Visualize seus projetos BIM em realidade aumentada</p>
+    </div>
+
+    <!-- Login Form Card -->
+    <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-gray-200">
+      
+      <!-- Alert Messages -->
+      <div id="alert-container" class="mb-6 hidden">
+        <!-- Dynamic alerts will be inserted here -->
+      </div>
+
+      <form id="login-form" class="space-y-6">
+        
+        <!-- Email Input -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="mail" class="w-5 h-5 text-gray-400"></i>
+            </div>
+            <input
+              id="email"
+              type="email"
+              class="input-focus block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-full bg-white text-gray-900 placeholder-gray-400 focus:outline-none transition-all"
+              placeholder="seu@email.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            Senha
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="lock" class="w-5 h-5 text-gray-400"></i>
+            </div>
+            <input
+              id="password"
+              type="password"
+              class="input-focus block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-full bg-white text-gray-900 placeholder-gray-400 focus:outline-none transition-all"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+        </div>
+
+        <!-- Remember & Forgot -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <input
+              id="remember"
+              type="checkbox"
+              class="h-4 w-4 text-black focus:ring-black border-gray-300 rounded bg-white"
+            />
+            <label for="remember" class="ml-2 block text-sm text-gray-600">
+              Lembrar-me
+            </label>
+          </div>
+          <a href="#" id="forgot-password" class="text-sm text-black hover:text-gray-600 transition-colors">
+            Esqueci minha senha
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="login-button"
+          class="btn-primary w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-full shadow-md text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+        >
+          <span id="button-text">Entrar</span>
+          <div id="button-spinner" class="spinner ml-2 hidden"></div>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-200"></div>
+        </div>
+        <div class="relative flex justify-center text-xs">
+          <span class="px-2 bg-white text-gray-400">ou continue com</span>
+        </div>
+      </div>
+
+      <!-- GitHub OAuth (opcional) -->
+      <button
+        type="button"
+        id="github-login"
+        class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-gray-200 rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
+      >
+        <svg viewBox="0 0 16 16" class="h-5 w-5" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        Entrar com GitHub
+      </button>
+
+      <!-- Register Link -->
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500">
+          Não tem uma conta? 
+          <a href="#" id="register-link" class="text-black hover:text-gray-600 font-medium transition-colors">
+            Cadastre-se grátis
+          </a>
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+        <p class="text-xs text-gray-400">
+          © 2026 Arxis VR by AvilaOps. Todos os direitos reservados.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // API Configuration
+    const API_URL = 'http://localhost:3001/api/v1';
+    const TENANT_ID = 'default-tenant'; // TODO: Get from domain/config
+
+    // DOM Elements
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginButton = document.getElementById('login-button');
+    const buttonText = document.getElementById('button-text');
+    const buttonSpinner = document.getElementById('button-spinner');
+    const alertContainer = document.getElementById('alert-container');
+    const forgotPasswordLink = document.getElementById('forgot-password');
+    const registerLink = document.getElementById('register-link');
+    const githubLoginButton = document.getElementById('github-login');
+
+    // Show alert message
+    function showAlert(message, type = 'error') {
+      const bgColor = type === 'error' ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-green-900/50 border-green-700 text-green-200';
+      alertContainer.innerHTML = `
+        <div class="${bgColor} border px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+          <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      alertContainer.classList.remove('hidden');
+      lucide.createIcons();
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Set loading state
+    function setLoading(loading) {
+      loginButton.disabled = loading;
+      if (loading) {
+        buttonText.textContent = 'Entrando...';
+        buttonSpinner.classList.remove('hidden');
+      } else {
+        buttonText.textContent = 'Entrar';
+        buttonSpinner.classList.add('hidden');
+      }
+    }
+
+    // Handle login form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showAlert('Por favor, preencha todos os campos.');
+        return;
+      }
+
+      setLoading(true);
+      alertContainer.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': TENANT_ID
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Save tokens to localStorage
+          localStorage.setItem('arxisvr_token', data.accessToken);
+          localStorage.setItem('arxisvr_refresh_token', data.refreshToken);
+          localStorage.setItem('arxisvr_user', JSON.stringify(data.user));
+
+          showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+          
+          // Redirect to app
+          setTimeout(() => {
+            window.location.href = '/app.html';
+          }, 1500);
+        } else {
+          showAlert(data.message || data.error || 'Credenciais inválidas. Tente novamente.');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Erro de conexão. Verifique se o servidor está rodando.');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Forgot password handler
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAlert('Funcionalidade em desenvolvimento. Entre em contato com suporte@arxisvr.com', 'error');
+    });
+
+    // Register link handler
+    registerLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAlert('Funcionalidade em desenvolvimento. Entre em contato com comercial@arxisvr.com', 'error');
+    });
+
+    // GitHub OAuth handler
+    githubLoginButton.addEventListener('click', () => {
+      showAlert('OAuth GitHub em desenvolvimento. Use email e senha.', 'error');
+    });
+
+    // Check if already logged in
+    const token = localStorage.getItem('arxisvr_token');
+    if (token) {
+      // Validate token
+      fetch(`${API_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-ID': TENANT_ID
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          // Already logged in, redirect
+          window.location.href = '/app.html';
+        }
+      })
+      .catch(() => {
+        // Token invalid, stay on login page
+      });
+    }
+  </script>
+
+</body>
+</html>

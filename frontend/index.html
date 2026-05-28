@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ArxisVR — Plataforma BIM com Copilot de IA e Realidade Estendida. Visualize IFC em 1:1, coordene disciplinas, simule 4D/5D e revise clashes no navegador, em VR ou AR." />
+  <meta name="theme-color" content="#0b0f1a" />
+
+  <meta property="og:title" content="ArxisVR — Plataforma BIM com IA e Realidade Estendida" />
+  <meta property="og:description" content="Viewer IFC 1:1, BIM 4D/5D, coordenação assistida por IA e VR/AR no navegador. Tudo em uma plataforma." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://arxisvr.com/" />
+
+  <title>ArxisVR — Plataforma BIM com IA e Realidade Estendida</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
+
+  <style>
+    :root {
+      /* Palette: Lu.ma Premium Light System */
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-panel: rgba(255, 255, 255, 0.78);
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --bg-card-hover: #ffffff;
+      
+      --text-primary: #1A1A1A;
+      --text-secondary: #8E8E93;
+      --text-muted: #AEAEB2;
+      
+      --border-color: rgba(0, 0, 0, 0.06);
+      --border-hover: rgba(0, 0, 0, 0.12);
+      
+      --accent-blue: #007AFF;      /* Apple Blue */
+      --accent-purple: #C4B5F4;    /* Luma Soft Purple */
+      --accent-purple-light: #EDE9FF;
+      --accent-green: #34C759;     /* iOS Green */
+      
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.015);
+      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.06);
+      
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius: 20px;
+      --max: 1140px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      letter-spacing: -0.1px;
+    }
+    a { color: inherit; text-decoration: none; }
+    code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    /* Force Lucide icons to have ultra-thin, elegant strokes (Lu.ma style) */
+    .lucide {
+      stroke-width: 1.4px !important;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* NAV (LUMA STYLE) */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: #000000; letter-spacing: -0.5px; }
+    .brand-mark {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #000000;
+      position: relative;
+    }
+    .brand-mark::after {
+      content: ""; position: absolute; inset: 7px;
+      border: 1.5px solid #ffffff; border-radius: 50%;
+    }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: var(--transition); }
+    .nav-links a:hover { color: #000000; }
+    .nav-cta { display: flex; gap: 8px; align-items: center; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 50px; /* Perfect Luma Pills */
+      font-weight: 500; font-size: 14px;
+      transition: var(--transition);
+      border: 1px solid var(--border-color);
+      cursor: pointer; white-space: nowrap;
+      background: #ffffff;
+      color: var(--text-primary);
+    }
+    .btn:active {
+      transform: scale(0.97); /* Luma click compress */
+    }
+    .btn-ghost { color: var(--text-secondary); border-color: transparent; background: transparent; }
+    .btn-ghost:hover { color: #000000; background: rgba(0,0,0,0.03); }
+    .btn-outline { color: var(--text-primary); border-color: var(--border-color); }
+    .btn-outline:hover { border-color: rgba(0,0,0,0.15); background: #ffffff; }
+    .btn-primary {
+      color: white;
+      background: #000000; /* Luma signature black solid */
+      border: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+    .btn-primary:hover { background: #222222; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+    .btn-lg { padding: 14px 26px; font-size: 15px; font-weight: 600; }
+
+    @media (max-width: 760px) { .nav-links { display: none; } }
+
+    /* HERO */
+    .hero { position: relative; padding: 80px 0 60px; overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(800px 400px at 80% -10%, rgba(196, 181, 244, 0.3), transparent 60%),
+        radial-gradient(700px 380px at 10% 10%, rgba(124, 150, 255, 0.2), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; text-align: center; max-width: 840px; margin: 0 auto; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.6);
+      font-size: 13px; font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.15);
+    }
+    .h1 {
+      font-size: clamp(34px, 5.5vw, 58px);
+      font-weight: 700; letter-spacing: -0.6px; line-height: 1.1;
+      margin-bottom: 20px;
+      color: #000000;
+    }
+    .lead {
+      font-size: clamp(16px, 1.5vw, 18px);
+      color: var(--text-secondary);
+      max-width: 680px; margin: 0 auto 36px;
+      line-height: 1.55;
+    }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+    .hero-meta { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 13.5px; color: var(--text-secondary); }
+    .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .check { color: var(--accent-green); font-weight: 700; font-size: 16px; }
+
+    /* FLOATING MOCK PREVIEW (LIGHT GLASSMORPHISM) */
+    .hero-preview {
+      margin-top: 56px;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 22px;
+      background: var(--bg-panel);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+    .preview-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.4);
+    }
+    .preview-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ddd; display: inline-block; }
+    .preview-bar i:nth-child(1) { background: #ff5f57; }
+    .preview-bar i:nth-child(2) { background: #febc2e; }
+    .preview-bar i:nth-child(3) { background: #28c840; }
+    .preview-bar .url {
+      flex: 1; text-align: center; color: var(--text-secondary);
+      font-size: 12px; font-family: 'DM Sans', sans-serif;
+    }
+    .preview-body {
+      display: grid;
+      grid-template-columns: 210px 1fr 250px;
+      min-height: 380px;
+      background: rgba(255,255,255,0.1);
+    }
+    .preview-side {
+      border-right: 1px solid var(--border-color);
+      padding: 18px 16px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.4);
+      text-align: left;
+    }
+    .preview-side h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
+    .preview-side ul { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
+    .preview-side li { color: var(--text-primary); padding: 6px 10px; border-radius: 8px; font-weight: 500; }
+    .preview-side li.active { background: rgba(0,0,0,0.05); font-weight: 600; }
+    .preview-canvas {
+      position: relative;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(237,233,254,0.3), transparent 60%),
+        radial-gradient(circle at 70% 60%, rgba(227,240,255,0.35), transparent 60%),
+        #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .preview-canvas::after {
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+    }
+    .preview-canvas svg { position: relative; z-index: 1; width: 70%; max-width: 360px; }
+    .preview-right { padding: 18px 16px; font-size: 13px; background: rgba(255,255,255,0.4); text-align: left; }
+    .preview-right h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
+    
+    /* Copilot inside Luma mockup style */
+    .copilot-card {
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 12px; font-size: 12.5px;
+      color: var(--text-primary); margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .copilot-card strong { color: #000000; }
+    .preview-right .ph { color: var(--text-secondary); font-size: 12px; font-weight: 500; text-align: center; margin-top: 14px; }
+
+    @media (max-width: 860px) {
+      .preview-body { grid-template-columns: 1fr; }
+      .preview-side, .preview-right { display: none; }
+      .preview-canvas { min-height: 280px; }
+    }
+
+    section { padding: 80px 0; position: relative; }
+    .section-head { text-align: center; max-width: 680px; margin: 0 auto 48px; }
+    .kicker { display: inline-block; font-size: 12px; font-weight: 700; color: #000000; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+    .h2 { font-size: clamp(26px, 3.2vw, 36px); font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 14px; color: #000000; }
+    .sub { font-size: 16px; color: var(--text-secondary); }
+
+    /* FEATURES GRID */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: var(--radius); padding: 28px 24px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      text-align: left;
+    }
+    .feature:hover { border-color: rgba(0,0,0,0.12); background: #ffffff; transform: translateY(-2px); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(196, 181, 244, 0.15);
+      border: 1px solid rgba(196, 181, 244, 0.3);
+      margin-bottom: 18px; font-size: 20px;
+    }
+    .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; color: #000000; }
+    .feature p { color: var(--text-secondary); font-size: 14.5px; line-height: 1.5; }
+    @media (max-width: 920px) { .features { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+
+    /* HOW IT WORKS STEP CARDS */
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .step {
+      position: relative; padding: 28px 24px;
+      border: 1px solid var(--border-color); border-radius: var(--radius);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+      text-align: left;
+    }
+    .step-num {
+      width: 32px; height: 36px; border-radius: 50px;
+      background: #000000;
+      color: white; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px; font-size: 14px;
+    }
+    .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #000000; }
+    .step p { color: var(--text-secondary); font-size: 14.5px; line-height: 1.5; }
+    @media (max-width: 860px) { .how-grid { grid-template-columns: 1fr; } }
+
+    /* CASES */
+    .cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .case { padding: 28px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-card); text-align: left; box-shadow: var(--shadow-sm); }
+    .case h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.2px; color: #000000; }
+    .case p { color: var(--text-secondary); font-size: 14.5px; margin-bottom: 14px; }
+    .case ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .case li { font-size: 13.5px; color: var(--text-primary); padding-left: 20px; position: relative; }
+    .case li::before { content: "›"; position: absolute; left: 6px; color: #000000; font-weight: 700; }
+    @media (max-width: 760px) { .cases { grid-template-columns: 1fr; } }
+
+    /* PRICING */
+    .pricing { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .plan {
+      padding: 28px 22px; border: 1px solid var(--border-color);
+      border-radius: var(--radius); background: var(--bg-card);
+      display: flex; flex-direction: column;
+      text-align: left;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .plan:hover {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.12);
+    }
+    .plan.featured {
+      border-color: rgba(0, 0, 0, 0.8);
+      background: #ffffff;
+      position: relative;
+    }
+    .plan.featured::before {
+      content: "Mais popular";
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: #000000;
+      color: white; font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: 999px;
+    }
+    .plan h4 { font-size: 13px; font-weight: 700; color: #000000; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .plan .price { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #000000; margin-bottom: 4px; }
+    .plan .price small { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .plan .desc { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 18px; min-height: 38px; }
+    .plan ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; flex: 1; }
+    .plan li { font-size: 13.5px; color: var(--text-primary); padding-left: 20px; position: relative; }
+    .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--accent-green); font-weight: 700; }
+    .plan .btn { width: 100%; justify-content: center; }
+    @media (max-width: 960px) { .pricing { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .pricing { grid-template-columns: 1fr; } }
+
+    /* STATS BAND */
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 20px; padding: 28px 24px;
+      border: 1px solid var(--border-color); border-radius: var(--radius);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+    }
+    .stat .num { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #000000; }
+    .stat .lbl { font-size: 13.5px; color: var(--text-secondary); }
+    @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    /* BOTTOM CTA BAND */
+    .cta-band {
+      padding: 64px 32px; border-radius: 24px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(20px);
+    }
+    .cta-band h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 700; letter-spacing: -0.5px; margin-bottom: 12px; color: #000000; }
+    .cta-band p { color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; font-size: 15px; }
+    .cta-band .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* FOOTER */
+    footer {
+      padding: 56px 0 32px;
+      border-top: 1px solid var(--border-color);
+      margin-top: 80px;
+    }
+    .foot-top {
+      display: grid; grid-template-columns: 1.4fr repeat(3, 1fr);
+      gap: 32px; margin-bottom: 36px;
+      text-align: left;
+    }
+    .foot-brand p { color: var(--text-secondary); font-size: 14px; margin-top: 14px; max-width: 300px; }
+    .foot-col h5 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 14px; font-weight: 700; }
+    .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .foot-col a { color: var(--text-secondary); font-size: 14px; transition: var(--transition); }
+    .foot-col a:hover { color: #000000; }
+    .foot-bot {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--text-muted);
+      padding-top: 24px; border-top: 1px solid var(--border-color);
+      flex-wrap: wrap; gap: 12px;
+    }
+    @media (max-width: 760px) { .foot-top { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/">
+        <img src="/logo-icon.svg" alt="" style="width: 26px; height: 26px;">
+        ArxisVR
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Recursos</a>
+        <a href="#how">Como funciona</a>
+        <a href="#cases">Casos de uso</a>
+        <a href="#pricing">Planos</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="https://signin.avilaops.com">Entrar</a>
+        <a class="btn btn-primary" href="/register.html">Começar grátis</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="container hero-inner">
+      <div class="eyebrow"><span class="dot"></span> BIM · 4D/5D · Realidade Estendida · IA</div>
+      <h1 class="h1">
+        A plataforma BIM com <span class="grad">Copilot de IA</span><br />
+        e Realidade Estendida no navegador.
+      </h1>
+      <p class="lead">
+        Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D,
+        revise clashes e custos 5D, e visite o projeto em VR ou AR — tudo em uma única plataforma,
+        sem instalação.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis</a>
+        <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
+      </div>
+      <div class="hero-meta">
+        <span><span class="check">✓</span> IFC 2x3, IFC4, IFC4.3</span>
+        <span><span class="check">✓</span> WebXR (VR/AR)</span>
+        <span><span class="check">✓</span> Multi-empresa</span>
+        <span><span class="check">✓</span> API REST v1</span>
+      </div>
+
+      <div class="hero-preview" aria-hidden="true">
+        <div class="preview-bar">
+          <i></i><i></i><i></i>
+          <span class="url">app.arxisvr.com/projects/residencial-heitor</span>
+        </div>
+        <div class="preview-body">
+          <aside class="preview-side">
+            <h4>Projetos</h4>
+            <ul>
+              <li class="active">▣ Residencial Heitor</li>
+              <li>▣ Edifício VZZ-086</li>
+              <li>▣ Industrial Sampa</li>
+            </ul>
+            <h4>Modelos IFC</h4>
+            <ul>
+              <li>· Estrutural Rev08</li>
+              <li>· Hidráulica Rev01</li>
+              <li>· Elétrica Rev01</li>
+            </ul>
+            <h4>Ferramentas</h4>
+            <ul>
+              <li>· Upload IFC</li>
+              <li>· Cortes &amp; Clipping</li>
+              <li>· Medições</li>
+            </ul>
+          </aside>
+          <div class="preview-canvas">
+            <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.7"/>
+                </linearGradient>
+                <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.85"/>
+                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.5"/>
+                </linearGradient>
+              </defs>
+              <polygon points="60,210 340,210 380,240 20,240" fill="url(#g2)" opacity="0.25" stroke="#22d3ee" stroke-width="1"/>
+              <polygon points="80,210 320,210 350,235 50,235" fill="#0e1426" stroke="#5b8def" stroke-width="1"/>
+              <polygon points="80,80 320,80 320,210 80,210" fill="url(#g1)" opacity="0.35" stroke="#7c5cff" stroke-width="1.2"/>
+              <polygon points="320,80 350,105 350,235 320,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
+              <polygon points="80,80 50,105 50,235 80,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
+              <polygon points="80,80 320,80 350,105 50,105" fill="#2a3160" stroke="#7c5cff" stroke-width="1"/>
+              <rect x="110" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
+              <rect x="170" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
+              <rect x="230" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
+              <rect x="280" y="160" width="22" height="50" fill="#7c5cff" opacity="0.5" stroke="#7c5cff" stroke-width="0.8"/>
+              <circle cx="170" cy="145" r="6" fill="#34d399"/>
+              <line x1="170" y1="145" x2="200" y2="60" stroke="#34d399" stroke-width="1" stroke-dasharray="3 3"/>
+              <text x="205" y="58" fill="#34d399" font-size="10" font-family="JetBrains Mono">IfcWindow · Pav 01</text>
+            </svg>
+          </div>
+          <aside class="preview-right">
+            <h4>Copilot</h4>
+            <div class="copilot-card">
+              <strong>🏗️ Coordenação BIM</strong><br />
+              Federação carregada. 3 disciplinas alinhadas. Detectei 12 possíveis clashes em HID×EST.
+            </div>
+            <div class="copilot-card">
+              <strong>⏱️ Simulação 4D</strong><br />
+              Avançar timeline para semana 14 e isolar fase de estrutura?
+            </div>
+            <div class="ph">Ctrl+K para abrir o Copilot</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Recursos</span>
+        <h2 class="h2">Tudo que sua equipe BIM precisa, em uma plataforma só.</h2>
+        <p class="sub">Do upload do IFC até a apresentação em VR para o cliente. Sem trocar de ferramenta, sem perder o contexto.</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">📐</div>
+          <h3>Viewer IFC em escala 1:1</h3>
+          <p>Suporte a IFC 2x3, IFC4 e IFC4.3 com renderização Three.js de alta performance, LOD, culling e instancing para modelos grandes.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🤖</div>
+          <h3>Copilot de IA para cenários</h3>
+          <p>Abra com <code class="mono">Ctrl+K</code> e peça coordenação BIM, simulação 4D, revisão 5D, clashes ou visita guiada. O Copilot monta o cenário e age no viewer.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⏱️</div>
+          <h3>BIM 4D — Cronograma</h3>
+          <p>Vincule tarefas a elementos IFC, simule a construção com play/pause/seek, controle de velocidade e estados visuais por fase.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">💰</div>
+          <h3>BIM 5D — Quantitativos &amp; custos</h3>
+          <p>Extraia quantitativos do modelo, vincule custos por elemento e acompanhe orçado vs. realizado em tempo real.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🥽</div>
+          <h3>VR/AR no navegador</h3>
+          <p>WebXR nativo: entre em VR com Quest, Vive ou outros headsets, ou abra em AR no celular — direto do navegador, sem app.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔐</div>
+          <h3>Multi-empresa &amp; API</h3>
+          <p>Isolamento por tenant, JWT com refresh automático, papéis e permissões, e uma API REST <code class="mono">/api/v1</code> documentada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="background: linear-gradient(180deg, transparent, rgba(91,141,239,0.04), transparent);">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Como funciona</span>
+        <h2 class="h2">Do IFC ao cliente em três passos.</h2>
+      </div>
+      <div class="how-grid">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Suba seu modelo IFC</h3>
+          <p>Arraste o arquivo na plataforma. O ArxisVR parseia, indexa propriedades e prepara o modelo para uso colaborativo.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Coordene com o Copilot</h3>
+          <p>Federe disciplinas, peça revisões ao Copilot, configure cronograma 4D e quantitativos 5D. A IA executa ações seguras no viewer.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Apresente em VR/AR</h3>
+          <p>Salve cenários e compartilhe um link. O cliente entra direto no navegador, em desktop, celular ou headset VR.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cases">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Casos de uso</span>
+        <h2 class="h2">Feito para times AEC que entregam projetos complexos.</h2>
+      </div>
+      <div class="cases">
+        <div class="case">
+          <h3>🏢 Construtoras &amp; Incorporadoras</h3>
+          <p>Reduza retrabalho com coordenação BIM e simulação 4D antes da obra.</p>
+          <ul>
+            <li>Federação de disciplinas EST × HID × ELE × ARQ</li>
+            <li>Cronograma 4D com vínculo IFC ↔ tarefa</li>
+            <li>Revisão de clashes priorizada</li>
+          </ul>
+        </div>
+        <div class="case">
+          <h3>📐 Escritórios de Arquitetura</h3>
+          <p>Apresente o projeto ao cliente em 1:1, dentro do espaço, antes da obra começar.</p>
+          <ul>
+            <li>Visita guiada em VR/AR</li>
+            <li>Cenários salvos por reunião</li>
+            <li>Comentários e anotações no modelo</li>
+          </ul>
+        </div>
+        <div class="case">
+          <h3>⚙️ Engenharia &amp; MEP</h3>
+          <p>Valide interferências e roteamentos com colaboração em tempo real.</p>
+          <ul>
+            <li>Cortes e clipping dinâmicos</li>
+            <li>Inspeção de propriedades IFC</li>
+            <li>Filtros avançados por tipo/disciplina</li>
+          </ul>
+        </div>
+        <div class="case">
+          <h3>🏗️ Gerenciadoras de Obra</h3>
+          <p>Acompanhe progresso físico-financeiro com 4D + 5D integrados.</p>
+          <ul>
+            <li>Quantitativos automáticos do IFC</li>
+            <li>Custos por elemento e fase</li>
+            <li>Relatórios exportáveis</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top: 0;">
+    <div class="container">
+      <div class="stats">
+        <div class="stat"><div class="num"><span class="grad">1:1</span></div><div class="lbl">Escala real do modelo</div></div>
+        <div class="stat"><div class="num"><span class="grad">3×</span></div><div class="lbl">Versões IFC suportadas</div></div>
+        <div class="stat"><div class="num"><span class="grad">100%</span></div><div class="lbl">Web — sem instalação</div></div>
+        <div class="stat"><div class="num"><span class="grad">∞</span></div><div class="lbl">Cenários por projeto</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <span class="kicker">Planos</span>
+        <h2 class="h2">Comece grátis. Escale quando precisar.</h2>
+        <p class="sub">Sem cartão de crédito para começar. Mude de plano a qualquer momento.</p>
+      </div>
+      <div class="pricing">
+        <div class="plan">
+          <h4>Free</h4>
+          <div class="price">R$ 0 <small>/mês</small></div>
+          <p class="desc">Para conhecer a plataforma e projetos pessoais.</p>
+          <ul>
+            <li>1 projeto ativo</li>
+            <li>Viewer IFC completo</li>
+            <li>Copilot básico</li>
+            <li>1 usuário</li>
+          </ul>
+          <a class="btn btn-outline" href="/register.html">Começar grátis</a>
+        </div>
+        <div class="plan">
+          <h4>Starter</h4>
+          <div class="price">R$ 149 <small>/mês</small></div>
+          <p class="desc">Para profissionais autônomos e pequenos times.</p>
+          <ul>
+            <li>5 projetos ativos</li>
+            <li>BIM 4D completo</li>
+            <li>Cenários ilimitados</li>
+            <li>Até 3 usuários</li>
+          </ul>
+          <a class="btn btn-outline" href="/register.html">Assinar</a>
+        </div>
+        <div class="plan featured">
+          <h4>Professional</h4>
+          <div class="price">R$ 499 <small>/mês</small></div>
+          <p class="desc">Para escritórios e construtoras com equipe BIM.</p>
+          <ul>
+            <li>Projetos ilimitados</li>
+            <li>BIM 4D + 5D</li>
+            <li>VR/AR completo</li>
+            <li>Até 15 usuários</li>
+            <li>Federação multidisciplinar</li>
+          </ul>
+          <a class="btn btn-primary" href="/register.html">Assinar Professional</a>
+        </div>
+        <div class="plan">
+          <h4>Enterprise</h4>
+          <div class="price">Sob consulta</div>
+          <p class="desc">Para grandes operações com SSO, SLA e on-premise.</p>
+          <ul>
+            <li>Tudo do Professional</li>
+            <li>SSO/SAML</li>
+            <li>SLA dedicado</li>
+            <li>API privada</li>
+            <li>Implantação dedicada</li>
+          </ul>
+          <a class="btn btn-outline" href="mailto:comercial@arxisvr.com">Falar com vendas</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="cta-band">
+        <h2>Pronto para ver seu projeto em outra dimensão?</h2>
+        <p>Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis</a>
+          <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <a class="brand" href="/">
+            <img src="/logo-icon.svg" alt="" style="width: 26px; height: 26px;">
+            ArxisVR
+          </a>
+          <p>Plataforma BIM com Copilot de IA e Realidade Estendida. Feito por AvilaOps no Brasil.</p>
+        </div>
+        <div class="foot-col">
+          <h5>Produto</h5>
+          <ul>
+            <li><a href="#features">Recursos</a></li>
+            <li><a href="#how">Como funciona</a></li>
+            <li><a href="#pricing">Planos</a></li>
+            <li><a href="/app.html">Demonstração</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Empresa</h5>
+          <ul>
+            <li><a href="mailto:comercial@arxisvr.com">Vendas</a></li>
+            <li><a href="mailto:contato@arxisvr.com">Contato</a></li>
+            <li><a href="https://github.com/avilaops" target="_blank" rel="noopener">GitHub</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Conta</h5>
+          <ul>
+            <li><a href="https://signin.avilaops.com">Entrar</a></li>
+            <li><a href="/register.html">Cadastrar</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bot">
+        <span>© 2026 ArxisVR by AvilaOps. Todos os direitos reservados.</span>
+        <span class="mono">v1.0</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

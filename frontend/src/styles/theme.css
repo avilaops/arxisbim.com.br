@@ -1,0 +1,131 @@
+/**
+ * Theme System - ArxisVR
+ * Define temas visuais: light, dark, glassmorphism
+ */
+
+/* ========== Light Theme (Default) ========== */
+[data-theme="light"] {
+  --theme-name: 'light';
+  
+  /* Cores específicas do tema */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  
+  --surface-1: var(--bg-primary);
+  --surface-2: var(--bg-secondary);
+  --surface-3: var(--bg-tertiary);
+  --surface-elevated: var(--bg-elevated);
+}
+
+/* ========== Dark Theme ========== */
+[data-theme="dark"] {
+  --theme-name: 'dark';
+  
+  /* Cores específicas do tema */
+  --glass-bg: rgba(22, 27, 34, 0.85);
+  --glass-border: rgba(42, 52, 65, 0.6);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  --surface-1: var(--bg-primary);
+  --surface-2: var(--bg-secondary);
+  --surface-3: var(--bg-tertiary);
+  --surface-elevated: var(--bg-elevated);
+}
+
+/* ========== Glassmorphism Theme ========== */
+[data-theme="glassmorphism"] {
+  --theme-name: 'glassmorphism';
+  
+  /* Fundo com blur e transparência */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  --glass-blur: blur(12px);
+  
+  /* Superfícies glass */
+  --surface-1: rgba(245, 247, 250, 0.6);
+  --surface-2: rgba(255, 255, 255, 0.7);
+  --surface-3: rgba(238, 242, 246, 0.5);
+  --surface-elevated: rgba(255, 255, 255, 0.85);
+  
+  /* Bordas mais sutis */
+  --border: rgba(229, 231, 235, 0.6);
+  --border-hover: rgba(209, 213, 219, 0.8);
+  
+  /* Sombras mais difusas */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ========== Glassmorphism Dark ========== */
+[data-theme="glassmorphism-dark"] {
+  --theme-name: 'glassmorphism-dark';
+  
+  /* Fundo com blur e transparência - dark */
+  --glass-bg: rgba(15, 18, 23, 0.75);
+  --glass-border: rgba(42, 52, 65, 0.5);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(12px);
+  
+  /* Superfícies glass dark */
+  --surface-1: rgba(15, 18, 23, 0.6);
+  --surface-2: rgba(22, 27, 34, 0.7);
+  --surface-3: rgba(29, 36, 48, 0.5);
+  --surface-elevated: rgba(32, 39, 52, 0.85);
+  
+  /* Bordas mais sutis */
+  --border: rgba(42, 52, 65, 0.6);
+  --border-hover: rgba(58, 70, 86, 0.8);
+  
+  /* Sombras mais difusas */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ========== Glass Effect Classes ========== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur, blur(12px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(12px));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur, blur(12px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(12px));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== Surface Classes ========== */
+.surface-1 {
+  background: var(--surface-1);
+}
+
+.surface-2 {
+  background: var(--surface-2);
+}
+
+.surface-3 {
+  background: var(--surface-3);
+}
+
+.surface-elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-md);
+}

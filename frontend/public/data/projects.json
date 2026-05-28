@@ -1,0 +1,109 @@
+{
+  "projects": [
+    {
+      "id": "magnussao-residencial",
+      "name": "Residencial Magnussão - Res. Heitor",
+      "type": "Residencial",
+      "location": "São Paulo, SP",
+      "area": "450m²",
+      "status": "Em Execução",
+      "year": 2025,
+      "description": "Projeto residencial completo com sistemas hidráulicos, elétricos e estruturais integrados. Inclui fundação, estrutura metálica e instalações.",
+      "ifcFiles": [
+        "demos/VZZ086_25 Magnussão - Res. Heitor - Estrutural Executivo - Rev08 (1).ifc",
+        "demos/ELE - VZZ086_25 - Magnussão - Res. Heitor - REV01-4.ifc",
+        "demos/HID - VZZ086_25 - Magnussão - Res. Heitor - REV01-3.ifc"
+      ],
+      "dwgFiles": [
+        "demos/FUNDAÇÃO.DWG",
+        "demos/QUADRO PILARES.DWG",
+        "demos/VIGAS LOCAÇÃO.DWG",
+        "demos/VIGAS.DWG"
+      ],
+      "thumbnail": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
+      "tags": ["Estrutural", "Hidráulico", "Elétrico", "BIM"],
+      "client": "Magnussão Engenharia",
+      "disciplines": ["Arquitetura", "Estrutural", "Hidráulica", "Elétrica"],
+      "clashes": 12,
+      "elements": 2847,
+      "revisions": 8
+    },
+    {
+      "id": "eduardo-sampa",
+      "name": "Projeto Eduardo Sampa",
+      "type": "Comercial",
+      "location": "Sampa, SP",
+      "area": "1200m²",
+      "status": "Concluído",
+      "year": 2024,
+      "description": "Projeto comercial com modelagem BIM completa. Inclui arquivos IFC e colaboração via BIMcollab.",
+      "ifcFiles": [
+        "demos/EDUARDO SAMPA.ifc"
+      ],
+      "collabFiles": [
+        "demos/EDUARDO SAMPA.bscollab",
+        "demos/EDUARDO SAMPA.bsplcmnt"
+      ],
+      "thumbnail": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800",
+      "tags": ["Comercial", "BIM", "BIMcollab"],
+      "client": "Eduardo Sampa",
+      "disciplines": ["Arquitetura", "Estrutural"],
+      "clashes": 5,
+      "elements": 1523,
+      "revisions": 4
+    },
+    {
+      "id": "jeferson-carvalho",
+      "name": "Projeto Jeferson Carvalho",
+      "type": "Residencial",
+      "location": "Interior, SP",
+      "area": "320m²",
+      "status": "Em Análise",
+      "year": 2025,
+      "description": "Residência unifamiliar com estrutura em concreto armado. Modelo IFC completo para análise de clash detection.",
+      "ifcFiles": [
+        "demos/JEFERSON CARVALHO.ifc"
+      ],
+      "thumbnail": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
+      "tags": ["Residencial", "Concreto Armado"],
+      "client": "Jeferson Carvalho",
+      "disciplines": ["Arquitetura", "Estrutural"],
+      "clashes": 8,
+      "elements": 987,
+      "revisions": 2
+    },
+    {
+      "id": "ifc-optimized-demo",
+      "name": "Demo IFC Otimizado",
+      "type": "Demo",
+      "location": "Virtual",
+      "area": "N/A",
+      "status": "Demo",
+      "year": 2025,
+      "description": "Demonstração de carregamento otimizado de arquivos IFC com web-ifc. Exemplo de performance e rendering.",
+      "ifcFiles": [],
+      "demoFile": "demos/ifc-optimized-demo.html",
+      "thumbnail": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800",
+      "tags": ["Demo", "Performance", "Web-IFC"],
+      "client": "ArxisVR",
+      "disciplines": ["Tecnologia"],
+      "elements": 0,
+      "revisions": 1
+    }
+  ],
+  "statistics": {
+    "totalProjects": 4,
+    "totalElements": 5357,
+    "totalClashes": 25,
+    "totalRevisions": 15,
+    "activeProjects": 2,
+    "completedProjects": 1,
+    "inReviewProjects": 1
+  },
+  "metadata": {
+    "lastUpdate": "2026-04-23T00:00:00Z",
+    "version": "1.0.0",
+    "apiEndpoint": "/api/projects",
+    "ifcBasePath": "/demos/"
+  }
+}

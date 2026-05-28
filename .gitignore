@@ -1,0 +1,59 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm/
+.pnpm-store/
+.playwright-mcp/
+# Environment
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+scripts/
+!/scripts/
+/scripts/*
+!/scripts/link-local-deps.ps1
+!/scripts/prepare-local-postgres.ps1
+!/scripts/dev-backend-local.ps1
+!/scripts/deploy.sh
+!/scripts/setup-prod-server.sh
+!/scripts/bootstrap-deploy.sh
+siga
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+dist/
+build/
+coverage/
+frontend/dist/
+frontend/build/
+backend/dist/
+backend/coverage/
+.vite/
+playwright-report/
+test-results/
+
+# Large files
+Examples-files/
+demos/
+uploads/
+*.ifc
+*.DWG
+*.dwg
+*.pdf
+*.rvt
+docs/
+.skills/

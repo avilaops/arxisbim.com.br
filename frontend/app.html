@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ArxisVR - Plataforma BIM Imersiva com IA e Realidade Aumentada" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>ArxisVR - Plataforma BIM</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/logo-icon.svg" />
+  
+  <!-- DNS Prefetch & Preconnect for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  
+  <!-- DM Sans Font (Luma style) - display swap for faster rendering -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons - defer loading -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" media="print" onload="this.media='all'">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Palette: Lu.ma Premium Light System */
+      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
+      --bg-panel: rgba(255, 255, 255, 0.78);
+      --bg-panel-solid: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.82);
+      --bg-card-hover: rgba(255, 255, 255, 0.95);
+      
+      --text-primary: #1A1A1A;
+      --text-secondary: #8E8E93;
+      --text-muted: #AEAEB2;
+      
+      --border-color: rgba(0, 0, 0, 0.06);
+      --border-hover: rgba(0, 0, 0, 0.12);
+      
+      --accent-blue: #007AFF;      /* Apple Blue */
+      --accent-purple: #C4B5F4;    /* Luma Soft Purple */
+      --accent-purple-light: #EDE9FF;
+      --accent-green: #34C759;     /* iOS Green */
+      --accent-red: #FF3B30;       /* iOS Red */
+      --accent-yellow: #FF9500;    /* iOS Orange */
+      
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.08);
+      
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      letter-spacing: -0.1px;
+    }
+
+    /* Force Lucide icons to have ultra-thin, elegant strokes (Lu.ma style) */
+    .lucide {
+      stroke-width: 1.4px !important;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* ========== LAYOUT ========== */
+    .app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 64px 1fr;
+      overflow: hidden;
+      pointer-events: none; /* Let empty clicks pass down to Three.js canvas */
+    }
+
+    /* Canvas is full screen at the bottom layer */
+    .canvas-area {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      background: #f8fafc;
+      pointer-events: auto; /* Enable 3D interactions */
+    }
+
+    /* Overlay container for floating panels */
+    .overlay-workspace {
+      position: relative;
+      grid-row: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 16px;
+      gap: 16px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* ========== HEADER (LUMA STYLING) ========== */
+    .header {
+      grid-row: 1;
+      background: rgba(255, 255, 255, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(20px);
+      pointer-events: auto;
+    }
+
+    .header__left {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .header__logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-button {
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 50px; /* Luma Pill buttons */
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-button:hover {
+      background: rgba(0, 0, 0, 0.03);
+      color: #000000;
+    }
+
+    .nav-button.active {
+      background: rgba(0, 0, 0, 0.05);
+      color: #000000;
+      font-weight: 600;
+      border-color: transparent;
+    }
+
+    .header__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50px; /* Perfect Circle */
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .icon-button:hover {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.15);
+      transform: scale(1.04);
+    }
+
+    /* ========== PANELS GENERAL (GLASSMORPHISM LIGHT) ========== */
+    .glass-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 22px; /* Smooth Luma cards */
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 64px - 32px);
+      pointer-events: auto;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    /* Collapse button */
+    .panel-toggle {
+      position: absolute;
+      top: 14px;
+      right: -10px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 50;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .panel-toggle:hover {
+      color: #000000;
+      border-color: rgba(0,0,0,0.15);
+      transform: scale(1.1);
+    }
+
+    /* ========== SIDEBAR (LEFT) ========== */
+    .sidebar {
+      width: 310px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar.collapsed {
+      width: 0px;
+      padding: 0;
+      overflow: hidden;
+      border: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sidebar__section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar__list {
+      list-style: none;
+    }
+
+    .sidebar__item {
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+    }
+
+    .sidebar__item:hover {
+      background: var(--bg-card-hover);
+      transform: translateX(2px);
+    }
+
+    .sidebar__item.active {
+      background: rgba(0, 0, 0, 0.05);
+      color: #000000;
+      font-weight: 600;
+    }
+
+    .sidebar__icon {
+      color: var(--text-secondary);
+      display: inline-flex;
+    }
+
+    .sidebar__item.active .sidebar__icon {
+      color: #000000;
+    }
+
+    /* ========== RIGHT PANEL ========== */
+    .right-panel {
+      width: 340px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .right-panel.collapsed {
+      width: 0px;
+      padding: 0;
+      overflow: hidden;
+      border: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .panel__title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: #000000;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .panel__section {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 16px; /* Elegant rounded cards */
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .panel__section:hover {
+      border-color: rgba(0,0,0,0.12);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .panel__section-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .control-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .control-range {
+      width: 100%;
+      accent-color: #000000; /* Luma Black accents */
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(0,0,0,0.06);
+      outline: none;
+    }
+
+    .control-value {
+      min-width: 44px;
+      text-align: right;
+      color: #000000;
+      font-weight: 600;
+    }
+
+    .control-hint {
+      margin-top: 8px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .camera-mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .camera-mode-button {
+      justify-content: center;
+      padding: 8px 6px;
+      font-size: 12px;
+      border-radius: 50px; /* Pill shapes */
+    }
+
+    .camera-mode-button.active {
+      background: #000000 !important;
+      border-color: #000000 !important;
+      color: #ffffff !important;
+    }
+
+    .camera-mode-status {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .camera-mode-status strong {
+      color: #000000;
+    }
+
+    /* ========== BUTTONS (LUMA SPECIFIC - PILL SHAPE) ========== */
+    .btn {
+      padding: 10px 18px;
+      border-radius: 50px; /* Luma Pill Button */
+      border: 1px solid var(--border-color);
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      background: #ffffff;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(0,0,0,0.15);
+    }
+
+    .btn:active {
+      transform: scale(0.97); /* Luma scale effect on press */
+    }
+
+    .btn-primary {
+      background: #000000; /* Luma Black CTA */
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+      background: #222222;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      border-color: var(--border-color);
+    }
+
+    /* ========== PANEL COLLAPSE TRIGGERS (FLOATING ACTIONS) ========== */
+    .floating-toggle-bar {
+      position: absolute;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 40;
+      pointer-events: auto;
+    }
+    .floating-toggle-bar.left { left: 16px; }
+    .floating-toggle-bar.right { right: 16px; }
+    
+    .floating-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%; /* Luma Circular floating action */
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: #000000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+    }
+    .floating-toggle-btn:hover {
+      background: #fafafa;
+      transform: scale(1.05);
+      border-color: rgba(0,0,0,0.15);
+    }
+
+    /* ========== SCENARIOS PANEL ========== */
+    .scenarios-panel .panel__section { margin-top: 8px; }
+    .scenarios-panel .panel__section-title {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .scenarios-panel__create { display: flex; flex-direction: column; gap: 6px; }
+    .scenarios-panel__input {
+      width: 100%; padding: 8px 12px; background: #ffffff;
+      border: 1px solid var(--border-color); color: var(--text-primary);
+      border-radius: 50px; font-size: 13px; font-family: inherit; /* Pill inputs */
+    }
+    .scenarios-panel__input:focus { outline: none; border-color: rgba(0,0,0,0.15); }
+    .scenarios-panel__textarea { resize: vertical; min-height: 44px; border-radius: 14px; font-family: inherit; }
+    
+    .scenarios-panel__preset-card {
+      width: 100%; padding: 12px; border-radius: 14px;
+      border: 1px solid var(--border-color); background: rgba(255,255,255,0.4);
+      color: var(--text-primary); text-align: left; cursor: pointer; transition: var(--transition);
+    }
+    .scenarios-panel__preset-card:hover:not(:disabled) {
+      background: #ffffff; border-color: rgba(0,0,0,0.12);
+    }
+    .scenarios-panel__preset-card strong { display: block; color: #000000; font-size: 13px; margin-bottom: 3px; }
+    .scenarios-panel__preset-card span { display: block; color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
+    
+    .scenarios-panel .panel__list-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 8px 12px; background: rgba(255,255,255,0.4); border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ========== SECTIONS PANEL ========== */
+    .sections-panel__slider {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; outline: none;
+    }
+    .sections-panel__slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 14px; height: 14px;
+      background: #000000; border-radius: 50%; cursor: pointer;
+    }
+    
+    /* ========== QUERY PANEL ========== */
+    .query-panel__input {
+      width: 100%; min-height: 60px; padding: 10px 12px; border-radius: 12px;
+      border: 1px solid var(--border-color); background: #ffffff;
+      color: var(--text-primary); font-size: 12px; font-family: 'Consolas', monospace;
+    }
+    .query-panel__results {
+      list-style: none; margin: 0; padding: 0;
+      max-height: 180px; overflow-y: auto;
+      border: 1px solid var(--border-color); border-radius: 12px;
+      background: rgba(255,255,255,0.4);
+    }
+    .query-panel__result-item {
+      padding: 8px 12px; border-bottom: 1px solid var(--border-color);
+      font-size: 12px; color: var(--text-primary); cursor: pointer;
+    }
+    .query-panel__result-item:hover { background: #ffffff; color: #000000; }
+
+    /* ========== TABLES ========== */
+    .takeoff-panel__table, .budget-panel__table {
+      width: 100%; font-size: 11px; border-collapse: collapse; border: 1px solid var(--border-color);
+      border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.4);
+    }
+    .takeoff-panel__table th, .budget-panel__table th,
+    .takeoff-panel__table td, .budget-panel__table td {
+      padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-color);
+    }
+    .takeoff-panel__table th, .budget-panel__table th {
+      background: rgba(0,0,0,0.02); color: #000000; font-weight: 600;
+    }
+    .budget-panel__list-item.is-active {
+      background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); color: #000000;
+    }
+
+    /* ========== SELECTION ACTIONS BAR (LUMA GLASS PILL) ========== */
+    .selection-actions {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 50px; /* High fidelity pill */
+      padding: 6px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      box-shadow: var(--shadow-lg);
+      font-size: 13px;
+      backdrop-filter: blur(20px);
+      pointer-events: auto;
+    }
+    .selection-actions__label {
+      padding: 0 12px 0 6px; color: #000000; font-weight: 600;
+      border-right: 1px solid var(--border-color); max-width: 240px;
+    }
+    .selection-actions button {
+      padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border-color);
+      background: #ffffff; color: var(--text-primary); cursor: pointer;
+    }
+    .selection-actions button:hover {
+      background: #000000; border-color: #000000; color: #ffffff;
+    }
+
+    /* ========== DRAG & DROP OVERLAY ========== */
+    .dnd-overlay {
+      position: absolute; inset: 0; z-index: 50;
+      background: rgba(196, 181, 244, 0.08); /* Luma purple overlay tint */
+      border: 2px dashed var(--accent-purple);
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .dnd-overlay__inner {
+      text-align: center; color: #8e74e6;
+      font-size: 18px; font-weight: 600;
+    }
+    .dnd-overlay__inner i { font-size: 40px; display: block; margin-bottom: 8px; }
+
+    /* ========== LOADING SCREEN ========== */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 9999;
+    }
+
+    .loading-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(0,0,0,0.03);
+      border-top-color: #000000; /* Minimal black loader */
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* ========== SKELETON LOADING STATES ========== */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-text {
+      height: 16px;
+      margin-bottom: 8px;
+    }
+
+    .skeleton-text-sm {
+      height: 12px;
+      width: 60%;
+    }
+
+    .skeleton-card {
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    /* ========== RESPONSIVE COLLAPSIBLE ADAPTABILITY ========== */
+    @media (max-width: 1024px) {
+      .sidebar {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        z-index: 45;
+        max-height: calc(100% - 32px);
+      }
+      .right-panel {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+        z-index: 45;
+        max-height: calc(100% - 32px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Inicializando ArxisVR...</div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container" id="app" style="display: none;">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__left">
+        <div class="header__logo">ArxisVR</div>
+        <nav class="header__nav">
+          <button class="nav-button active" data-view="viewer">
+            <i class="lucide lucide-layout-grid"></i> Workspace
+          </button>
+          <button class="nav-button" data-view="ifc">
+            <i class="lucide lucide-box"></i> Modelos
+          </button>
+          <button class="nav-button" data-view="bim4d">
+            <i class="lucide lucide-calendar-days"></i> Planejamento
+          </button>
+          <button class="nav-button" data-view="ar">
+            <i class="lucide lucide-view"></i> XR Imersivo
+          </button>
+        </nav>
+      </div>
+      <div class="header__actions">
+        <button class="icon-button" title="Notificações">
+          <i class="lucide lucide-bell"></i>
+        </button>
+        <button class="icon-button" title="Configurações">
+          <i class="lucide lucide-settings"></i>
+        </button>
+        <button class="icon-button" title="Usuário">
+          <i class="lucide lucide-user"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Canvas Area (Bottom layer) -->
+    <main class="canvas-area" id="viewer-canvas">
+      <!-- ViewerHost será montado aqui -->
+    </main>
+
+    <!-- Overlay Workspace (Top layer for floating elements) -->
+    <div class="overlay-workspace">
+      
+      <!-- Floating action to restore Left Sidebar when collapsed -->
+      <div class="floating-toggle-bar left">
+        <button class="floating-toggle-btn" id="btn-restore-left" title="Abrir Navegador">
+          <i class="lucide lucide-sidebar-open"></i>
+        </button>
+      </div>
+
+      <!-- Sidebar (Left Glass Panel) -->
+      <aside class="sidebar glass-panel" id="left-sidebar">
+        <!-- Close button inside panel -->
+        <button class="panel-toggle" id="btn-close-left" title="Ocultar Painel">
+          <i class="lucide lucide-chevron-left"></i>
+        </button>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-folder"></i> Projetos</h3>
+          <ul class="sidebar__list">
+            <li class="sidebar__item active">
+              <span class="sidebar__icon"><i class="lucide lucide-folder-git-2"></i></span>
+              <span>Projeto atual</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-box"></i> Modelos IFC</h3>
+          <ul class="sidebar__list" id="ifc-list">
+            <li class="sidebar__item">
+              <span class="sidebar__icon"><i class="lucide lucide-loader-2"></i></span>
+              <span>Carregando modelos...</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-wrench"></i> Ferramentas</h3>
+          <ul class="sidebar__list">
+            <li class="sidebar__item" data-action="upload-ifc">
+              <span class="sidebar__icon"><i class="lucide lucide-upload-cloud"></i></span>
+              <span>Abrir IFC</span>
+            </li>
+            <li class="sidebar__item">
+              <span class="sidebar__icon"><i class="lucide lucide-scissors"></i></span>
+              <span>Cortes</span>
+            </li>
+            <li class="sidebar__item">
+              <span class="sidebar__icon"><i class="lucide lucide-ruler"></i></span>
+              <span>Medições</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-image"></i> Cenas</h3>
+          <div id="scenarios-panel-mount"></div>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-split"></i> Cortes</h3>
+          <div id="sections-panel-mount"></div>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-ruler"></i> Medições</h3>
+          <div id="measurements-panel-mount"></div>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-search"></i> Consulta BIM</h3>
+          <div id="query-panel-mount"></div>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-calculator"></i> Quantitativos (5D)</h3>
+          <div id="takeoff-panel-mount"></div>
+        </div>
+
+        <div class="sidebar__section">
+          <h3 class="sidebar__title"><i class="lucide lucide-dollar-sign"></i> Orçamento (5D)</h3>
+          <div id="budget-panel-mount"></div>
+        </div>
+      </aside>
+
+      <!-- Floating action to restore Right Panel when collapsed -->
+      <div class="floating-toggle-bar right">
+        <button class="floating-toggle-btn" id="btn-restore-right" title="Abrir Propriedades">
+          <i class="lucide lucide-sliders-horizontal"></i>
+        </button>
+      </div>
+
+      <!-- Right Panel (Right Glass Panel) -->
+      <aside class="right-panel glass-panel" id="right-panel">
+        <!-- Close button inside panel -->
+        <button class="panel-toggle" id="btn-close-right" title="Ocultar Painel" style="right: auto; left: -10px;">
+          <i class="lucide lucide-chevron-right"></i>
+        </button>
+
+        <h2 class="panel__title"><i class="lucide lucide-sliders-horizontal"></i> Propriedades</h2>
+        
+        <div class="panel__section">
+          <div class="panel__section-title"><i class="lucide lucide-info"></i> Informações do Modelo</div>
+          <div id="model-info">
+            <p style="color: var(--text-secondary); font-size: 13px;">
+              Selecione um modelo para consultar detalhes técnicos.
+            </p>
+          </div>
+        </div>
+
+        <div class="panel__section">
+          <div class="panel__section-title"><i class="lucide lucide-play"></i> Ações Rápidas</div>
+          <button class="btn btn-primary" data-action="upload-ifc" style="width: 100%; margin-bottom: 8px;">
+            <i class="lucide lucide-upload-cloud"></i> Abrir IFC
+          </button>
+          <button class="btn btn-secondary" data-action="export-glb" style="width: 100%; margin-bottom: 8px;">
+            <i class="lucide lucide-download"></i> Exportar modelo
+          </button>
+          <button class="btn btn-secondary" data-action="snapshot-png" style="width: 100%;">
+            <i class="lucide lucide-camera"></i> Capturar imagem
+          </button>
+        </div>
+
+        <div class="panel__section">
+          <div class="panel__section-title"><i class="lucide lucide-video"></i> Modos de Câmera</div>
+          <div class="camera-mode-grid">
+            <button class="btn btn-secondary camera-mode-button active" data-camera-mode="fps">
+              1 Pessoa
+            </button>
+            <button class="btn btn-secondary camera-mode-button" data-camera-mode="third-person">
+              2 Avatar
+            </button>
+            <button class="btn btn-secondary camera-mode-button" data-camera-mode="drone">
+              3 Drone
+            </button>
+            <button class="btn btn-secondary camera-mode-button" data-camera-mode="orbit">
+              V Órbita
+            </button>
+          </div>
+          <div class="camera-mode-status" id="camera-mode-status">
+            <strong>Primeira Pessoa:</strong> WASD anda, mouse olha, Space pula.
+          </div>
+          <p class="control-hint">
+            Atalhos: 1 Primeira Pessoa, 2 Terceira Pessoa 360°, 3 Drone, V Órbita. Clique no canvas para travar a navegação.
+          </p>
+        </div>
+
+        <div class="panel__section">
+          <div class="panel__section-title"><i class="lucide lucide-navigation-2"></i> Navegação imersiva</div>
+          <button class="btn btn-secondary" data-action="fps-mode" style="width: 100%; margin-bottom: 12px;">
+            Navegação WASD
+          </button>
+          <label class="control-label" style="margin-bottom: 12px;">
+            <input type="checkbox" id="gravity-enabled" checked />
+            Gravidade ativa
+          </label>
+          <div class="control-row">
+            <span>Gravidade</span>
+            <span class="control-value" id="gravity-value">9.8</span>
+          </div>
+          <input class="control-range" id="gravity-slider" type="range" min="0" max="30" step="0.1" value="9.8" />
+          <p class="control-hint">
+            Clique no canvas para navegar. WASD desloca, Shift acelera, Ctrl reduz velocidade, Space eleva. V alterna Órbita/Pessoa.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Interactive Sidebar Toggles -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const leftSidebar = document.getElementById('left-sidebar');
+      const rightPanel = document.getElementById('right-panel');
+      
+      const btnCloseLeft = document.getElementById('btn-close-left');
+      const btnRestoreLeft = document.getElementById('btn-restore-left');
+      const btnCloseRight = document.getElementById('btn-close-right');
+      const btnRestoreRight = document.getElementById('btn-restore-right');
+
+      // Left Sidebar Toggle Logic
+      if (btnCloseLeft && btnRestoreLeft && leftSidebar) {
+        btnCloseLeft.addEventListener('click', () => {
+          leftSidebar.classList.add('collapsed');
+          btnRestoreLeft.style.display = 'flex';
+          // Trigger window resize event to let Three.js canvas update size immediately
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 260);
+        });
+
+        btnRestoreLeft.addEventListener('click', () => {
+          leftSidebar.classList.remove('collapsed');
+          btnRestoreLeft.style.display = 'none';
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 260);
+        });
+      }
+
+      // Right Panel Toggle Logic
+      if (btnCloseRight && btnRestoreRight && rightPanel) {
+        btnCloseRight.addEventListener('click', () => {
+          rightPanel.classList.add('collapsed');
+          btnRestoreRight.style.display = 'flex';
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 260);
+        });
+
+        btnRestoreRight.onclick = () => {
+          rightPanel.classList.remove('collapsed');
+          btnRestoreRight.style.display = 'none';
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 260);
+        };
+      }
+    });
+  </script>
+
+  <!-- Entry Point -->
+  <script type="module" src="/src/app/entrypoints/app-main.ts"></script>
+</body>
+</html>

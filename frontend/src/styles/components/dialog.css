@@ -1,0 +1,9 @@
+/* dialog.css: estilos para o componente Dialog */
+.dialog {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-6);
+  max-width: 400px;
+  margin: auto;
+}

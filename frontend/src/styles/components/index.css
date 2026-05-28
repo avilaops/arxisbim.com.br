@@ -1,0 +1,11 @@
+/* index.css: importa todos os estilos de componentes */
+@import './panel.css';
+@import './button.css';
+@import './input.css';
+@import './toolbar.css';
+@import './dialog.css';
+@import './rightpanel.css';
+@import './sidebar.css';
+@import './header.css';
+@import './canvas3d.css';
+@import './appshell.css';

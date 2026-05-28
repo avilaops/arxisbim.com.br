@@ -1,0 +1,38 @@
+{
+  "id": "ocean",
+  "name": "Ocean Blue",
+  "description": "Calm ocean-inspired theme",
+  "colors": {
+    "background": "#0a192f",
+    "backgroundSecondary": "#112240",
+    "backgroundTertiary": "#1a2f4a",
+    "foreground": "#ccd6f6",
+    "foregroundSecondary": "#a8b2d1",
+    "foregroundMuted": "#8892b0",
+    "primary": "#64ffda",
+    "secondary": "#57cbff",
+    "accent": "#64ffda",
+    "error": "#ff5370",
+    "warning": "#ffcb6b",
+    "info": "#82aaff",
+    "success": "#c3e88d",
+    "border": "#233554",
+    "borderHover": "#2e4a6f",
+    "shadow": "rgba(2, 12, 27, 0.7)",
+    "hover": "#1a2f4a",
+    "active": "#233554",
+    "focus": "#64ffda",
+    "disabled": "#4a5568"
+  },
+  "fonts": {
+    "base": "'Inter', sans-serif",
+    "heading": "'Inter', sans-serif",
+    "monospace": "'Fira Code', monospace"
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "author": "ArxisVR Team",
+    "version": "1.0.0",
+    "tags": ["ocean", "blue", "calm"]
+  }
+}

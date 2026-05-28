@@ -1,0 +1,30 @@
+{
+    "name": "arxisvr-backend",
+    "version": "1.0.1",
+    "description": "ArxisVR Backend API - Fastify + TypeScript",
+    "main": "dist/index.js",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "type-check": "tsc --noEmit"
+    },
+    "keywords": [
+        "fastify",
+        "typescript",
+        "api",
+        "bim",
+        "arxisvr"
+    ],
+    "author": "ArxisVR Team",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "devDependencies": {
+        "tsx": "^4.22.3",
+        "typescript": "^6.0.3",
+        "vitest": "^4.1.7"
+    }
+}

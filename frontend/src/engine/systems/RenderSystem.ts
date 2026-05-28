@@ -1,0 +1,245 @@
+import { EngineSystem } from "../EngineLoop";
+import type { IRenderer, IScene, ICamera } from '../api';
+import { ThreeRendererAdapter, createScene, createPerspectiveCamera, createAmbientLight, createDirectionalLight, createColor, createFog } from '../adapters/ThreeAdapter';
+
+export class RenderSystem implements EngineSystem {
+  name = "RenderSystem";
+  enabled = true;
+  private renderer?: IRenderer;
+  private scene?: IScene;
+  private camera?: ICamera;
+  private gl?: WebGLRenderingContext | WebGL2RenderingContext;
+  private isWebGL2: boolean = false;
+
+  constructor(private canvas: HTMLCanvasElement) {
+    if (!this.canvas.id) {
+      this.canvas.id = "avx-canvas";
+    }
+
+    console.log("🎨 Render System: Constructor called, canvas ID:", this.canvas.id);
+  }
+
+  private detectWebGLSupport(): { webgl2: boolean; webgl1: boolean } {
+    const testCanvas = document.createElement('canvas');
+    
+    // Test WebGL2
+    const webgl2Context = testCanvas.getContext('webgl2');
+    const hasWebGL2 = !!webgl2Context;
+    
+    // Test WebGL1
+    const webgl1Context = testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
+    const hasWebGL1 = !!webgl1Context;
+    
+    return { webgl2: hasWebGL2, webgl1: hasWebGL1 };
+  }
+
+  private initializeWebGL(): void {
+    const support = this.detectWebGLSupport();
+    
+    if (!support.webgl1 && !support.webgl2) {
+      throw new Error('WebGL is not supported in this browser');
+    }
+
+    // Try WebGL2 first
+    if (support.webgl2) {
+      const gl2 = this.canvas.getContext('webgl2', {
+        alpha: true,
+        antialias: true,
+        depth: true,
+        stencil: true,
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: false,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false
+      });
+
+      if (gl2) {
+        this.gl = gl2 as WebGL2RenderingContext;
+        this.isWebGL2 = true;
+        console.log("✅ WebGL2 context created successfully");
+        console.log("📊 WebGL2 Info:", {
+          version: gl2.getParameter(gl2.VERSION),
+          vendor: gl2.getParameter(gl2.VENDOR),
+          renderer: gl2.getParameter(gl2.RENDERER),
+          shadingLanguageVersion: gl2.getParameter(gl2.SHADING_LANGUAGE_VERSION),
+          maxTextureSize: gl2.getParameter(gl2.MAX_TEXTURE_SIZE),
+          maxViewportDims: gl2.getParameter(gl2.MAX_VIEWPORT_DIMS)
+        });
+        return;
+      }
+    }
+
+    // Fallback to WebGL1
+    if (support.webgl1) {
+      const gl1 = this.canvas.getContext('webgl', {
+        alpha: true,
+        antialias: true,
+        depth: true,
+        stencil: true,
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: false,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false
+      }) || this.canvas.getContext('experimental-webgl');
+
+      if (gl1) {
+        this.gl = gl1 as WebGLRenderingContext;
+        this.isWebGL2 = false;
+        console.warn("⚠️ WebGL2 not available, using WebGL1");
+        console.log("📊 WebGL1 Info:", {
+          version: gl1.getParameter(gl1.VERSION),
+          vendor: gl1.getParameter(gl1.VENDOR),
+          renderer: gl1.getParameter(gl1.RENDERER),
+          shadingLanguageVersion: gl1.getParameter(gl1.SHADING_LANGUAGE_VERSION),
+          maxTextureSize: gl1.getParameter(gl1.MAX_TEXTURE_SIZE),
+          maxViewportDims: gl1.getParameter(gl1.MAX_VIEWPORT_DIMS)
+        });
+        return;
+      }
+    }
+
+    throw new Error('Failed to create WebGL context');
+  }
+
+  public async initialize(): Promise<void> {
+    try {
+      console.log("🚀 Render System: Starting initialization...");
+
+      // Detect and initialize WebGL/WebGL2
+      this.initializeWebGL();
+
+      // Initialize renderer via adapter
+      this.renderer = new ThreeRendererAdapter({
+        canvas: this.canvas,
+        context: this.gl,
+        antialias: true,
+        alpha: true,
+        precision: 'highp',
+        powerPreference: 'high-performance',
+        stencil: true,
+        depth: true,
+        logarithmicDepthBuffer: this.isWebGL2
+      });
+      
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      // Enable additional features
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1.0;
+      
+      console.log(`✅ Three.js WebGL${this.isWebGL2 ? '2' : '1'} Renderer initialized`);
+      
+      console.log(`✅ Three.js WebGL${this.isWebGL2 ? '2' : '1'} Renderer initialized`);
+      
+      // Log renderer capabilities
+      const capabilities = this.renderer.capabilities;
+      console.log("📊 Renderer Capabilities:", {
+        isWebGL2: capabilities.isWebGL2,
+        maxTextures: capabilities.maxTextures,
+        maxVertexTextures: capabilities.maxVertexTextures,
+        maxTextureSize: capabilities.maxTextureSize,
+        maxCubemapSize: capabilities.maxCubemapSize,
+        maxAttributes: capabilities.maxAttributes,
+        maxVertexUniforms: capabilities.maxVertexUniforms,
+        maxFragmentUniforms: capabilities.maxFragmentUniforms,
+        maxSamples: capabilities.maxSamples,
+        floatFragmentTextures: capabilities.floatFragmentTextures,
+        floatVertexTextures: capabilities.floatVertexTextures
+      });
+      
+      // Create scene
+      this.scene = createScene();
+      this.scene.background = createColor(0x0a0a0f);
+      this.scene.fog = createFog(0x0a0a0f, 50, 200);
+      
+      // Create camera
+      this.camera = createPerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      this.camera.position.z = 5;
+      
+      // Add basic lighting
+      const ambientLight = createAmbientLight(0xffffff, 0.6);
+      this.scene.add(ambientLight);
+      
+      const directionalLight = createDirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(10, 10, 10);
+      this.scene.add(directionalLight);
+      
+      // Handle window resize
+      window.addEventListener('resize', () => this.onWindowResize());
+      
+      console.log("🎨 Render System: Canvas element found:", this.canvas);
+      console.log("🎉 Render System initialized successfully");
+    } catch (error) {
+      console.error("❌ Render System: Failed to initialize:", error);
+      throw error;
+    }
+  }
+
+  private onWindowResize(): void {
+    if (!this.camera || !this.renderer) return;
+    
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  public update(deltaTime: number): void {
+    if (!this.renderer || !this.scene || !this.camera) return;
+    
+    // Render the scene
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  public shutdown(): void {
+    console.log("🛑 Render System: Shutting down");
+    
+    window.removeEventListener('resize', () => this.onWindowResize());
+    
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = undefined;
+    }
+    
+    this.scene = undefined;
+    this.camera = undefined;
+  }
+  
+  public getRenderer(): IRenderer | undefined {
+    return this.renderer;
+  }
+  
+  public getScene(): IScene | undefined {
+    return this.scene;
+  }
+  
+  public getCamera(): ICamera | undefined {
+    return this.camera;
+  }
+  
+  public getWebGLContext(): WebGLRenderingContext | WebGL2RenderingContext | undefined {
+    return this.gl;
+  }
+  
+  public isUsingWebGL2(): boolean {
+    return this.isWebGL2;
+  }
+  
+  public getWebGLInfo(): string {
+    if (!this.gl) return 'No WebGL context';
+    
+    const version = this.isWebGL2 ? 'WebGL 2.0' : 'WebGL 1.0';
+    const vendor = this.gl.getParameter(this.gl.VENDOR);
+    const renderer = this.gl.getParameter(this.gl.RENDERER);
+    
+    return `${version} - ${vendor} - ${renderer}`;
+  }
+}
