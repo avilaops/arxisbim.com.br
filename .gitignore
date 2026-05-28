@@ -40,7 +40,6 @@ build/
 coverage/
 frontend/dist/
 frontend/build/
-backend/dist/
 backend/coverage/
 .vite/
 playwright-report/

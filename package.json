@@ -10,7 +10,7 @@
     "dev:backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\dev-backend-local.ps1",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:signaling": "cd signaling-server && npm run dev",
-    "build": "cd backend && npm install && npm run build && cd .. && npm run build:frontend",
+    "build": "cd backend && npm run build && cd .. && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && pnpm install && pnpm run build",
     "prestart": "if [ \"$NODE_ENV\" != \"production\" ]; then npm run setup:links; fi",
