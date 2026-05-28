@@ -9,6 +9,10 @@ import postgres from 'postgres';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { authRoutes } from './routes/v1/auth.js';
+import { tenantRoutes } from './routes/v1/tenants.js';
+import { companyRoutes } from './routes/v1/companies.js';
+import { projectRoutes } from './routes/v1/projects.js';
+import { ifcModelRoutes } from './routes/v1/ifc-models.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
 import { meetingsRoutes } from './modules/virtual-meetings/meetings.routes.js';
 import { ifcRoutes } from './modules/ifc/ifc.routes.js';
@@ -302,6 +306,10 @@ server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: Fastif
 // =====================================
 
 await server.register(authRoutes, { prefix: '/api/v1/auth' });
+await server.register(tenantRoutes, { prefix: '/api/v1' });
+await server.register(companyRoutes, { prefix: '/api/v1' });
+await server.register(projectRoutes, { prefix: '/api/v1' });
+await server.register(ifcModelRoutes, { prefix: '/api/v1' });
 await server.register(projectsRoutes, { prefix: '/api/v1/projects' });
 await server.register(meetingsRoutes, { prefix: '/api/v1/meetings' });
 await server.register(ifcRoutes, { prefix: '/api/v1/ifc' });

@@ -1,0 +1,160 @@
+import { FastifyInstance } from 'fastify';
+import { projects, ifcModels, federatedModels } from '../../shared/database/schema/projects.js';
+import { tenants, companies } from '../../shared/database/schema/tenants.js';
+import { db } from '../../shared/database/db.js';
+import { eq, desc, and } from 'drizzle-orm';
+
+export async function projectRoutes(fastify: FastifyInstance) {
+  // Get all projects for a tenant
+  fastify.get('/tenants/:tenantId/projects', async (request, reply) => {
+    const { tenantId } = request.params as { tenantId: string };
+    try {
+      const tenantProjects = await db.select().from(projects).where(eq(projects.tenantId, tenantId)).orderBy(desc(projects.createdAt));
+      return reply.send(tenantProjects);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch projects' });
+    }
+  });
+
+  // Get projects for a company
+  fastify.get('/companies/:companyId/projects', async (request, reply) => {
+    const { companyId } = request.params as { companyId: string };
+    try {
+      const companyProjects = await db.select().from(projects).where(eq(projects.companyId, companyId)).orderBy(desc(projects.createdAt));
+      return reply.send(companyProjects);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch projects' });
+    }
+  });
+
+  // Get project by ID
+  fastify.get('/projects/:projectId', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    try {
+      const project = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
+      if (!project || project.length === 0) {
+        return reply.status(404).send({ error: 'Project not found' });
+      }
+      return reply.send(project[0]);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch project' });
+    }
+  });
+
+  // Create project for a tenant and company
+  fastify.post('/tenants/:tenantId/companies/:companyId/projects', async (request, reply) => {
+    const { tenantId, companyId } = request.params as { tenantId: string; companyId: string };
+    const body = request.body as {
+      name: string;
+      description?: string;
+      location?: {
+        address?: string;
+        city?: string;
+        country?: string;
+        coordinates?: { lat: number; lng: number };
+      };
+    };
+    try {
+      // Verify tenant and company exist
+      const tenant = await db.select().from(tenants).where(eq(tenants.tenantId, tenantId)).limit(1);
+      if (!tenant || tenant.length === 0) {
+        return reply.status(404).send({ error: 'Tenant not found' });
+      }
+
+      const company = await db.select().from(companies).where(eq(companies.companyId, companyId)).limit(1);
+      if (!company || company.length === 0) {
+        return reply.status(404).send({ error: 'Company not found' });
+      }
+
+      const [newProject] = await db.insert(projects).values({
+        tenantId,
+        companyId,
+        name: body.name,
+        description: body.description,
+        location: body.location,
+        status: 'active',
+      }).returning();
+      return reply.status(201).send(newProject);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to create project' });
+    }
+  });
+
+  // Update project
+  fastify.put('/projects/:projectId', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    const body = request.body as {
+      name?: string;
+      description?: string;
+      location?: {
+        address?: string;
+        city?: string;
+        country?: string;
+        coordinates?: { lat: number; lng: number };
+      };
+      status?: 'active' | 'archived' | 'completed';
+    };
+    try {
+      const [updatedProject] = await db.update(projects)
+        .set({
+          ...(body.name && { name: body.name }),
+          ...(body.description !== undefined && { description: body.description }),
+          ...(body.location !== undefined && { location: body.location }),
+          ...(body.status && { status: body.status }),
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, projectId))
+        .returning();
+      if (!updatedProject) {
+        return reply.status(404).send({ error: 'Project not found' });
+      }
+      return reply.send(updatedProject);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to update project' });
+    }
+  });
+
+  // Delete project
+  fastify.delete('/projects/:projectId', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    try {
+      const [deletedProject] = await db.delete(projects).where(eq(projects.id, projectId)).returning();
+      if (!deletedProject) {
+        return reply.status(404).send({ error: 'Project not found' });
+      }
+      return reply.send({ message: 'Project deleted successfully' });
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to delete project' });
+    }
+  });
+
+  // Get IFC models for a project
+  fastify.get('/projects/:projectId/ifc-models', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    try {
+      const models = await db.select().from(ifcModels).where(eq(ifcModels.projectId, projectId)).orderBy(desc(ifcModels.uploadedAt));
+      return reply.send(models);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch IFC models' });
+    }
+  });
+
+  // Get federated models for a project
+  fastify.get('/projects/:projectId/federated-models', async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    try {
+      const federated = await db.select().from(federatedModels).where(eq(federatedModels.projectId, projectId)).orderBy(desc(federatedModels.createdAt));
+      return reply.send(federated);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch federated models' });
+    }
+  });
+}
