@@ -108,6 +108,50 @@ export interface FederatedModel {
   updatedAt: string;
 }
 
+export interface BIMSchedule {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScheduleTask {
+  id: string;
+  scheduleId: string;
+  taskName: string;
+  startDate: string;
+  endDate: string;
+  progress: number;
+  dependencies?: string[];
+  isCriticalPath: boolean;
+  createdAt: string;
+}
+
+export interface TaskElementLink {
+  id: string;
+  taskId: string;
+  elementId: string;
+  action?: string;
+}
+
+export interface TimelineSimulation {
+  id: string;
+  scheduleId: string;
+  name?: string;
+  simulationDate: string;
+  snapshot: {
+    visibleElements: string[];
+    hiddenElements: string[];
+    partialElements: Record<string, number>;
+  };
+  createdAt: string;
+}
+
 class TenantService {
   private getAuthHeaders() {
     const token = localStorage.getItem('arxisvr_token');
@@ -471,6 +515,175 @@ class TenantService {
     });
     if (!response.ok) throw new Error('Failed to update model transform');
     return response.json();
+  }
+
+  // BIM Scheduling (4D)
+  async getSchedules(projectId: string): Promise<BIMSchedule[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/schedules`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch schedules');
+    return response.json();
+  }
+
+  async getSchedule(scheduleId: string): Promise<BIMSchedule> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch schedule');
+    return response.json();
+  }
+
+  async createSchedule(projectId: string, data: {
+    name: string;
+    description?: string;
+    startDate: string;
+    endDate: string;
+    createdBy: string;
+  }): Promise<BIMSchedule> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/schedules`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create schedule');
+    return response.json();
+  }
+
+  async updateSchedule(scheduleId: string, data: {
+    name?: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<BIMSchedule> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update schedule');
+    return response.json();
+  }
+
+  async deleteSchedule(scheduleId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete schedule');
+  }
+
+  async getScheduleTasks(scheduleId: string): Promise<ScheduleTask[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}/tasks`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch tasks');
+    return response.json();
+  }
+
+  async createTask(scheduleId: string, data: {
+    taskName: string;
+    startDate: string;
+    endDate: string;
+    progress?: number;
+    dependencies?: string[];
+    isCriticalPath?: boolean;
+  }): Promise<ScheduleTask> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}/tasks`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create task');
+    return response.json();
+  }
+
+  async updateTask(taskId: string, data: {
+    taskName?: string;
+    startDate?: string;
+    endDate?: string;
+    progress?: number;
+    dependencies?: string[];
+    isCriticalPath?: boolean;
+  }): Promise<ScheduleTask> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update task');
+    return response.json();
+  }
+
+  async deleteTask(taskId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete task');
+  }
+
+  async getTaskElements(taskId: string): Promise<TaskElementLink[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}/elements`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch task elements');
+    return response.json();
+  }
+
+  async linkElementToTask(taskId: string, data: {
+    elementId: string;
+    action?: string;
+  }): Promise<TaskElementLink> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}/elements`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to link element to task');
+    return response.json();
+  }
+
+  async unlinkElementFromTask(taskId: string, elementId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}/elements/${elementId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to unlink element');
+  }
+
+  async getSimulations(scheduleId: string): Promise<TimelineSimulation[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}/simulations`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch simulations');
+    return response.json();
+  }
+
+  async createSimulation(scheduleId: string, data: {
+    name?: string;
+    simulationDate: string;
+    snapshot: {
+      visibleElements: string[];
+      hiddenElements: string[];
+      partialElements: Record<string, number>;
+    };
+  }): Promise<TimelineSimulation> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}/simulations`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create simulation');
+    return response.json();
+  }
+
+  async deleteSimulation(simulationId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/simulations/${simulationId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete simulation');
   }
 }
 
