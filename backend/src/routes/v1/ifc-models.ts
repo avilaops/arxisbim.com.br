@@ -60,8 +60,8 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: 'Only IFC files are allowed' });
       }
 
-      // Generate storage key
-      const storageKey = `${project[0].tenantId}/${projectId}/${filename}`;
+      // Generate storage key (with tenant prefix for storage routes)
+      const storageKey = `tenants/${project[0].tenantId}/${projectId}/${filename}`;
 
       // Save file to storage
       const { size: fileSizeBytes } = await storageService.upload(storageKey, file);
