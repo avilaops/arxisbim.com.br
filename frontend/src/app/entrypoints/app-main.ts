@@ -7,6 +7,9 @@ import { tenantService } from '../../api/v1/services/tenant.service';
 import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import { AuthModal } from '../../app/components/AuthModal.js';
 import { AdminPanel } from '../../app/components/AdminPanel.js';
+import { FederatedModelsPanel } from '../../app/components/FederatedModelsPanel.js';
+import { SchedulingPanel } from '../../app/components/SchedulingPanel.js';
+import { MeetingsPanel } from '../../app/components/MeetingsPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -61,10 +64,85 @@ async function init() {
   // Initialize Admin Panel
   const adminPanel = new AdminPanel();
 
+  // Initialize Federated Models Panel
+  const federatedPanel = new FederatedModelsPanel();
+
+  // Initialize Scheduling Panel
+  const schedulingPanel = new SchedulingPanel();
+
+  // Initialize Meetings Panel
+  const meetingsPanel = new MeetingsPanel();
+
   // Connect settings button to admin panel
   const settingsBtn = document.querySelector('[title="Configurações"]');
   if (settingsBtn) {
     settingsBtn.addEventListener('click', () => adminPanel.open());
+  }
+
+  // Add button to open federated models panel in IFC section
+  const ifcSection = document.querySelector('[data-view="ifc"]');
+  if (ifcSection) {
+    const federatedBtn = document.createElement('button');
+    federatedBtn.innerHTML = 'Modelos Federados';
+    federatedBtn.style.cssText = 'padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;';
+    federatedBtn.addEventListener('click', () => {
+      if (PROJECT_ID) {
+        federatedPanel.open(PROJECT_ID);
+      } else {
+        alert('Selecione um projeto primeiro');
+      }
+    });
+    
+    // Add button after IFC list
+    const ifcList = document.getElementById('ifc-list');
+    if (ifcList && ifcList.parentElement) {
+      ifcList.parentElement.appendChild(federatedBtn);
+    }
+  }
+
+  // Add button to open scheduling panel in BIM 4D section
+  const bim4dSection = document.querySelector('[data-view="bim4d"]');
+  if (bim4dSection) {
+    const schedulingBtn = document.createElement('button');
+    schedulingBtn.innerHTML = 'Abrir Cronograma 4D';
+    schedulingBtn.style.cssText = 'padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;';
+    schedulingBtn.addEventListener('click', () => {
+      if (PROJECT_ID) {
+        schedulingPanel.open(PROJECT_ID);
+      } else {
+        alert('Selecione um projeto primeiro');
+      }
+    });
+    
+    // Add button to BIM 4D section (we'll need to find where to add it)
+    setTimeout(() => {
+      const bim4dContent = document.querySelector('[data-view="bim4d"]')?.parentElement;
+      if (bim4dContent) {
+        bim4dContent.appendChild(schedulingBtn);
+      }
+    }, 100);
+  }
+
+  // Add button to open meetings panel in XR section
+  const xrSection = document.querySelector('[data-view="ar"]');
+  if (xrSection) {
+    const meetingsBtn = document.createElement('button');
+    meetingsBtn.innerHTML = 'Reuniões XR';
+    meetingsBtn.style.cssText = 'padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;';
+    meetingsBtn.addEventListener('click', () => {
+      if (PROJECT_ID) {
+        meetingsPanel.open(PROJECT_ID);
+      } else {
+        alert('Selecione um projeto primeiro');
+      }
+    });
+    
+    setTimeout(() => {
+      const xrContent = document.querySelector('[data-view="ar"]')?.parentElement;
+      if (xrContent) {
+        xrContent.appendChild(meetingsBtn);
+      }
+    }, 100);
   }
 
   // Initialize Tenant/Project Selector
