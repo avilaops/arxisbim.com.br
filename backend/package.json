@@ -23,7 +23,7 @@
         "node": ">=18.0.0"
     },
     "dependencies": {
-        "@fastify/static": "^7.0.0"
+        "@fastify/static": "^8.0.0"
     },
     "devDependencies": {
         "tsx": "^4.22.3",
