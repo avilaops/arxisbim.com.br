@@ -160,7 +160,7 @@ export const errorResponseSchema = z.object({
   statusCode: z.number().int(),
   timestamp: z.string(),
   path: z.string().optional(),
-  details: z.record(z.any()).optional(),
+  details: z.record(z.string(), z.any()).optional(),
 });
 
 // =====================================

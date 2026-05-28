@@ -29,7 +29,7 @@ export const billingWebhookSchema = z.object({
   plan: billingPlanSchema.optional(),
   billingCycle: billingCycleSchema.optional(),
   status: z.enum(['trialing', 'active', 'past_due', 'canceled', 'incomplete']).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;

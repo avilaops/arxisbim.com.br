@@ -44,7 +44,7 @@ export const createActionSchema = z.object({
   roomId: z.string().uuid(),
   userId: z.string().uuid(),
   actionType: z.enum(['laser_pointer', 'annotation', 'highlight', 'measure', 'section']),
-  actionData: z.record(z.any()),
+  actionData: z.record(z.string(), z.any()),
   targetElementId: z.string().optional(),
 });
 

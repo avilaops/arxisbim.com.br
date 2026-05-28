@@ -3,7 +3,7 @@
 
 
 import { Readable } from 'stream';
-import { minioClient } from './minio.client';
+import { minioClient } from './minio.client.js';
 const BUCKET = process.env.MINIO_BUCKET || 'arxisvr-files';
 
 export interface UploadOptions {
@@ -76,7 +76,7 @@ export class StorageService {
 
     // Log de auditoria
     if (options?.tenantId && options?.userId) {
-      const { observabilityService } = await import('../../core/observability/service');
+      const { observabilityService } = await import('../../core/observability/service.js');
       await observabilityService.logAudit({
         tenantId: options.tenantId,
         userId: options.userId,
@@ -116,7 +116,7 @@ export class StorageService {
 
     // Log de auditoria
     if (options?.tenantId && options?.userId) {
-      const { observabilityService } = await import('../../core/observability/service');
+      const { observabilityService } = await import('../../core/observability/service.js');
       await observabilityService.logAudit({
         tenantId: options.tenantId,
         userId: options.userId,
@@ -172,7 +172,7 @@ export class StorageService {
     await minioClient.removeObject(BUCKET, path);
     // Log de auditoria
     if (options?.tenantId && options?.userId) {
-      const { observabilityService } = await import('../../core/observability/service');
+      const { observabilityService } = await import('../../core/observability/service.js');
       await observabilityService.logAudit({
         tenantId: options.tenantId,
         userId: options.userId,
@@ -227,7 +227,7 @@ export class StorageService {
     // Listar versões do arquivo (MinIO/S3 API compatível)
     // MinIO precisa estar com versionamento habilitado no bucket
     const versions: FileVersionInfo[] = [];
-    const stream = minioClient.listObjectVersions(BUCKET, path);
+    const stream = minioClient.listObjects(BUCKET, path, true);
     for await (const obj of stream) {
       if (obj.name === path && obj.versionId) {
         versions.push({

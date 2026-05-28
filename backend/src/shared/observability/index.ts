@@ -40,9 +40,7 @@ export function setupObservability(): void {
         '@opentelemetry/instrumentation-fs': {
           enabled: false,
         },
-        '@opentelemetry/instrumentation-http': {
-          ignoreIncomingPaths: ['/health', '/health/ready', '/health/live'],
-        },
+        '@opentelemetry/instrumentation-http': {},
       }),
     ],
   });

@@ -41,7 +41,15 @@ export const scenarioConfigSchema = z.object({
   sprintMultiplier: z.number().min(1).max(5).default(2),
   verticalSpeed: z.number().min(0.1).max(100).default(5),
   enableMinimap: z.boolean().default(true),
-  minimapConfig: minimapConfigSchema.default({}),
+  minimapConfig: minimapConfigSchema.default({
+    width: 200,
+    height: 200,
+    position: 'bottom-right',
+    zoom: 1,
+    showPlayerDirection: true,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderColor: '#ffffff',
+  }),
 });
 
 // Create Scenario Schema
@@ -50,7 +58,25 @@ export const createScenarioSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   presetId: z.string().max(80).optional(),
-  config: scenarioConfigSchema.default({}),
+  config: scenarioConfigSchema.default({
+    initialPosition: { x: 0, y: 0, z: 0 },
+    initialRotation: { pitch: 0, yaw: 0, roll: 0 },
+    movementSpeed: 5,
+    rotationSpeed: 90,
+    crouchMultiplier: 0.5,
+    sprintMultiplier: 2,
+    verticalSpeed: 5,
+    enableMinimap: true,
+    minimapConfig: {
+      width: 200,
+      height: 200,
+      position: 'bottom-right',
+      zoom: 1,
+      showPlayerDirection: true,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      borderColor: '#ffffff',
+    },
+  }),
 });
 
 // Update Scenario Schema

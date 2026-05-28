@@ -1,7 +1,7 @@
 // storage.controller.ts
 // Controller inicial para StorageService (esqueleto)
 
-import { StorageService } from './storage.service';
+import { StorageService } from './storage.service.js';
 
 export class StorageController {
   private storageService = new StorageService();
