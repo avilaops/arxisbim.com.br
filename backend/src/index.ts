@@ -4,7 +4,10 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
+import staticFiles from '@fastify/static';
 import postgres from 'postgres';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { authRoutes } from './routes/v1/auth.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
 import { meetingsRoutes } from './modules/virtual-meetings/meetings.routes.js';
@@ -98,6 +101,16 @@ await server.register(multipart, {
     files: 1, // 1 file per request
   },
 } as any);
+
+// Serve static files from frontend
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+
+await server.register(staticFiles, {
+  root: frontendDistPath,
+  prefix: '/', // Serve from root
+});
 
 // =====================================
 // OBSERVABILITY HOOKS
