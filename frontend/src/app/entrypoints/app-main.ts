@@ -388,9 +388,63 @@ function setupNavigation() {
   // Setup navigation buttons
   const navButtons = document.querySelectorAll('.nav-button');
   navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       navButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+
+      const view = btn.getAttribute('data-view');
+      console.log('View changed to:', view);
+
+      // Load view-specific functionality
+      switch (view) {
+        case 'ifc':
+          // Show IFC Project Panel
+          if (viewerHost) {
+            try {
+              const { IFCProjectPanel } = await import('../../systems/model/IFCProjectPanel');
+              const panel = new IFCProjectPanel({
+                mountPoint: document.getElementById('left-sidebar'),
+                viewerHost
+              });
+              console.log('IFC Project Panel loaded');
+            } catch (err) {
+              console.error('Failed to load IFC Project Panel:', err);
+            }
+          }
+          break;
+
+        case 'bim4d':
+          // Load BIM 4D scheduling features
+          if (viewerHost) {
+            try {
+              const { BIM4DManager } = await import('../../features/bim-4d/bim/4d');
+              const manager = new BIM4DManager(viewerHost.scene, viewerHost.camera);
+              console.log('BIM 4D Manager loaded');
+            } catch (err) {
+              console.error('Failed to load BIM 4D Manager:', err);
+            }
+          }
+          break;
+
+        case 'ar':
+          // Load XR/AR immersive features
+          if (viewerHost) {
+            try {
+              const { AvatarSystem } = await import('../../features/virtual-meetings/avatar/AvatarSystem');
+              const avatarSystem = new AvatarSystem(viewerHost.scene);
+              console.log('XR Avatar System loaded');
+            } catch (err) {
+              console.error('Failed to load XR features:', err);
+            }
+          }
+          break;
+
+        case 'viewer':
+        default:
+          // Default workspace view - no special loading
+          console.log('Workspace view active');
+          break;
+      }
     });
   });
 }
@@ -406,8 +460,11 @@ function setupIfcUpload() {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file && viewerHost && ifcLoader) {
           try {
-            // await ifcLoader.loadFromFile(file);
+            await ifcLoader.load(file);
             console.log('IFC carregado:', file.name);
+            loadedIfcModelId = file.name;
+            // Update IFC list
+            await loadIfcModels();
           } catch (err) {
             console.error('Erro ao carregar IFC:', err);
             alert('Erro ao carregar arquivo IFC');
@@ -436,12 +493,15 @@ function setupDragDropIfc() {
   canvasArea.addEventListener('drop', async (e) => {
     e.preventDefault();
     canvasArea.classList.remove('dnd-overlay');
-    
+
     const file = (e as any).dataTransfer?.files[0];
     if (file && file.name.endsWith('.ifc') && viewerHost && ifcLoader) {
       try {
-        // await ifcLoader.loadFromFile(file);
+        await ifcLoader.load(file);
         console.log('IFC carregado via drag-drop:', file.name);
+        loadedIfcModelId = file.name;
+        // Update IFC list
+        await loadIfcModels();
       } catch (err) {
         console.error('Erro ao carregar IFC:', err);
         alert('Erro ao carregar arquivo IFC');
@@ -453,12 +513,12 @@ function setupDragDropIfc() {
 function setupCameraModeControls(viewerHost: ViewerHost) {
   const buttons = document.querySelectorAll('.camera-mode-button');
   const statusEl = document.getElementById('camera-mode-status');
-  
+
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      
+
       const mode = btn.getAttribute('data-camera-mode');
       if (statusEl) {
         const modeNames: Record<string, string> = {
@@ -468,6 +528,33 @@ function setupCameraModeControls(viewerHost: ViewerHost) {
           'orbit': 'Órbita'
         };
         statusEl.innerHTML = `<strong>${modeNames[mode || ''] || mode}:</strong> ${getModeHint(mode || '')}`;
+      }
+
+      // Apply camera mode changes
+      if (viewerHost && viewerHost.controls) {
+        switch (mode) {
+          case 'fps':
+            viewerHost.controls.enableZoom = true;
+            viewerHost.controls.enableRotate = true;
+            viewerHost.controls.enablePan = true;
+            break;
+          case 'third-person':
+            viewerHost.controls.enableZoom = true;
+            viewerHost.controls.enableRotate = true;
+            viewerHost.controls.enablePan = true;
+            break;
+          case 'drone':
+            viewerHost.controls.enableZoom = true;
+            viewerHost.controls.enableRotate = true;
+            viewerHost.controls.enablePan = true;
+            break;
+          case 'orbit':
+            viewerHost.controls.enableZoom = true;
+            viewerHost.controls.enableRotate = true;
+            viewerHost.controls.enablePan = true;
+            break;
+        }
+        viewerHost.controls.update();
       }
     });
   });
@@ -487,10 +574,23 @@ function setupGravityControls(viewerHost: ViewerHost) {
   const slider = document.getElementById('gravity-slider') as HTMLInputElement;
   const valueEl = document.getElementById('gravity-value');
   const checkbox = document.getElementById('gravity-enabled') as HTMLInputElement;
-  
+
   if (slider && valueEl) {
     slider.addEventListener('input', () => {
       valueEl.textContent = slider.value;
+      // Apply gravity to viewerHost if it has physics
+      if (viewerHost && (viewerHost as any).physics) {
+        (viewerHost as any).physics.gravity = parseFloat(slider.value);
+      }
+    });
+  }
+
+  if (checkbox) {
+    checkbox.addEventListener('change', () => {
+      // Enable/disable gravity in viewerHost
+      if (viewerHost && (viewerHost as any).physics) {
+        (viewerHost as any).physics.enabled = checkbox.checked;
+      }
     });
   }
 }
