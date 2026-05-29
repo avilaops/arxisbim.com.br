@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createScenarioHandler, getScenariosHandler, getScenarioHandler, updateScenarioHandler, deleteScenarioHandler } from './scenarios.controller';
+import { createScenarioHandler, getScenariosHandler, getScenarioHandler, updateScenarioHandler, deleteScenarioHandler } from './scenarios.controller.js';
 
 export async function scenariosRoutes(fastify: FastifyInstance) {
   fastify.get('/api/v1/projects/:projectId/scenarios', getScenariosHandler);

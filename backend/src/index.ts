@@ -1,6 +1,5 @@
 import taskElementLinksRoutes from './routes/v1/task-element-links.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
-import notificationsRoutes from './routes/v1/notifications.js';
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';

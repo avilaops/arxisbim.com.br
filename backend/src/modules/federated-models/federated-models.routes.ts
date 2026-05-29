@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createFederatedModelHandler, getFederatedModelsHandler, getFederatedModelHandler, updateFederatedModelHandler, deleteFederatedModelHandler } from './federated-models.controller';
+import { createFederatedModelHandler, getFederatedModelsHandler, getFederatedModelHandler, updateFederatedModelHandler, deleteFederatedModelHandler } from './federated-models.controller.js';
 
 export async function federatedModelsRoutes(fastify: FastifyInstance) {
   fastify.get('/api/v1/projects/:projectId/federated-models', getFederatedModelsHandler);

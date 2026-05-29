@@ -1,2 +1,2 @@
-export * from './federated-models.routes';
-export * from './federated-models.controller';
+export * from './federated-models.routes.js';
+export * from './federated-models.controller.js';

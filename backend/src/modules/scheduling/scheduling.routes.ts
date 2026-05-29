@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createSchedulingHandler, getSchedulingsHandler, getSchedulingHandler, updateSchedulingHandler, deleteSchedulingHandler } from './scheduling.controller';
+import { createSchedulingHandler, getSchedulingsHandler, getSchedulingHandler, updateSchedulingHandler, deleteSchedulingHandler } from './scheduling.controller.js';
 
 export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.get('/api/v1/projects/:projectId/scheduling', getSchedulingsHandler);

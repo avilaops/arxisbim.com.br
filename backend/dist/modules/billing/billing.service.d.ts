@@ -53,10 +53,10 @@ export declare class BillingService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            status: string;
             metadata: Record<string, any>;
             expiresAt: Date;
             plan: BillingPlanTier;
-            status: string;
             billingCycle: BillingCycle;
             currency: string;
             amountCents: number;

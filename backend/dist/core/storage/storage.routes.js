@@ -133,5 +133,58 @@ export async function storageRoutes(fastify) {
             });
         },
     });
+    /**
+     * Serve a stored file directly.
+     *
+     * GET /api/v1/storage/:key
+     * This allows downloading files without presigned URLs (useful for local storage).
+     */
+    fastify.get('/:key', {
+        schema: {
+            description: 'Download a stored file by key.',
+            tags: ['storage'],
+            params: {
+                type: 'object',
+                required: ['key'],
+                properties: {
+                    key: { type: 'string' },
+                },
+            },
+        },
+        preHandler: authenticateRequest,
+        handler: async (request, reply) => {
+            const user = request.user;
+            const { key } = request.params;
+            if (!isKeyAllowedForTenant(key, user.tenantId)) {
+                return reply.code(403).send({
+                    error: 'Forbidden: key is not under your tenant prefix',
+                });
+            }
+            try {
+                const buffer = await storage.download(key);
+                // Detect content type based on file extension
+                const ext = key.split('.').pop()?.toLowerCase() || '';
+                const contentTypes = {
+                    'ifc': 'application/ifc',
+                    'ifcxml': 'application/xml',
+                    'json': 'application/json',
+                    'png': 'image/png',
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'gif': 'image/gif',
+                    'pdf': 'application/pdf',
+                };
+                reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
+                reply.header('Content-Disposition', `attachment; filename="${key.split('/').pop()}"`);
+                return reply.send(buffer);
+            }
+            catch (err) {
+                if (err?.code === 'NOT_FOUND') {
+                    return reply.code(404).send({ error: 'File not found' });
+                }
+                throw err;
+            }
+        },
+    });
 }
 //# sourceMappingURL=storage.routes.js.map

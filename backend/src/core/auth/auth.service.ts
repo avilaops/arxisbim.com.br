@@ -283,14 +283,14 @@ export class AuthService {
    * Gerar access token
    */
   private generateAccessToken(payload: JWTPayload): string {
-    return jwt.sign(payload, this.jwtSecret, { expiresIn: this.accessTokenExpiry });
+    return jwt.sign(payload, this.jwtSecret as string, { expiresIn: this.accessTokenExpiry } as jwt.SignOptions);
   }
 
   /**
    * Gerar refresh token
    */
   private generateRefreshToken(payload: Pick<JWTPayload, 'userId' | 'email' | 'tenantId'>): string {
-    return jwt.sign(payload, this.jwtRefreshSecret, { expiresIn: this.refreshTokenExpiry });
+    return jwt.sign(payload, this.jwtRefreshSecret as string, { expiresIn: this.refreshTokenExpiry } as jwt.SignOptions);
   }
 
   /**

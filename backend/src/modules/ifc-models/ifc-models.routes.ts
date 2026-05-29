@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createIfcModelHandler, getIfcModelsHandler, getIfcModelHandler, updateIfcModelHandler, deleteIfcModelHandler } from './ifc-models.controller';
+import { createIfcModelHandler, getIfcModelsHandler, getIfcModelHandler, updateIfcModelHandler, deleteIfcModelHandler } from './ifc-models.controller.js';
 
 export async function ifcModelsRoutes(fastify: FastifyInstance) {
   fastify.get('/api/v1/projects/:projectId/ifc-models', getIfcModelsHandler);

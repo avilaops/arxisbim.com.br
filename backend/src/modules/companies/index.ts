@@ -1,2 +1,2 @@
-export * from './companies.routes';
-export * from './companies.controller';
+export * from './companies.routes.js';
+export * from './companies.controller.js';

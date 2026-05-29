@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createCompanyHandler, getCompaniesHandler, getCompanyHandler, updateCompanyHandler, deleteCompanyHandler } from './companies.controller';
+import { createCompanyHandler, getCompaniesHandler, getCompanyHandler, updateCompanyHandler, deleteCompanyHandler } from './companies.controller.js';
 
 export async function companiesRoutes(fastify: FastifyInstance) {
   fastify.get('/api/v1/companies', getCompaniesHandler);

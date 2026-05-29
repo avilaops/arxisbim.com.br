@@ -1,12 +1,6 @@
-import jwt from 'jsonwebtoken';
+import { AuthService } from './auth.service.js';
 import { extractTenantContext } from '../tenancy/context.js';
-// Validate JWT_SECRET at module load
-if (!process.env.JWT_SECRET) {
-    console.error('❌ CRITICAL: JWT_SECRET not configured in environment variables');
-    console.error('   Set JWT_SECRET in your .env file before starting the server');
-    process.exit(1);
-}
-const JWT_SECRET = process.env.JWT_SECRET;
+const authService = new AuthService();
 // =====================================
 // AUTHENTICATION MIDDLEWARE
 // =====================================
@@ -20,15 +14,16 @@ export async function authenticateRequest(request, reply) {
     }
     const token = authHeader.substring(7);
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const role = ['owner', 'admin', 'user', 'viewer'].includes(decoded.role || '')
+        const decoded = authService.verifyToken(token);
+        const validRoles = ['owner', 'admin', 'user', 'viewer'];
+        const role = validRoles.includes(decoded.role)
             ? decoded.role
             : 'user';
         const permissions = Array.isArray(decoded.permissions) ? decoded.permissions : [];
         const user = {
             userId: decoded.userId,
-            email: '', // Will be populated from database if needed
-            name: '',
+            email: decoded.email,
+            name: '', // Will be populated from database if needed
             role,
             permissions,
             tenantId: decoded.tenantId,
