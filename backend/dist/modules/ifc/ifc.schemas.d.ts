@@ -17,9 +17,9 @@ export declare const IfcDisciplineEnum: z.ZodEnum<{
  * IFC Phases enum
  */
 export declare const IfcPhaseEnum: z.ZodEnum<{
+    new: "new";
     existing: "existing";
     demolition: "demolition";
-    new: "new";
     renovation: "renovation";
     future: "future";
 }>;
@@ -41,9 +41,9 @@ export declare const uploadIfcMetadataSchema: z.ZodObject<{
         other: "other";
     }>;
     phase: z.ZodOptional<z.ZodEnum<{
+        new: "new";
         existing: "existing";
         demolition: "demolition";
-        new: "new";
         renovation: "renovation";
         future: "future";
     }>>;
@@ -66,9 +66,9 @@ export declare const updateIfcMetadataSchema: z.ZodObject<{
         other: "other";
     }>>;
     phase: z.ZodOptional<z.ZodEnum<{
+        new: "new";
         existing: "existing";
         demolition: "demolition";
-        new: "new";
         renovation: "renovation";
         future: "future";
     }>>;
@@ -97,9 +97,9 @@ export declare const ifcModelSchema: z.ZodObject<{
         other: "other";
     }>;
     phase: z.ZodNullable<z.ZodEnum<{
+        new: "new";
         existing: "existing";
         demolition: "demolition";
-        new: "new";
         renovation: "renovation";
         future: "future";
     }>>;

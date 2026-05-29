@@ -10,6 +10,7 @@ class TenantProjectSelector {
     this.selectedProject = localStorage.getItem('arxisvr_project_id') || null;
     this.loading = false;
     this.error = null;
+    this.showCreateProjectInput = false;
   }
 
   hasAuthToken() {
@@ -214,6 +215,52 @@ class TenantProjectSelector {
       `;
     }
 
+    if (this.showCreateProjectInput) {
+      html += `
+        <div style="padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; margin-top: 12px;">
+          <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">Criar Projeto</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="project-name" placeholder="Nome do projeto" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-secondary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <input type="text" id="project-desc" placeholder="Descrição (opcional)" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-secondary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <div style="display: flex; gap: 8px;">
+              <button id="project-create-confirm" style="
+                padding: 8px 16px;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Criar</button>
+              <button id="project-create-cancel" style="
+                padding: 8px 16px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     html += '</div>';
     container.innerHTML = html;
 
@@ -237,22 +284,40 @@ class TenantProjectSelector {
     if (createProjectBtn) {
       createProjectBtn.addEventListener('click', () => this.handleCreateProject());
     }
+
+    // Create project input handlers
+    document.getElementById('project-create-confirm')?.addEventListener('click', () => {
+      const name = document.getElementById('project-name')?.value;
+      const description = document.getElementById('project-desc')?.value;
+      this.confirmCreateProject({ name, description });
+    });
+    document.getElementById('project-create-cancel')?.addEventListener('click', () => {
+      this.showCreateProjectInput = false;
+      this.render();
+    });
   }
 
   async handleCreateProject() {
-    const name = prompt('Nome do projeto:');
-    if (!name) return;
+    this.showCreateProjectInput = true;
+    this.render();
+  }
 
-    const description = prompt('Descrição (opcional):') || undefined;
+  async confirmCreateProject(data) {
+    if (!data.name) {
+      this.showCreateProjectInput = false;
+      this.render();
+      return;
+    }
 
     this.loading = true;
     this.error = null;
+    this.showCreateProjectInput = false;
     this.render();
 
     try {
       const newProject = await tenantService.createProject(this.selectedTenant, this.selectedCompany, {
-        name,
-        description,
+        name: data.name,
+        description: data.description,
       });
       this.selectedProject = newProject.id;
       localStorage.setItem('arxisvr_project_id', newProject.id);

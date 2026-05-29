@@ -181,6 +181,22 @@ export interface MeetingMessage {
   timestamp: string;
 }
 
+export interface Scenario {
+  id: string;
+  tenantId: string;
+  projectId: string;
+  createdBy: string | null;
+  name: string;
+  description: string | null;
+  presetId: string | null;
+  camera: any;
+  player: any;
+  config: any;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 class TenantService {
   private getAuthHeaders() {
     const token = localStorage.getItem('arxisvr_token');
@@ -804,6 +820,68 @@ class TenantService {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to end meeting room');
+  }
+
+  // Scenarios
+  async getScenarios(projectId: string): Promise<Scenario[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenarios?projectId=${projectId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch scenarios');
+    const result = await response.json();
+    return result.data || [];
+  }
+
+  async getScenario(scenarioId: string): Promise<Scenario> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenarios/${scenarioId}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch scenario');
+    const result = await response.json();
+    return result.data;
+  }
+
+  async createScenario(data: {
+    projectId: string;
+    name: string;
+    description?: string;
+    camera: any;
+    player: any;
+    config?: any;
+  }): Promise<Scenario> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenarios`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create scenario');
+    const result = await response.json();
+    return result.data;
+  }
+
+  async updateScenario(scenarioId: string, data: {
+    name?: string;
+    description?: string;
+    camera?: any;
+    player?: any;
+    config?: any;
+  }): Promise<Scenario> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenarios/${scenarioId}`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update scenario');
+    const result = await response.json();
+    return result.data;
+  }
+
+  async deleteScenario(scenarioId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/scenarios/${scenarioId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete scenario');
   }
 }
 

@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3001';
 
 class AuthModal {
   constructor() {
@@ -7,6 +7,7 @@ class AuthModal {
     this.email = '';
     this.password = '';
     this.name = '';
+    this.tenantId = '';
     this.loading = false;
     this.error = null;
   }
@@ -41,18 +42,21 @@ class AuthModal {
         body: JSON.stringify({
           email: this.email,
           password: this.password,
+          tenantId: this.tenantId,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.error || 'Login failed');
       }
 
-      // Save token
+      // Save token and user data
       localStorage.setItem('arxisvr_token', data.token);
+      localStorage.setItem('arxisvr_refresh_token', data.refreshToken);
       localStorage.setItem('arxisvr_user', JSON.stringify(data.user));
+      localStorage.setItem('arxisvr_tenant_id', data.user.tenantId);
 
       // Close modal and reload page to reinitialize
       this.close();
@@ -77,18 +81,21 @@ class AuthModal {
           email: this.email,
           password: this.password,
           name: this.name,
+          tenantId: this.tenantId,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        throw new Error(data.error || 'Registration failed');
       }
 
       // Auto-login after registration
       localStorage.setItem('arxisvr_token', data.token);
+      localStorage.setItem('arxisvr_refresh_token', data.refreshToken);
       localStorage.setItem('arxisvr_user', JSON.stringify(data.user));
+      localStorage.setItem('arxisvr_tenant_id', data.user.tenantId);
 
       this.close();
       window.location.reload();
@@ -173,6 +180,29 @@ class AuthModal {
     }
 
     html += `
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+              Tenant ID
+            </label>
+            <input
+              type="text"
+              id="auth-tenant-id"
+              value="${this.tenantId}"
+              placeholder="ex: acme-corp"
+              ${this.loading ? 'disabled' : ''}
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-size: 14px;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+
           <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
               Email
@@ -302,6 +332,13 @@ class AuthModal {
     container.innerHTML = html;
 
     // Attach event listeners
+    const tenantIdInput = document.getElementById('auth-tenant-id');
+    if (tenantIdInput) {
+      tenantIdInput.addEventListener('input', (e) => {
+        this.tenantId = e.target.value;
+      });
+    }
+
     const emailInput = document.getElementById('auth-email');
     if (emailInput) {
       emailInput.addEventListener('input', (e) => {

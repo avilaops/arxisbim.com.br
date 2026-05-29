@@ -33,9 +33,13 @@ export class MeetingsGateway {
   private roomParticipants = new Map<string, Set<string>>();
 
   constructor(httpServer: HTTPServer) {
+    const allowedOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174'];
+
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: ['http://localhost:5173', 'http://localhost:3000'],
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
       },
@@ -288,6 +292,60 @@ export class MeetingsGateway {
         } catch (error) {
           console.error('Error loading collaboration history:', error);
           socket.emit(ServerEvents.ERROR, { message: 'Failed to load collaboration history' });
+        }
+      });
+
+      // WEBRTC SIGNALING - Offer
+      socket.on('WEBRTC_OFFER', async (data: { to: string; offer: any }) => {
+        try {
+          if (!socket.roomId || !socket.userId) {
+            return;
+          }
+
+          // Enviar offer para o peer específico
+          this.io.to(socket.roomId).emit('WEBRTC_OFFER', {
+            from: socket.userId,
+            to: data.to,
+            offer: data.offer
+          });
+        } catch (error) {
+          console.error('Error sending WebRTC offer:', error);
+        }
+      });
+
+      // WEBRTC SIGNALING - Answer
+      socket.on('WEBRTC_ANSWER', async (data: { to: string; answer: any }) => {
+        try {
+          if (!socket.roomId || !socket.userId) {
+            return;
+          }
+
+          // Enviar answer para o peer específico
+          this.io.to(socket.roomId).emit('WEBRTC_ANSWER', {
+            from: socket.userId,
+            to: data.to,
+            answer: data.answer
+          });
+        } catch (error) {
+          console.error('Error sending WebRTC answer:', error);
+        }
+      });
+
+      // WEBRTC SIGNALING - ICE Candidate
+      socket.on('WEBRTC_ICE_CANDIDATE', async (data: { to: string; candidate: any }) => {
+        try {
+          if (!socket.roomId || !socket.userId) {
+            return;
+          }
+
+          // Enviar ICE candidate para o peer específico
+          this.io.to(socket.roomId).emit('WEBRTC_ICE_CANDIDATE', {
+            from: socket.userId,
+            to: data.to,
+            candidate: data.candidate
+          });
+        } catch (error) {
+          console.error('Error sending WebRTC ICE candidate:', error);
         }
       });
 

@@ -1,8 +1,6 @@
-const SIGNIN_URL = 'https://signin.avilaops.com';
-
 export default function LoginPage() {
   function handleSignIn() {
-    window.location.href = SIGNIN_URL;
+    window.location.href = '/';
   }
 
   return (
@@ -11,7 +9,7 @@ export default function LoginPage() {
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
           <h1 className="auth-title">ArxisVR</h1>
-          <p className="auth-subtitle">Entre com sua conta AvilaOps para acessar seus projetos BIM</p>
+          <p className="auth-subtitle">Entre com sua conta para acessar seus projetos BIM</p>
         </div>
 
         <div className="auth-form">

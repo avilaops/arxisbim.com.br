@@ -417,7 +417,7 @@
         <a href="#pricing">Planos</a>
       </nav>
       <div class="nav-cta">
-        <a class="btn btn-ghost" href="https://signin.avilaops.com">Entrar</a>
+        <div id="auth-button-container"></div>
         <a class="btn btn-primary" href="/register.html">Começar grátis</a>
       </div>
     </div>
@@ -748,7 +748,7 @@
         <div class="foot-col">
           <h5>Conta</h5>
           <ul>
-            <li><a href="https://signin.avilaops.com">Entrar</a></li>
+            <li><a href="#" id="footer-login-btn">Entrar</a></li>
             <li><a href="/register.html">Cadastrar</a></li>
           </ul>
         </div>
@@ -759,6 +759,23 @@
       </div>
     </div>
   </footer>
+
+  <script type="module" src="/src/app/components/AuthModal.js"></script>
+  <script>
+    // Initialize Auth Modal on landing page after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      import('./src/app/components/AuthModal.js').then(({ AuthModal }) => {
+        const authModal = new AuthModal();
+        authModal.renderAuthButton();
+
+        // Attach event listener to footer login button
+        document.getElementById('footer-login-btn')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          authModal.open('login');
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>

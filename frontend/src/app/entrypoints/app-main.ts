@@ -38,7 +38,6 @@ declare global {
 }
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
-const SIGNIN_URL = 'https://signin.avilaops.com';
 let PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '123e4567-e89b-12d3-a456-426614174000';
 let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 

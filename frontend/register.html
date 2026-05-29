@@ -200,27 +200,28 @@
     </div>
 
     <form id="registerForm">
+      <label for="tenantId">Tenant ID</label>
+      <input id="tenantId" name="tenantId" autocomplete="organization" required minlength="2" placeholder="ex: acme-corp">
+
       <label for="name">Nome</label>
       <input id="name" name="name" autocomplete="name" required minlength="2" placeholder="Seu nome">
-
-      <label for="companyName">Empresa</label>
-      <input id="companyName" name="companyName" autocomplete="organization" required minlength="2" placeholder="Nome da empresa">
 
       <label for="email">Email</label>
       <input id="email" name="email" type="email" autocomplete="email" required placeholder="voce@empresa.com">
 
       <label for="password">Senha</label>
-      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Mín. 8, maiúscula, número e especial">
+      <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Mín. 8 caracteres">
 
       <button id="submitBtn" type="submit">Criar conta</button>
       <div id="status" class="status"></div>
     </form>
 
     <div class="links">
-      Já tem conta? <a href="https://signin.avilaops.com">Entrar</a> · <a href="/">Voltar</a>
+      Já tem conta? <a href="#" id="login-link">Entrar</a> · <a href="/">Voltar</a>
     </div>
   </main>
 
+  <script type="module" src="/src/app/components/AuthModal.js"></script>
   <script>
     const form = document.getElementById('registerForm');
     const statusBox = document.getElementById('status');
@@ -231,6 +232,17 @@
       statusBox.textContent = message;
     }
 
+    // Initialize Auth Modal
+    import('./src/app/components/AuthModal.js').then(({ AuthModal }) => {
+      const authModal = new AuthModal();
+
+      // Attach event listener to login link
+      document.getElementById('login-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        authModal.open('login');
+      });
+    });
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       statusBox.className = 'status';
@@ -240,7 +252,7 @@
       const payload = Object.fromEntries(new FormData(form).entries());
 
       try {
-        const response = await fetch('/api/v1/auth/register', {
+        const response = await fetch('http://localhost:3001/api/v1/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -252,9 +264,12 @@
         }
 
         setStatus('ok', 'Conta criada com sucesso. Redirecionando para o app...');
-        if (data.accessToken) localStorage.setItem('arxisvr_token', data.accessToken);
+        if (data.token) localStorage.setItem('arxisvr_token', data.token);
         if (data.refreshToken) localStorage.setItem('arxisvr_refresh_token', data.refreshToken);
-        if (data.user) localStorage.setItem('arxisvr_user', JSON.stringify(data.user));
+        if (data.user) {
+          localStorage.setItem('arxisvr_user', JSON.stringify(data.user));
+          localStorage.setItem('arxisvr_tenant_id', data.user.tenantId);
+        }
         setTimeout(() => { window.location.href = '/app.html'; }, 900);
       } catch (error) {
         setStatus('err', error.message || 'Não foi possível criar a conta.');

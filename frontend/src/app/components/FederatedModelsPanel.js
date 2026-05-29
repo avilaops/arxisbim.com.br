@@ -9,6 +9,8 @@ class FederatedModelsPanel {
     this.selectedFederated = null;
     this.loading = false;
     this.error = null;
+    this.showCreateInput = false;
+    this.showAddModelInput = false;
   }
 
   open(projectId) {
@@ -49,19 +51,26 @@ class FederatedModelsPanel {
   }
 
   async createFederatedModel() {
-    const name = prompt('Nome do modelo federado:');
-    if (!name) return;
+    this.showCreateInput = true;
+    this.render();
+  }
 
-    const description = prompt('Descrição (opcional):') || undefined;
+  async confirmCreateFederatedModel(data) {
+    if (!data.name) {
+      this.showCreateInput = false;
+      this.render();
+      return;
+    }
 
     this.loading = true;
     this.error = null;
+    this.showCreateInput = false;
     this.render();
 
     try {
       const newFederated = await tenantService.createFederatedModel(this.projectId, {
-        name,
-        description,
+        name: data.name,
+        description: data.description,
         modelReferences: [],
       });
       this.federatedModels.push(newFederated);
@@ -78,29 +87,38 @@ class FederatedModelsPanel {
 
   async addModelToFederated(federatedId) {
     if (this.ifcModels.length === 0) {
-      alert('Nenhum modelo IFC disponível. Faça upload primeiro.');
+      this.error = 'Nenhum modelo IFC disponível. Faça upload primeiro.';
+      this.render();
       return;
     }
 
-    const ifcModelId = prompt('Selecione o modelo IFC (ID):\n' + 
-      this.ifcModels.map((m, i) => `${i + 1}. ${m.name} (${m.id.substring(0, 8)}...)`).join('\n'));
-    
-    if (!ifcModelId) return;
+    this.showAddModelInput = true;
+    this.selectedFederatedForAdd = federatedId;
+    this.render();
+  }
 
-    const index = parseInt(ifcModelId) - 1;
-    if (isNaN(index) || index < 0 || index >= this.ifcModels.length) {
-      alert('Seleção inválida');
+  async confirmAddModelToFederated(ifcModelId) {
+    if (!ifcModelId) {
+      this.showAddModelInput = false;
+      this.render();
       return;
     }
 
-    const selectedModel = this.ifcModels[index];
+    const selectedModel = this.ifcModels.find(m => m.id === ifcModelId);
+    if (!selectedModel) {
+      this.error = 'Seleção inválida';
+      this.showAddModelInput = false;
+      this.render();
+      return;
+    }
 
     this.loading = true;
     this.error = null;
+    this.showAddModelInput = false;
     this.render();
 
     try {
-      await tenantService.addModelToFederated(federatedId, {
+      await tenantService.addModelToFederated(this.selectedFederatedForAdd, {
         ifcModelId: selectedModel.id,
       });
       await this.loadFederatedModels();
@@ -113,8 +131,7 @@ class FederatedModelsPanel {
   }
 
   async removeModelFromFederated(federatedId, ifcModelId) {
-    if (!confirm('Remover este modelo do federado?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -131,8 +148,7 @@ class FederatedModelsPanel {
   }
 
   async deleteFederatedModel(federatedId) {
-    if (!confirm('Deletar este modelo federado?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -245,6 +261,52 @@ class FederatedModelsPanel {
           <h3 style="margin: 0 0 16px 0; font-size: 16px; color: var(--text-primary);">Modelos Federados</h3>
     `;
 
+    if (this.showCreateInput) {
+      html += `
+        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">Criar Modelo Federado</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="federated-name" placeholder="Nome" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <input type="text" id="federated-desc" placeholder="Descrição (opcional)" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <div style="display: flex; gap: 8px;">
+              <button id="federated-create-confirm" style="
+                padding: 8px 16px;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Criar</button>
+              <button id="federated-create-cancel" style="
+                padding: 8px 16px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     if (this.loading) {
       html += `<p style="color: var(--text-secondary);">Carregando...</p>`;
     } else if (this.federatedModels.length === 0) {
@@ -299,6 +361,47 @@ class FederatedModelsPanel {
             margin-bottom: 16px;
           ">+ Adicionar Modelo IFC</button>
       `;
+
+      if (this.showAddModelInput && this.selectedFederatedForAdd === selectedFederated.id) {
+        html += `
+          <div style="padding: 12px; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 16px;">
+            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">Selecione o modelo IFC:</div>
+            <select id="federated-add-model-select" style="
+              width: 100%;
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+              margin-bottom: 8px;
+            ">
+              <option value="">Selecione...</option>
+              ${this.ifcModels.map(m => `<option value="${m.id}">${m.name} (${m.id.substring(0, 8)}...)</option>`).join('')}
+            </select>
+            <div style="display: flex; gap: 8px;">
+              <button id="federated-add-model-confirm" style="
+                padding: 8px 16px;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Adicionar</button>
+              <button id="federated-add-model-cancel" style="
+                padding: 8px 16px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Cancelar</button>
+            </div>
+          </div>
+        `;
+      }
 
       if (selectedFederated.models && selectedFederated.models.length > 0) {
         html += `<div style="max-height: 300px; overflow-y: auto;">`;
@@ -358,6 +461,27 @@ class FederatedModelsPanel {
     // Attach event listeners
     document.getElementById('federated-close')?.addEventListener('click', () => this.close());
     document.getElementById('federated-create')?.addEventListener('click', () => this.createFederatedModel());
+
+    // Create federated input handlers
+    document.getElementById('federated-create-confirm')?.addEventListener('click', () => {
+      const name = document.getElementById('federated-name')?.value;
+      const description = document.getElementById('federated-desc')?.value;
+      this.confirmCreateFederatedModel({ name, description });
+    });
+    document.getElementById('federated-create-cancel')?.addEventListener('click', () => {
+      this.showCreateInput = false;
+      this.render();
+    });
+
+    // Add model input handlers
+    document.getElementById('federated-add-model-confirm')?.addEventListener('click', () => {
+      const ifcModelId = document.getElementById('federated-add-model-select')?.value;
+      this.confirmAddModelToFederated(ifcModelId);
+    });
+    document.getElementById('federated-add-model-cancel')?.addEventListener('click', () => {
+      this.showAddModelInput = false;
+      this.render();
+    });
 
     container.querySelectorAll('.federated-item').forEach(item => {
       item.addEventListener('click', () => this.selectFederated(item.dataset.id));

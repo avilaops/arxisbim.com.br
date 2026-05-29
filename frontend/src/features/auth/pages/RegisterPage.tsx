@@ -1,8 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { authManager } from '../AuthManager';
 
-const SIGNIN_URL = 'https://signin.avilaops.com';
-
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -93,7 +91,7 @@ export default function RegisterPage() {
 
         <p className="auth-footer-text">
           Já tem conta?{' '}
-          <a className="auth-link" href={SIGNIN_URL}>
+          <a className="auth-link" href="/">
             Entrar
           </a>
         </p>

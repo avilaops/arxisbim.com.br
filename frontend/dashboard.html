@@ -385,7 +385,7 @@
       alert(message);
       // Redirecionar para login se não autenticado
       if (!token) {
-        window.location.href = 'https://signin.avilaops.com';
+        window.location.href = '/';
       }
     }
 
@@ -399,7 +399,7 @@
     // Carregar dados inicialmente
     if (!token) {
       showError('Você precisa fazer login para acessar o dashboard.');
-      window.location.href = 'https://signin.avilaops.com';
+      window.location.href = '/';
     } else {
       fetchDashboardData();
     }

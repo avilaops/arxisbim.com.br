@@ -111,18 +111,6 @@ export async function tenantRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get companies for a tenant
-  fastify.get('/tenants/:tenantId/companies', async (request, reply) => {
-    const { tenantId } = request.params as { tenantId: string };
-    try {
-      const tenantCompanies = await db.select().from(companies).where(eq(companies.tenantId, tenantId));
-      return reply.send(tenantCompanies);
-    } catch (error) {
-      fastify.log.error(error);
-      return reply.status(500).send({ error: 'Failed to fetch companies' });
-    }
-  });
-
   // Get users for a tenant
   fastify.get('/tenants/:tenantId/users', async (request, reply) => {
     const { tenantId } = request.params as { tenantId: string };

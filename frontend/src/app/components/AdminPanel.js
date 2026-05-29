@@ -111,8 +111,7 @@ class AdminPanel {
   }
 
   async deleteTenant(tenantId) {
-    if (!confirm('Tem certeza que deseja deletar este tenant?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -145,8 +144,7 @@ class AdminPanel {
   }
 
   async deleteCompany(companyId) {
-    if (!confirm('Tem certeza que deseja deletar esta empresa?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -179,8 +177,7 @@ class AdminPanel {
   }
 
   async deleteProject(projectId) {
-    if (!confirm('Tem certeza que deseja deletar este projeto?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();

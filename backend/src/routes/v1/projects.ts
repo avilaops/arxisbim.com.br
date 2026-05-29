@@ -133,28 +133,4 @@ export async function projectRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: 'Failed to delete project' });
     }
   });
-
-  // Get IFC models for a project
-  fastify.get('/projects/:projectId/ifc-models', async (request, reply) => {
-    const { projectId } = request.params as { projectId: string };
-    try {
-      const models = await db.select().from(ifcModels).where(eq(ifcModels.projectId, projectId)).orderBy(desc(ifcModels.uploadedAt));
-      return reply.send(models);
-    } catch (error) {
-      fastify.log.error(error);
-      return reply.status(500).send({ error: 'Failed to fetch IFC models' });
-    }
-  });
-
-  // Get federated models for a project
-  fastify.get('/projects/:projectId/federated-models', async (request, reply) => {
-    const { projectId } = request.params as { projectId: string };
-    try {
-      const federated = await db.select().from(federatedModels).where(eq(federatedModels.projectId, projectId)).orderBy(desc(federatedModels.createdAt));
-      return reply.send(federated);
-    } catch (error) {
-      fastify.log.error(error);
-      return reply.status(500).send({ error: 'Failed to fetch federated models' });
-    }
-  });
 }

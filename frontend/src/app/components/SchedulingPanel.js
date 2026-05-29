@@ -9,6 +9,8 @@ class SchedulingPanel {
     this.tasks = [];
     this.loading = false;
     this.error = null;
+    this.showCreateInput = false;
+    this.showCreateTaskInput = false;
   }
 
   open(projectId) {
@@ -56,34 +58,37 @@ class SchedulingPanel {
   }
 
   async createSchedule() {
-    const name = prompt('Nome do cronograma:');
-    if (!name) return;
+    this.showCreateInput = true;
+    this.render();
+  }
 
-    const startDate = prompt('Data de início (YYYY-MM-DD):');
-    if (!startDate) return;
-
-    const endDate = prompt('Data de fim (YYYY-MM-DD):');
-    if (!endDate) return;
-
-    const description = prompt('Descrição (opcional):') || undefined;
+  async confirmCreateSchedule(data) {
+    if (!data.name || !data.startDate || !data.endDate) {
+      this.showCreateInput = false;
+      this.render();
+      return;
+    }
 
     const userStr = localStorage.getItem('arxisvr_user');
     const user = userStr ? JSON.parse(userStr) : null;
     if (!user) {
-      alert('Usuário não autenticado');
+      this.error = 'Usuário não autenticado';
+      this.showCreateInput = false;
+      this.render();
       return;
     }
 
     this.loading = true;
     this.error = null;
+    this.showCreateInput = false;
     this.render();
 
     try {
       const newSchedule = await tenantService.createSchedule(this.projectId, {
-        name,
-        description,
-        startDate,
-        endDate,
+        name: data.name,
+        description: data.description,
+        startDate: data.startDate,
+        endDate: data.endDate,
         createdBy: user.id,
       });
       this.schedules.push(newSchedule);
@@ -99,31 +104,33 @@ class SchedulingPanel {
 
   async createTask() {
     if (!this.selectedSchedule) {
-      alert('Selecione um cronograma primeiro');
+      this.error = 'Selecione um cronograma primeiro';
+      this.render();
+      return;
+    }
+    this.showCreateTaskInput = true;
+    this.render();
+  }
+
+  async confirmCreateTask(data) {
+    if (!data.taskName || !data.startDate || !data.endDate) {
+      this.showCreateTaskInput = false;
+      this.render();
       return;
     }
 
-    const taskName = prompt('Nome da tarefa:');
-    if (!taskName) return;
-
-    const startDate = prompt('Data de início (YYYY-MM-DD):');
-    if (!startDate) return;
-
-    const endDate = prompt('Data de fim (YYYY-MM-DD):');
-    if (!endDate) return;
-
-    const progress = prompt('Progresso (0-100):');
-    const progressNum = progress ? parseInt(progress) : 0;
+    const progressNum = data.progress ? parseInt(data.progress) : 0;
 
     this.loading = true;
     this.error = null;
+    this.showCreateTaskInput = false;
     this.render();
 
     try {
       const newTask = await tenantService.createTask(this.selectedSchedule, {
-        taskName,
-        startDate,
-        endDate,
+        taskName: data.taskName,
+        startDate: data.startDate,
+        endDate: data.endDate,
         progress: progressNum,
       });
       this.tasks.push(newTask);
@@ -154,8 +161,7 @@ class SchedulingPanel {
   }
 
   async deleteSchedule(scheduleId) {
-    if (!confirm('Deletar este cronograma?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -176,8 +182,7 @@ class SchedulingPanel {
   }
 
   async deleteTask(taskId) {
-    if (!confirm('Deletar esta tarefa?')) return;
-
+    // TODO: Add custom confirmation UI
     this.loading = true;
     this.error = null;
     this.render();
@@ -286,6 +291,68 @@ class SchedulingPanel {
           </div>
     `;
 
+    if (this.showCreateInput) {
+      html += `
+        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">Criar Cronograma</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="schedule-name" placeholder="Nome" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <input type="date" id="schedule-start" placeholder="Data de início" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <input type="date" id="schedule-end" placeholder="Data de fim" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <input type="text" id="schedule-desc" placeholder="Descrição (opcional)" style="
+              padding: 8px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              font-size: 13px;
+            " />
+            <div style="display: flex; gap: 8px;">
+              <button id="schedule-create-confirm" style="
+                padding: 8px 16px;
+                background: var(--accent-blue);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Criar</button>
+              <button id="schedule-create-cancel" style="
+                padding: 8px 16px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+              ">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     if (this.loading) {
       html += `<p style="color: var(--text-secondary);">Carregando...</p>`;
     } else if (this.schedules.length === 0) {
@@ -340,6 +407,68 @@ class SchedulingPanel {
             </div>
           </div>
       `;
+
+      if (this.showCreateTaskInput) {
+        html += `
+          <div style="padding: 12px; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 16px;">
+            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">Criar Tarefa</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <input type="text" id="task-name" placeholder="Nome da tarefa" style="
+                padding: 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                font-size: 13px;
+              " />
+              <input type="date" id="task-start" placeholder="Data de início" style="
+                padding: 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                font-size: 13px;
+              " />
+              <input type="date" id="task-end" placeholder="Data de fim" style="
+                padding: 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                font-size: 13px;
+              " />
+              <input type="number" id="task-progress" placeholder="Progresso (0-100)" min="0" max="100" style="
+                padding: 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                font-size: 13px;
+              " />
+              <div style="display: flex; gap: 8px;">
+                <button id="task-create-confirm" style="
+                  padding: 8px 16px;
+                  background: var(--accent-blue);
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 13px;
+                ">Criar</button>
+                <button id="task-create-cancel" style="
+                  padding: 8px 16px;
+                  background: var(--bg-secondary);
+                  color: var(--text-primary);
+                  border: 1px solid var(--border-color);
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 13px;
+                ">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
       if (this.tasks.length === 0) {
         html += `<p style="color: var(--text-secondary);">Nenhuma tarefa</p>`;
@@ -410,6 +539,32 @@ class SchedulingPanel {
     document.getElementById('scheduling-close')?.addEventListener('click', () => this.close());
     document.getElementById('scheduling-create')?.addEventListener('click', () => this.createSchedule());
     document.getElementById('task-create')?.addEventListener('click', () => this.createTask());
+
+    // Create schedule input handlers
+    document.getElementById('schedule-create-confirm')?.addEventListener('click', () => {
+      const name = document.getElementById('schedule-name')?.value;
+      const startDate = document.getElementById('schedule-start')?.value;
+      const endDate = document.getElementById('schedule-end')?.value;
+      const description = document.getElementById('schedule-desc')?.value;
+      this.confirmCreateSchedule({ name, startDate, endDate, description });
+    });
+    document.getElementById('schedule-create-cancel')?.addEventListener('click', () => {
+      this.showCreateInput = false;
+      this.render();
+    });
+
+    // Create task input handlers
+    document.getElementById('task-create-confirm')?.addEventListener('click', () => {
+      const taskName = document.getElementById('task-name')?.value;
+      const startDate = document.getElementById('task-start')?.value;
+      const endDate = document.getElementById('task-end')?.value;
+      const progress = document.getElementById('task-progress')?.value;
+      this.confirmCreateTask({ taskName, startDate, endDate, progress });
+    });
+    document.getElementById('task-create-cancel')?.addEventListener('click', () => {
+      this.showCreateTaskInput = false;
+      this.render();
+    });
 
     container.querySelectorAll('.schedule-item').forEach(item => {
       item.addEventListener('click', () => this.selectSchedule(item.dataset.id));
