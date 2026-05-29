@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3001';
+// Corrigido: Não usar import.meta em arquivos JS comuns
+const API_BASE_URL = (typeof window !== 'undefined' && window.env && window.env.VITE_API_URL)
+  ? window.env.VITE_API_URL
+  : 'http://localhost:3001';
 
 class AuthModal {
   constructor() {
