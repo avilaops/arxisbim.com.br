@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { bimSchedules, scheduleTasks, taskElementLinks, timelineSimulations } from '../../shared/database/schema/scheduling.js';
+import { bimSchedules, scheduleTasks } from '../../shared/database/schema/scheduling.js';
+import { taskElementLinks, timelineSimulations } from '../../shared/database/schema/tenants.js';
 import { projects } from '../../shared/database/schema/projects.js';
 import { db } from '../../shared/database/db.js';
 import { eq, desc, and } from 'drizzle-orm';

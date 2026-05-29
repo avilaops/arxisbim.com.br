@@ -30,11 +30,13 @@ export async function createNotificationHandler(request: FastifyRequest, reply: 
   try {
     const db = getDb();
     const body = request.body as any;
-    if (!body || !body.tenantId || !body.type || !body.message) {
-      return reply.code(400).send({ error: 'tenantId, type e message são obrigatórios' });
+    if (!body || !body.tenantId || !body.type || !body.message || !body.userId || !body.title) {
+      return reply.code(400).send({ error: 'tenantId, type, message, userId e title são obrigatórios' });
     }
     const [created] = await db.insert(notifications).values({
       tenantId: body.tenantId,
+      userId: body.userId,
+      title: body.title,
       type: body.type,
       message: body.message,
       isRead: body.read ?? false,
