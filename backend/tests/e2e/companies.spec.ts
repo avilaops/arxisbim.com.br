@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { companiesRoutes } from '../../../src/modules/companies/companies.routes';
+import { companiesRoutes } from '@modules/companies/companies.routes';
 
 let server;
 

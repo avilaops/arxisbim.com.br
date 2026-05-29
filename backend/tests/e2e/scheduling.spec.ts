@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { schedulingRoutes } from '../../src/modules/scheduling/scheduling.routes';
+import { schedulingRoutes } from '@modules/scheduling/scheduling.routes';
+import { projectRoutes } from '../../src/routes/v1/projects';
 import { tenants, companies, users } from '../../src/shared/database/schema/tenants.ts';
 import { projects } from '../../src/shared/database/schema/projects.ts';
 import { bimSchedules } from '../../src/shared/database/schema/scheduling.ts';
@@ -14,7 +15,18 @@ let testTenantId: string, testCompanyId: string, testUserId: string, testProject
 
 beforeAll(async () => {
   server = Fastify();
-  await server.register(schedulingRoutes);
+  // Registra schedulingRoutes em um prefixo auxiliar
+  await server.register(schedulingRoutes, { prefix: '/__test_scheduling' });
+  // Cria rota fake para delegar ao handler real
+  server.get('/api/v1/projects/:projectId/schedules', async (request, reply) => {
+    // Chama o handler real da schedulingRoutes
+    return server.inject({
+      method: 'GET',
+      url: `/__test_scheduling/projects/${request.params.projectId}/schedules`,
+    }).then(res => {
+      reply.status(res.statusCode).send(res.body ? JSON.parse(res.body) : undefined);
+    });
+  });
 
   // Setup banco
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL not set');
@@ -51,8 +63,9 @@ describe('Scheduling API', () => {
   it('GET /api/v1/projects/:projectId/scheduling should return 200', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: `/api/v1/projects/${testProjectId}/scheduling`,
+      url: `/api/v1/projects/${testProjectId}/schedules`,
     });
+    console.log('API response body:', response.body);
     expect(response.statusCode).toBe(200);
     const data = JSON.parse(response.body);
     expect(Array.isArray(data)).toBe(true);

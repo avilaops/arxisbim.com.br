@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { tenantsRoutes } from '@modules/tenants/tenants.routes';
+import { tenantsRoutes } from '../../../src/modules/tenants';
 import { tenants } from '@shared/database/schema/tenants';
 import { drizzle } from 'drizzle-orm';
 import postgres from 'postgres';

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { taskElementLinksRoutes } from '../../../src/modules/tenants/task-element-links.routes';
+import { taskElementLinksRoutes } from '@modules/tenants/task-element-links.routes';
 
 let server;
 

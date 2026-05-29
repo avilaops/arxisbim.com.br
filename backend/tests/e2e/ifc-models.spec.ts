@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { ifcModelsRoutes } from '../../../src/modules/ifc-models/ifc-models.routes';
+import { ifcModelsRoutes } from '@modules/ifc-models/ifc-models.routes';
 
-let server;
+let server: FastifyInstance;
 
 beforeAll(async () => {
   server = Fastify();

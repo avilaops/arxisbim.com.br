@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { projectsRoutes } from '../../../src/modules/projects/projects.routes';
+import { projectsRoutes } from '@modules/projects/projects.routes';
 
 let server;
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { webhooksRoutes } from '../../../src/modules/tenants/webhooks.routes';
+import { webhooksRoutes } from '@modules/tenants/webhooks.routes';
 
 let server;
 

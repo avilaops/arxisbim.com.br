@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { scenariosRoutes } from '../../../src/modules/scenarios/scenarios.routes';
+import { scenariosRoutes } from '@modules/scenarios/scenarios.routes';
 
-let server;
+let server: FastifyInstance;
 
 beforeAll(async () => {
   server = Fastify();

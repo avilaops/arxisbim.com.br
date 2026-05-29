@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { modelElementsRoutes } from '../../../src/modules/ifc-models/model-elements.routes';
+import { modelElementsRoutes } from '@modules/ifc-models/model-elements.routes';
 
 let server;
 

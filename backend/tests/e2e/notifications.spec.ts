@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { notificationsRoutes } from '../../../src/modules/tenants/notifications.routes';
+import { notificationsRoutes } from '@modules/tenants/notifications.routes';
 
 let server;
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { timelineSimulationsRoutes } from '../../../src/modules/tenants/timeline-simulations.routes';
+import { timelineSimulationsRoutes } from '@modules/tenants/timeline-simulations.routes';
 
 let server;
 

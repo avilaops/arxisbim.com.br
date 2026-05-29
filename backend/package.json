@@ -3,6 +3,12 @@
     "version": "1.0.1",
     "description": "ArxisVR Backend API - Fastify + TypeScript",
     "main": "dist/index.js",
+    "exports": {
+        ".": {
+            "import": "./src/index.ts",
+            "require": "./src/index.ts"
+        }
+    },
     "type": "module",
     "scripts": {
         "dev": "tsx watch src/index.ts",

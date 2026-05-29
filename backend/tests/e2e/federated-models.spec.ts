@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { federatedModelsRoutes } from '../../../src/modules/federated-models/federated-models.routes';
+import { federatedModelsRoutes } from '@modules/federated-models/federated-models.routes';
 
-let server;
+let server: FastifyInstance;
 
 beforeAll(async () => {
   server = Fastify();

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { scheduleTasksRoutes } from '../../../src/modules/scheduling/schedule-tasks.routes';
+import { scheduleTasksRoutes } from '@modules/scheduling/schedule-tasks.routes';
 
 let server;
 
