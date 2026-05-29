@@ -1,3 +1,6 @@
+import taskElementLinksRoutes from './routes/v1/task-element-links.js';
+import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
+import notificationsRoutes from './routes/v1/notifications.js';
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -14,6 +17,9 @@ import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
 import { schedulingRoutes } from './routes/v1/scheduling.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
+import scheduleTasksRoutes from './routes/v1/schedule-tasks.js';
+import modelElementsRoutes from './routes/v1/model-elements.js';
+import webhooksRoutes from './routes/v1/webhooks.js';
 import { meetingsRoutes } from './modules/virtual-meetings/meetings.routes.js';
 import { ifcRoutes } from './modules/ifc/ifc.routes.js';
 import { federationRoutes } from './modules/federation/federation.routes.js';
@@ -306,11 +312,17 @@ server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: Fastif
 // =====================================
 
 await server.register(authRoutes, { prefix: '/api/v1/auth' });
+await server.register(taskElementLinksRoutes, { prefix: '/api/v1' });
+await server.register(timelineSimulationsRoutes, { prefix: '/api/v1' });
+await server.register(notificationsRoutes, { prefix: '/api/v1' });
 await server.register(tenantRoutes, { prefix: '/api/v1' });
 await server.register(companyRoutes, { prefix: '/api/v1' });
 await server.register(ifcModelRoutes, { prefix: '/api/v1' });
 await server.register(schedulingRoutes, { prefix: '/api/v1' });
 await server.register(projectsRoutes, { prefix: '/api/v1/projects' });
+await server.register(scheduleTasksRoutes, { prefix: '/api/v1' });
+await server.register(modelElementsRoutes, { prefix: '/api/v1' });
+await server.register(webhooksRoutes, { prefix: '/api/v1' });
 await server.register(meetingsRoutes, { prefix: '/api/v1/meetings' });
 await server.register(ifcRoutes, { prefix: '/api/v1/ifc' });
 await server.register(federationRoutes, { prefix: '/api/v1/federation' });

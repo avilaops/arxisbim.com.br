@@ -1,0 +1,24 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import Fastify from 'fastify';
+import { scenariosRoutes } from '../../../src/modules/scenarios/scenarios.routes';
+
+let server;
+
+beforeAll(async () => {
+  server = Fastify();
+  await server.register(scenariosRoutes);
+});
+
+afterAll(async () => {
+  await server.close();
+});
+
+describe('Scenarios API', () => {
+  it('GET /api/v1/projects/123/scenarios should return 200', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/api/v1/projects/123/scenarios',
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});

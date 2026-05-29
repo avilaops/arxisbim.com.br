@@ -1,3 +1,34 @@
+// =====================================
+// TIMELINE_SIMULATIONS (simulações de timeline por tenant)
+// =====================================
+export const timelineSimulations = pgTable('timeline_simulations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: varchar('tenant_id', { length: 255 }).notNull().references(() => tenants.tenantId, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  status: varchar('status', { length: 100 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  tenantIdIdx: index('timeline_simulations_tenant_id_idx').on(table.tenantId),
+  nameIdx: index('timeline_simulations_name_idx').on(table.name),
+}));
+// =====================================
+// TASK_ELEMENT_LINKS (vincula tasks a elementos de modelo)
+// =====================================
+export const taskElementLinks = pgTable('task_element_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: varchar('tenant_id', { length: 255 }).notNull().references(() => tenants.tenantId, { onDelete: 'cascade' }),
+  taskId: uuid('task_id').notNull(),
+  elementId: uuid('element_id').notNull(),
+  linkType: varchar('link_type', { length: 100 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  tenantIdIdx: index('task_element_links_tenant_id_idx').on(table.tenantId),
+  taskIdIdx: index('task_element_links_task_id_idx').on(table.taskId),
+  elementIdIdx: index('task_element_links_element_id_idx').on(table.elementId),
+}));
 import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, real, index, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // =====================================

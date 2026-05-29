@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@modules/*": ["backend/src/modules/*"],
+      "@shared/*": ["backend/src/shared/*"]
+    },
+    "types": ["vitest/globals"]
+  },
+  "include": ["backend/src", "backend/tests"]
+}
