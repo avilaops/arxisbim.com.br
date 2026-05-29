@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { notifications } from '../../shared/database/schema/tenants.js';
+import { notifications } from '../../shared/database/schema/notifications.js';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -37,7 +37,7 @@ export async function createNotificationHandler(request: FastifyRequest, reply: 
       tenantId: body.tenantId,
       type: body.type,
       message: body.message,
-      read: body.read ?? false,
+      isRead: body.read ?? false,
       createdAt: new Date(),
     }).returning();
     reply.code(201).send(created);
@@ -75,7 +75,7 @@ export async function updateNotificationHandler(request: FastifyRequest, reply: 
       .set({
         type: body.type,
         message: body.message,
-        read: body.read,
+        isRead: body.read,
       })
       .where(eq(notifications.id, id))
       .returning();

@@ -2,7 +2,7 @@
 // SCHEMA INDEX - All database schemas
 // =====================================
 // Tenancy & Users
-export * from './tenants.js';
+export * from './tenants.js'; // Inclui taskElementLinks e timelineSimulations
 // Observability & Audit
 export * from './observability.js';
 // API Keys & WebAuthn

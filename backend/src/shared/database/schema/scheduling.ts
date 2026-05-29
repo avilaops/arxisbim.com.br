@@ -39,29 +39,3 @@ export const scheduleTasks = pgTable('schedule_tasks', {
 // =====================================
 // TASK_ELEMENT_LINKS (link tasks to IFC elements)
 // =====================================
-export const taskElementLinks = pgTable('task_element_links', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  taskId: uuid('task_id').notNull().references(() => scheduleTasks.id, { onDelete: 'cascade' }),
-  elementId: varchar('element_id', { length: 255 }).notNull(), // IFC element GlobalId
-  action: varchar('action', { length: 50 }), // 'construct', 'demolish', 'temporary'
-}, (table) => ({
-  taskIdIdx: index('task_element_links_task_id_idx').on(table.taskId),
-}));
-
-// =====================================
-// TIMELINE_SIMULATIONS (saved playback states)
-// =====================================
-export const timelineSimulations = pgTable('timeline_simulations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  scheduleId: uuid('schedule_id').notNull().references(() => bimSchedules.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 255 }),
-  simulationDate: date('simulation_date').notNull(),
-  snapshot: jsonb('snapshot').$type<{
-    visibleElements: string[];
-    hiddenElements: string[];
-    partialElements: Record<string, number>; // elementId -> progress %
-  }>(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  scheduleIdIdx: index('timeline_simulations_schedule_id_idx').on(table.scheduleId),
-}));
