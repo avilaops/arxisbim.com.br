@@ -55,8 +55,8 @@ export declare class BillingService {
             updatedAt: Date;
             status: string;
             metadata: Record<string, any>;
-            expiresAt: Date;
             plan: BillingPlanTier;
+            expiresAt: Date;
             billingCycle: BillingCycle;
             currency: string;
             amountCents: number;

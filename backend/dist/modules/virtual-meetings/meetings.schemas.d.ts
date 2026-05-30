@@ -75,8 +75,8 @@ export declare const createActionSchema: z.ZodObject<{
 export declare const collaborationUpdateSchema: z.ZodObject<{
     update: z.ZodArray<z.ZodNumber>;
     origin: z.ZodOptional<z.ZodUnion<[z.ZodEnum<{
-        snapshot: "snapshot";
         selection: "selection";
+        snapshot: "snapshot";
         annotation: "annotation";
         section: "section";
         presence: "presence";

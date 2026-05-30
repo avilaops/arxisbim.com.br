@@ -1,4 +1,4 @@
-import taskElementLinksRoutes from './routes/v1/task-element-links.js';
+import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import 'dotenv/config';
 import Fastify from 'fastify';

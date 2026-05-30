@@ -298,7 +298,7 @@ export declare const notificationPreferences: import("drizzle-orm/pg-core").PgTa
             tableName: "notification_preferences";
             dataType: "json";
             columnType: "PgJsonb";
-            data: ("email" | "push" | "in_app" | "sms")[];
+            data: ("email" | "in_app" | "push" | "sms")[];
             driverParam: unknown;
             notNull: true;
             hasDefault: true;
@@ -310,7 +310,7 @@ export declare const notificationPreferences: import("drizzle-orm/pg-core").PgTa
             identity: undefined;
             generated: undefined;
         }, {}, {
-            $type: ("email" | "push" | "in_app" | "sms")[];
+            $type: ("email" | "in_app" | "push" | "sms")[];
         }>;
         enabled: import("drizzle-orm/pg-core").PgColumn<{
             name: "enabled";
