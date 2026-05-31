@@ -1,4 +1,5 @@
 import { ViewerHost } from '../../viewer/ViewerHost';
+import * as THREE from 'three';
 import { IFCSimpleLoader } from '../../loaders/IFCSimpleLoader';
 import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
 import { initializeAPI } from '../../api/v1/client';
@@ -208,10 +209,8 @@ async function init() {
     const sectionsMount = document.getElementById('sections-panel-mount');
     if (sectionsMount) {
       import('../../shared/components/ui/panels/SectionsPanel').then(({ SectionsPanel }) => {
-        import('three').then(({ default: THREE }) => {
-          window.THREE = THREE;
-          new SectionsPanel(sectionsMount);
-        });
+        window.THREE = THREE;
+        new SectionsPanel(sectionsMount);
       }).catch(err => console.error('Failed to load SectionsPanel:', err));
     }
   }, 300);
@@ -520,9 +519,13 @@ function setupNavigation() {
           // Load XR/AR immersive features
           if (viewerHost) {
             try {
-              const { AvatarSystem } = await import('../../features/virtual-meetings/avatar/AvatarSystem');
-              const avatarSystem = new AvatarSystem(viewerHost.scene);
-              console.log('XR Avatar System loaded');
+              // AvatarSystem já está carregado via ViewerHost
+              const avatarSystem = viewerHost.avatarSystem;
+              if (avatarSystem) {
+                console.log('XR Avatar System loaded');
+              } else {
+                console.warn('Avatar System não disponível');
+              }
             } catch (err) {
               console.error('Failed to load XR features:', err);
             }

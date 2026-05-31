@@ -4,6 +4,7 @@
  */
 
 import { getIfcService, IfcModel, IfcDiscipline, IfcPhase } from '../../api/v1/services';
+import { tenantService } from '../../api/v1/services/tenant.service';
 import { eventBus } from '../../core';
 import type { IFCSimpleLoader } from '../../loaders/IFCSimpleLoader';
 import type { Scene } from 'three';
@@ -224,7 +225,6 @@ export class IFCUploadManager {
    */
   private async downloadModel(modelId: string): Promise<Blob> {
     // Use tenantService for download (simpler, uses correct endpoint)
-    const { tenantService } = await import('../../api/v1/services/tenant.service');
     return tenantService.downloadIFCModel(modelId);
   }
 

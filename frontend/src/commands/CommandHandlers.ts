@@ -1,4 +1,5 @@
 import { CommandId, CommandPayload } from './Command';
+import * as THREE from 'three';
 import { commandRegistry } from './CommandRegistry';
 import { appController, commandHistory, projectSerializer } from '../app';
 import { eventBus, EventType } from '../core';
@@ -341,8 +342,7 @@ function registerFileHandlers(): void {
       console.log('Taking screenshot...');
       
       try {
-        // Pega referências via dynamic import para evitar circular deps
-        const THREE = await import('three');
+        // Pega referências via import estático
         
         // Acessa canvas do renderer
         const canvas = document.querySelector('canvas');
@@ -1005,8 +1005,8 @@ function registerSectionHandlers(): void {
     async (payload?: CommandPayload) => {
       const min = payload?.min || { x: -10, y: -10, z: -10 };
       const max = payload?.max || { x: 10, y: 10, z: 10 };
-      const minVec = new (await import('three')).Vector3(min.x, min.y, min.z);
-      const maxVec = new (await import('three')).Vector3(max.x, max.y, max.z);
+      const minVec = new THREE.Vector3(min.x, min.y, min.z);
+      const maxVec = new THREE.Vector3(max.x, max.y, max.z);
       appController.sectionManager.createBoxClipping(minVec, maxVec);
       console.log('Box clipping created');
     }
