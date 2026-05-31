@@ -1,2 +1,3 @@
 // Proxy para nova implementação em modules/tenants
-module.exports = require('../../modules/tenants/tenants.routes');
+import { tenantsRoutes } from '../../modules/tenants/tenants.routes.js';
+export default tenantsRoutes;

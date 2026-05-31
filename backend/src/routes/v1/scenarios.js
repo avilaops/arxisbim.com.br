@@ -1,2 +1,3 @@
 // Proxy para nova implementação em modules/scenarios
-module.exports = require('../../modules/scenarios/scenarios.routes');
+import { scenariosRoutes } from '../../modules/scenarios/scenarios.routes.js';
+export default scenariosRoutes;

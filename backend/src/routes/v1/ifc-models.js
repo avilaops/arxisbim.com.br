@@ -1,2 +1,3 @@
 // Proxy para nova implementação em modules/ifc-models
-module.exports = require('../../modules/ifc-models/ifc-models.routes');
+import { ifcModelRoutes } from '../../modules/ifc-models/ifc-models.routes.js';
+export default ifcModelRoutes;
