@@ -1,0 +1,59 @@
+# =====================================================================
+# Render Blueprint — ArxisVR
+# Config versionada do deploy. Com isto o Render para de depender de
+# ajustes manuais no dashboard: build e start ficam determinísticos.
+# Docs: https://render.com/docs/blueprint-spec
+# =====================================================================
+services:
+  # -------------------------------------------------------------------
+  # Web service principal: backend Fastify que TAMBÉM serve o frontend
+  # buildado (frontend/dist via @fastify/static). Por isso o build
+  # compila os dois; o start roda só o backend.
+  # -------------------------------------------------------------------
+  - type: web
+    name: arxisvr
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /health/live
+    # --include=dev é obrigatório: vite (frontend) e tsx vivem em
+    # devDependencies; sem isso o build quebra quando NODE_ENV=production.
+    buildCommand: >-
+      cd backend && npm ci --include=dev && npm run build &&
+      cd ../frontend && npm ci --include=dev && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      # PORT é injetado automaticamente pelo Render — NÃO definir aqui.
+      # Segredos: marcados sync:false => você preenche no dashboard.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      # Variáveis VITE_* são embutidas no bundle do frontend NO BUILD.
+      # Precisam existir aqui, senão o frontend sai sem URL de API.
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_WS_URL
+        sync: false
+
+  # -------------------------------------------------------------------
+  # Signaling server (WebRTC/colaboração) — serviço separado, já tem
+  # Dockerfile próprio. Descomente para subir junto.
+  # -------------------------------------------------------------------
+  # - type: web
+  #   name: arxisvr-signaling
+  #   runtime: docker
+  #   plan: free
+  #   region: oregon
+  #   branch: main
+  #   dockerfilePath: ./signaling-server/Dockerfile
+  #   dockerContext: .
+  #   healthCheckPath: /

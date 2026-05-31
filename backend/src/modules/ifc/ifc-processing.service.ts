@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { IfcModel } from './ifc.schemas.js';
 
 /**
@@ -165,8 +166,7 @@ export class IfcProcessingService {
    * Simple hash for identifying duplicate files
    */
   generateFileHash(fileBuffer: Buffer): string {
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    return createHash('sha256').update(fileBuffer).digest('hex');
   }
 
   /**

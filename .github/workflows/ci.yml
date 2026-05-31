@@ -1,51 +1,65 @@
-name: CI Pipeline
+name: CI
 
+# Roda nos pushes e PRs da branch real do projeto (main).
+# Builda backend + frontend EXATAMENTE como o Render builda, e faz um
+# smoke test subindo o backend — assim qualquer quebra de build aparece
+# aqui antes de chegar no Render.
 on:
   push:
-    branches: [master, develop]
+    branches: [main]
   pull_request:
-    branches: [master, develop]
+    branches: [main]
 
 jobs:
-  validate:
-    name: Validate ArxisVR
+  build:
+    name: Build & smoke test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '20'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Print package versions
+      - name: Build backend (esbuild)
+        working-directory: backend
         run: |
-          node -p "'root=' + require('./package.json').version"
-          node -p "'backend=' + require('./backend/package.json').version"
-          node -p "'frontend=' + require('./frontend/package.json').version"
+          npm ci --include=dev
+          npm run build
 
-      - name: Validate app HTML assets
-        run: |
-          test -f frontend/app.html
-          test -f frontend/index.html
-          test -f frontend/login.html
-          test -f frontend/register.html
-          test -f frontend/public/logo-icon.svg
-          test -f frontend/src/app/bootstrap.ts
-          test -f frontend/src/app/entrypoints/login-main.tsx
-          test -f frontend/src/app/entrypoints/register-main.tsx
+      - name: Type-check backend (não bloqueia o deploy)
+        working-directory: backend
+        run: npm run type-check
+        continue-on-error: true
 
-      - name: Validate Vite config
+      - name: Build frontend (vite)
+        working-directory: frontend
         run: |
-          test -f frontend/vite.config.ts
-          grep -q "defineConfig" frontend/vite.config.ts
-          grep -q "app.html" frontend/vite.config.ts
+          npm ci --include=dev
+          npm run build
+
+      - name: Smoke test — backend sobe e responde /health/live
+        working-directory: backend
+        env:
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          JWT_SECRET: ci-smoke-secret-not-for-prod
+          HOST: 127.0.0.1
+          PORT: '3001'
+        run: |
+          node dist/index.js &
+          PID=$!
+          ok=0
+          for i in $(seq 1 25); do
+            if curl -sf http://127.0.0.1:3001/health/live >/dev/null; then
+              echo "✅ backend respondeu em /health/live"
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          kill $PID 2>/dev/null || true
+          if [ "$ok" -ne 1 ]; then
+            echo "❌ backend não respondeu a tempo"
+            exit 1
+          fi
