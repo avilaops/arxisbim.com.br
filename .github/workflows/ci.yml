@@ -6,7 +6,7 @@ name: CI
 # aqui antes de chegar no Render.
 on:
   push:
-    branches: [main]
+    branches: [main, 'chore/**', 'feat/**', 'fix/**']
   pull_request:
     branches: [main]
 
