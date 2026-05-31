@@ -45,7 +45,11 @@ export declare class WebAuthnService {
             };
             timeout: number;
             attestation: string;
-            excludeCredentials: any;
+            excludeCredentials: {
+                id: string;
+                type: string;
+                transports: any;
+            }[];
         };
         challenge: string;
     }>;
@@ -69,12 +73,16 @@ export declare class WebAuthnService {
         options: {
             challenge: string;
             rpId: string;
-            allowCredentials: any;
+            allowCredentials: {
+                id: string;
+                type: string;
+                transports: any;
+            }[];
             userVerification: string;
             timeout: number;
         };
         challenge: string;
-        userId: any;
+        userId: string;
     }>;
     /**
      * Verificar autenticação WebAuthn

@@ -88,7 +88,7 @@ export interface StorageService {
 }
 export declare class StorageError extends Error {
     readonly code: 'NOT_FOUND' | 'ACCESS_DENIED' | 'UNKNOWN';
-    readonly cause?: unknown;
-    constructor(message: string, code: 'NOT_FOUND' | 'ACCESS_DENIED' | 'UNKNOWN', cause?: unknown);
+    readonly cause?: unknown | undefined;
+    constructor(message: string, code: 'NOT_FOUND' | 'ACCESS_DENIED' | 'UNKNOWN', cause?: unknown | undefined);
 }
 //# sourceMappingURL=storage.types.d.ts.map

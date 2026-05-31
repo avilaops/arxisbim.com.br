@@ -59,7 +59,7 @@ export declare class FederationAnalyticsService {
     getDisciplineCoverage(projectId: string, tenantId: string): Promise<{
         totalDisciplines: number;
         coveredDisciplines: string[];
-        missingDisciplines: string[];
+        missingDisciplines: (string | null)[];
         coveragePercentage: string | number;
     }>;
     /**

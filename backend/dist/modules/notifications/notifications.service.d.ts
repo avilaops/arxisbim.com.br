@@ -33,10 +33,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }>;
     /**
      * Cria notificações em lote para múltiplos usuários
@@ -50,10 +50,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }[]>;
     /**
      * Lista notificações do usuário
@@ -75,10 +75,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
         createdAt: Date;
     }>;
     /**
@@ -140,10 +140,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }>;
     static notifyIfcProcessingFailed(userId: string, tenantId: string, ifcModelName: string, error: string): Promise<{
         channels: NotificationChannel[];
@@ -155,10 +155,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }>;
     static notifyUserMentioned(userId: string, tenantId: string, mentionedBy: string, context: string, actionUrl: string): Promise<{
         channels: NotificationChannel[];
@@ -170,10 +170,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }>;
     static notifyMeetingStarted(userIds: string[], tenantId: string, meetingId: string, meetingTitle: string): Promise<{
         id: string;
@@ -184,10 +184,10 @@ export declare class NotificationService {
         title: string;
         message: string;
         priority: string;
-        actionUrl: string;
+        actionUrl: string | null;
         metadata: unknown;
         isRead: boolean;
-        readAt: Date;
+        readAt: Date | null;
     }[]>;
 }
 export {};

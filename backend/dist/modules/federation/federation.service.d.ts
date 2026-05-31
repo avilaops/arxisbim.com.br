@@ -8,7 +8,7 @@ export declare class FederationService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
+        description: string | null;
         projectId: string;
         models: {
             ifcModelId: string;
@@ -30,7 +30,7 @@ export declare class FederationService {
                 };
             };
             visible?: boolean;
-        }[];
+        }[] | null;
     }>;
     /**
      * Get federated model by ID (with cache)
@@ -39,6 +39,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -58,18 +59,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -86,9 +87,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Get all federated models for a project
@@ -97,6 +97,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -116,18 +117,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -144,15 +145,14 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     } | {
-        modelsDetails: any[];
+        modelsDetails: never[];
         id: string;
         projectId: string;
         name: string;
-        description: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             transformation?: {
@@ -173,7 +173,7 @@ export declare class FederationService {
                 };
             };
             visible?: boolean;
-        }[];
+        }[] | null;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
@@ -184,6 +184,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -203,18 +204,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -231,9 +232,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Add IFC model to federation
@@ -242,6 +242,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -261,18 +262,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -289,9 +290,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Remove IFC model from federation
@@ -300,6 +300,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -319,18 +320,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -347,9 +348,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Update model transformation in federation
@@ -358,6 +358,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -377,18 +378,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -405,9 +406,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Update model visibility in federation
@@ -416,6 +416,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -435,18 +436,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -463,9 +464,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Delete federated model (invalidates cache)
@@ -496,7 +496,7 @@ export declare class FederationService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
+        description: string | null;
         projectId: string;
         models: {
             ifcModelId: string;
@@ -518,7 +518,7 @@ export declare class FederationService {
                 };
             };
             visible?: boolean;
-        }[];
+        }[] | null;
     }>;
     /**
      * Batch update visibility of multiple models
@@ -530,6 +530,7 @@ export declare class FederationService {
         id: string;
         projectId: string;
         name: string;
+        description: string | null;
         models: {
             ifcModelId: string;
             visible: boolean;
@@ -549,18 +550,18 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
         createdAt: Date;
         updatedAt: Date;
         modelsDetails: {
             ifcModelId: string;
             name: string;
+            discipline: string | null;
+            phase: string | null;
             fileUrl: string;
+            thumbnailUrl: string | null;
             visible: boolean;
-            discipline?: string;
-            phase?: string;
-            thumbnailUrl?: string;
             transformation?: {
                 position: {
                     x: number;
@@ -577,9 +578,8 @@ export declare class FederationService {
                     y: number;
                     z: number;
                 };
-            };
+            } | undefined;
         }[];
-        description?: string;
     }>;
     /**
      * Validate federation for conflicts
@@ -593,7 +593,7 @@ export declare class FederationService {
         exportedAt: string;
         federation: {
             name: string;
-            description: string;
+            description: string | null;
             projectId: string;
             models: {
                 ifcModelId: string;
@@ -614,16 +614,16 @@ export declare class FederationService {
                         y: number;
                         z: number;
                     };
-                };
+                } | undefined;
             }[];
             modelsDetails: {
                 ifcModelId: string;
                 name: string;
+                discipline: string | null;
+                phase: string | null;
                 fileUrl: string;
+                thumbnailUrl: string | null;
                 visible: boolean;
-                discipline?: string;
-                phase?: string;
-                thumbnailUrl?: string;
                 transformation?: {
                     position: {
                         x: number;
@@ -640,7 +640,7 @@ export declare class FederationService {
                         y: number;
                         z: number;
                     };
-                };
+                } | undefined;
             }[];
         };
     }>;
@@ -652,7 +652,7 @@ export declare class FederationService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string;
+        description: string | null;
         projectId: string;
         models: {
             ifcModelId: string;
@@ -674,7 +674,7 @@ export declare class FederationService {
                 };
             };
             visible?: boolean;
-        }[];
+        }[] | null;
     }>;
     /**
      * Get federation history (updates over time)

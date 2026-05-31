@@ -10,8 +10,8 @@
     "dev:backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\dev-backend-local.ps1",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:signaling": "cd signaling-server && npm run dev",
-    "build": "cd backend && npm install && npm run build && cd .. && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && rimraf dist && npm run build",
     "build:frontend": "cd frontend && pnpm install && pnpm run build",
     "prestart": "if [ \"$NODE_ENV\" != \"production\" ]; then npm run setup:links; fi",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:signaling\" --names \"BACKEND,FRONTEND,SIGNALING\" --prefix-colors \"blue,green,yellow\"",
@@ -72,6 +72,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^8.2.2",
     "drizzle-kit": "^0.31.10",
+    "rimraf": "^6.1.3",
     "ts-jest": "^29.4.11",
     "vite": "^8.0.14",
     "vitest": "^4.1.7"

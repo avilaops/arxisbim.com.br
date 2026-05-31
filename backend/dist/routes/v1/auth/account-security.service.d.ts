@@ -36,11 +36,11 @@ export declare class AccountSecurityService {
      * Obter estatísticas de segurança da conta
      */
     getAccountSecurityStats(userId: string, tenantId: string): Promise<{
-        emailVerified: any;
-        emailVerifiedAt: any;
-        lastLoginAt: any;
-        activeTokens: any;
-        accountCreated: any;
+        emailVerified: boolean;
+        emailVerifiedAt: Date | null;
+        lastLoginAt: Date | null;
+        activeTokens: number;
+        accountCreated: Date;
     }>;
 }
 //# sourceMappingURL=account-security.service.d.ts.map

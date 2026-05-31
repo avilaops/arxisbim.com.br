@@ -16,12 +16,12 @@ export declare class AuthService {
      */
     register(input: RegisterInput): Promise<{
         user: {
-            id: any;
-            email: any;
-            name: any;
-            role: any;
-            tenantId: any;
-            companyId: any;
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            tenantId: string;
+            companyId: string | null;
         };
         accessToken: string;
         refreshToken: string;
@@ -34,12 +34,12 @@ export declare class AuthService {
      */
     login(input: LoginInput, tenantId?: string): Promise<{
         user: {
-            id: any;
-            email: any;
-            name: any;
-            role: any;
-            tenantId: any;
-            companyId: any;
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            tenantId: string;
+            companyId: string | null;
         };
         accessToken: string;
         refreshToken: string;
@@ -56,13 +56,13 @@ export declare class AuthService {
      * Get user by ID (tenant-isolated)
      */
     getUserById(userId: string, tenantId: string): Promise<{
-        id: any;
-        email: any;
-        name: any;
-        role: any;
-        tenantId: any;
-        companyId: any;
-        permissions: any;
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        tenantId: string;
+        companyId: string | null;
+        permissions: string[] | null;
     }>;
     /**
      * Generate JWT access token with tenant context

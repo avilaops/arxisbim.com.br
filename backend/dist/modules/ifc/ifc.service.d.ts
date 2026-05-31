@@ -35,12 +35,12 @@ export declare class IfcService {
         name: string;
         originalName: string;
         fileUrl: string;
-        fileSizeBytes: number;
-        ifcType: string;
-        discipline: string;
-        phase: string;
-        thumbnailUrl: string;
-        uploadedBy: string;
+        fileSizeBytes: number | null;
+        ifcType: string | null;
+        discipline: string | null;
+        phase: string | null;
+        thumbnailUrl: string | null;
+        uploadedBy: string | null;
         metadata: {
             author?: string;
             application?: string;
@@ -53,7 +53,7 @@ export declare class IfcService {
                 min: [number, number, number];
                 max: [number, number, number];
             };
-        };
+        } | null;
         uploadedAt: Date;
         updatedAt: Date;
     }>;
@@ -75,12 +75,12 @@ export declare class IfcService {
         name: string;
         originalName: string;
         fileUrl: string;
-        fileSizeBytes: number;
-        ifcType: string;
-        discipline: string;
-        phase: string;
-        thumbnailUrl: string;
-        uploadedBy: string;
+        fileSizeBytes: number | null;
+        ifcType: string | null;
+        discipline: string | null;
+        phase: string | null;
+        thumbnailUrl: string | null;
+        uploadedBy: string | null;
         metadata: {
             author?: string;
             application?: string;
@@ -93,7 +93,7 @@ export declare class IfcService {
                 min: [number, number, number];
                 max: [number, number, number];
             };
-        };
+        } | null;
         uploadedAt: Date;
         updatedAt: Date;
     }>;

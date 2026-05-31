@@ -29,15 +29,15 @@ export declare const ROLE_PERMISSIONS: Record<UserRole, Permission[]>;
 /**
  * Verificar se usuário tem uma role específica
  */
-export declare function requireRole(...roles: UserRole[]): (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
+export declare function requireRole(...roles: UserRole[]): (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
 /**
  * Verificar se usuário tem uma ou mais permissões específicas
  */
-export declare function requirePermission(...permissions: Permission[]): (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
+export declare function requirePermission(...permissions: Permission[]): (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
 /**
  * Verificar se usuário tem TODAS as permissões especificadas
  */
-export declare function requireAllPermissions(...permissions: Permission[]): (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
+export declare function requireAllPermissions(...permissions: Permission[]): (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
 /**
  * Helper para verificar permissões programaticamente (não como middleware)
  */
@@ -49,9 +49,9 @@ export declare function getUserPermissions(user: any): Permission[];
 /**
  * Middleware para verificar se usuário é do mesmo tenant
  */
-export declare function requireSameTenant(tenantIdParam?: string): (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
+export declare function requireSameTenant(tenantIdParam?: string): (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
 /**
  * Verificar se usuário é owner do recurso ou admin
  */
-export declare function requireOwnerOrAdmin(userIdField?: string): (request: FastifyRequest, reply: FastifyReply) => Promise<never>;
+export declare function requireOwnerOrAdmin(userIdField?: string): (request: FastifyRequest, reply: FastifyReply) => Promise<undefined>;
 //# sourceMappingURL=rbac.middleware.d.ts.map
