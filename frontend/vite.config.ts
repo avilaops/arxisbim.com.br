@@ -7,9 +7,17 @@ export default defineConfig({
   publicDir: 'public',
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-    },
+    // Array form para permitir alias por regex (o shim do BufferGeometryUtils).
+    alias: [
+      { find: '@', replacement: resolve(__dirname, 'src') },
+      // web-ifc-three importa `mergeGeometries` do three 0.149, que não tem
+      // esse export. Redireciona só o specifier `three/examples/jsm/...`
+      // para o shim (o shim importa via `three/addons/...`, sem loop).
+      {
+        find: /^three\/examples\/jsm\/utils\/BufferGeometryUtils(\.js)?$/,
+        replacement: resolve(__dirname, 'src/shims/three-BufferGeometryUtils.js'),
+      },
+    ],
   },
   build: {
     outDir: 'dist',
