@@ -225,14 +225,16 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     const { taskId } = request.params as { taskId: string };
     const body = request.body as {
       elementId: string;
-      action?: string;
+      tenantId: string;
+      linkType?: string;
     };
 
     try {
       const [newLink] = await db.insert(taskElementLinks).values({
+        tenantId: body.tenantId,
         taskId,
         elementId: body.elementId,
-        action: body.action,
+        ...(body.linkType && { linkType: body.linkType })
       }).returning();
 
       return reply.status(201).send(newLink);
@@ -259,11 +261,11 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get simulations for a schedule
-  fastify.get('/schedules/:scheduleId/simulations', async (request, reply) => {
-    const { scheduleId } = request.params as { scheduleId: string };
+  // Get simulations for a tenant (corrigir: timelineSimulations não tem scheduleId)
+  fastify.get('/tenants/:tenantId/simulations', async (request, reply) => {
+    const { tenantId } = request.params as { tenantId: string };
     try {
-      const simulations = await db.select().from(timelineSimulations).where(eq(timelineSimulations.scheduleId, scheduleId)).orderBy(desc(timelineSimulations.createdAt));
+      const simulations = await db.select().from(timelineSimulations).where(eq(timelineSimulations.tenantId, tenantId)).orderBy(desc(timelineSimulations.createdAt));
       return reply.send(simulations);
     } catch (error) {
       fastify.log.error(error);
@@ -271,26 +273,26 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Create simulation
-  fastify.post('/schedules/:scheduleId/simulations', async (request, reply) => {
-    const { scheduleId } = request.params as { scheduleId: string };
+  // Create simulation (corrigir: timelineSimulations não tem scheduleId)
+  fastify.post('/tenants/:tenantId/simulations', async (request, reply) => {
+    const { tenantId } = request.params as { tenantId: string };
     const body = request.body as {
-      name?: string;
-      simulationDate: string;
-      snapshot: {
-        visibleElements: string[];
-        hiddenElements: string[];
-        partialElements: Record<string, number>;
-      };
+      name: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      status?: string;
     };
 
     try {
       const [newSimulation] = await db.insert(timelineSimulations).values({
-        scheduleId,
+        tenantId,
         name: body.name,
-        simulationDate: body.simulationDate,
-        snapshot: body.snapshot,
-      }).returning();
+        description: body.description,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        status: body.status
+      } as any).returning();
 
       return reply.status(201).send(newSimulation);
     } catch (error) {
