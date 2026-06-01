@@ -205,84 +205,172 @@
     .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
     .check { color: var(--accent-green); font-weight: 700; font-size: 16px; }
 
-    /* FLOATING MOCK PREVIEW (LIGHT GLASSMORPHISM) */
+    /* ── APP MOCKUP ── */
     .hero-preview {
       margin-top: 56px;
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 22px;
-      background: var(--bg-panel);
-      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
       overflow: hidden;
-      backdrop-filter: blur(20px);
+      background: #fff;
+      text-align: left;
     }
+    /* top chrome bar */
     .preview-bar {
       display: flex; align-items: center; gap: 8px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-      background: rgba(255,255,255,0.4);
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      background: #f5f5f7;
     }
-    .preview-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ddd; display: inline-block; }
+    .preview-bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .preview-bar i:nth-child(1) { background: #ff5f57; }
     .preview-bar i:nth-child(2) { background: #febc2e; }
     .preview-bar i:nth-child(3) { background: #28c840; }
     .preview-bar .url {
-      flex: 1; text-align: center; color: var(--text-secondary);
-      font-size: 12px; font-family: 'DM Sans', sans-serif;
+      flex: 1; text-align: center; background: rgba(0,0,0,0.06);
+      border-radius: 6px; padding: 3px 12px;
+      font-size: 11.5px; color: #6e6e73;
     }
+    /* app top nav */
+    .app-nav {
+      display: flex; align-items: center; gap: 0;
+      background: #fff; border-bottom: 1px solid rgba(0,0,0,0.07);
+      padding: 0 16px; height: 44px;
+      font-size: 13px;
+    }
+    .app-nav .app-brand { font-weight: 700; font-size: 14px; margin-right: 20px; }
+    .app-nav .app-tabs { display: flex; gap: 2px; flex: 1; }
+    .app-nav .tab {
+      padding: 6px 14px; border-radius: 8px; font-size: 12.5px;
+      font-weight: 500; color: #6e6e73; cursor: default;
+    }
+    .app-nav .tab.active {
+      background: rgba(0,0,0,0.06); color: #000; font-weight: 600;
+    }
+    .app-nav .tab-cta {
+      padding: 5px 12px; border-radius: 8px; font-size: 12px;
+      font-weight: 600; color: #fff; background: #007AFF; margin-left: 4px;
+    }
+    /* three-column body */
     .preview-body {
       display: grid;
-      grid-template-columns: 210px 1fr 250px;
-      min-height: 380px;
-      background: rgba(255,255,255,0.1);
+      grid-template-columns: 200px 1fr 240px;
+      height: 420px;
     }
-    .preview-side {
-      border-right: 1px solid var(--border-color);
-      padding: 18px 16px;
-      font-size: 13px;
-      background: rgba(255,255,255,0.4);
-      text-align: left;
+    /* left sidebar */
+    .prev-left {
+      border-right: 1px solid rgba(0,0,0,0.07);
+      background: #fafafa;
+      padding: 14px 12px;
+      overflow: hidden;
+      font-size: 12.5px;
     }
-    .preview-side h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
-    .preview-side ul { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
-    .preview-side li { color: var(--text-primary); padding: 6px 10px; border-radius: 8px; font-weight: 500; }
-    .preview-side li.active { background: rgba(0,0,0,0.05); font-weight: 600; }
-    .preview-canvas {
-      position: relative;
-      background:
-        radial-gradient(circle at 30% 40%, rgba(237,233,254,0.3), transparent 60%),
-        radial-gradient(circle at 70% 60%, rgba(227,240,255,0.35), transparent 60%),
-        #ffffff;
-      display: flex; align-items: center; justify-content: center;
+    .prev-left .sec-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+      color: #aeaeb2; font-weight: 700; margin: 12px 0 6px;
+    }
+    .prev-left .sec-label:first-child { margin-top: 0; }
+    .prev-left .row {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 8px; border-radius: 7px; color: #1a1a1a;
+      font-weight: 500; cursor: default;
+    }
+    .prev-left .row.active { background: rgba(0,0,0,0.06); font-weight: 700; }
+    .prev-left .row .ic { font-size: 13px; opacity: .7; }
+    .prev-left .row.ifc { font-size: 12px; color: #6e6e73; }
+    .prev-left .row.tool { font-size: 12px; color: #6e6e73; }
+    .prev-left .cut-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #6e6e73; padding: 4px 8px;
+    }
+    .prev-left .cut-row input[type=checkbox] { accent-color: #007AFF; width: 13px; height: 13px; }
+    /* center canvas */
+    .prev-canvas {
+      position: relative; overflow: hidden;
+      background: #e8e8e8;
+    }
+    /* perspective grid like real Three.js viewer */
+    .prev-canvas .grid-wrap {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, #d0d0d0 0%, #c8c8c8 100%);
       overflow: hidden;
     }
-    .preview-canvas::after {
-      content: ""; position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
-      background-size: 32px 32px;
-      mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+    .prev-canvas .grid-wrap svg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
     }
-    .preview-canvas svg { position: relative; z-index: 1; width: 70%; max-width: 360px; }
-    .preview-right { padding: 18px 16px; font-size: 13px; background: rgba(255,255,255,0.4); text-align: left; }
-    .preview-right h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
-    
-    /* Copilot inside Luma mockup style */
-    .copilot-card {
-      background: #ffffff;
-      border: 1px solid rgba(0,0,0,0.05);
-      border-radius: 12px;
-      padding: 12px; font-size: 12.5px;
-      color: var(--text-primary); margin-bottom: 10px;
-      box-shadow: var(--shadow-sm);
+    /* IFC building overlay */
+    .prev-canvas .bim-model {
+      position: absolute; bottom: 60px; left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
     }
-    .copilot-card strong { color: #000000; }
-    .preview-right .ph { color: var(--text-secondary); font-size: 12px; font-weight: 500; text-align: center; margin-top: 14px; }
+    .prev-canvas .bim-model svg { width: 100%; }
+    /* selection tag */
+    .prev-canvas .sel-tag {
+      position: absolute; top: 28px; right: 28px;
+      background: rgba(0,122,255,.12);
+      border: 1px solid rgba(0,122,255,.3);
+      border-radius: 8px; padding: 6px 10px; font-size: 11.5px; color: #007AFF; font-weight: 600;
+    }
+    /* copilot bubble */
+    .prev-canvas .copilot-bubble {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,.95); border: 1px solid rgba(0,0,0,.08);
+      border-radius: 50px; padding: 7px 18px; font-size: 12px;
+      color: #6e6e73; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    }
+    .prev-canvas .copilot-bubble kbd {
+      background: rgba(0,0,0,.07); border-radius: 4px; padding: 1px 5px;
+      font-size: 11px; font-family: monospace; color: #1a1a1a;
+    }
+    /* right panel */
+    .prev-right {
+      border-left: 1px solid rgba(0,0,0,.07);
+      background: #fff; padding: 14px 13px;
+      overflow: hidden; font-size: 12.5px;
+    }
+    .prev-right .panel-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #000;
+    }
+    .prev-right .sec-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
+      color: #aeaeb2; font-weight: 700; margin: 14px 0 8px;
+    }
+    .prev-right .sec-label:first-of-type { margin-top: 0; }
+    .prev-right .prop-row {
+      display: flex; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.05);
+      font-size: 12px;
+    }
+    .prev-right .prop-row:last-child { border-bottom: none; }
+    .prev-right .prop-key { color: #8e8e93; }
+    .prev-right .prop-val { color: #1a1a1a; font-weight: 600; }
+    .prev-right .action-btn {
+      display: block; width: 100%; padding: 8px 10px;
+      border-radius: 9px; font-size: 12.5px; font-weight: 600;
+      text-align: center; margin-bottom: 6px; border: none; cursor: default;
+    }
+    .prev-right .action-btn.primary { background: #000; color: #fff; }
+    .prev-right .action-btn.outline { background: transparent; border: 1px solid rgba(0,0,0,.12); color: #1a1a1a; }
+    .prev-right .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .prev-right .cam-btn {
+      padding: 6px; border-radius: 7px; font-size: 11.5px; font-weight: 600;
+      text-align: center; border: none; cursor: default;
+    }
+    .prev-right .cam-btn.active { background: #000; color: #fff; }
+    .prev-right .cam-btn:not(.active) { background: rgba(0,0,0,.05); color: #6e6e73; }
+    .prev-right .ai-card {
+      background: rgba(0,122,255,.06); border: 1px solid rgba(0,122,255,.15);
+      border-radius: 10px; padding: 9px 11px; font-size: 12px;
+      color: #1a1a1a; margin-bottom: 7px; line-height: 1.45;
+    }
+    .prev-right .ai-card strong { color: #007AFF; display: block; font-size: 11.5px; margin-bottom: 3px; }
 
-    @media (max-width: 860px) {
-      .preview-body { grid-template-columns: 1fr; }
-      .preview-side, .preview-right { display: none; }
-      .preview-canvas { min-height: 280px; }
+    @media (max-width: 900px) {
+      .preview-body { grid-template-columns: 1fr; height: auto; }
+      .prev-left, .prev-right { display: none; }
+      .prev-canvas { height: 280px; }
     }
 
     section { padding: 80px 0; position: relative; }
@@ -499,72 +587,172 @@
       </div>
 
       <div class="hero-preview" aria-hidden="true">
+        <!-- Browser chrome -->
         <div class="preview-bar">
           <i></i><i></i><i></i>
-          <span class="url">app.arxisvr.com/projects/residencial-heitor</span>
+          <span class="url">https://arxisvr.avilaops.com/app.html</span>
         </div>
-        <div class="preview-body">
-          <aside class="preview-side">
-            <h4>Projetos</h4>
-            <ul>
-              <li class="active">▣ Residencial Heitor</li>
-              <li>▣ Edifício VZZ-086</li>
-              <li>▣ Industrial Sampa</li>
-            </ul>
-            <h4>Modelos IFC</h4>
-            <ul>
-              <li>· Estrutural Rev08</li>
-              <li>· Hidráulica Rev01</li>
-              <li>· Elétrica Rev01</li>
-            </ul>
-            <h4>Ferramentas</h4>
-            <ul>
-              <li>· Upload IFC</li>
-              <li>· Cortes &amp; Clipping</li>
-              <li>· Medições</li>
-            </ul>
-          </aside>
-          <div class="preview-canvas">
-            <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.7"/>
-                </linearGradient>
-                <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.85"/>
-                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.5"/>
-                </linearGradient>
-              </defs>
-              <polygon points="60,210 340,210 380,240 20,240" fill="url(#g2)" opacity="0.25" stroke="#22d3ee" stroke-width="1"/>
-              <polygon points="80,210 320,210 350,235 50,235" fill="#0e1426" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 320,80 320,210 80,210" fill="url(#g1)" opacity="0.35" stroke="#7c5cff" stroke-width="1.2"/>
-              <polygon points="320,80 350,105 350,235 320,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 50,105 50,235 80,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 320,80 350,105 50,105" fill="#2a3160" stroke="#7c5cff" stroke-width="1"/>
-              <rect x="110" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="170" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="230" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="280" y="160" width="22" height="50" fill="#7c5cff" opacity="0.5" stroke="#7c5cff" stroke-width="0.8"/>
-              <circle cx="170" cy="145" r="6" fill="#34d399"/>
-              <line x1="170" y1="145" x2="200" y2="60" stroke="#34d399" stroke-width="1" stroke-dasharray="3 3"/>
-              <text x="205" y="58" fill="#34d399" font-size="10" font-family="JetBrains Mono">IfcWindow · Pav 01</text>
-            </svg>
+
+        <!-- App top nav (replicates real UI) -->
+        <div class="app-nav">
+          <span class="app-brand">ArxisVR</span>
+          <div class="app-tabs">
+            <span class="tab active">Workspace</span>
+            <span class="tab">Modelos</span>
+            <span class="tab">Planejamento</span>
+            <span class="tab">XR Imersivo</span>
           </div>
-          <aside class="preview-right">
-            <h4>Copilot</h4>
-            <div class="copilot-card">
-              <strong>🏗️ Coordenação BIM</strong><br />
-              Federação carregada. 3 disciplinas alinhadas. Detectei 12 possíveis clashes em HID×EST.
-            </div>
-            <div class="copilot-card">
-              <strong>⏱️ Simulação 4D</strong><br />
-              Avançar timeline para semana 14 e isolar fase de estrutura?
-            </div>
-            <div class="ph">Ctrl+K para abrir o Copilot</div>
-          </aside>
+          <span class="tab-cta">Abrir Cronograma 4D</span>
+          <span class="tab-cta" style="background:#6b21a8;margin-left:4px;">Reuniões XR</span>
         </div>
-      </div>
+
+        <!-- Three-column body -->
+        <div class="preview-body">
+
+          <!-- LEFT SIDEBAR -->
+          <div class="prev-left">
+            <div class="sec-label">Projetos</div>
+            <div class="row active"><span class="ic">▣</span> Residencial Heitor</div>
+            <div class="row"><span class="ic">▣</span> Edifício VZZ-086</div>
+            <div class="row"><span class="ic">▣</span> Industrial Sampa</div>
+
+            <div class="sec-label">Modelos IFC</div>
+            <div class="row ifc"><span class="ic">·</span> Estrutural Rev08</div>
+            <div class="row ifc"><span class="ic">·</span> Hidráulica Rev01</div>
+            <div class="row ifc"><span class="ic">·</span> Elétrica Rev01</div>
+
+            <div class="sec-label">Ferramentas</div>
+            <div class="row tool"><span class="ic">↑</span> Abrir IFC</div>
+            <div class="row tool"><span class="ic">✂</span> Cortes</div>
+            <div class="row tool"><span class="ic">↔</span> Medições</div>
+
+            <div class="sec-label">Cortes 3D</div>
+            <div class="cut-row"><input type="checkbox" checked disabled> <span>Corte 3D ativo</span></div>
+            <div class="cut-row" style="margin-top:4px;color:#aeaeb2;font-size:11px;">Eixo X &nbsp;0.00</div>
+            <div class="cut-row" style="color:#aeaeb2;font-size:11px;">Eixo Y &nbsp;0.00</div>
+          </div>
+
+          <!-- CENTER CANVAS (perspective grid like real Three.js viewer) -->
+          <div class="prev-canvas">
+            <div class="grid-wrap">
+              <svg viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#b8b8b8"/>
+                    <stop offset="100%" stop-color="#d0d0d0"/>
+                  </linearGradient>
+                </defs>
+                <!-- Sky -->
+                <rect width="600" height="420" fill="url(#sky)"/>
+                <!-- Perspective grid floor (like Three.js GridHelper) -->
+                <g opacity="0.5">
+                  <!-- Horizontal lines converging to horizon at y=210 -->
+                  <line x1="0" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="60" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="120" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="180" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="240" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="300" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.8"/>
+                  <line x1="360" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="420" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="480" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="540" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <line x1="600" y1="420" x2="300" y2="210" stroke="#999" stroke-width="0.6"/>
+                  <!-- Cross lines at various depths -->
+                  <line x1="0" y1="420" x2="600" y2="420" stroke="#888" stroke-width="1"/>
+                  <line x1="20" y1="380" x2="580" y2="380" stroke="#999" stroke-width="0.7"/>
+                  <line x1="60" y1="340" x2="540" y2="340" stroke="#999" stroke-width="0.6"/>
+                  <line x1="100" y1="310" x2="500" y2="310" stroke="#aaa" stroke-width="0.5"/>
+                  <line x1="130" y1="285" x2="470" y2="285" stroke="#aaa" stroke-width="0.5"/>
+                  <line x1="160" y1="265" x2="440" y2="265" stroke="#bbb" stroke-width="0.4"/>
+                  <line x1="185" y1="248" x2="415" y2="248" stroke="#bbb" stroke-width="0.4"/>
+                  <line x1="205" y1="235" x2="395" y2="235" stroke="#ccc" stroke-width="0.3"/>
+                  <line x1="220" y1="225" x2="380" y2="225" stroke="#ccc" stroke-width="0.3"/>
+                  <line x1="240" y1="217" x2="360" y2="217" stroke="#ccc" stroke-width="0.2"/>
+                </g>
+
+                <!-- IFC Building — simplified but recognizable 3-storey structure -->
+                <!-- Shadow -->
+                <ellipse cx="300" cy="310" rx="120" ry="14" fill="rgba(0,0,0,0.08)"/>
+                <!-- Main body -->
+                <rect x="170" y="165" width="260" height="145" fill="#e8e0d4" stroke="#b0a898" stroke-width="1.2"/>
+                <!-- Floor lines -->
+                <line x1="170" y1="214" x2="430" y2="214" stroke="#b0a898" stroke-width="0.8"/>
+                <line x1="170" y1="262" x2="430" y2="262" stroke="#b0a898" stroke-width="0.8"/>
+                <!-- Windows row 1 -->
+                <rect x="183" y="172" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="233" y="172" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="283" y="172" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="333" y="172" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="383" y="172" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <!-- Windows row 2 -->
+                <rect x="183" y="220" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="233" y="220" width="38" height="34" rx="2" fill="#b8d8f0" stroke="#007AFF" stroke-width="1.5"/>
+                <rect x="283" y="220" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="333" y="220" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="383" y="220" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <!-- Windows row 3 -->
+                <rect x="183" y="268" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="233" y="268" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="283" y="268" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="333" y="268" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <rect x="383" y="268" width="38" height="34" rx="2" fill="#9fc8e8" stroke="#6b9ab8" stroke-width="0.8"/>
+                <!-- Door -->
+                <rect x="272" y="278" width="56" height="32" rx="2" fill="#c8a878" stroke="#8a6840" stroke-width="0.8"/>
+                <!-- Selection highlight on window -->
+                <rect x="233" y="220" width="38" height="34" rx="2" fill="rgba(0,122,255,.1)" stroke="#007AFF" stroke-width="2"/>
+                <circle cx="237" cy="224" r="3" fill="#007AFF"/>
+                <!-- Annotation line -->
+                <line x1="252" y1="220" x2="390" y2="148" stroke="#007AFF" stroke-width="1" stroke-dasharray="4 3"/>
+                <rect x="390" y="138" width="130" height="20" rx="4" fill="#007AFF"/>
+                <text x="397" y="151" fill="white" font-size="10.5" font-family="DM Sans,sans-serif" font-weight="600">IfcWindow · Pav 02</text>
+              </svg>
+            </div>
+
+            <!-- Selection info tag -->
+            <div class="sel-tag">1 elemento selecionado · IfcWindow</div>
+
+            <!-- Copilot hint -->
+            <div class="copilot-bubble"><kbd>Ctrl+K</kbd> &nbsp;Abrir Copilot de IA</div>
+          </div>
+
+          <!-- RIGHT PANEL -->
+          <div class="prev-right">
+            <div class="panel-title">Propriedades</div>
+
+            <div class="sec-label">Informações do modelo</div>
+            <div class="prop-row"><span class="prop-key">Tipo IFC</span><span class="prop-val">IfcWindow</span></div>
+            <div class="prop-row"><span class="prop-key">Pavimento</span><span class="prop-val">Pav 02</span></div>
+            <div class="prop-row"><span class="prop-key">Largura</span><span class="prop-val">1.20 m</span></div>
+            <div class="prop-row"><span class="prop-key">Altura</span><span class="prop-val">2.10 m</span></div>
+            <div class="prop-row"><span class="prop-key">Material</span><span class="prop-val">Alumínio</span></div>
+            <div class="prop-row"><span class="prop-key">ExpressID</span><span class="prop-val">#1247</span></div>
+
+            <div class="sec-label">Ações rápidas</div>
+            <div class="action-btn primary">Abrir IFC</div>
+            <div class="action-btn outline">Exportar modelo</div>
+
+            <div class="sec-label">Modos de câmera</div>
+            <div class="cam-grid">
+              <div class="cam-btn active">1 Pessoa</div>
+              <div class="cam-btn">2 Avatar</div>
+              <div class="cam-btn">3 Drone</div>
+              <div class="cam-btn">V Órbita</div>
+            </div>
+
+            <div class="sec-label">Copilot IA</div>
+            <div class="ai-card">
+              <strong>🏗 Coordenação BIM</strong>
+              Federação carregada. 3 disciplinas. 12 clashes detectados em HID×EST.
+            </div>
+            <div class="ai-card">
+              <strong>⏱ Simulação 4D</strong>
+              Avançar timeline para semana 14?
+            </div>
+          </div>
+
+        </div><!-- /preview-body -->
+      </div><!-- /hero-preview -->
     </div>
   </section>
 
