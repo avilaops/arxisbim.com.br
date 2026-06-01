@@ -35,19 +35,19 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Build backend (esbuild)
         working-directory: backend
-        run: pnpm run build
+        run: npm run build
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Build frontend (vite)
         working-directory: frontend
-        run: pnpm run build
+        run: npm run build
 
       - name: Install signaling-server dependencies
         working-directory: signaling-server

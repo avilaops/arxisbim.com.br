@@ -6,8 +6,9 @@ export class StorageController {
   constructor(private storageService: StorageService) {}
 
   async uploadIFC(file: File) {
-    await this.storageService.uploadIFC(file);
-    emit('ifc:uploaded', file);
+    const stored = await this.storageService.uploadIFC(file);
+    emit('ifc:uploaded', stored);
+    return stored;
   }
 
   async downloadIFC(id: string) {

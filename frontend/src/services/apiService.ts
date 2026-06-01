@@ -1,4 +1,9 @@
-// Interface e implementação base do ApiService
+// ApiService — thin wrapper around the shared ApiClient (src/api/client.ts).
+// Existed as a Not-implemented stub; this implementation delegates to `api`
+// so existing consumers (controllers, legacy services) get real HTTP behavior
+// without changing their interface.
+import { api } from '../api/client';
+
 export interface ApiService {
   get<T>(url: string): Promise<T>;
   post<T>(url: string, data: any): Promise<T>;
@@ -7,20 +12,8 @@ export interface ApiService {
 }
 
 export const apiService: ApiService = {
-  async get(url) {
-    // TODO: implementar fetch real
-    throw new Error('Not implemented');
-  },
-  async post(url, data) {
-    // TODO: implementar post real
-    throw new Error('Not implemented');
-  },
-  async put(url, data) {
-    // TODO: implementar put real
-    throw new Error('Not implemented');
-  },
-  async delete(url) {
-    // TODO: implementar delete real
-    throw new Error('Not implemented');
-  }
+  get: <T>(url: string) => api.get<T>(url),
+  post: <T>(url: string, data: any) => api.post<T>(url, data),
+  put: <T>(url: string, data: any) => api.put<T>(url, data),
+  delete: <T>(url: string) => api.delete<T>(url),
 };
