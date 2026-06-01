@@ -7,7 +7,6 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [tenantId, setTenantId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const turnstileToken = useRef<string>('');
@@ -26,12 +25,11 @@ export default function LoginPage() {
       await authManager.login({
         email: email.trim(),
         password,
-        tenantId: tenantId.trim(),
         turnstileToken: turnstileToken.current,
       } as any);
       window.location.href = '/app.html';
     } catch (err: any) {
-      setError(err?.message || 'Email, senha ou tenant incorretos.');
+      setError(err?.message || 'Email ou senha incorretos.');
     } finally {
       setLoading(false);
     }
@@ -47,19 +45,6 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <label className="auth-field">
-            <span className="auth-label">Tenant ID</span>
-            <input
-              className="auth-input"
-              type="text"
-              autoComplete="organization"
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              placeholder="ex: acme-corp"
-              required
-            />
-          </label>
-
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input

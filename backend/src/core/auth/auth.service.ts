@@ -32,16 +32,23 @@ interface AuthResponse {
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
-  tenantId: z.string().min(1, 'Tenant ID é obrigatório'),
+  tenantId: z.string().optional(),
 });
 
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
-  tenantId: z.string().min(1, 'Tenant ID é obrigatório'),
+  tenantId: z.string().optional(),
   companyId: z.string().optional(),
 });
+
+// Deriva slug de tenant a partir do domínio do email (ex: user@acme.com -> 'acme')
+function tenantFromEmail(email: string): string {
+  const domain = email.split('@')[1] || 'public';
+  const base = domain.split('.')[0] || 'public';
+  return base.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+}
 
 export class AuthService {
   private db;
@@ -62,21 +69,23 @@ export class AuthService {
   /**
    * Login com email e senha
    */
-  async login(credentials: { email: string; password: string; tenantId: string }): Promise<AuthResponse> {
+  async login(credentials: { email: string; password: string; tenantId?: string }): Promise<AuthResponse> {
     // Validar input
     const validated = loginSchema.parse(credentials);
 
-    // Buscar usuário pelo email e tenant
+    // Email é único globalmente — tenantId opcional. Se omitido, busca só por email.
+    const whereClauses = [
+      eq(users.email, validated.email),
+      eq(users.isActive, true),
+    ];
+    if (validated.tenantId) {
+      whereClauses.push(eq(users.tenantId, validated.tenantId));
+    }
+
     const [user] = await this.db
       .select()
       .from(users)
-      .where(
-        and(
-          eq(users.email, validated.email),
-          eq(users.tenantId, validated.tenantId),
-          eq(users.isActive, true)
-        )
-      )
+      .where(and(...whereClauses))
       .limit(1);
 
     if (!user) {
@@ -140,23 +149,26 @@ export class AuthService {
   /**
    * Registrar novo usuário
    */
-  async register(data: { email: string; password: string; name: string; tenantId: string; companyId?: string }): Promise<AuthResponse> {
+  async register(data: { email: string; password: string; name: string; tenantId?: string; companyId?: string }): Promise<AuthResponse> {
     // Validar input
     const validated = registerSchema.parse(data);
+
+    // tenantId opcional — deriva do domínio do email se omitido (ex: user@acme.com -> 'acme')
+    const tenantSlug = validated.tenantId || tenantFromEmail(validated.email);
 
     // Verificar se o tenant existe; se não, criar automaticamente (self-service signup)
     let [tenant] = await this.db
       .select()
       .from(tenants)
-      .where(eq(tenants.tenantId, validated.tenantId))
+      .where(eq(tenants.tenantId, tenantSlug))
       .limit(1);
 
     if (!tenant) {
       [tenant] = await this.db
         .insert(tenants)
         .values({
-          tenantId: validated.tenantId,
-          name: validated.tenantId,
+          tenantId: tenantSlug,
+          name: tenantSlug,
           isActive: true,
         })
         .returning();
@@ -166,20 +178,15 @@ export class AuthService {
       throw new Error('Tenant inativo');
     }
 
-    // Verificar se o email já existe no tenant
+    // Email é único globalmente — verifica duplicidade sem filtrar por tenant
     const [existingUser] = await this.db
       .select()
       .from(users)
-      .where(
-        and(
-          eq(users.email, validated.email),
-          eq(users.tenantId, validated.tenantId)
-        )
-      )
+      .where(eq(users.email, validated.email))
       .limit(1);
 
     if (existingUser) {
-      throw new Error('Email já cadastrado neste tenant');
+      throw new Error('Email já cadastrado');
     }
 
     // Hash da senha
@@ -192,7 +199,7 @@ export class AuthService {
         email: validated.email,
         name: validated.name,
         passwordHash,
-        tenantId: validated.tenantId,
+        tenantId: tenantSlug,
         companyId: validated.companyId || null,
         role: 'user',
         permissions: [],

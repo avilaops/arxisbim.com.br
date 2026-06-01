@@ -8,7 +8,6 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [tenantId, setTenantId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const turnstileToken = useRef<string>('');
@@ -28,7 +27,6 @@ export default function RegisterPage() {
         name: name.trim(),
         email: email.trim(),
         password,
-        tenantId: tenantId.trim(),
         turnstileToken: turnstileToken.current,
       } as any);
       window.location.href = '/app.html';
@@ -49,20 +47,6 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <label className="auth-field">
-            <span className="auth-label">Tenant ID</span>
-            <input
-              className="auth-input"
-              type="text"
-              autoComplete="organization"
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              placeholder="ex: acme-corp"
-              required
-              minLength={2}
-            />
-          </label>
-
           <label className="auth-field">
             <span className="auth-label">Nome</span>
             <input
