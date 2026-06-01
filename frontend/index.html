@@ -3,411 +3,425 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ArxisVR — Plataforma BIM com Copilot de IA e Realidade Estendida. Visualize IFC em 1:1, coordene disciplinas, simule 4D/5D e revise clashes no navegador, em VR ou AR." />
-  <meta name="theme-color" content="#0b0f1a" />
-
+  <meta name="description" content="ArxisVR — Plataforma BIM com Copilot de IA e Realidade Estendida. Viewer IFC 1:1, coordenação BIM, 4D/5D e VR/AR no navegador." />
+  <meta name="theme-color" content="#0a0e1a" />
   <meta property="og:title" content="ArxisVR — Plataforma BIM com IA e Realidade Estendida" />
-  <meta property="og:description" content="Viewer IFC 1:1, BIM 4D/5D, coordenação assistida por IA e VR/AR no navegador. Tudo em uma plataforma." />
+  <meta property="og:description" content="Viewer IFC 1:1, BIM 4D/5D, coordenação assistida por IA e VR/AR no navegador. Sem instalação." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://arxisvr.com/" />
-
+  <meta property="og:url" content="https://arxisvr.avilaops.com/" />
   <title>ArxisVR — Plataforma BIM com IA e Realidade Estendida</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-
-  <!-- Lucide Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* Palette: Lu.ma Premium Light System */
-      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
-      --bg-panel: rgba(255, 255, 255, 0.78);
-      --bg-card: rgba(255, 255, 255, 0.85);
-      --bg-card-hover: #ffffff;
-      
-      --text-primary: #1A1A1A;
-      --text-secondary: #8E8E93;
-      --text-muted: #AEAEB2;
-      
-      --border-color: rgba(0, 0, 0, 0.06);
-      --border-hover: rgba(0, 0, 0, 0.12);
-      
-      --accent-blue: #007AFF;      /* Apple Blue */
-      --accent-purple: #C4B5F4;    /* Luma Soft Purple */
-      --accent-purple-light: #EDE9FF;
-      --accent-green: #34C759;     /* iOS Green */
-      
-      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.015);
-      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.04);
-      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.06);
-      
-      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      --radius: 20px;
-      --max: 1140px;
+      --bg-dark:    #0a0e1a;
+      --bg-surface: #111827;
+      --bg-card:    #1a2236;
+      --bg-card-hover: #1f2a40;
+      --border:     rgba(255,255,255,0.07);
+      --border-hi:  rgba(255,255,255,0.14);
+      --text:       #f0f4ff;
+      --text-2:     #8b9ab8;
+      --text-3:     #4d5f7c;
+      --blue:       #4f8ef7;
+      --blue-dim:   rgba(79,142,247,0.12);
+      --green:      #22c55e;
+      --purple:     #a78bfa;
+      --shadow:     0 1px 3px rgba(0,0,0,.4), 0 8px 32px rgba(0,0,0,.3);
+      --shadow-lg:  0 2px 8px rgba(0,0,0,.5), 0 24px 64px rgba(0,0,0,.4);
+      --r:          12px;
+      --max:        1160px;
+      --ease:       cubic-bezier(.4,0,.2,1);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
     body {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-app);
-      color: var(--text-primary);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      letter-spacing: -0.1px;
+      font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+      line-height:1.6;
     }
-    a { color: inherit; text-decoration: none; }
-    code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    a { color:inherit; text-decoration:none; }
+    img { display:block; max-width:100%; }
 
-    .container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .container { max-width:var(--max); margin:0 auto; padding:0 28px; }
 
-    /* Force Lucide icons to have ultra-thin, elegant strokes (Lu.ma style) */
-    .lucide {
-      stroke-width: 1.4px !important;
-      width: 18px;
-      height: 18px;
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    /* NAV (LUMA STYLE) */
+    /* ── NAV ── */
     .nav {
-      position: sticky; top: 0; z-index: 50;
-      backdrop-filter: blur(20px);
-      background: rgba(255, 255, 255, 0.8);
-      border-bottom: 1px solid var(--border-color);
+      position:sticky; top:0; z-index:100;
+      border-bottom:1px solid var(--border);
+      background:rgba(10,14,26,.85);
+      backdrop-filter:blur(20px);
     }
-    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: #000000; letter-spacing: -0.5px; }
-    .brand-mark {
-      width: 26px; height: 26px; border-radius: 50%;
-      background: #000000;
-      position: relative;
+    .nav-inner {
+      display:flex; align-items:center; justify-content:space-between;
+      height:60px;
     }
-    .brand-mark::after {
-      content: ""; position: absolute; inset: 7px;
-      border: 1.5px solid #ffffff; border-radius: 50%;
+    .brand {
+      display:flex; align-items:center; gap:10px;
+      font-size:16px; font-weight:700; letter-spacing:-.3px; color:var(--text);
     }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
-    .nav-links a { color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: var(--transition); }
-    .nav-links a:hover { color: #000000; }
-    .nav-cta { display: flex; gap: 8px; align-items: center; }
+    .brand-logo {
+      width:28px; height:28px;
+      background:linear-gradient(135deg,#4f8ef7,#a78bfa);
+      border-radius:7px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:800; color:#fff; letter-spacing:.05em;
+    }
+    .nav-links { display:flex; gap:24px; }
+    .nav-links a {
+      font-size:13.5px; font-weight:500; color:var(--text-2);
+      transition:color .15s;
+    }
+    .nav-links a:hover { color:var(--text); }
+    .nav-cta { display:flex; gap:8px; align-items:center; }
+    @media(max-width:760px){ .nav-links{display:none;} }
 
-    /* BUTTONS */
+    /* ── BUTTONS ── */
     .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: 50px; /* Perfect Luma Pills */
-      font-weight: 500; font-size: 14px;
-      transition: var(--transition);
-      border: 1px solid var(--border-color);
-      cursor: pointer; white-space: nowrap;
-      background: #ffffff;
-      color: var(--text-primary);
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 18px; border-radius:7px;
+      font-size:13.5px; font-weight:600;
+      border:1px solid transparent;
+      cursor:pointer; white-space:nowrap;
+      transition:all .15s var(--ease);
+      font-family:inherit;
     }
-    .btn:active {
-      transform: scale(0.97); /* Luma click compress */
+    .btn:active { transform:scale(.97); }
+    .btn-ghost {
+      background:transparent; color:var(--text-2); border-color:transparent;
     }
-    .btn-ghost { color: var(--text-secondary); border-color: transparent; background: transparent; }
-    .btn-ghost:hover { color: #000000; background: rgba(0,0,0,0.03); }
-    .btn-outline { color: var(--text-primary); border-color: var(--border-color); }
-    .btn-outline:hover { border-color: rgba(0,0,0,0.15); background: #ffffff; }
+    .btn-ghost:hover { color:var(--text); background:rgba(255,255,255,.06); }
+    .btn-outline {
+      background:transparent; color:var(--text);
+      border-color:var(--border-hi);
+    }
+    .btn-outline:hover { background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); }
     .btn-primary {
-      color: white;
-      background: #000000; /* Luma signature black solid */
-      border: none;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      background:var(--blue); color:#fff; border-color:transparent;
+      box-shadow:0 0 0 0 rgba(79,142,247,0);
     }
-    .btn-primary:hover { background: #222222; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
-    .btn-lg { padding: 14px 26px; font-size: 15px; font-weight: 600; }
+    .btn-primary:hover {
+      background:#3a7de8;
+      box-shadow:0 0 0 4px rgba(79,142,247,.2);
+    }
+    .btn-lg { padding:12px 24px; font-size:14.5px; border-radius:8px; }
 
-    @media (max-width: 760px) { .nav-links { display: none; } }
-
-    /* HERO */
-    .hero { position: relative; padding: 80px 0 60px; overflow: hidden; }
-    .hero::before {
-      content: ""; position: absolute; inset: 0;
-      background:
-        radial-gradient(800px 400px at 80% -10%, rgba(196, 181, 244, 0.3), transparent 60%),
-        radial-gradient(700px 380px at 10% 10%, rgba(124, 150, 255, 0.2), transparent 60%);
-      pointer-events: none;
+    /* ── HERO ── */
+    .hero {
+      position:relative; padding:100px 0 80px;
+      overflow:hidden;
     }
-    .hero-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
-      background-size: 56px 56px;
-      mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
-      pointer-events: none;
+    .hero-glow {
+      position:absolute; pointer-events:none;
+      width:900px; height:500px;
+      top:-100px; left:50%; transform:translateX(-50%);
+      background:radial-gradient(ellipse at 50% 0%,rgba(79,142,247,.18) 0%,rgba(167,139,250,.08) 50%,transparent 70%);
+      filter:blur(1px);
     }
-    .hero-inner { position: relative; text-align: center; max-width: 840px; margin: 0 auto; }
+    .hero-inner {
+      position:relative; text-align:center;
+      max-width:860px; margin:0 auto;
+    }
     .eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 16px; border-radius: 999px;
-      border: 1px solid var(--border-color);
-      background: rgba(255,255,255,0.6);
-      font-size: 13px; font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
+      display:inline-flex; align-items:center; gap:8px;
+      padding:5px 14px; border-radius:999px;
+      border:1px solid var(--border-hi);
+      background:rgba(79,142,247,.08);
+      font-size:12.5px; font-weight:600; color:var(--blue);
+      margin-bottom:28px;
+      letter-spacing:.02em;
     }
     .eyebrow .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.15);
+      width:6px; height:6px; border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 0 3px rgba(34,197,94,.2);
     }
     .h1 {
-      font-size: clamp(34px, 5.5vw, 58px);
-      font-weight: 700; letter-spacing: -0.6px; line-height: 1.1;
-      margin-bottom: 20px;
-      color: #000000;
+      font-size:clamp(32px,5vw,58px);
+      font-weight:800; letter-spacing:-.8px; line-height:1.08;
+      margin-bottom:22px; color:var(--text);
     }
+    .h1 .hi { color:var(--blue); }
     .lead {
-      font-size: clamp(16px, 1.5vw, 18px);
-      color: var(--text-secondary);
-      max-width: 680px; margin: 0 auto 36px;
-      line-height: 1.55;
+      font-size:clamp(15px,1.4vw,17px);
+      color:var(--text-2); max-width:640px; margin:0 auto 40px;
+      line-height:1.65; font-weight:400;
     }
-    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
-    .hero-meta { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 13.5px; color: var(--text-secondary); }
-    .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
-    .check { color: var(--accent-green); font-weight: 700; font-size: 16px; }
+    .hero-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:28px; }
+    .hero-badges {
+      display:flex; justify-content:center; gap:20px; flex-wrap:wrap;
+      font-size:13px; color:var(--text-3);
+    }
+    .hero-badges span { display:inline-flex; align-items:center; gap:6px; }
+    .check { color:var(--green); }
 
-    /* FLOATING MOCK PREVIEW (LIGHT GLASSMORPHISM) */
-    .hero-preview {
-      margin-top: 56px;
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 22px;
-      background: var(--bg-panel);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-      backdrop-filter: blur(20px);
+    /* ── PRODUCT SCREENSHOT MOCKUP ── */
+    .mockup-wrap {
+      margin-top:64px; position:relative;
+      border-radius:14px; overflow:hidden;
+      border:1px solid var(--border-hi);
+      box-shadow:var(--shadow-lg);
     }
-    .preview-bar {
-      display: flex; align-items: center; gap: 8px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-      background: rgba(255,255,255,0.4);
+    .mockup-bar {
+      display:flex; align-items:center; gap:7px;
+      padding:10px 16px;
+      background:var(--bg-surface);
+      border-bottom:1px solid var(--border);
     }
-    .preview-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ddd; display: inline-block; }
-    .preview-bar i:nth-child(1) { background: #ff5f57; }
-    .preview-bar i:nth-child(2) { background: #febc2e; }
-    .preview-bar i:nth-child(3) { background: #28c840; }
-    .preview-bar .url {
-      flex: 1; text-align: center; color: var(--text-secondary);
-      font-size: 12px; font-family: 'DM Sans', sans-serif;
+    .mockup-bar .dot { width:10px; height:10px; border-radius:50%; }
+    .mockup-bar .dot-r { background:#ff5f57; }
+    .mockup-bar .dot-y { background:#febc2e; }
+    .mockup-bar .dot-g { background:#28c840; }
+    .mockup-bar .url-bar {
+      flex:1; text-align:center; font-size:11.5px; color:var(--text-3);
+      font-family:'Inter',monospace;
     }
-    .preview-body {
-      display: grid;
-      grid-template-columns: 210px 1fr 250px;
-      min-height: 380px;
-      background: rgba(255,255,255,0.1);
+    .mockup-body {
+      display:grid; grid-template-columns:200px 1fr 240px;
+      min-height:400px; background:var(--bg-dark);
     }
-    .preview-side {
-      border-right: 1px solid var(--border-color);
-      padding: 18px 16px;
-      font-size: 13px;
-      background: rgba(255,255,255,0.4);
-      text-align: left;
+    .mock-sidebar {
+      background:var(--bg-surface); border-right:1px solid var(--border);
+      padding:16px 14px; font-size:12.5px;
     }
-    .preview-side h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
-    .preview-side ul { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
-    .preview-side li { color: var(--text-primary); padding: 6px 10px; border-radius: 8px; font-weight: 500; }
-    .preview-side li.active { background: rgba(0,0,0,0.05); font-weight: 600; }
-    .preview-canvas {
-      position: relative;
+    .mock-sidebar .section-lbl {
+      font-size:10px; text-transform:uppercase; letter-spacing:.1em;
+      color:var(--text-3); font-weight:700; margin-bottom:8px; margin-top:16px;
+    }
+    .mock-sidebar .section-lbl:first-child { margin-top:0; }
+    .mock-sidebar ul { list-style:none; display:flex; flex-direction:column; gap:2px; }
+    .mock-sidebar li {
+      padding:6px 8px; border-radius:6px; color:var(--text-2);
+      display:flex; align-items:center; gap:7px; cursor:default;
+    }
+    .mock-sidebar li.active { background:var(--blue-dim); color:var(--blue); font-weight:600; }
+    .mock-sidebar li .ico { font-size:13px; opacity:.7; }
+    .mock-canvas {
+      position:relative; overflow:hidden;
       background:
-        radial-gradient(circle at 30% 40%, rgba(237,233,254,0.3), transparent 60%),
-        radial-gradient(circle at 70% 60%, rgba(227,240,255,0.35), transparent 60%),
-        #ffffff;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
+        radial-gradient(circle at 35% 45%,rgba(79,142,247,.12),transparent 55%),
+        radial-gradient(circle at 70% 55%,rgba(167,139,250,.08),transparent 50%),
+        #0d1120;
+      display:flex; align-items:center; justify-content:center;
     }
-    .preview-canvas::after {
-      content: ""; position: absolute; inset: 0;
+    .mock-canvas::after {
+      content:""; position:absolute; inset:0;
       background-image:
-        linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
-      background-size: 32px 32px;
-      mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+      background-size:28px 28px;
+      mask-image:radial-gradient(ellipse at 50% 50%,black,transparent 70%);
     }
-    .preview-canvas svg { position: relative; z-index: 1; width: 70%; max-width: 360px; }
-    .preview-right { padding: 18px 16px; font-size: 13px; background: rgba(255,255,255,0.4); text-align: left; }
-    .preview-right h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600; }
-    
-    /* Copilot inside Luma mockup style */
-    .copilot-card {
-      background: #ffffff;
-      border: 1px solid rgba(0,0,0,0.05);
-      border-radius: 12px;
-      padding: 12px; font-size: 12.5px;
-      color: var(--text-primary); margin-bottom: 10px;
-      box-shadow: var(--shadow-sm);
+    .mock-canvas svg { position:relative; z-index:1; width:72%; max-width:380px; }
+    .mock-panel {
+      background:var(--bg-surface); border-left:1px solid var(--border);
+      padding:16px 14px; font-size:12.5px;
     }
-    .copilot-card strong { color: #000000; }
-    .preview-right .ph { color: var(--text-secondary); font-size: 12px; font-weight: 500; text-align: center; margin-top: 14px; }
+    .mock-panel .section-lbl {
+      font-size:10px; text-transform:uppercase; letter-spacing:.1em;
+      color:var(--text-3); font-weight:700; margin-bottom:10px; margin-top:14px;
+    }
+    .mock-panel .section-lbl:first-child { margin-top:0; }
+    .ai-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:8px; padding:10px 12px; margin-bottom:8px;
+      font-size:12px; color:var(--text-2); line-height:1.5;
+    }
+    .ai-card strong { color:var(--text); font-size:11.5px; display:block; margin-bottom:4px; }
+    .prop-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
+    .prop-row:last-child { border-bottom:none; }
+    .prop-row .key { color:var(--text-3); }
+    .prop-row .val { color:var(--text); font-weight:500; }
+    @media(max-width:900px){
+      .mockup-body { grid-template-columns:1fr; }
+      .mock-sidebar,.mock-panel { display:none; }
+      .mock-canvas { min-height:300px; }
+    }
 
-    @media (max-width: 860px) {
-      .preview-body { grid-template-columns: 1fr; }
-      .preview-side, .preview-right { display: none; }
-      .preview-canvas { min-height: 280px; }
+    /* ── LOGOS ── */
+    .logos-band {
+      padding:48px 0;
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      text-align:center;
+    }
+    .logos-band p { font-size:12px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.1em; margin-bottom:28px; }
+    .logos-row { display:flex; justify-content:center; align-items:center; gap:40px; flex-wrap:wrap; }
+    .logo-pill {
+      padding:8px 20px; border:1px solid var(--border);
+      border-radius:8px; font-size:13px; font-weight:700;
+      color:var(--text-3); letter-spacing:.04em;
+      background:var(--bg-surface);
     }
 
-    section { padding: 80px 0; position: relative; }
-    .section-head { text-align: center; max-width: 680px; margin: 0 auto 48px; }
-    .kicker { display: inline-block; font-size: 12px; font-weight: 700; color: #000000; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
-    .h2 { font-size: clamp(26px, 3.2vw, 36px); font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 14px; color: #000000; }
-    .sub { font-size: 16px; color: var(--text-secondary); }
-
-    /* FEATURES GRID */
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .feature {
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: var(--radius); padding: 28px 24px;
-      transition: var(--transition);
-      box-shadow: var(--shadow-sm);
-      text-align: left;
+    /* ── SECTION COMMONS ── */
+    section { padding:80px 0; }
+    .section-head { text-align:center; max-width:660px; margin:0 auto 56px; }
+    .kicker {
+      display:inline-block; font-size:11.5px; font-weight:700;
+      color:var(--blue); letter-spacing:.12em; text-transform:uppercase;
+      margin-bottom:14px;
     }
-    .feature:hover { border-color: rgba(0,0,0,0.12); background: #ffffff; transform: translateY(-2px); }
+    .h2 {
+      font-size:clamp(24px,3vw,36px); font-weight:800;
+      letter-spacing:-.5px; line-height:1.15;
+      margin-bottom:14px; color:var(--text);
+    }
+    .sub { font-size:15.5px; color:var(--text-2); line-height:1.6; }
+
+    /* ── FEATURES ── */
+    .features { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .feature { background:var(--bg-surface); padding:28px 24px; transition:background .15s; }
+    .feature:hover { background:var(--bg-card); }
     .feature-icon {
-      width: 44px; height: 44px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(196, 181, 244, 0.15);
-      border: 1px solid rgba(196, 181, 244, 0.3);
-      margin-bottom: 18px; font-size: 20px;
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      background:var(--blue-dim); margin-bottom:16px;
     }
-    .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; color: #000000; }
-    .feature p { color: var(--text-secondary); font-size: 14.5px; line-height: 1.5; }
-    @media (max-width: 920px) { .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+    .feature-icon svg { width:20px; height:20px; stroke:var(--blue); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+    .feature h3 { font-size:15px; font-weight:700; margin-bottom:8px; color:var(--text); }
+    .feature p { color:var(--text-2); font-size:13.5px; line-height:1.6; }
+    .feature code { font-family:ui-monospace,monospace; font-size:12px; background:var(--bg-card); padding:1px 5px; border-radius:4px; color:var(--purple); }
+    @media(max-width:900px){ .features{grid-template-columns:repeat(2,1fr);} }
+    @media(max-width:560px){ .features{grid-template-columns:1fr;} }
 
-    /* HOW IT WORKS STEP CARDS */
-    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .step {
-      position: relative; padding: 28px 24px;
-      border: 1px solid var(--border-color); border-radius: var(--radius);
-      background: var(--bg-card);
-      box-shadow: var(--shadow-sm);
-      text-align: left;
-    }
+    /* ── HOW IT WORKS ── */
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; counter-reset:step; }
+    .step { padding:28px 24px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg-surface); position:relative; }
     .step-num {
-      width: 32px; height: 36px; border-radius: 50px;
-      background: #000000;
-      color: white; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px; font-size: 14px;
+      width:30px; height:30px; border-radius:8px;
+      background:var(--blue); color:#fff;
+      font-size:13px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+      margin-bottom:16px;
     }
-    .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #000000; }
-    .step p { color: var(--text-secondary); font-size: 14.5px; line-height: 1.5; }
-    @media (max-width: 860px) { .how-grid { grid-template-columns: 1fr; } }
+    .step h3 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .step p { color:var(--text-2); font-size:13.5px; line-height:1.6; }
+    @media(max-width:760px){ .steps{grid-template-columns:1fr;} }
 
-    /* CASES */
-    .cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    .case { padding: 28px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-card); text-align: left; box-shadow: var(--shadow-sm); }
-    .case h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.2px; color: #000000; }
-    .case p { color: var(--text-secondary); font-size: 14.5px; margin-bottom: 14px; }
-    .case ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-    .case li { font-size: 13.5px; color: var(--text-primary); padding-left: 20px; position: relative; }
-    .case li::before { content: "›"; position: absolute; left: 6px; color: #000000; font-weight: 700; }
-    @media (max-width: 760px) { .cases { grid-template-columns: 1fr; } }
+    /* ── USE CASES ── */
+    .cases { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .case {
+      padding:28px; border:1px solid var(--border);
+      border-radius:var(--r); background:var(--bg-surface);
+      transition:border-color .15s, background .15s;
+    }
+    .case:hover { border-color:var(--border-hi); background:var(--bg-card); }
+    .case-icon { font-size:20px; margin-bottom:12px; }
+    .case h3 { font-size:16px; font-weight:700; margin-bottom:8px; color:var(--text); }
+    .case p { color:var(--text-2); font-size:13.5px; margin-bottom:16px; line-height:1.6; }
+    .case ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+    .case li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; }
+    .case li::before { content:"›"; position:absolute; left:4px; color:var(--blue); font-weight:700; }
+    @media(max-width:700px){ .cases{grid-template-columns:1fr;} }
 
-    /* PRICING */
-    .pricing { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    /* ── STATS ── */
+    .stats-band {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      border:1px solid var(--border); border-radius:var(--r);
+      background:var(--bg-surface); overflow:hidden;
+    }
+    .stat {
+      padding:32px 24px; text-align:center;
+      border-right:1px solid var(--border);
+    }
+    .stat:last-child { border-right:none; }
+    .stat .num { font-size:32px; font-weight:800; letter-spacing:-.5px; color:var(--text); line-height:1; margin-bottom:8px; }
+    .stat .num span { color:var(--blue); }
+    .stat .lbl { font-size:13px; color:var(--text-2); }
+    @media(max-width:720px){
+      .stats-band { grid-template-columns:repeat(2,1fr); }
+      .stat:nth-child(2) { border-right:none; }
+      .stat { border-bottom:1px solid var(--border); }
+      .stat:nth-child(3),.stat:nth-child(4) { border-bottom:none; }
+    }
+
+    /* ── PRICING ── */
+    .pricing { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
     .plan {
-      padding: 28px 22px; border: 1px solid var(--border-color);
-      border-radius: var(--radius); background: var(--bg-card);
-      display: flex; flex-direction: column;
-      text-align: left;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
+      padding:28px 22px; border:1px solid var(--border);
+      border-radius:var(--r); background:var(--bg-surface);
+      display:flex; flex-direction:column;
+      transition:border-color .15s;
     }
-    .plan:hover {
-      background: #ffffff;
-      border-color: rgba(0,0,0,0.12);
-    }
+    .plan:hover { border-color:var(--border-hi); }
     .plan.featured {
-      border-color: rgba(0, 0, 0, 0.8);
-      background: #ffffff;
-      position: relative;
+      border-color:var(--blue);
+      background:var(--bg-card);
+      position:relative;
     }
     .plan.featured::before {
-      content: "Mais popular";
-      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-      background: #000000;
-      color: white; font-size: 11px; font-weight: 600;
-      padding: 4px 12px; border-radius: 999px;
+      content:"Mais popular";
+      position:absolute; top:-11px; left:50%; transform:translateX(-50%);
+      background:var(--blue); color:#fff;
+      font-size:10.5px; font-weight:700;
+      padding:3px 12px; border-radius:999px; white-space:nowrap;
     }
-    .plan h4 { font-size: 13px; font-weight: 700; color: #000000; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-    .plan .price { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #000000; margin-bottom: 4px; }
-    .plan .price small { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-    .plan .desc { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 18px; min-height: 38px; }
-    .plan ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; flex: 1; }
-    .plan li { font-size: 13.5px; color: var(--text-primary); padding-left: 20px; position: relative; }
-    .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--accent-green); font-weight: 700; }
-    .plan .btn { width: 100%; justify-content: center; }
-    @media (max-width: 960px) { .pricing { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 520px) { .pricing { grid-template-columns: 1fr; } }
+    .plan-name { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--text-3); margin-bottom:12px; }
+    .plan-price { font-size:30px; font-weight:800; letter-spacing:-.5px; color:var(--text); margin-bottom:4px; line-height:1; }
+    .plan-price small { font-size:13px; font-weight:500; color:var(--text-2); }
+    .plan-desc { font-size:13px; color:var(--text-2); margin-bottom:20px; min-height:36px; line-height:1.5; }
+    .plan ul { list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:24px; flex:1; }
+    .plan li { font-size:13px; color:var(--text-2); padding-left:20px; position:relative; }
+    .plan li::before { content:"✓"; position:absolute; left:0; color:var(--green); font-weight:700; }
+    .plan .btn { width:100%; justify-content:center; }
+    @media(max-width:960px){ .pricing{grid-template-columns:repeat(2,1fr);} }
+    @media(max-width:520px){ .pricing{grid-template-columns:1fr;} }
 
-    /* STATS BAND */
-    .stats {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 20px; padding: 28px 24px;
-      border: 1px solid var(--border-color); border-radius: var(--radius);
-      background: var(--bg-card);
-      box-shadow: var(--shadow-sm);
-    }
-    .stat .num { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #000000; }
-    .stat .lbl { font-size: 13.5px; color: var(--text-secondary); }
-    @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-
-    /* BOTTOM CTA BAND */
+    /* ── CTA BAND ── */
     .cta-band {
-      padding: 64px 32px; border-radius: 24px;
-      background: rgba(255,255,255,0.7);
-      border: 1px solid var(--border-color);
-      text-align: center;
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(20px);
+      padding:72px 40px; border-radius:16px;
+      background:linear-gradient(135deg,var(--bg-card),var(--bg-surface));
+      border:1px solid var(--border-hi);
+      text-align:center; position:relative; overflow:hidden;
     }
-    .cta-band h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 700; letter-spacing: -0.5px; margin-bottom: 12px; color: #000000; }
-    .cta-band p { color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; font-size: 15px; }
-    .cta-band .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .cta-band::before {
+      content:""; position:absolute;
+      width:600px; height:300px; top:-100px; left:50%; transform:translateX(-50%);
+      background:radial-gradient(ellipse at 50% 0%,rgba(79,142,247,.2),transparent 70%);
+      pointer-events:none;
+    }
+    .cta-band h2 { font-size:clamp(22px,3vw,32px); font-weight:800; letter-spacing:-.4px; margin-bottom:12px; position:relative; }
+    .cta-band p { color:var(--text-2); margin-bottom:28px; max-width:480px; margin-left:auto; margin-right:auto; position:relative; }
+    .cta-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; position:relative; }
 
-    /* FOOTER */
-    footer {
-      padding: 56px 0 32px;
-      border-top: 1px solid var(--border-color);
-      margin-top: 80px;
-    }
+    /* ── FOOTER ── */
+    footer { padding:56px 0 32px; border-top:1px solid var(--border); margin-top:80px; }
     .foot-top {
-      display: grid; grid-template-columns: 1.4fr repeat(3, 1fr);
-      gap: 32px; margin-bottom: 36px;
-      text-align: left;
+      display:grid; grid-template-columns:1.4fr repeat(3,1fr);
+      gap:32px; margin-bottom:40px;
     }
-    .foot-brand p { color: var(--text-secondary); font-size: 14px; margin-top: 14px; max-width: 300px; }
-    .foot-col h5 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 14px; font-weight: 700; }
-    .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    .foot-col a { color: var(--text-secondary); font-size: 14px; transition: var(--transition); }
-    .foot-col a:hover { color: #000000; }
+    .foot-brand p { color:var(--text-2); font-size:13.5px; margin-top:14px; max-width:280px; line-height:1.6; }
+    .foot-col h5 {
+      font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+      color:var(--text-3); margin-bottom:14px; font-weight:700;
+    }
+    .foot-col ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
+    .foot-col a { color:var(--text-2); font-size:13.5px; transition:color .15s; }
+    .foot-col a:hover { color:var(--text); }
     .foot-bot {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 13px; color: var(--text-muted);
-      padding-top: 24px; border-top: 1px solid var(--border-color);
-      flex-wrap: wrap; gap: 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:12.5px; color:var(--text-3);
+      padding-top:24px; border-top:1px solid var(--border);
+      flex-wrap:wrap; gap:12px;
     }
-    @media (max-width: 760px) { .foot-top { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:760px){ .foot-top{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
 <body>
 
+  <!-- NAV -->
   <header class="nav">
     <div class="container nav-inner">
       <a class="brand" href="/">
-        <img src="/logo-icon.svg" alt="" style="width: 26px; height: 26px;">
+        <div class="brand-logo">AR</div>
         ArxisVR
       </a>
       <nav class="nav-links">
@@ -417,174 +431,231 @@
         <a href="#pricing">Planos</a>
       </nav>
       <div class="nav-cta">
-        <div id="auth-button-container"></div>
+        <a class="btn btn-ghost" href="/login.html">Entrar</a>
         <a class="btn btn-primary" href="/register.html">Começar grátis</a>
       </div>
     </div>
   </header>
 
+  <!-- HERO -->
   <section class="hero">
-    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
     <div class="container hero-inner">
-      <div class="eyebrow"><span class="dot"></span> BIM · 4D/5D · Realidade Estendida · IA</div>
+      <div class="eyebrow">
+        <span class="dot"></span>
+        BIM · 4D/5D · Realidade Estendida · IA
+      </div>
       <h1 class="h1">
-        A plataforma BIM com <span class="grad">Copilot de IA</span><br />
-        e Realidade Estendida no navegador.
+        A plataforma BIM com<br>
+        <span class="hi">Copilot de IA</span> e Realidade<br>
+        Estendida no navegador.
       </h1>
       <p class="lead">
         Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D,
-        revise clashes e custos 5D, e visite o projeto em VR ou AR — tudo em uma única plataforma,
-        sem instalação.
+        revise clashes e custos 5D, e apresente o projeto em VR ou AR —
+        tudo em uma única plataforma, sem instalação.
       </p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis</a>
-        <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
+        <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração →</a>
       </div>
-      <div class="hero-meta">
+      <div class="hero-badges">
         <span><span class="check">✓</span> IFC 2x3, IFC4, IFC4.3</span>
         <span><span class="check">✓</span> WebXR (VR/AR)</span>
         <span><span class="check">✓</span> Multi-empresa</span>
         <span><span class="check">✓</span> API REST v1</span>
+        <span><span class="check">✓</span> Sem instalação</span>
       </div>
 
-      <div class="hero-preview" aria-hidden="true">
-        <div class="preview-bar">
-          <i></i><i></i><i></i>
-          <span class="url">app.arxisvr.com/projects/residencial-heitor</span>
+      <!-- Product Mockup -->
+      <div class="mockup-wrap" aria-hidden="true">
+        <div class="mockup-bar">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span class="url-bar">app.arxisvr.avilaops.com · Residencial Heitor · Estrutural Rev08</span>
         </div>
-        <div class="preview-body">
-          <aside class="preview-side">
-            <h4>Projetos</h4>
+        <div class="mockup-body">
+          <aside class="mock-sidebar">
+            <div class="section-lbl">Projetos</div>
             <ul>
-              <li class="active">▣ Residencial Heitor</li>
-              <li>▣ Edifício VZZ-086</li>
-              <li>▣ Industrial Sampa</li>
+              <li class="active"><span class="ico">▣</span> Residencial Heitor</li>
+              <li><span class="ico">▣</span> Edifício VZZ-086</li>
+              <li><span class="ico">▣</span> Industrial Sampa</li>
             </ul>
-            <h4>Modelos IFC</h4>
+            <div class="section-lbl">Modelos IFC</div>
             <ul>
-              <li>· Estrutural Rev08</li>
-              <li>· Hidráulica Rev01</li>
-              <li>· Elétrica Rev01</li>
+              <li><span class="ico">·</span> Estrutural Rev08</li>
+              <li><span class="ico">·</span> Hidráulica Rev01</li>
+              <li><span class="ico">·</span> Elétrica Rev01</li>
             </ul>
-            <h4>Ferramentas</h4>
+            <div class="section-lbl">Ferramentas</div>
             <ul>
-              <li>· Upload IFC</li>
-              <li>· Cortes &amp; Clipping</li>
-              <li>· Medições</li>
+              <li><span class="ico">·</span> Upload IFC</li>
+              <li><span class="ico">·</span> Cortes &amp; Clipping</li>
+              <li><span class="ico">·</span> Medições</li>
+              <li><span class="ico">·</span> BIM 4D / 5D</li>
             </ul>
           </aside>
-          <div class="preview-canvas">
+          <div class="mock-canvas">
             <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.7"/>
+                  <stop offset="0%" stop-color="#4f8ef7" stop-opacity=".9"/>
+                  <stop offset="100%" stop-color="#a78bfa" stop-opacity=".6"/>
                 </linearGradient>
                 <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.85"/>
-                  <stop offset="100%" stop-color="#5b8def" stop-opacity="0.5"/>
+                  <stop offset="0%" stop-color="#22d3ee" stop-opacity=".8"/>
+                  <stop offset="100%" stop-color="#4f8ef7" stop-opacity=".4"/>
                 </linearGradient>
+                <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>
-              <polygon points="60,210 340,210 380,240 20,240" fill="url(#g2)" opacity="0.25" stroke="#22d3ee" stroke-width="1"/>
-              <polygon points="80,210 320,210 350,235 50,235" fill="#0e1426" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 320,80 320,210 80,210" fill="url(#g1)" opacity="0.35" stroke="#7c5cff" stroke-width="1.2"/>
-              <polygon points="320,80 350,105 350,235 320,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 50,105 50,235 80,210" fill="#1a234a" stroke="#5b8def" stroke-width="1"/>
-              <polygon points="80,80 320,80 350,105 50,105" fill="#2a3160" stroke="#7c5cff" stroke-width="1"/>
-              <rect x="110" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="170" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="230" y="120" width="40" height="50" fill="#22d3ee" opacity="0.4" stroke="#22d3ee" stroke-width="0.8"/>
-              <rect x="280" y="160" width="22" height="50" fill="#7c5cff" opacity="0.5" stroke="#7c5cff" stroke-width="0.8"/>
-              <circle cx="170" cy="145" r="6" fill="#34d399"/>
-              <line x1="170" y1="145" x2="200" y2="60" stroke="#34d399" stroke-width="1" stroke-dasharray="3 3"/>
-              <text x="205" y="58" fill="#34d399" font-size="10" font-family="JetBrains Mono">IfcWindow · Pav 01</text>
+              <!-- Ground -->
+              <polygon points="60,215 340,215 375,240 25,240" fill="url(#g2)" opacity=".18" stroke="#22d3ee" stroke-width=".8"/>
+              <!-- Floor -->
+              <polygon points="75,215 325,215 352,235 48,235" fill="#0d1a30" stroke="#4f8ef7" stroke-width=".8"/>
+              <!-- Front face -->
+              <polygon points="75,82 325,82 325,215 75,215" fill="url(#g1)" opacity=".22" stroke="#4f8ef7" stroke-width="1"/>
+              <!-- Right face -->
+              <polygon points="325,82 352,105 352,235 325,215" fill="#0f1e38" stroke="#4f8ef7" stroke-width=".8"/>
+              <!-- Left face -->
+              <polygon points="75,82 48,105 48,235 75,215" fill="#0f1e38" stroke="#4f8ef7" stroke-width=".8"/>
+              <!-- Top face -->
+              <polygon points="75,82 325,82 352,105 48,105" fill="#1a2d55" stroke="#4f8ef7" stroke-width=".8"/>
+              <!-- Windows -->
+              <rect x="100" y="118" width="38" height="50" rx="2" fill="#22d3ee" opacity=".25" stroke="#22d3ee" stroke-width=".7"/>
+              <rect x="160" y="118" width="38" height="50" rx="2" fill="#22d3ee" opacity=".25" stroke="#22d3ee" stroke-width=".7"/>
+              <rect x="220" y="118" width="38" height="50" rx="2" fill="#22d3ee" opacity=".25" stroke="#22d3ee" stroke-width=".7"/>
+              <rect x="280" y="155" width="22" height="60" rx="2" fill="#a78bfa" opacity=".35" stroke="#a78bfa" stroke-width=".7"/>
+              <!-- Selection highlight -->
+              <rect x="160" y="118" width="38" height="50" rx="2" fill="none" stroke="#4f8ef7" stroke-width="1.5" filter="url(#glow)"/>
+              <!-- Annotation -->
+              <circle cx="179" cy="143" r="5" fill="#22c55e" filter="url(#glow)"/>
+              <line x1="179" y1="138" x2="205" y2="62" stroke="#22c55e" stroke-width=".8" stroke-dasharray="3 2"/>
+              <rect x="205" y="50" width="120" height="22" rx="4" fill="#0d1a30" stroke="#22c55e" stroke-width=".7"/>
+              <text x="213" y="64" fill="#22c55e" font-size="9.5" font-family="Inter,sans-serif" font-weight="600">IfcWindow · Pav 02 · ID 1247</text>
             </svg>
           </div>
-          <aside class="preview-right">
-            <h4>Copilot</h4>
-            <div class="copilot-card">
-              <strong>🏗️ Coordenação BIM</strong><br />
-              Federação carregada. 3 disciplinas alinhadas. Detectei 12 possíveis clashes em HID×EST.
+          <aside class="mock-panel">
+            <div class="section-lbl">Copilot IA</div>
+            <div class="ai-card">
+              <strong>🏗 Coordenação BIM</strong>
+              Federação carregada. 3 disciplinas alinhadas. Detectei 12 clashes em HID×EST.
             </div>
-            <div class="copilot-card">
-              <strong>⏱️ Simulação 4D</strong><br />
+            <div class="ai-card">
+              <strong>⏱ Simulação 4D</strong>
               Avançar timeline para semana 14 e isolar fase de estrutura?
             </div>
-            <div class="ph">Ctrl+K para abrir o Copilot</div>
+            <div class="section-lbl">Propriedades IFC</div>
+            <div class="prop-row"><span class="key">Tipo</span><span class="val">IfcWindow</span></div>
+            <div class="prop-row"><span class="key">Piso</span><span class="val">Pavimento 02</span></div>
+            <div class="prop-row"><span class="key">Largura</span><span class="val">1.20 m</span></div>
+            <div class="prop-row"><span class="key">Altura</span><span class="val">2.10 m</span></div>
+            <div class="prop-row"><span class="key">Material</span><span class="val">Alumínio</span></div>
           </aside>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- LOGOS / TRUST -->
+  <div class="logos-band">
+    <div class="container">
+      <p>Compatível com os principais formatos e plataformas do mercado AEC</p>
+      <div class="logos-row">
+        <span class="logo-pill">IFC 2x3</span>
+        <span class="logo-pill">IFC 4</span>
+        <span class="logo-pill">IFC 4.3</span>
+        <span class="logo-pill">WebXR</span>
+        <span class="logo-pill">REST API</span>
+        <span class="logo-pill">OpenBIM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
   <section id="features">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Recursos</span>
-        <h2 class="h2">Tudo que sua equipe BIM precisa, em uma plataforma só.</h2>
+        <h2 class="h2">Tudo que sua equipe BIM precisa,<br>em uma plataforma.</h2>
         <p class="sub">Do upload do IFC até a apresentação em VR para o cliente. Sem trocar de ferramenta, sem perder o contexto.</p>
       </div>
       <div class="features">
         <div class="feature">
-          <div class="feature-icon">📐</div>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
           <h3>Viewer IFC em escala 1:1</h3>
-          <p>Suporte a IFC 2x3, IFC4 e IFC4.3 com renderização Three.js de alta performance, LOD, culling e instancing para modelos grandes.</p>
+          <p>Suporte completo a IFC 2x3, IFC4 e IFC4.3. Renderização Three.js com LOD adaptativo, culling por frustum e GPU instancing para modelos de grande porte.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🤖</div>
-          <h3>Copilot de IA para cenários</h3>
-          <p>Abra com <code class="mono">Ctrl+K</code> e peça coordenação BIM, simulação 4D, revisão 5D, clashes ou visita guiada. O Copilot monta o cenário e age no viewer.</p>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+          </div>
+          <h3>Copilot de IA para BIM</h3>
+          <p>Abra com <code>Ctrl+K</code> e peça coordenação BIM, simulação 4D, revisão 5D ou detecção de clashes. O Copilot age diretamente no viewer com contexto do modelo.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">⏱️</div>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
           <h3>BIM 4D — Cronograma</h3>
-          <p>Vincule tarefas a elementos IFC, simule a construção com play/pause/seek, controle de velocidade e estados visuais por fase.</p>
+          <p>Vincule tarefas a elementos IFC, simule a construção com play/pause/seek e controle de velocidade. Visualização de estados visuais por fase e disciplina.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">💰</div>
-          <h3>BIM 5D — Quantitativos &amp; custos</h3>
-          <p>Extraia quantitativos do modelo, vincule custos por elemento e acompanhe orçado vs. realizado em tempo real.</p>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>BIM 5D — Custos</h3>
+          <p>Extraia quantitativos diretamente do modelo IFC. Vincule custos por elemento e acompanhe orçado vs. realizado com relatórios exportáveis em tempo real.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🥽</div>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
           <h3>VR/AR no navegador</h3>
-          <p>WebXR nativo: entre em VR com Quest, Vive ou outros headsets, ou abra em AR no celular — direto do navegador, sem app.</p>
+          <p>WebXR nativo: entre em VR com Quest, Vive ou outros headsets, ou abra em AR no celular — direto do navegador, sem app, sem plugin, sem instalação.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🔐</div>
-          <h3>Multi-empresa &amp; API</h3>
-          <p>Isolamento por tenant, JWT com refresh automático, papéis e permissões, e uma API REST <code class="mono">/api/v1</code> documentada.</p>
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h3>Multi-tenant &amp; API REST</h3>
+          <p>Isolamento completo por tenant, JWT com refresh automático, papéis e permissões granulares. API REST <code>/api/v1</code> documentada para integrações.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="how" style="background: linear-gradient(180deg, transparent, rgba(91,141,239,0.04), transparent);">
+  <!-- HOW IT WORKS -->
+  <section id="how">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Como funciona</span>
         <h2 class="h2">Do IFC ao cliente em três passos.</h2>
       </div>
-      <div class="how-grid">
+      <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
           <h3>Suba seu modelo IFC</h3>
-          <p>Arraste o arquivo na plataforma. O ArxisVR parseia, indexa propriedades e prepara o modelo para uso colaborativo.</p>
+          <p>Arraste o arquivo na plataforma. O ArxisVR parseia, indexa propriedades e prepara o modelo para uso colaborativo em segundos.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <h3>Coordene com o Copilot</h3>
-          <p>Federe disciplinas, peça revisões ao Copilot, configure cronograma 4D e quantitativos 5D. A IA executa ações seguras no viewer.</p>
+          <p>Federe disciplinas, detecte clashes, configure cronograma 4D e quantitativos 5D. A IA entende o contexto do modelo e age com precisão.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <h3>Apresente em VR/AR</h3>
-          <p>Salve cenários e compartilhe um link. O cliente entra direto no navegador, em desktop, celular ou headset VR.</p>
+          <p>Salve cenários e compartilhe um link. O cliente entra diretamente no navegador — desktop, celular ou headset VR — sem instalar nada.</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- USE CASES -->
   <section id="cases">
     <div class="container">
       <div class="section-head">
@@ -593,56 +664,74 @@
       </div>
       <div class="cases">
         <div class="case">
-          <h3>🏢 Construtoras &amp; Incorporadoras</h3>
-          <p>Reduza retrabalho com coordenação BIM e simulação 4D antes da obra.</p>
+          <div class="case-icon">🏢</div>
+          <h3>Construtoras &amp; Incorporadoras</h3>
+          <p>Reduza retrabalho com coordenação BIM e simulação 4D antes e durante a obra.</p>
           <ul>
-            <li>Federação de disciplinas EST × HID × ELE × ARQ</li>
+            <li>Federação EST × HID × ELE × ARQ</li>
             <li>Cronograma 4D com vínculo IFC ↔ tarefa</li>
-            <li>Revisão de clashes priorizada</li>
+            <li>Revisão de clashes priorizada por impacto</li>
           </ul>
         </div>
         <div class="case">
-          <h3>📐 Escritórios de Arquitetura</h3>
+          <div class="case-icon">📐</div>
+          <h3>Escritórios de Arquitetura</h3>
           <p>Apresente o projeto ao cliente em 1:1, dentro do espaço, antes da obra começar.</p>
           <ul>
             <li>Visita guiada em VR/AR</li>
-            <li>Cenários salvos por reunião</li>
+            <li>Cenários salvos por reunião de cliente</li>
             <li>Comentários e anotações no modelo</li>
           </ul>
         </div>
         <div class="case">
-          <h3>⚙️ Engenharia &amp; MEP</h3>
+          <div class="case-icon">⚙️</div>
+          <h3>Engenharia &amp; MEP</h3>
           <p>Valide interferências e roteamentos com colaboração em tempo real.</p>
           <ul>
-            <li>Cortes e clipping dinâmicos</li>
-            <li>Inspeção de propriedades IFC</li>
-            <li>Filtros avançados por tipo/disciplina</li>
+            <li>Cortes e clipping dinâmicos por plano</li>
+            <li>Inspeção detalhada de propriedades IFC</li>
+            <li>Filtros avançados por tipo e disciplina</li>
           </ul>
         </div>
         <div class="case">
-          <h3>🏗️ Gerenciadoras de Obra</h3>
-          <p>Acompanhe progresso físico-financeiro com 4D + 5D integrados.</p>
+          <div class="case-icon">🏗️</div>
+          <h3>Gerenciadoras de Obra</h3>
+          <p>Acompanhe progresso físico-financeiro com 4D + 5D totalmente integrados.</p>
           <ul>
-            <li>Quantitativos automáticos do IFC</li>
-            <li>Custos por elemento e fase</li>
-            <li>Relatórios exportáveis</li>
+            <li>Quantitativos automáticos do modelo IFC</li>
+            <li>Custos por elemento e fase de obra</li>
+            <li>Relatórios exportáveis em tempo real</li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <section style="padding-top: 0;">
+  <!-- STATS -->
+  <section style="padding-top:0;">
     <div class="container">
-      <div class="stats">
-        <div class="stat"><div class="num"><span class="grad">1:1</span></div><div class="lbl">Escala real do modelo</div></div>
-        <div class="stat"><div class="num"><span class="grad">3×</span></div><div class="lbl">Versões IFC suportadas</div></div>
-        <div class="stat"><div class="num"><span class="grad">100%</span></div><div class="lbl">Web — sem instalação</div></div>
-        <div class="stat"><div class="num"><span class="grad">∞</span></div><div class="lbl">Cenários por projeto</div></div>
+      <div class="stats-band">
+        <div class="stat">
+          <div class="num"><span>1:1</span></div>
+          <div class="lbl">Escala real do modelo</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span>3</span></div>
+          <div class="lbl">Versões IFC suportadas</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span>100%</span></div>
+          <div class="lbl">Web — sem instalação</div>
+        </div>
+        <div class="stat">
+          <div class="num"><span>∞</span></div>
+          <div class="lbl">Cenários por projeto</div>
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- PRICING -->
   <section id="pricing">
     <div class="container">
       <div class="section-head">
@@ -652,9 +741,9 @@
       </div>
       <div class="pricing">
         <div class="plan">
-          <h4>Free</h4>
-          <div class="price">R$ 0 <small>/mês</small></div>
-          <p class="desc">Para conhecer a plataforma e projetos pessoais.</p>
+          <div class="plan-name">Free</div>
+          <div class="plan-price">R$ 0 <small>/mês</small></div>
+          <p class="plan-desc">Para conhecer a plataforma e projetos pessoais.</p>
           <ul>
             <li>1 projeto ativo</li>
             <li>Viewer IFC completo</li>
@@ -664,9 +753,9 @@
           <a class="btn btn-outline" href="/register.html">Começar grátis</a>
         </div>
         <div class="plan">
-          <h4>Starter</h4>
-          <div class="price">R$ 149 <small>/mês</small></div>
-          <p class="desc">Para profissionais autônomos e pequenos times.</p>
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">R$ 149 <small>/mês</small></div>
+          <p class="plan-desc">Para profissionais autônomos e pequenos times.</p>
           <ul>
             <li>5 projetos ativos</li>
             <li>BIM 4D completo</li>
@@ -676,57 +765,59 @@
           <a class="btn btn-outline" href="/register.html">Assinar</a>
         </div>
         <div class="plan featured">
-          <h4>Professional</h4>
-          <div class="price">R$ 499 <small>/mês</small></div>
-          <p class="desc">Para escritórios e construtoras com equipe BIM.</p>
+          <div class="plan-name">Professional</div>
+          <div class="plan-price">R$ 499 <small>/mês</small></div>
+          <p class="plan-desc">Para escritórios e construtoras com equipe BIM.</p>
           <ul>
             <li>Projetos ilimitados</li>
-            <li>BIM 4D + 5D</li>
-            <li>VR/AR completo</li>
+            <li>BIM 4D + 5D completo</li>
+            <li>VR/AR sem restrições</li>
             <li>Até 15 usuários</li>
             <li>Federação multidisciplinar</li>
           </ul>
           <a class="btn btn-primary" href="/register.html">Assinar Professional</a>
         </div>
         <div class="plan">
-          <h4>Enterprise</h4>
-          <div class="price">Sob consulta</div>
-          <p class="desc">Para grandes operações com SSO, SLA e on-premise.</p>
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-price">Sob consulta</div>
+          <p class="plan-desc">Para grandes operações com SSO, SLA e on-premise.</p>
           <ul>
             <li>Tudo do Professional</li>
-            <li>SSO/SAML</li>
+            <li>SSO / SAML</li>
             <li>SLA dedicado</li>
             <li>API privada</li>
             <li>Implantação dedicada</li>
           </ul>
-          <a class="btn btn-outline" href="mailto:comercial@arxisvr.com">Falar com vendas</a>
+          <a class="btn btn-outline" href="mailto:comercial@arxisvr.avilaops.com">Falar com vendas</a>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- BOTTOM CTA -->
   <section>
     <div class="container">
       <div class="cta-band">
         <h2>Pronto para ver seu projeto em outra dimensão?</h2>
-        <p>Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão.</p>
+        <p>Crie sua conta gratuita e suba um modelo IFC em menos de 2 minutos.<br>Sem instalação, sem cartão de crédito.</p>
         <div class="cta-row">
           <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis</a>
-          <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
+          <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração →</a>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="foot-top">
         <div class="foot-brand">
           <a class="brand" href="/">
-            <img src="/logo-icon.svg" alt="" style="width: 26px; height: 26px;">
+            <div class="brand-logo">AR</div>
             ArxisVR
           </a>
-          <p>Plataforma BIM com Copilot de IA e Realidade Estendida. Feito por AvilaOps no Brasil.</p>
+          <p>Plataforma BIM com Copilot de IA e Realidade Estendida. Desenvolvida por AvilaOps no Brasil.</p>
         </div>
         <div class="foot-col">
           <h5>Produto</h5>
@@ -740,42 +831,25 @@
         <div class="foot-col">
           <h5>Empresa</h5>
           <ul>
-            <li><a href="mailto:comercial@arxisvr.com">Vendas</a></li>
-            <li><a href="mailto:contato@arxisvr.com">Contato</a></li>
+            <li><a href="mailto:comercial@arxisvr.avilaops.com">Vendas</a></li>
+            <li><a href="mailto:contato@arxisvr.avilaops.com">Contato</a></li>
             <li><a href="https://github.com/avilaops" target="_blank" rel="noopener">GitHub</a></li>
           </ul>
         </div>
         <div class="foot-col">
           <h5>Conta</h5>
           <ul>
-            <li><a href="#" id="footer-login-btn">Entrar</a></li>
-            <li><a href="/register.html">Cadastrar</a></li>
+            <li><a href="/login.html">Entrar</a></li>
+            <li><a href="/register.html">Criar conta</a></li>
           </ul>
         </div>
       </div>
       <div class="foot-bot">
         <span>© 2026 ArxisVR by AvilaOps. Todos os direitos reservados.</span>
-        <span class="mono">v1.0</span>
+        <span style="font-family:ui-monospace,monospace;font-size:11.5px;">v1.1.0</span>
       </div>
     </div>
   </footer>
-
-  <script type="module" src="/src/app/components/AuthModal.js"></script>
-  <script>
-    // Initialize Auth Modal on landing page after DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-      import('./src/app/components/AuthModal.js').then(({ AuthModal }) => {
-        const authModal = new AuthModal();
-        authModal.renderAuthButton();
-
-        // Attach event listener to footer login button
-        document.getElementById('footer-login-btn')?.addEventListener('click', (e) => {
-          e.preventDefault();
-          authModal.open('login');
-        });
-      });
-    });
-  </script>
 
 </body>
 </html>
