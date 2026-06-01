@@ -31,15 +31,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Use Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: backend
@@ -49,10 +48,9 @@ jobs:
         working-directory: backend
         run: npm run build
 
-      - name: Type-check backend (não bloqueia o deploy)
+      - name: Type-check backend
         working-directory: backend
         run: npm run type-check
-        continue-on-error: true
 
       - name: Install frontend dependencies
         working-directory: frontend
