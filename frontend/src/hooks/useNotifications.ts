@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { resolveApiBaseUrl } from '../config/apiBaseUrl';
 
 interface Notification {
   id: string;
@@ -31,7 +32,7 @@ export function useNotifications(token: string): UseNotificationsReturn {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const apiUrl = resolveApiBaseUrl();
 
   // Conectar ao WebSocket
   useEffect(() => {

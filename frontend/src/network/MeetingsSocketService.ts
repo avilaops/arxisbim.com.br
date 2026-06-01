@@ -3,8 +3,9 @@
  */
 
 import { io, Socket } from 'socket.io-client';
+import { resolveApiBaseUrl } from '../config/apiBaseUrl';
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = resolveApiBaseUrl();
 
 export interface AvatarState {
   position: { x: number; y: number; z: number };

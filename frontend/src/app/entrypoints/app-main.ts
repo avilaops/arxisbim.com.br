@@ -5,6 +5,7 @@ import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
 import { initializeAPI } from '../../api/v1/client';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
+import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
 import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import { AuthModal } from '../../app/components/AuthModal.js';
 import { AdminPanel } from '../../app/components/AdminPanel.js';
@@ -38,7 +39,7 @@ declare global {
   }
 }
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = resolveApiBaseUrl();
 let PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '123e4567-e89b-12d3-a456-426614174000';
 let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 

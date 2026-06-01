@@ -1,4 +1,5 @@
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+import { resolveApiBaseUrl } from '../../../config/apiBaseUrl';
+const API_BASE_URL = resolveApiBaseUrl();
 
 export interface Tenant {
   id: string;

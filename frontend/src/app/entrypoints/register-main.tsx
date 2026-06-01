@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import RegisterPage from '../../features/auth/pages/RegisterPage';
 import { initializeAPI } from '../../api/v1';
+import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
@@ -11,7 +12,7 @@ import '../../styles/tokens.css';
 import '../../styles/login.css';
 
 initializeAPI({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: resolveApiBaseUrl(),
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

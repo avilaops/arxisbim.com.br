@@ -3,7 +3,9 @@
  * Use this to integrate IFC element analysis with your frontend
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { resolveApiBaseUrl } from '../config/apiBaseUrl';
+
+const API_URL = resolveApiBaseUrl();
 
 // Types for IFC Elements
 export interface IfcElement {

@@ -22,6 +22,7 @@ import { IFCSimpleLoader } from '../loaders/IFCSimpleLoader';
 import { FederatedLoader } from '../systems/model/FederatedLoader';
 import { fileService } from '../systems/file';
 import { initializeAPI, getAuthService, getProjectsService, getMeetingsService, getBillingService } from '../api/v1';
+import { resolveApiBaseUrl } from '../config/apiBaseUrl';
 import { licenseManager } from '../systems/licensing/LicenseManager';
 
 // Autenticação removida para uso anônimo
@@ -38,7 +39,7 @@ async function bootstrap() {
 
   // 0. Initialize API connection to backend
   console.log('Initializing API connection...');
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const baseURL = resolveApiBaseUrl();
   
   initializeAPI({
     baseURL,
