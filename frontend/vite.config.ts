@@ -74,8 +74,9 @@ export default defineConfig({
           if (id.includes('/features/')) {
             return 'features';
           }
-          // Core app modules
-          if (id.includes('/app/')) {
+          // Core app modules (exclude entrypoints — they have top-level createRoot calls
+          // and must stay in their own per-page chunks, not shared across all pages)
+          if (id.includes('/app/') && !id.includes('/app/entrypoints/')) {
             return 'app-core';
           }
           // Engine modules
