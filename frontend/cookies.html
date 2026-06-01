@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Política de Cookies — ArxisVR</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --bg:#F5F5F7; --text:#1A1A1A; --text-2:#6e6e73; --text-3:#aeaeb2; --border:rgba(0,0,0,0.07); --blue:#007AFF; --max:780px; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; line-height:1.7; }
+    a { color:var(--blue); } a:hover { text-decoration:underline; }
+    .nav { background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; }
+    .nav-inner { max-width:var(--max); margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { font-weight:700; font-size:16px; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .brand-mark { width:24px; height:24px; background:#000; border-radius:50%; position:relative; }
+    .brand-mark::after { content:""; position:absolute; inset:6px; border:1.5px solid #fff; border-radius:50%; }
+    .nav-back { font-size:13.5px; color:var(--text-2); } .nav-back:hover { color:var(--text); text-decoration:none; }
+    .page { max-width:var(--max); margin:0 auto; padding:56px 24px 96px; }
+    .meta { font-size:13px; color:var(--text-3); margin-bottom:8px; }
+    h1 { font-size:clamp(26px,4vw,38px); font-weight:700; letter-spacing:-.5px; margin-bottom:12px; }
+    .lead { font-size:16px; color:var(--text-2); margin-bottom:40px; padding-bottom:32px; border-bottom:1px solid var(--border); }
+    h2 { font-size:18px; font-weight:700; margin:36px 0 12px; }
+    p { margin-bottom:14px; font-size:15px; color:var(--text-2); }
+    ul { padding-left:20px; margin-bottom:14px; }
+    li { font-size:15px; color:var(--text-2); margin-bottom:6px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:24px; font-size:14px; }
+    th { background:rgba(0,0,0,0.03); padding:10px 14px; text-align:left; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); border-bottom:1px solid var(--border); }
+    td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
+    .badge-green { background:rgba(52,199,89,.12); color:#1a7a33; }
+    .badge-yellow { background:rgba(255,204,0,.15); color:#7a5c00; }
+    .pref-box { background:#fff; border:1px solid var(--border); border-radius:14px; padding:24px; margin:20px 0; }
+    .pref-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:16px; }
+    .pref-row:last-child { border-bottom:none; padding-bottom:0; }
+    .pref-info h4 { font-size:15px; font-weight:600; margin-bottom:4px; }
+    .pref-info p { font-size:13px; margin:0; }
+    .toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; background:#ddd; border-radius:999px; cursor:pointer; transition:.2s; }
+    .slider::before { content:""; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    input:checked + .slider { background:#34C759; }
+    input:checked + .slider::before { transform:translateX(20px); }
+    input:disabled + .slider { opacity:.5; cursor:default; }
+    .save-btn { margin-top:16px; padding:10px 22px; background:#000; color:#fff; border:none; border-radius:50px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+    .save-btn:hover { background:#222; }
+    footer { border-top:1px solid var(--border); padding:24px; text-align:center; font-size:13px; color:var(--text-3); }
+    footer a { color:var(--text-3); margin:0 10px; } footer a:hover { color:var(--text); text-decoration:none; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="brand-mark"></span> ArxisVR</a>
+    <a class="nav-back" href="/">← Voltar ao início</a>
+  </div>
+</nav>
+
+<main class="page">
+  <p class="meta">Última atualização: 01 de junho de 2026 · Versão 1.1</p>
+  <h1>Política de Cookies</h1>
+  <p class="lead">
+    Esta página explica o que são cookies, quais utilizamos na plataforma ArxisVR e como você pode gerenciar suas preferências,
+    em conformidade com a <strong>LGPD (Lei nº 13.709/2018)</strong>.
+  </p>
+
+  <h2>O que são cookies?</h2>
+  <p>
+    Cookies são pequenos arquivos de texto armazenados no seu navegador quando você visita um site.
+    Eles permitem que o site lembre suas preferências e funcionem de forma mais eficiente.
+  </p>
+
+  <h2>Cookies que utilizamos</h2>
+
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Tipo</th><th>Finalidade</th><th>Expiração</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>arxisvr_token</code></td>
+        <td><span class="badge badge-green">Essencial</span></td>
+        <td>Token de autenticação JWT (armazenado em localStorage)</td>
+        <td>7 dias</td>
+      </tr>
+      <tr>
+        <td><code>arxisvr_refresh_token</code></td>
+        <td><span class="badge badge-green">Essencial</span></td>
+        <td>Renova a sessão automaticamente sem novo login</td>
+        <td>30 dias</td>
+      </tr>
+      <tr>
+        <td><code>arxisvr_tenant_id</code></td>
+        <td><span class="badge badge-green">Essencial</span></td>
+        <td>Identifica o tenant (empresa) do usuário logado</td>
+        <td>Sessão</td>
+      </tr>
+      <tr>
+        <td><code>arxisvr_cookie_consent</code></td>
+        <td><span class="badge badge-green">Essencial</span></td>
+        <td>Registra sua escolha de consentimento de cookies</td>
+        <td>1 ano</td>
+      </tr>
+      <tr>
+        <td><code>arxisvr_project_id</code></td>
+        <td><span class="badge badge-green">Essencial</span></td>
+        <td>Último projeto acessado (preferência de navegação)</td>
+        <td>Sessão</td>
+      </tr>
+      <tr>
+        <td>Cookies analíticos (futuros)</td>
+        <td><span class="badge badge-yellow">Analítico</span></td>
+        <td>Métricas de uso anonimizadas para melhoria da plataforma</td>
+        <td>90 dias</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Atualmente não utilizamos cookies de terceiros para publicidade ou rastreamento cross-site.
+    A proteção DDoS e CDN da Cloudflare pode definir cookies técnicos de curta duração (<code>cf_clearance</code>)
+    para verificação de segurança — esses não identificam o usuário individualmente.
+  </p>
+
+  <h2>Gerencie suas preferências</h2>
+
+  <div class="pref-box">
+    <div class="pref-row">
+      <div class="pref-info">
+        <h4>Cookies essenciais</h4>
+        <p>Necessários para autenticação e funcionamento da plataforma. Não podem ser desativados.</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" checked disabled>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="pref-row">
+      <div class="pref-info">
+        <h4>Cookies analíticos</h4>
+        <p>Nos ajudam a entender como a plataforma é utilizada (dados anonimizados).</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-analytics">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button class="save-btn" id="save-prefs">Salvar preferências</button>
+  </div>
+
+  <h2>Como desativar cookies no navegador</h2>
+  <ul>
+    <li><strong>Chrome:</strong> Configurações → Privacidade e segurança → Cookies</li>
+    <li><strong>Firefox:</strong> Preferências → Privacidade e Segurança → Cookies</li>
+    <li><strong>Safari:</strong> Preferências → Privacidade → Bloquear cookies</li>
+    <li><strong>Edge:</strong> Configurações → Cookies e permissões do site</li>
+  </ul>
+  <p>Desativar cookies essenciais impedirá o funcionamento correto do login e da plataforma.</p>
+
+  <h2>Mais informações</h2>
+  <p>Veja também nossa <a href="/privacy.html">Política de Privacidade</a> e a página de <a href="/lgpd.html">direitos LGPD</a>.</p>
+  <p>Dúvidas: <a href="mailto:privacidade@arxisvr.avilaops.com">privacidade@arxisvr.avilaops.com</a></p>
+</main>
+
+<footer>
+  <a href="/">ArxisVR</a>
+  <a href="/privacy.html">Privacidade</a>
+  <a href="/terms.html">Termos</a>
+  <a href="/cookies.html">Cookies</a>
+  <a href="/lgpd.html">LGPD</a>
+  <br><br>© 2026 ArxisVR by AvilaOps. Todos os direitos reservados.
+</footer>
+
+<script>
+  (function() {
+    var consent = localStorage.getItem('arxisvr_cookie_consent');
+    if (consent === 'all') {
+      document.getElementById('toggle-analytics').checked = true;
+    }
+    document.getElementById('save-prefs').addEventListener('click', function() {
+      var analytics = document.getElementById('toggle-analytics').checked;
+      localStorage.setItem('arxisvr_cookie_consent', analytics ? 'all' : 'essential');
+      this.textContent = 'Preferências salvas ✓';
+      setTimeout(() => { this.textContent = 'Salvar preferências'; }, 2000);
+    });
+  })();
+</script>
+
+</body>
+</html>

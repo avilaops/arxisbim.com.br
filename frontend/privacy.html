@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Política de Privacidade — ArxisVR</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #F5F5F7; --surface: #ffffff;
+      --text: #1A1A1A; --text-2: #6e6e73; --text-3: #aeaeb2;
+      --border: rgba(0,0,0,0.07); --blue: #007AFF;
+      --max: 780px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; line-height:1.7; }
+    a { color:var(--blue); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .nav { background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; }
+    .nav-inner { max-width:var(--max); margin:0 auto; padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { font-weight:700; font-size:16px; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .brand-mark { width:24px; height:24px; background:#000; border-radius:50%; position:relative; }
+    .brand-mark::after { content:""; position:absolute; inset:6px; border:1.5px solid #fff; border-radius:50%; }
+    .nav-back { font-size:13.5px; color:var(--text-2); }
+    .nav-back:hover { color:var(--text); }
+    .page { max-width:var(--max); margin:0 auto; padding:56px 24px 96px; }
+    .meta { font-size:13px; color:var(--text-3); margin-bottom:8px; }
+    h1 { font-size:clamp(26px,4vw,38px); font-weight:700; letter-spacing:-.5px; line-height:1.15; margin-bottom:12px; }
+    .lead { font-size:16px; color:var(--text-2); margin-bottom:40px; padding-bottom:32px; border-bottom:1px solid var(--border); }
+    h2 { font-size:18px; font-weight:700; margin:36px 0 12px; letter-spacing:-.2px; }
+    h3 { font-size:15px; font-weight:700; margin:24px 0 8px; }
+    p { margin-bottom:14px; font-size:15px; color:var(--text-2); }
+    ul, ol { padding-left:20px; margin-bottom:14px; }
+    li { font-size:15px; color:var(--text-2); margin-bottom:6px; }
+    .callout { background:rgba(0,122,255,0.06); border:1px solid rgba(0,122,255,0.15); border-radius:12px; padding:16px 20px; margin:20px 0; font-size:14px; color:var(--text); }
+    .callout strong { color:var(--blue); }
+    footer { border-top:1px solid var(--border); padding:24px; text-align:center; font-size:13px; color:var(--text-3); }
+    footer a { color:var(--text-3); margin:0 10px; }
+    footer a:hover { color:var(--text); text-decoration:none; }
+    table { width:100%; border-collapse:collapse; margin-bottom:20px; font-size:14px; }
+    th { background:var(--bg); padding:10px 14px; text-align:left; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); border-bottom:1px solid var(--border); }
+    td { padding:10px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="brand-mark"></span> ArxisVR</a>
+    <a class="nav-back" href="/">← Voltar ao início</a>
+  </div>
+</nav>
+
+<main class="page">
+  <p class="meta">Última atualização: 01 de junho de 2026 · Versão 1.1</p>
+  <h1>Política de Privacidade</h1>
+  <p class="lead">
+    Esta Política descreve como a <strong>AvilaOps Tecnologia Ltda.</strong>, responsável pela plataforma ArxisVR,
+    coleta, utiliza, armazena e protege seus dados pessoais, em conformidade com a
+    Lei Geral de Proteção de Dados Pessoais — <strong>LGPD (Lei nº 13.709/2018)</strong>.
+  </p>
+
+  <div class="callout">
+    <strong>Resumo:</strong> coletamos apenas o necessário para operar a plataforma. Não vendemos seus dados.
+    Você pode solicitar acesso, correção ou exclusão a qualquer momento pelo e-mail <a href="mailto:privacidade@arxisvr.avilaops.com">privacidade@arxisvr.avilaops.com</a>.
+  </div>
+
+  <h2>1. Quem somos (Controlador)</h2>
+  <p>
+    <strong>AvilaOps Tecnologia Ltda.</strong><br>
+    CNPJ: a ser registrado<br>
+    Endereço: Brasil<br>
+    E-mail do Encarregado (DPO): <a href="mailto:privacidade@arxisvr.avilaops.com">privacidade@arxisvr.avilaops.com</a>
+  </p>
+
+  <h2>2. Dados que coletamos</h2>
+  <table>
+    <thead>
+      <tr><th>Categoria</th><th>Dados</th><th>Finalidade</th><th>Base legal (LGPD)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cadastro</td><td>Nome, e-mail, tenant ID, senha (hash)</td><td>Criar e autenticar conta</td><td>Art. 7º, V — execução de contrato</td></tr>
+      <tr><td>Uso da plataforma</td><td>Logs de acesso, IP, user-agent, ações no viewer</td><td>Segurança, auditoria, suporte</td><td>Art. 7º, II — legítimo interesse</td></tr>
+      <tr><td>Modelos IFC</td><td>Arquivos enviados e metadados BIM</td><td>Processar e exibir modelos</td><td>Art. 7º, V — execução de contrato</td></tr>
+      <tr><td>Cookies analíticos</td><td>Páginas visitadas, tempo de sessão (anonimizados)</td><td>Melhorar a plataforma</td><td>Art. 7º, I — consentimento</td></tr>
+      <tr><td>Faturamento</td><td>Dados de pagamento (processados por Stripe/PayPal)</td><td>Cobrança de assinaturas</td><td>Art. 7º, V — execução de contrato</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Como usamos seus dados</h2>
+  <ul>
+    <li>Operar, manter e melhorar a plataforma ArxisVR.</li>
+    <li>Autenticar usuários e proteger contas contra acesso não autorizado.</li>
+    <li>Processar pagamentos de assinaturas via processadores certificados PCI-DSS.</li>
+    <li>Enviar comunicações transacionais (confirmação de e-mail, redefinição de senha).</li>
+    <li>Cumprir obrigações legais e regulatórias.</li>
+    <li>Detectar e prevenir fraudes e abusos.</li>
+  </ul>
+
+  <h2>4. Compartilhamento de dados</h2>
+  <p>Não vendemos, alugamos nem compartilhamos seus dados com terceiros para fins publicitários. Compartilhamos apenas com:</p>
+  <ul>
+    <li><strong>Render.com</strong> — infraestrutura de hospedagem (EUA, SCCs da UE aplicáveis).</li>
+    <li><strong>Stripe / PayPal</strong> — processamento de pagamentos (PCI-DSS nível 1).</li>
+    <li><strong>Cloudflare</strong> — CDN, proteção DDoS e DNS (dados de rede apenas).</li>
+    <li><strong>Autoridades competentes</strong> — quando exigido por lei ou ordem judicial.</li>
+  </ul>
+
+  <h2>5. Transferência internacional de dados</h2>
+  <p>
+    Alguns de nossos fornecedores operam fora do Brasil. Adotamos as salvaguardas previstas no
+    art. 33 da LGPD, incluindo cláusulas contratuais padrão e verificação de nível de proteção adequado.
+  </p>
+
+  <h2>6. Segurança</h2>
+  <ul>
+    <li>Senhas armazenadas como hash bcrypt (fator 12).</li>
+    <li>Comunicações criptografadas via TLS 1.3.</li>
+    <li>Tokens JWT com expiração curta e refresh tokens rotativos.</li>
+    <li>Verificação CAPTCHA (Cloudflare Turnstile) em formulários de autenticação.</li>
+    <li>Logs de auditoria para operações críticas.</li>
+  </ul>
+
+  <h2>7. Retenção de dados</h2>
+  <ul>
+    <li>Dados de conta: mantidos enquanto a conta estiver ativa + 5 anos após encerramento (obrigação fiscal).</li>
+    <li>Logs de acesso: 90 dias.</li>
+    <li>Modelos IFC: excluídos 30 dias após solicitação ou encerramento da conta.</li>
+    <li>Dados de pagamento: conforme exigido pelo processador e legislação fiscal.</li>
+  </ul>
+
+  <h2>8. Seus direitos como titular (LGPD, art. 18)</h2>
+  <p>Você tem direito a:</p>
+  <ul>
+    <li><strong>Acesso</strong> — confirmar existência e obter cópia dos seus dados.</li>
+    <li><strong>Correção</strong> — corrigir dados incompletos, inexatos ou desatualizados.</li>
+    <li><strong>Anonimização, bloqueio ou eliminação</strong> — de dados desnecessários ou tratados em desconformidade.</li>
+    <li><strong>Portabilidade</strong> — receber seus dados em formato estruturado e legível por máquina.</li>
+    <li><strong>Revogação do consentimento</strong> — a qualquer momento, sem prejuízo dos tratamentos já realizados.</li>
+    <li><strong>Oposição</strong> — ao tratamento baseado em legítimo interesse.</li>
+    <li><strong>Reclamação à ANPD</strong> — Autoridade Nacional de Proteção de Dados.</li>
+  </ul>
+  <p>Exerça seus direitos via: <a href="mailto:privacidade@arxisvr.avilaops.com">privacidade@arxisvr.avilaops.com</a>. Respondemos em até <strong>15 dias úteis</strong>.</p>
+
+  <h2>9. Cookies</h2>
+  <p>Utilizamos cookies conforme nossa <a href="/cookies.html">Política de Cookies</a>. Você pode gerenciar suas preferências no banner ao acessar o site.</p>
+
+  <h2>10. Menores de idade</h2>
+  <p>A plataforma ArxisVR é destinada a profissionais e não é direcionada a menores de 18 anos. Não coletamos intencionalmente dados de menores.</p>
+
+  <h2>11. Alterações nesta política</h2>
+  <p>Podemos atualizar esta Política periodicamente. Notificaremos por e-mail e/ou aviso na plataforma com ao menos 15 dias de antecedência para mudanças materiais.</p>
+
+  <h2>12. Contato</h2>
+  <p>
+    Encarregado de Proteção de Dados (DPO):<br>
+    <a href="mailto:privacidade@arxisvr.avilaops.com">privacidade@arxisvr.avilaops.com</a>
+  </p>
+</main>
+
+<footer>
+  <a href="/">ArxisVR</a>
+  <a href="/privacy.html">Privacidade</a>
+  <a href="/terms.html">Termos</a>
+  <a href="/cookies.html">Cookies</a>
+  <a href="/lgpd.html">LGPD</a>
+  <br><br>© 2026 ArxisVR by AvilaOps. Todos os direitos reservados.
+</footer>
+
+</body>
+</html>
