@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "features": "Recursos",
+    "how": "Como funciona",
+    "cases": "Casos de uso",
+    "pricing": "Planos",
+    "login": "Entrar",
+    "start": "Começar grátis"
+  },
+  "hero": {
+    "eyebrow": "BIM · 4D/5D · Realidade Estendida · IA",
+    "title": "A plataforma BIM com <grad>Copilot de IA</grad> e Realidade Estendida no navegador.",
+    "lead": "Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D, revise clashes e custos 5D, e visite o projeto em VR ou AR — tudo em uma única plataforma, sem instalação.",
+    "cta_primary": "Criar conta grátis",
+    "cta_secondary": "Ver demonstração",
+    "badge1": "IFC 2x3, IFC4, IFC4.3",
+    "badge2": "WebXR (VR/AR)",
+    "badge3": "Multi-empresa",
+    "badge4": "API REST v1"
+  },
+  "features": {
+    "kicker": "Recursos",
+    "title": "Tudo que sua equipe BIM precisa, em uma plataforma só.",
+    "sub": "Do upload do IFC até a apresentação em VR para o cliente. Sem trocar de ferramenta, sem perder o contexto.",
+    "viewer_title": "Viewer IFC em escala 1:1",
+    "viewer_desc": "Suporte a IFC 2x3, IFC4 e IFC4.3 com renderização Three.js de alta performance, LOD, culling e instancing para modelos grandes.",
+    "copilot_title": "Copilot de IA para cenários",
+    "copilot_desc": "Abra com Ctrl+K e peça coordenação BIM, simulação 4D, revisão 5D, clashes ou visita guiada. O Copilot monta o cenário e age no viewer.",
+    "bim4d_title": "BIM 4D — Cronograma",
+    "bim4d_desc": "Vincule tarefas a elementos IFC, simule a construção com play/pause/seek, controle de velocidade e estados visuais por fase.",
+    "bim5d_title": "BIM 5D — Quantitativos & custos",
+    "bim5d_desc": "Extraia quantitativos do modelo, vincule custos por elemento e acompanhe orçado vs. realizado em tempo real.",
+    "vr_title": "VR/AR no navegador",
+    "vr_desc": "WebXR nativo: entre em VR com Quest, Vive ou outros headsets, ou abra em AR no celular — direto do navegador, sem app.",
+    "api_title": "Multi-empresa & API",
+    "api_desc": "Isolamento por tenant, JWT com refresh automático, papéis e permissões, e uma API REST /api/v1 documentada."
+  },
+  "how": {
+    "kicker": "Como funciona",
+    "title": "Do IFC ao cliente em três passos.",
+    "step1_title": "Suba seu modelo IFC",
+    "step1_desc": "Arraste o arquivo na plataforma. O ArxisVR parseia, indexa propriedades e prepara o modelo para uso colaborativo.",
+    "step2_title": "Coordene com o Copilot",
+    "step2_desc": "Federe disciplinas, peça revisões ao Copilot, configure cronograma 4D e quantitativos 5D. A IA executa ações seguras no viewer.",
+    "step3_title": "Apresente em VR/AR",
+    "step3_desc": "Salve cenários e compartilhe um link. O cliente entra direto no navegador, em desktop, celular ou headset VR."
+  },
+  "pricing": {
+    "kicker": "Planos",
+    "title": "Comece grátis. Escale quando precisar.",
+    "sub": "Sem cartão de crédito para começar. Mude de plano a qualquer momento.",
+    "popular": "Mais popular",
+    "subscribe": "Assinar",
+    "start_free": "Começar grátis",
+    "contact_sales": "Falar com vendas",
+    "monthly": "/mês",
+    "on_request": "Sob consulta"
+  },
+  "cta": {
+    "title": "Pronto para ver seu projeto em outra dimensão?",
+    "sub": "Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão.",
+    "primary": "Criar conta grátis",
+    "secondary": "Ver demonstração"
+  },
+  "footer": {
+    "tagline": "Plataforma BIM com Copilot de IA e Realidade Estendida. Feito por AvilaOps no Brasil.",
+    "product": "Produto",
+    "company": "Empresa",
+    "account": "Conta",
+    "features": "Recursos",
+    "how": "Como funciona",
+    "pricing": "Planos",
+    "demo": "Demonstração",
+    "sales": "Vendas",
+    "contact": "Contato",
+    "login": "Entrar",
+    "register": "Criar conta",
+    "rights": "Todos os direitos reservados.",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Uso",
+    "cookies": "Cookies",
+    "lgpd": "LGPD"
+  },
+  "auth": {
+    "login_title": "ArxisVR",
+    "login_sub": "Entre com sua conta para acessar seus projetos BIM",
+    "register_title": "ArxisVR",
+    "register_sub": "Crie sua conta para começar",
+    "tenant": "Tenant ID",
+    "name": "Nome",
+    "email": "Email",
+    "password": "Senha",
+    "confirm_password": "Confirmar senha",
+    "login_btn": "Entrar",
+    "register_btn": "Criar conta",
+    "no_account": "Não tem conta?",
+    "has_account": "Já tem conta?",
+    "create_account": "Criar conta",
+    "sign_in": "Entrar",
+    "back": "Voltar",
+    "loading": "Carregando...",
+    "tenant_placeholder": "ex: acme-corp",
+    "name_placeholder": "Seu nome completo",
+    "email_placeholder": "seu@email.com",
+    "password_placeholder": "Mínimo de 8 caracteres"
+  },
+  "cookie_banner": {
+    "text": "Usamos cookies essenciais para o funcionamento da plataforma e, com seu consentimento, cookies analíticos para melhorar a experiência.",
+    "essential_only": "Só essenciais",
+    "accept_all": "Aceitar todos"
+  }
+}

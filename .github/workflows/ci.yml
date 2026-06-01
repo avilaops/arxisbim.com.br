@@ -1,9 +1,5 @@
 name: CI
 
-# Roda nos pushes e PRs da branch real do projeto (main).
-# Builda backend + frontend EXATAMENTE como o Render builda, e faz um
-# smoke test subindo o backend — assim qualquer quebra de build aparece
-# aqui antes de chegar no Render.
 on:
   push:
     branches: [main, 'chore/**', 'feat/**', 'fix/**']
@@ -17,27 +13,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
 
       - name: Build backend (esbuild)
         working-directory: backend
         run: |
-          npm ci --include=dev
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Type-check backend (não bloqueia o deploy)
         working-directory: backend
-        run: npm run type-check
+        run: pnpm run type-check
         continue-on-error: true
 
       - name: Build frontend (vite)
         working-directory: frontend
         run: |
-          npm ci --include=dev
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Smoke test — backend sobe e responde /health/live
         working-directory: backend

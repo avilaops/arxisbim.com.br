@@ -435,6 +435,16 @@
     }
     .foot-legal a { color: var(--text-muted); font-size: 13px; transition: var(--transition); }
     .foot-legal a:hover { color: var(--text-secondary); }
+
+    /* LANGUAGE SWITCHER */
+    .lang-switcher { display:flex; align-items:center; gap:4px; }
+    .lang-btn {
+      padding:5px 10px; border-radius:8px; border:1px solid var(--border-color);
+      background:transparent; font-size:12.5px; font-weight:600; cursor:pointer;
+      color:var(--text-secondary); transition:var(--transition); font-family:inherit;
+    }
+    .lang-btn:hover { background:rgba(0,0,0,.04); color:#000; }
+    .lang-btn.active { background:#000; color:#fff; border-color:#000; }
   </style>
 </head>
 <body>
@@ -452,8 +462,14 @@
         <a href="#pricing">Planos</a>
       </nav>
       <div class="nav-cta">
-        <a class="btn btn-ghost" href="/login.html">Entrar</a>
-        <a class="btn btn-primary" href="/register.html">Começar grátis</a>
+        <div class="lang-switcher" id="lang-switcher">
+          <button class="lang-btn" data-lang="pt">PT</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="de">DE</button>
+          <button class="lang-btn" data-lang="es">ES</button>
+        </div>
+        <a class="btn btn-ghost" href="/login.html" data-i18n="nav.login">Entrar</a>
+        <a class="btn btn-primary" href="/register.html" data-i18n="nav.start">Começar grátis</a>
       </div>
     </div>
   </header>
@@ -800,6 +816,64 @@
       </div>
     </div>
   </footer>
+
+  <!-- i18n via i18next CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/i18next@24/i18next.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend@3/i18nextHttpBackend.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@8/i18nextBrowserLanguageDetector.min.js"></script>
+  <script>
+    (function() {
+      var SUPPORTED = ['pt', 'en', 'de', 'es'];
+
+      i18next
+        .use(i18nextHttpBackend)
+        .use(i18nextBrowserLanguageDetector)
+        .init({
+          fallbackLng: 'pt',
+          supportedLngs: SUPPORTED,
+          defaultNS: 'translation',
+          backend: { loadPath: '/locales/{{lng}}/{{ns}}.json' },
+          detection: {
+            order: ['querystring', 'localStorage', 'navigator'],
+            lookupQuerystring: 'lang',
+            lookupLocalStorage: 'arxisvr_lang',
+            caches: ['localStorage'],
+          },
+          interpolation: { escapeValue: false },
+        }, function(err, t) {
+          applyTranslations(t);
+          updateLangButtons();
+        });
+
+      function applyTranslations(t) {
+        document.querySelectorAll('[data-i18n]').forEach(function(el) {
+          var key = el.getAttribute('data-i18n');
+          var translated = t(key);
+          if (translated && translated !== key) {
+            el.textContent = translated;
+          }
+        });
+      }
+
+      function updateLangButtons() {
+        var lang = i18next.language?.slice(0, 2) || 'pt';
+        document.querySelectorAll('.lang-btn').forEach(function(btn) {
+          btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+      }
+
+      document.getElementById('lang-switcher').addEventListener('click', function(e) {
+        var btn = e.target.closest('.lang-btn');
+        if (!btn) return;
+        var lang = btn.dataset.lang;
+        i18next.changeLanguage(lang, function(err, t) {
+          localStorage.setItem('arxisvr_lang', lang);
+          applyTranslations(t);
+          updateLangButtons();
+        });
+      });
+    })();
+  </script>
 
   <!-- Cookie Consent Banner (LGPD) -->
   <div id="cookie-banner" class="hidden" role="dialog" aria-label="Consentimento de cookies">
