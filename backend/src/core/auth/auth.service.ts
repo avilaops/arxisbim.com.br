@@ -144,15 +144,22 @@ export class AuthService {
     // Validar input
     const validated = registerSchema.parse(data);
 
-    // Verificar se o tenant existe e está ativo
-    const [tenant] = await this.db
+    // Verificar se o tenant existe; se não, criar automaticamente (self-service signup)
+    let [tenant] = await this.db
       .select()
       .from(tenants)
       .where(eq(tenants.tenantId, validated.tenantId))
       .limit(1);
 
     if (!tenant) {
-      throw new Error('Tenant não encontrado');
+      [tenant] = await this.db
+        .insert(tenants)
+        .values({
+          tenantId: validated.tenantId,
+          name: validated.tenantId,
+          isActive: true,
+        })
+        .returning();
     }
 
     if (!tenant.isActive) {

@@ -182,8 +182,8 @@ export class HTTPClient {
             response.status,
             response.statusText,
             data,
-            data && typeof data === 'object' && 'message' in data 
-              ? (data as any).message 
+            data && typeof data === 'object'
+              ? ((data as any).message ?? (data as any).error)
               : undefined
           );
         }
