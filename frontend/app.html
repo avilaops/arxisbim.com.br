@@ -748,6 +748,19 @@
       </div>
       <div class="header__actions">
         <div id="auth-button-container"></div>
+        <div id="env-dropdown-container" style="position: relative;">
+          <button class="icon-button" id="btn-environment" title="Cenário / Ambiente" aria-haspopup="menu" aria-expanded="false">
+            <i class="lucide lucide-mountain"></i>
+          </button>
+          <div id="env-dropdown-menu" role="menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:220px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,0.16);padding:6px 0;z-index:9999;">
+            <button class="env-item" data-cmd="env.skybox.neutral" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">⚪</span><span>Estúdio neutro</span></button>
+            <button class="env-item" data-cmd="env.skybox.nature" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">🌲</span><span>Exterior natural</span></button>
+            <button class="env-item" data-cmd="env.skybox.urban" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">🏙️</span><span>Urbano</span></button>
+            <button class="env-item" data-cmd="env.skybox.sunset" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">🌅</span><span>Pôr do sol</span></button>
+            <div style="height:1px;background:#e5e7eb;margin:6px 0;"></div>
+            <button class="env-item" data-cmd="env.fog.toggle" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">🌫️</span><span>Alternar névoa</span></button>
+          </div>
+        </div>
         <button class="icon-button" title="Notificações">
           <i class="lucide lucide-bell"></i>
         </button>

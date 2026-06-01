@@ -12,6 +12,8 @@ import { AdminPanel } from '../../app/components/AdminPanel.js';
 import { FederatedModelsPanel } from '../../app/components/FederatedModelsPanel.js';
 import { SchedulingPanel } from '../../app/components/SchedulingPanel.js';
 import { MeetingsPanel } from '../../app/components/MeetingsPanel.js';
+import { commandRegistry } from '../../commands';
+import { appController } from '../../app/AppController';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -172,6 +174,7 @@ async function init() {
 
   viewerHost = new ViewerHost(canvasEl);
   window.__viewerHost = viewerHost;
+  (appController as any).viewerHost = viewerHost;
   console.log('ViewerHost inicializado');
 
   // Inicializar IFCUploadManager após API Client estar pronto
@@ -793,4 +796,56 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+// Wire up Environment / Scenery dropdown in app.html header
+function wireEnvironmentDropdown() {
+  const btn = document.getElementById('btn-environment');
+  const menu = document.getElementById('env-dropdown-menu');
+  const wrapper = document.getElementById('env-dropdown-container');
+  if (!btn || !menu || !wrapper) return;
+
+  const close = () => {
+    menu.style.display = 'none';
+    btn.setAttribute('aria-expanded', 'false');
+  };
+  const open = () => {
+    menu.style.display = 'block';
+    btn.setAttribute('aria-expanded', 'true');
+  };
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.style.display === 'block';
+    isOpen ? close() : open();
+  });
+
+  menu.querySelectorAll<HTMLButtonElement>('.env-item').forEach((item) => {
+    item.addEventListener('click', async () => {
+      const cmd = item.getAttribute('data-cmd');
+      if (!cmd) return;
+      try {
+        const result = await commandRegistry.execute(cmd as any);
+        if (!result.success) {
+          console.warn('[Environment] command failed:', cmd, result.error);
+        }
+      } catch (err) {
+        console.error('[Environment] command error:', cmd, err);
+      }
+      close();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target as Node)) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(wireEnvironmentDropdown, 0));
+} else {
+  setTimeout(wireEnvironmentDropdown, 0);
 }
