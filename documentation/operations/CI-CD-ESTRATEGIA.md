@@ -169,15 +169,15 @@ Isso é implementação do step, não decisão arquitetural — fica aqui apenas
 - [x] **Fase 2**
   - [x] Criar `docker-compose.dev.yml` (postgres + minio + bootstrap de bucket)
   - [x] Documentar comandos em `documentation/runbooks/ComoRodarBackendETestes.md`
-- [ ] **Fase 3**
+- [x] **Fase 3**
   - [x] `backend/Dockerfile` multi-stage (deps → build → prod-deps → runtime, tini + healthcheck)
   - [x] `frontend/Dockerfile` multi-stage (vite → nginx-unprivileged static)
   - [x] `.dockerignore` per package
-  - [ ] Validar build local (`docker build` ambos)
-  - [ ] Validar `docker run` + smoke manual
-- [ ] **Fase 4** (quando workers/MinIO chegarem)
-  - [ ] Job CI que builda containers
-  - [ ] Smoke contra `docker compose up`
+  - [x] Validar build local (`docker build` ambos)
+  - [x] Validar `docker run` + smoke manual
+- [x] **Fase 4** (quando workers/MinIO chegarem)
+  - [x] Job CI que builda containers (`.github/workflows/docker-build.yml`)
+  - [x] Smoke contra `docker compose up`
 
 ## Riscos por horizonte
 
