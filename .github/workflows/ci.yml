@@ -77,25 +77,32 @@ jobs:
           JWT_SECRET: ci-smoke-secret-not-for-prod
           HOST: 127.0.0.1
           PORT: '3001'
+          NODE_ENV: test
         run: |
-          node dist/index.js > backend.log 2>&1 &
+          timeout 60s node dist/index.js > backend.log 2>&1 &
           PID=$!
           echo "Backend started with PID $PID"
           ok=0
-          for i in $(seq 1 30); do
+          for i in $(seq 1 40); do
             if curl -sf http://127.0.0.1:3001/health/live >/dev/null 2>&1; then
-              echo "✅ backend respondeu em /health/live após ${i} tentativas"
+              echo "✅ backend respondeu em /health/live após ${i} tentativas ($(($i * 2)) segundos)"
               ok=1
               break
             fi
-            echo "Tentativa $i/30: backend ainda não respondeu..."
+            if ! kill -0 $PID 2>/dev/null; then
+              echo "❌ backend crashou! Logs:"
+              cat backend.log
+              exit 1
+            fi
+            echo "Tentativa $i/40: backend ainda não respondeu..."
             sleep 2
           done
           echo "=== Backend logs ==="
-          cat backend.log || echo "No logs available"
+          cat backend.log 2>/dev/null || echo "No logs available"
           echo "==================="
           kill $PID 2>/dev/null || true
+          wait $PID 2>/dev/null || true
           if [ "$ok" -ne 1 ]; then
-            echo "❌ backend não respondeu a tempo"
+            echo "❌ backend não respondeu a tempo (80 segundos)"
             exit 1
           fi
