@@ -11,6 +11,7 @@ import postgres from 'postgres';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { authRoutes } from './core/auth/auth.routes.js';
+import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
@@ -311,6 +312,7 @@ server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: Fastif
 // =====================================
 
 await server.register(authRoutes, { prefix: '/api/v1/auth' });
+await server.register(adminRoutes, { prefix: '/api/v1/admin' });
 await server.register(taskElementLinksRoutes, { prefix: '/api/v1' });
 await server.register(timelineSimulationsRoutes, { prefix: '/api/v1' });
 await server.register(notificationsRoutes, { prefix: '/api/v1' });
