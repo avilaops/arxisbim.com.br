@@ -54,6 +54,10 @@ private constructor() {
   // Register command handlers
   registerAllCommandHandlers();
 
+  if (typeof window !== 'undefined') {
+    (window as any).commandRegistry = commandRegistry;
+  }
+
   this.setupEventListeners();
   this.initializeDefaultState();
 

@@ -11,6 +11,7 @@ import {
   FolderOpen,
   MessageSquare,
   MousePointer2,
+  Mountain,
   PanelLeft,
   Ruler,
   Search,
@@ -22,6 +23,22 @@ import {
 import { uiStore, type UIState, type ViewType } from './state/uiStore';
 import { appController } from './AppController';
 import { eventBus, EventType, ToolType } from '../core';
+import { commandRegistry } from '../commands';
+import { CommandId } from '../commands/Command';
+
+interface SkyboxPreset {
+  id: string;
+  label: string;
+  icon: string;
+  commandId: CommandId;
+}
+
+const SKYBOX_PRESETS: SkyboxPreset[] = [
+  { id: 'neutral', label: 'Estúdio neutro', icon: '⚪', commandId: CommandId.ENV_SKYBOX_NEUTRAL },
+  { id: 'nature',  label: 'Exterior natural', icon: '🌲', commandId: CommandId.ENV_SKYBOX_NATURE },
+  { id: 'urban',   label: 'Urbano', icon: '🏙️', commandId: CommandId.ENV_SKYBOX_URBAN },
+  { id: 'sunset',  label: 'Pôr do sol', icon: '🌅', commandId: CommandId.ENV_SKYBOX_SUNSET },
+];
 
 const VIEW_LABELS: Record<ViewType, string> = {
   explorer: 'Projetos',
@@ -150,8 +167,11 @@ export class WorkspaceTopBar {
       uiStore.setActiveView('settings');
     });
 
+    const environmentButton = this.createEnvironmentDropdown();
+
     right.appendChild(fileContext);
     right.appendChild(searchButton);
+    right.appendChild(environmentButton);
     right.appendChild(openButton);
     right.appendChild(settingsButton);
 
@@ -284,6 +304,105 @@ export class WorkspaceTopBar {
     separator.className = 'app-topbar__breadcrumb-separator';
     separator.appendChild(this.createIcon(ChevronRight));
     parent.appendChild(separator);
+  }
+
+  private createEnvironmentDropdown(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'app-topbar__env';
+    wrapper.style.position = 'relative';
+
+    const button = this.createIconButton(Mountain, 'Cenário / Ambiente', () => {
+      const open = wrapper.getAttribute('data-open') === 'true';
+      wrapper.setAttribute('data-open', String(!open));
+      menu.style.display = open ? 'none' : 'block';
+    });
+    button.classList.add('app-topbar__button--env');
+
+    const menu = document.createElement('div');
+    menu.className = 'app-topbar__env-menu';
+    menu.setAttribute('role', 'menu');
+    menu.style.cssText = [
+      'position: absolute',
+      'top: calc(100% + 6px)',
+      'right: 0',
+      'min-width: 200px',
+      'background: #ffffff',
+      'border: 1px solid #e5e7eb',
+      'border-radius: 8px',
+      'box-shadow: 0 12px 32px rgba(15,23,42,0.16)',
+      'padding: 6px 0',
+      'display: none',
+      'z-index: 400',
+    ].join(';');
+
+    SKYBOX_PRESETS.forEach((preset) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.setAttribute('role', 'menuitem');
+      item.style.cssText = [
+        'display: flex',
+        'align-items: center',
+        'gap: 10px',
+        'width: 100%',
+        'padding: 8px 14px',
+        'background: transparent',
+        'border: none',
+        'color: #111827',
+        'font-size: 14px',
+        'cursor: pointer',
+        'text-align: left',
+      ].join(';');
+      item.innerHTML = `<span style="font-size:16px">${preset.icon}</span><span>${preset.label}</span>`;
+      item.addEventListener('mouseenter', () => { item.style.background = '#eff6ff'; });
+      item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+      item.addEventListener('click', () => {
+        commandRegistry.execute(preset.commandId);
+        menu.style.display = 'none';
+        wrapper.setAttribute('data-open', 'false');
+      });
+      menu.appendChild(item);
+    });
+
+    const sep = document.createElement('div');
+    sep.style.cssText = 'height:1px;background:#e5e7eb;margin:6px 0;';
+    menu.appendChild(sep);
+
+    const fogItem = document.createElement('button');
+    fogItem.type = 'button';
+    fogItem.setAttribute('role', 'menuitem');
+    fogItem.style.cssText = [
+      'display: flex',
+      'align-items: center',
+      'gap: 10px',
+      'width: 100%',
+      'padding: 8px 14px',
+      'background: transparent',
+      'border: none',
+      'color: #111827',
+      'font-size: 14px',
+      'cursor: pointer',
+      'text-align: left',
+    ].join(';');
+    fogItem.innerHTML = `<span style="font-size:16px">🌫️</span><span>Alternar névoa</span>`;
+    fogItem.addEventListener('mouseenter', () => { fogItem.style.background = '#eff6ff'; });
+    fogItem.addEventListener('mouseleave', () => { fogItem.style.background = 'transparent'; });
+    fogItem.addEventListener('click', () => {
+      commandRegistry.execute(CommandId.ENV_TOGGLE_FOG);
+      menu.style.display = 'none';
+      wrapper.setAttribute('data-open', 'false');
+    });
+    menu.appendChild(fogItem);
+
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target as Node)) {
+        menu.style.display = 'none';
+        wrapper.setAttribute('data-open', 'false');
+      }
+    });
+
+    wrapper.appendChild(button);
+    wrapper.appendChild(menu);
+    return wrapper;
   }
 
   private createIconButton(icon: IconNode, label: string, onClick: () => void): HTMLButtonElement {
