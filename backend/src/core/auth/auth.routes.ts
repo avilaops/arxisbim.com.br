@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { AuthService } from './auth.service.js';
+import { verifyTurnstileToken } from './turnstile.js';
 
 const authService = new AuthService();
 
@@ -8,6 +9,7 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   tenantId: z.string().min(1),
+  turnstileToken: z.string().optional(),
 });
 
 const registerSchema = z.object({
@@ -16,6 +18,7 @@ const registerSchema = z.object({
   name: z.string().min(2),
   tenantId: z.string().min(1),
   companyId: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 const refreshTokenSchema = z.object({
@@ -65,6 +68,8 @@ export async function authRoutes(fastify: FastifyInstance) {
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const body = loginSchema.parse(request.body);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        await verifyTurnstileToken(body.turnstileToken ?? '', ip);
         const result = await authService.login(body);
         return reply.send(result);
       } catch (error) {
@@ -118,6 +123,8 @@ export async function authRoutes(fastify: FastifyInstance) {
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const body = registerSchema.parse(request.body);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        await verifyTurnstileToken(body.turnstileToken ?? '', ip);
         const result = await authService.register(body);
         return reply.status(201).send(result);
       } catch (error) {
