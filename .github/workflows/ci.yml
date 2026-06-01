@@ -46,6 +46,14 @@ jobs:
         working-directory: frontend
         run: pnpm run build
 
+      - name: Install signaling-server dependencies
+        working-directory: signaling-server
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Sanity check signaling-server entrypoint
+        working-directory: signaling-server
+        run: node --check server.js
+
       - name: Smoke test — backend sobe e responde /health/live
         working-directory: backend
         env:

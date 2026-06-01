@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/arxisvr}"
 REPO_URL="${ARXISVR_REPO_URL:-https://github.com/avilaops/arxisvr.git}"
-BRANCH="${DEPLOY_BRANCH:-master}"
+BRANCH="${DEPLOY_BRANCH:-main}"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -120,11 +120,20 @@ run_setup_or_deploy() {
     log "✅ .env already exists"
   fi
 
-  log "📚 Installing dependencies"
-  pnpm install --frozen-lockfile
+  log "📚 Installing backend dependencies"
+  pnpm --dir backend install --frozen-lockfile
 
-  log "🏗️ Building application"
-  pnpm run build
+  log "🏗️ Building backend (esbuild)"
+  pnpm --dir backend run build
+
+  log "📚 Installing frontend dependencies"
+  pnpm --dir frontend install --frozen-lockfile
+
+  log "🏗️ Building frontend (vite)"
+  pnpm --dir frontend run build
+
+  log "📚 Installing signaling-server dependencies"
+  (cd signaling-server && npm install --omit=dev --no-audit --no-fund)
 
   log "🚀 Starting PM2 apps"
   pm2 start ecosystem.config.js --update-env

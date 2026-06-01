@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR="/opt/arxisvr"
-BRANCH="${DEPLOY_BRANCH:-master}"
+BRANCH="${DEPLOY_BRANCH:-main}"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -51,11 +51,20 @@ if [ ! -e node_modules/pino-pretty ] && [ -d Bucket/nodejs/pino-pretty ]; then
   log "Linked pino-pretty from Bucket"
 fi
 
-log "📚 Installing dependencies"
-pnpm install --frozen-lockfile
+log "📚 Installing backend dependencies"
+pnpm --dir backend install --frozen-lockfile
 
-log "🏗️ Building backend and frontend"
-pnpm run build
+log "🏗️ Building backend (esbuild)"
+pnpm --dir backend run build
+
+log "📚 Installing frontend dependencies"
+pnpm --dir frontend install --frozen-lockfile
+
+log "🏗️ Building frontend (vite)"
+pnpm --dir frontend run build
+
+log "📚 Installing signaling-server dependencies"
+(cd signaling-server && npm install --omit=dev --no-audit --no-fund)
 
 log "📁 Ensuring log directory"
 mkdir -p "$APP_DIR/logs"
