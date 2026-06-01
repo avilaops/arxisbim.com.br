@@ -78,17 +78,22 @@ jobs:
           HOST: 127.0.0.1
           PORT: '3001'
         run: |
-          node dist/index.js &
+          node dist/index.js > backend.log 2>&1 &
           PID=$!
+          echo "Backend started with PID $PID"
           ok=0
-          for i in $(seq 1 25); do
-            if curl -sf http://127.0.0.1:3001/health/live >/dev/null; then
-              echo "✅ backend respondeu em /health/live"
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3001/health/live >/dev/null 2>&1; then
+              echo "✅ backend respondeu em /health/live após ${i} tentativas"
               ok=1
               break
             fi
-            sleep 1
+            echo "Tentativa $i/30: backend ainda não respondeu..."
+            sleep 2
           done
+          echo "=== Backend logs ==="
+          cat backend.log || echo "No logs available"
+          echo "==================="
           kill $PID 2>/dev/null || true
           if [ "$ok" -ne 1 ]; then
             echo "❌ backend não respondeu a tempo"
