@@ -6,8 +6,7 @@ on:
     paths-ignore:
       - '**.md'
       - '.gitignore'
-      - 'docs/**'
-      - 'Docs/**'
+      - 'documentation/**'
   workflow_dispatch:
 
 concurrency:

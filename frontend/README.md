@@ -256,9 +256,10 @@ npm run format:check
 
 ## Documentação
 
-- ADRs (Architecture Decision Records): `docs/ADR/`
-- Roadmap técnico: `docs/ROADMAP.md`
-- Documentação de módulos: `Docs/` (raiz do projeto)
+- ADRs (Architecture Decision Records): [`documentation/ADR/`](../documentation/ADR/)
+- Roadmap geral: [`documentation/roadmap/ROADMAP.md`](../documentation/roadmap/ROADMAP.md)
+- Roadmap técnico frontend: [`documentation/roadmap/frontend.md`](../documentation/roadmap/frontend.md)
+- Documentação de módulos: [`documentation/modules/`](../documentation/modules/)
 
 ## Desenvolvimento
 
@@ -272,7 +273,7 @@ npm run format:check
 2. **Frontend:** Criar em `frontend/src/api/v1/services/NomeServico/`
 3. Implementar classe com singleton pattern
 4. Adicionar testes em `NomeServico.test.ts`
-5. Documentar no `Docs/XX- NomeServico.md`
+5. Documentar em `documentation/modules/XX- NomeServico.md`
 
 ### Padrões
 
@@ -283,7 +284,7 @@ npm run format:check
 
 ## Roadmap
 
-Veja `docs/ROADMAP.md` para o roadmap técnico de evolução (Q3 2026 - Q4 2027).
+Veja [`documentation/roadmap/frontend.md`](../documentation/roadmap/frontend.md) para o roadmap técnico de evolução (Q3 2026 - Q4 2027).
 
 ## Licença
 
