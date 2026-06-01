@@ -59,8 +59,17 @@ export class ViewerActionRouter {
         case ViewerActionType.SHOW_ALL:
           return await this.executeShowAll();
         
+        case ViewerActionType.APPLY_CLIP_PLANE:
+          return await this.executeApplyClipPlane(action);
+        
+        case ViewerActionType.MEASURE_DISTANCE:
+          return await this.executeMeasureDistance(action);
+        
         case ViewerActionType.TAKE_SCREENSHOT:
           return await this.executeTakeScreenshot(action);
+        
+        case ViewerActionType.EXPORT_REPORT:
+          return await this.executeExportReport(action);
         
         case ViewerActionType.SET_CAMERA:
           return await this.executeSetCamera(action);
@@ -395,5 +404,170 @@ export class ViewerActionRouter {
       message: `Activated ${action.toolName} tool`,
       data: { tool: action.toolName }
     };
+  }
+
+  /**
+   * Aplica plano de corte
+   */
+  private async executeApplyClipPlane(action: import('./ActionDSL').ApplyClipPlaneAction): Promise<ActionResult> {
+    try {
+      const normal = new THREE.Vector3(...action.normal).normalize();
+      const clipPlane = new THREE.Plane(normal, action.constant);
+
+      // Apply clipping to all materials in scene
+      let affectedCount = 0;
+      this.scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh) {
+          const mesh = obj as THREE.Mesh;
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          
+          materials.forEach((mat: THREE.Material) => {
+            (mat as any).clippingPlanes = [clipPlane];
+            mat.needsUpdate = true;
+          });
+          
+          affectedCount++;
+        }
+      });
+
+      if (this.renderer) {
+        this.renderer.localClippingEnabled = true;
+      }
+
+      return {
+        action,
+        success: true,
+        message: `Clip plane applied to ${affectedCount} objects`,
+        data: { affectedCount, normal: action.normal, constant: action.constant }
+      };
+    } catch (error) {
+      return {
+        action,
+        success: false,
+        error: 'Failed to apply clip plane'
+      };
+    }
+  }
+
+  /**
+   * Mede distância entre dois pontos
+   */
+  private async executeMeasureDistance(action: import('./ActionDSL').MeasureDistanceAction): Promise<ActionResult> {
+    try {
+      const pointA = new THREE.Vector3(...action.pointA);
+      const pointB = new THREE.Vector3(...action.pointB);
+      const distance = pointA.distanceTo(pointB);
+
+      // Create visual line for measurement
+      const geometry = new THREE.BufferGeometry().setFromPoints([pointA, pointB]);
+      const material = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+      const line = new THREE.Line(geometry, material);
+      line.name = 'measurement-line';
+      this.scene.add(line);
+
+      return {
+        action,
+        success: true,
+        message: `Distance measured: ${distance.toFixed(3)} units`,
+        data: { 
+          distance, 
+          pointA: action.pointA, 
+          pointB: action.pointB,
+          lineId: line.uuid
+        }
+      };
+    } catch (error) {
+      return {
+        action,
+        success: false,
+        error: 'Failed to measure distance'
+      };
+    }
+  }
+
+  /**
+   * Exporta relatório
+   */
+  private async executeExportReport(action: import('./ActionDSL').ExportReportAction): Promise<ActionResult> {
+    try {
+      const state = appController.getState();
+      const report: any = {
+        timestamp: new Date().toISOString(),
+        projectName: 'ArxisVR Project',
+        scene: {
+          objectCount: 0,
+          visibleCount: 0
+        },
+        camera: {
+          position: this.camera.position.toArray(),
+          rotation: this.camera.rotation.toArray()
+        },
+        selection: state.selectedObjects.map(s => ({
+          uuid: s.object.uuid,
+          name: s.object.name,
+          type: s.object.type
+        }))
+      };
+
+      // Count objects
+      this.scene.traverse((obj) => {
+        report.scene.objectCount++;
+        if (obj.visible) report.scene.visibleCount++;
+      });
+
+      let content: string;
+      let filename: string;
+      let mimeType: string;
+
+      switch (action.format) {
+        case 'json':
+          content = JSON.stringify(report, null, 2);
+          filename = `arxisvr-report-${Date.now()}.json`;
+          mimeType = 'application/json';
+          break;
+        
+        case 'md':
+          content = `# ArxisVR Report\n\n**Generated:** ${report.timestamp}\n\n## Scene\n- Total Objects: ${report.scene.objectCount}\n- Visible: ${report.scene.visibleCount}\n\n## Camera\n- Position: ${report.camera.position.join(', ')}\n\n## Selection\n${report.selection.map((s: any) => `- ${s.name || s.uuid} (${s.type})`).join('\n')}`;
+          filename = `arxisvr-report-${Date.now()}.md`;
+          mimeType = 'text/markdown';
+          break;
+        
+        case 'csv':
+          content = 'uuid,name,type,visible\n' + 
+            report.selection.map((s: any) => `${s.uuid},${s.name},${s.type},true`).join('\n');
+          filename = `arxisvr-report-${Date.now()}.csv`;
+          mimeType = 'text/csv';
+          break;
+        
+        default:
+          return {
+            action,
+            success: false,
+            error: `Unknown format: ${action.format}`
+          };
+      }
+
+      // Create download link
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      return {
+        action,
+        success: true,
+        message: `Report exported as ${action.format}`,
+        data: { format: action.format, filename, objectCount: report.scene.objectCount }
+      };
+    } catch (error) {
+      return {
+        action,
+        success: false,
+        error: 'Failed to export report'
+      };
+    }
   }
 }

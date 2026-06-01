@@ -10,6 +10,8 @@ export class LayerPanel {
   private panel: HTMLElement | null = null;
   private isVisible: boolean = false;
   private searchTerm: string = '';
+  private selectedLayerId: string | null = null; // Track selected layer
+  private colorPickerOverlay: HTMLElement | null = null; // Color picker UI
 
   constructor(layerManager: LayerManager) {
     this.layerManager = layerManager;
@@ -352,10 +354,12 @@ export class LayerPanel {
    */
   private createLayerItem(layer: ILayer): HTMLElement {
     const item = document.createElement('div');
+    const isSelected = this.selectedLayerId === layer.id;
+    item.setAttribute('data-layer-id', layer.id); // Add data attribute for selection
     item.style.cssText = `
       padding: 8px;
       margin: 2px 0;
-      background: ${layer.visible ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.3)'};
+      background: ${isSelected ? 'rgba(0, 255, 136, 0.2)' : (layer.visible ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.3)')};
       border-left: 4px solid ${layer.color.base.getStyle()};
       border-radius: 3px;
       display: flex;
@@ -363,7 +367,9 @@ export class LayerPanel {
       gap: 8px;
       font-size: 12px;
       cursor: pointer;
+      outline: ${isSelected ? '2px solid #00ff88' : 'none'};
     `;
+
 
     // Cor indicator
     const colorBox = document.createElement('div');
@@ -480,8 +486,16 @@ export class LayerPanel {
   }
 
   private isolateSelected(): void {
-    // TODO: Implementar com layer selecionado
-    console.log('Isolar layer selecionado');
+    if (!this.selectedLayerId) {
+      console.warn('Nenhum layer selecionado para isolar');
+      return;
+    }
+    
+    // Hide all layers except selected
+    this.layerManager.getAllLayers().forEach(layer => {
+      this.layerManager.setLayerVisibility(layer.id, layer.id === this.selectedLayerId);
+    });
+    this.refreshLayersList();
   }
 
   private freezeInactive(): void {
@@ -502,12 +516,180 @@ export class LayerPanel {
 
   private selectLayer(layer: ILayer): void {
     console.log('Layer selecionado:', layer.name);
-    // TODO: Implementar seleção de layer
+    
+    // Update selected layer
+    this.selectedLayerId = layer.id;
+    
+    // Highlight selected layer in UI
+    const container = document.getElementById('layers-list-container');
+    if (container) {
+      const allItems = container.querySelectorAll('[data-layer-id]');
+      allItems.forEach(item => {
+        const itemElement = item as HTMLElement;
+        const isSelected = itemElement.dataset.layerId === layer.id;
+        itemElement.style.background = isSelected 
+          ? 'rgba(0, 255, 136, 0.2)' 
+          : (layer.visible ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.3)');
+        itemElement.style.outline = isSelected ? '2px solid #00ff88' : 'none';
+      });
+    }
+    
+    // Emit custom event for other components
+    const event = new CustomEvent('layer-selected', { detail: { layer } });
+    document.dispatchEvent(event);
   }
 
   private changeLayerColor(layer: ILayer): void {
-    // TODO: Implementar color picker
     console.log('Mudar cor do layer:', layer.name);
+    
+    // Remove existing color picker if any
+    if (this.colorPickerOverlay) {
+      this.colorPickerOverlay.remove();
+      this.colorPickerOverlay = null;
+      return; // Toggle off
+    }
+    
+    // Create color picker overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    const picker = document.createElement('div');
+    picker.style.cssText = `
+      background: #1a1a1a;
+      border: 2px solid #00ff88;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 255, 136, 0.5);
+    `;
+    
+    picker.innerHTML = `
+      <h3 style="margin: 0 0 15px 0; color: #00ff88;">🎨 Selecionar Cor - ${layer.name}</h3>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; color: white; font-size: 12px;">Cor Base:</label>
+        <input 
+          type="color" 
+          id="color-picker-input" 
+          value="${layer.color.base.getHexString()}" 
+          style="width: 100%; height: 50px; border: none; border-radius: 5px; cursor: pointer;"
+        />
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; color: white; font-size: 12px;">Pré-definidas:</label>
+        <div id="preset-colors" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px;">
+          ${this.getPresetColors().map(color => `
+            <div 
+              class="preset-color" 
+              data-color="${color}"
+              style="
+                width: 40px;
+                height: 40px;
+                background: ${color};
+                border: 2px solid white;
+                border-radius: 5px;
+                cursor: pointer;
+              "
+            ></div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button id="color-picker-apply" style="
+          flex: 1;
+          padding: 10px;
+          background: #00ff88;
+          border: none;
+          border-radius: 5px;
+          color: black;
+          font-weight: bold;
+          cursor: pointer;
+        ">✓ Aplicar</button>
+        <button id="color-picker-cancel" style="
+          flex: 1;
+          padding: 10px;
+          background: #ff4444;
+          border: none;
+          border-radius: 5px;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+        ">✖ Cancelar</button>
+      </div>
+    `;
+    
+    overlay.appendChild(picker);
+    document.body.appendChild(overlay);
+    this.colorPickerOverlay = overlay;
+    
+    // Event listeners for color picker
+    const colorInput = picker.querySelector('#color-picker-input') as HTMLInputElement;
+    const presetColors = picker.querySelectorAll('.preset-color');
+    const applyBtn = picker.querySelector('#color-picker-apply');
+    const cancelBtn = picker.querySelector('#color-picker-cancel');
+    
+    // Preset color click
+    presetColors.forEach(preset => {
+      const presetElement = preset as HTMLElement;
+      presetElement.onclick = () => {
+        const color = presetElement.dataset.color!;
+        colorInput.value = color;
+        // Visual feedback
+        presetColors.forEach(p => (p as HTMLElement).style.borderColor = 'white');
+        presetElement.style.borderColor = '#00ff88';
+      };
+    });
+    
+    // Apply button
+    applyBtn?.addEventListener('click', () => {
+      const newColor = colorInput.value;
+      // Convert hex to THREE.Color
+      const threeColor = new (window as any).THREE.Color(newColor);
+      this.layerManager.setLayerColor(layer.id, threeColor);
+      this.closeColorPicker();
+      this.refreshLayersList();
+    });
+    
+    // Cancel button
+    cancelBtn?.addEventListener('click', () => {
+      this.closeColorPicker();
+    });
+    
+    // Click outside to close
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        this.closeColorPicker();
+      }
+    };
+  }
+  
+  private getPresetColors(): string[] {
+    return [
+      '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
+      '#FF00FF', '#00FFFF', '#FFA500', '#800080',
+      '#008000', '#000080', '#808080', '#C0C0C0',
+      '#FFFFFF', '#000000', '#A52A2A', '#FF69B4'
+    ];
+  }
+  
+  private closeColorPicker(): void {
+    if (this.colorPickerOverlay) {
+      this.colorPickerOverlay.remove();
+      this.colorPickerOverlay = null;
+    }
   }
 
   private createNewLayer(): void {
@@ -576,6 +758,7 @@ export class LayerPanel {
    * Dispose
    */
   public dispose(): void {
+    this.closeColorPicker();
     if (this.panel) {
       this.panel.remove();
       this.panel = null;

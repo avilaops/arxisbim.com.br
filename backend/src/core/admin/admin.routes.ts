@@ -62,7 +62,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
     const { id } = request.params as { id: string };
     const caller = (request as any).user;
     if (caller.userId === id) return reply.status(400).send({ error: 'Você não pode excluir sua própria conta.' });
-    await db.update(users).set({ isActive: false, updatedAt: new Date() }).where(eq(users.id, id));
+    await db.update(users).set({ isActive: false }).where(eq(users.id, id));
     return reply.send({ ok: true });
   });
 

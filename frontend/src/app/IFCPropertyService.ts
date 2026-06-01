@@ -177,9 +177,33 @@ export class IFCPropertyService {
 
     try {
       const spatialStructure = await this.ifcLoader.getSpatialStructure(modelID, expressID);
-      // A estrutura espacial é complexa, pode precisar de parsing específico
-      return undefined; // TODO: Implementar parsing da estrutura espacial
+      if (!spatialStructure) return undefined;
+
+      // Parse spatial hierarchy: Building > Storey > Space
+      const location: DetailedIFCProperties['location'] = {};
+
+      // Recursive search for Building
+      const findInStructure = (node: any, type: string): string | undefined => {
+        if (node.type === type) {
+          return node.Name?.value || node.LongName?.value;
+        }
+        if (node.children) {
+          for (const child of node.children) {
+            const found = findInStructure(child, type);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      };
+
+      // Extract Building, Storey, Space names
+      location.building = findInStructure(spatialStructure, 'IFCBUILDING');
+      location.storey = findInStructure(spatialStructure, 'IFCBUILDINGSTOREY');
+      location.space = findInStructure(spatialStructure, 'IFCSPACE');
+
+      return Object.keys(location).length > 0 ? location : undefined;
     } catch (error) {
+      console.warn('Failed to extract spatial location:', error);
       return undefined;
     }
   }

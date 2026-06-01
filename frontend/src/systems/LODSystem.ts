@@ -425,6 +425,60 @@ export class LODSystem {
   }
 
   /**
+   * Cria LOD (Level of Detail) para um objeto
+   * @param id Identificador único do LOD
+   * @param levels Array de níveis LOD com distâncias e objetos correspondentes
+   */
+  public createLOD(id: string, levels: Array<{ distance: number; object: THREE.Object3D }>): void {
+    if (levels.length === 0) {
+      console.warn(`⚠️ createLOD chamado com array vazio para ID: ${id}`);
+      return;
+    }
+
+    // Ordena níveis por distância (menor para maior)
+    const sortedLevels = [...levels].sort((a, b) => a.distance - b.distance);
+
+    // Cria modelo LOD baseado no primeiro nível (mais detalhado)
+    const baseObject = sortedLevels[0].object;
+    const lodModel: LODModel = {
+      object: baseObject,
+      meshes: [],
+      boundingBox: new THREE.Box3(),
+      boundingSphere: new THREE.Sphere(),
+      currentLOD: 'HIGH'
+    };
+
+    // Coleta todas as meshes do objeto base
+    baseObject.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        lodModel.meshes.push(child);
+        this.stats.totalObjects++;
+      }
+    });
+
+    // Calcula bounding volumes
+    lodModel.boundingBox.setFromObject(baseObject);
+    lodModel.boundingBox.getBoundingSphere(lodModel.boundingSphere);
+
+    // Armazena o modelo LOD
+    this.registeredModels.set(id, lodModel);
+
+    // Armazena os níveis de LOD para troca dinâmica
+    const lodLevels: LODLevelData[] = sortedLevels.map((level, index) => ({
+      distance: level.distance,
+      object: level.object,
+      visible: index === 0 // Apenas o primeiro nível é visível inicialmente
+    }));
+
+    // Adiciona userData para rastrear níveis LOD
+    baseObject.userData.lodLevels = lodLevels;
+    baseObject.userData.currentLevelIndex = 0;
+    baseObject.userData.lodId = id;
+
+    console.log(`📊 LOD criado: ${id} com ${lodLevels.length} níveis (distâncias: ${lodLevels.map(l => l.distance).join(', ')})`);
+  }
+
+  /**
    * Remove modelo do sistema LOD
    */
   public unregisterModel(model: THREE.Object3D): void {
@@ -482,4 +536,10 @@ interface LODStats {
   highLOD: number;
   mediumLOD: number;
   lowLOD: number;
+}
+
+interface LODLevelData {
+  distance: number;
+  object: THREE.Object3D;
+  visible: boolean;
 }

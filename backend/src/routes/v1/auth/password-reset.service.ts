@@ -186,6 +186,6 @@ export class PasswordResetService {
         )
       );
 
-    return result.rowCount || 0;
+    return result.length || 0;
   }
 }

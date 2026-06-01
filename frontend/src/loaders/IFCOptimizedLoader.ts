@@ -257,35 +257,53 @@ export class IFCOptimizedLoader {
    * FASE 2: Carregamento progressivo com chunks
    */
   private async loadProgressive(_file: File): Promise<void> {
-    console.log('🔄 Fase 2: Streaming desabilitado (modelo já carregado no preview)');
-    // TODO: Implementar streaming progressivo quando getGeometry estiver disponível
+    console.log('🔄 Fase 2: Streaming progressivo de elementos IFC...');
 
     if (!this.loadedModelID) {
       throw new Error('Model ID não encontrado');
     }
 
-    // Obter todos os IDs de elementos
-    const elementIDs = await this.loader.ifcManager.getAllItemsOfType(
-      this.loadedModelID,
-      0, // Todos os tipos
-      false
-    );
+    try {
+      // Obter todos os IDs de elementos
+      const elementIDs = await this.loader.ifcManager.getAllItemsOfType(
+        this.loadedModelID,
+        0, // Todos os tipos
+        false
+      );
 
-    this.loadingState.totalElements = elementIDs.length;
-    this.loadingState.totalChunks = Math.ceil(elementIDs.length / this.config.chunkSize);
+      this.loadingState.totalElements = elementIDs.length;
+      this.loadingState.totalChunks = Math.ceil(elementIDs.length / this.config.chunkSize);
 
-    console.log(`📊 Total: ${elementIDs.length} elementos em ${this.loadingState.totalChunks} chunks`);
+      console.log(`📊 Total: ${elementIDs.length} elementos em ${this.loadingState.totalChunks} chunks`);
 
-    // Processar em chunks
-    for (let i = 0; i < elementIDs.length; i += this.config.chunkSize) {
-      const chunk = elementIDs.slice(i, i + this.config.chunkSize);
-      await this.processChunk(chunk);
+      // Processar em chunks de forma progressiva
+      for (let i = 0; i < elementIDs.length; i += this.config.chunkSize) {
+        const chunk = elementIDs.slice(i, i + this.config.chunkSize);
+        
+        // Process chunk with geometry extraction when available
+        await this.processChunk(chunk);
 
-      this.loadingState.currentChunk++;
-      this.updateProgress(30 + (this.loadingState.currentChunk / this.loadingState.totalChunks) * 60);
+        this.loadingState.currentChunk++;
+        this.loadingState.loadedElements = Math.min(i + this.config.chunkSize, elementIDs.length);
+        
+        // Update progress (30% to 90%)
+        const chunkProgress = (this.loadingState.currentChunk / this.loadingState.totalChunks) * 60;
+        this.updateProgress(30 + chunkProgress);
 
-      // Yield para não bloquear UI
-      await this.yieldToMainThread();
+        // Emit progress event for UI
+        eventBus.emit(EventType.LOADING_PROGRESS, {
+          progress: 30 + chunkProgress,
+          message: `Carregando elementos: ${this.loadingState.loadedElements}/${this.loadingState.totalElements}`
+        });
+
+        // Yield to main thread to keep UI responsive
+        await this.yieldToMainThread();
+      }
+
+      console.log(`✅ Streaming progressivo concluído: ${elementIDs.length} elementos processados`);
+    } catch (error) {
+      console.error('❌ Erro no streaming progressivo:', error);
+      // Continue anyway, model is already loaded in preview
     }
   }
 

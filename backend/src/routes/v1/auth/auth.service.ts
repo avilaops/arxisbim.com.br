@@ -125,7 +125,7 @@ export class AuthService {
         companyId: input.companyId || null,
         role,
         isActive: true,
-        permissions: {},
+        permissions: [],
       })
       .returning();
 
@@ -375,7 +375,7 @@ export class AuthService {
   private async createSession(
     userId: string,
     tenantId: string,
-    deviceInfo?: string,
+    deviceInfo?: { userAgent?: string; ip?: string; device?: string; browser?: string; os?: string },
     ipAddress?: string
   ): Promise<{ token: string; sessionId: string }> {
     const refreshToken = this.generateRefreshToken(userId, tenantId);
@@ -388,7 +388,7 @@ export class AuthService {
         tenantId,
         refreshToken,
         expiresAt,
-        deviceInfo: deviceInfo || 'unknown',
+        deviceInfo: deviceInfo || null,
         ipAddress: ipAddress || 'unknown',
         isRevoked: false,
       })

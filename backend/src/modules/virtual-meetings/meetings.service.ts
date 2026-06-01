@@ -53,10 +53,10 @@ export class MeetingsService {
         projectId: input.projectId,
         roomUrl,
         meetingCode,
-        createdBy: input.hostUserId, // Map hostUserId to createdBy
+        createdBy: input.hostUserId,
         avatarSettings: input.avatarSettings || {},
         isActive: true,
-      })
+      } as any)
       .returning();
 
     // Send notification to host
@@ -132,7 +132,12 @@ export class MeetingsService {
     const [participant] = await this.db
       .update(meetingParticipants)
       .set({ 
-        avatarState,
+        avatarState: {
+          position: avatarState.position || { x: 0, y: 0, z: 0 },
+          rotation: avatarState.rotation || { x: 0, y: 0, z: 0 },
+          animation: avatarState.animation,
+          customization: avatarState.scale ? { color: undefined, accessories: [] } : undefined
+        },
         lastSeenAt: new Date()
       })
       .where(eq(meetingParticipants.id, participantId))

@@ -38,7 +38,8 @@ export class StorageController {
 
       return reply.send(result);
     } catch (error) {
-      return reply.code(500).send({ error: 'Upload failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'Upload failed', message: err.message });
     }
   }
 
@@ -54,7 +55,8 @@ export class StorageController {
       reply.header('Content-Disposition', `attachment; filename="${path}"`);
       return reply.type('application/octet-stream').send(stream);
     } catch (error) {
-      return reply.code(404).send({ error: 'File not found', message: error.message });
+      const err = error as Error;
+      return reply.code(404).send({ error: 'File not found', message: err.message });
     }
   }
 
@@ -64,7 +66,8 @@ export class StorageController {
       const files = await this.storageService.listFiles(params);
       return reply.send(files);
     } catch (error) {
-      return reply.code(500).send({ error: 'List failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'List failed', message: err.message });
     }
   }
 
@@ -74,7 +77,8 @@ export class StorageController {
       await this.storageService.deleteFile(path);
       return reply.send({ success: true });
     } catch (error) {
-      return reply.code(500).send({ error: 'Delete failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'Delete failed', message: err.message });
     }
   }
 
@@ -84,7 +88,8 @@ export class StorageController {
       await this.storageService.deleteFiles(paths);
       return reply.send({ success: true, deleted: paths.length });
     } catch (error) {
-      return reply.code(500).send({ error: 'Batch delete failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'Batch delete failed', message: err.message });
     }
   }
 
@@ -95,7 +100,8 @@ export class StorageController {
       const url = await this.storageService.getFileUrl(path, expiresIn);
       return reply.send({ url });
     } catch (error) {
-      return reply.code(500).send({ error: 'URL generation failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'URL generation failed', message: err.message });
     }
   }
 
@@ -105,7 +111,8 @@ export class StorageController {
       const metadata = await this.storageService.getFileMetadata(path);
       return reply.send(metadata);
     } catch (error) {
-      return reply.code(404).send({ error: 'File not found', message: error.message });
+      const err = error as Error;
+      return reply.code(404).send({ error: 'File not found', message: err.message });
     }
   }
 
@@ -115,7 +122,8 @@ export class StorageController {
       const versions = await this.storageService.getFileVersions(path);
       return reply.send(versions);
     } catch (error) {
-      return reply.code(500).send({ error: 'Version list failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'Version list failed', message: err.message });
     }
   }
 
@@ -125,7 +133,8 @@ export class StorageController {
       await this.storageService.restoreFileVersion(path, versionId);
       return reply.send({ success: true });
     } catch (error) {
-      return reply.code(500).send({ error: 'Restore failed', message: error.message });
+      const err = error as Error;
+      return reply.code(500).send({ error: 'Restore failed', message: err.message });
     }
   }
 }

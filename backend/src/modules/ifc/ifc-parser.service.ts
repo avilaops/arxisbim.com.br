@@ -320,11 +320,11 @@ export class IfcParserService {
    * Parse IFC file from disk
    */
   async parseFile(filePath: string): Promise<{
-    version: ReturnType<typeof this.detectIfcVersion>;
-    elements: ReturnType<typeof this.extractElements>;
-    entities: ReturnType<typeof this.countEntities>;
-    hierarchy: ReturnType<typeof this.extractHierarchy>;
-    complexity: ReturnType<typeof this.analyzeComplexity>;
+    version: Awaited<ReturnType<IfcParserService['detectIfcVersion']>>;
+    elements: Awaited<ReturnType<IfcParserService['extractElements']>>;
+    entities: Awaited<ReturnType<IfcParserService['countEntities']>>;
+    hierarchy: Awaited<ReturnType<IfcParserService['extractHierarchy']>>;
+    complexity: Awaited<ReturnType<IfcParserService['analyzeComplexity']>>;
     guids: string[];
   }> {
     const content = await fs.readFile(filePath, 'utf-8');

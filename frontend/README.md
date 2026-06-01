@@ -262,11 +262,15 @@ npm run format:check
 
 ## Desenvolvimento
 
-### Adicionar Novo Serviço
+### Adicionar Novo Módulo/Serviço
 
-1. Criar diretório em `src/services/NomeServico/`
-2. Implementar classe com singleton pattern
-3. Criar `index.ts` com barrel export
+1. **Backend:** Criar em `backend/src/modules/NomeModulo/`
+   - `nome-modulo.service.ts` - Lógica de negócio
+   - `nome-modulo.controller.ts` - Handlers de requisição
+   - `nome-modulo.routes.ts` - Definição de rotas
+   - `index.ts` - Barrel export
+2. **Frontend:** Criar em `frontend/src/api/v1/services/NomeServico/`
+3. Implementar classe com singleton pattern
 4. Adicionar testes em `NomeServico.test.ts`
 5. Documentar no `Docs/XX- NomeServico.md`
 

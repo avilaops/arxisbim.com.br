@@ -123,9 +123,9 @@ export async function notificationsRoutes(fastify: FastifyInstance) {
   // =====================================
   // PUT /:id/read - Marcar como lida
   // =====================================
-  fastify.put('/:id/read', {
+  fastify.put<{ Params: { id: string } }>('/:id/read', {
     preHandler: authenticateRequest,
-  }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const user = request.user!;
     const { id } = request.params;
 
@@ -188,9 +188,9 @@ export async function notificationsRoutes(fastify: FastifyInstance) {
   // =====================================
   // DELETE /:id - Deletar notificação
   // =====================================
-  fastify.delete('/:id', {
+  fastify.delete<{ Params: { id: string } }>('/:id', {
     preHandler: authenticateRequest,
-  }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  }, async (request, reply) => {
     const user = request.user!;
     const { id } = request.params;
 

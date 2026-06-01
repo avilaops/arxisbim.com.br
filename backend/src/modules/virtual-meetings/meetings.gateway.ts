@@ -228,8 +228,8 @@ export class MeetingsGateway {
             userId: action.userId,
             actionType: action.actionType,
             actionData: action.actionData,
-            targetElementId: action.targetElementId,
-            timestamp: action.timestamp
+            targetElementId: action.actionData?.targetElementId,
+            timestamp: action.createdAt
           });
         } catch (error) {
           console.error('Error creating action:', error);

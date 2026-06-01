@@ -246,7 +246,7 @@ export class FederationAnalyticsService {
     });
 
     const missingDisciplines = Array.from(availableDisciplines)
-      .filter(disc => !coveredDisciplines.has(disc));
+      .filter(disc => disc !== null && !coveredDisciplines.has(disc));
 
     return {
       totalDisciplines: availableDisciplines.size,

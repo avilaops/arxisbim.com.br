@@ -315,9 +315,9 @@ class TenantService {
     if (!response.ok) throw new Error('Failed to delete company');
   }
 
-  // Projects
-  async getProjects(tenantId: string): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/tenants/${tenantId}/projects`, {
+  // Projects - Using new backend API (tenant-scoped via JWT)
+  async getProjects(): Promise<Project[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects`, {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch projects');
@@ -325,11 +325,9 @@ class TenantService {
   }
 
   async getCompanyProjects(companyId: string): Promise<Project[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/companies/${companyId}/projects`, {
-      headers: this.getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error('Failed to fetch company projects');
-    return response.json();
+    // Filter projects by companyId on frontend since backend returns all tenant projects
+    const allProjects = await this.getProjects();
+    return allProjects.filter(p => p.companyId === companyId);
   }
 
   async getProject(projectId: string): Promise<Project> {
@@ -350,10 +348,15 @@ class TenantService {
       coordinates?: { lat: number; lng: number };
     };
   }): Promise<Project> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/tenants/${tenantId}/companies/${companyId}/projects`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        companyId,
+        name: data.name,
+        description: data.description,
+        location: data.location
+      }),
     });
     if (!response.ok) throw new Error('Failed to create project');
     return response.json();
