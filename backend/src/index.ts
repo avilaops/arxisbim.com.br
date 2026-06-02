@@ -11,6 +11,7 @@ import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { authRoutes } from './core/auth/auth.routes.js';
 import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
@@ -71,6 +72,42 @@ const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BI
 
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function runMigrations() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS _migrations (
+      id SERIAL PRIMARY KEY,
+      filename VARCHAR(255) UNIQUE NOT NULL,
+      applied_at TIMESTAMP DEFAULT NOW() NOT NULL
+    )
+  `;
+
+  const migrationsDir = path.join(__dirname, '../../migrations');
+  if (!fs.existsSync(migrationsDir)) return;
+
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
+  const applied = await sql<{ filename: string }[]>`SELECT filename FROM _migrations`;
+  const appliedSet = new Set(applied.map(r => r.filename));
+
+  for (const file of files) {
+    if (appliedSet.has(file)) continue;
+    const sqlContent = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    try {
+      await sql.unsafe(sqlContent);
+      await sql`INSERT INTO _migrations (filename) VALUES (${file})`;
+      console.log(`✅ Migration applied: ${file}`);
+    } catch (err) {
+      console.error(`❌ Migration failed: ${file}`, err);
+      throw err;
+    }
+  }
+}
 
 async function checkDatabaseConnection() {
   try {
@@ -200,8 +237,6 @@ await server.register(fastifyRawBody, {
 } as any);
 
 // Serve static files from frontend
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
 await server.register(staticFiles, {
@@ -455,6 +490,8 @@ signals.forEach((signal: NodeJS.Signals) => {
 // =====================================
 
 try {
+  await runMigrations();
+
   await server.listen({ port: PORT, host: HOST });
 
   // Initialize billing retry worker
