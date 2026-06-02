@@ -20,6 +20,7 @@ import { AvatarSystem } from '../features/virtual-meetings/avatar/AvatarSystem';
 import { IFCUploadManager } from '../systems/model/IFCUploadManager';
 import IFCSimpleLoader from './loaders/IFCSimpleLoader';
 import GLBLoader from './loaders/GLBLoader';
+import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 
 
 /**
@@ -43,6 +44,7 @@ export class ViewerHost {
   public backgroundManager!: BackgroundManager;
   public clippingGeometry!: ClippingGeometry;
   public ifcUploadManager!: IFCUploadManager;
+  public postProcess!: PostProcessingPipeline;
   private clock!: THREE.Clock;
 
   /**
@@ -261,11 +263,16 @@ export class ViewerHost {
       this.initWebRTC(signalingServer);
     }
 
-    // Background Manager - Fundos profissionais para BIM
-    // Carrega preset salvo ou usa padrão corporativo claro para revisão/apresentação
+    // Post-processing pipeline AAA (SSAO + Bloom + SMAA + Vignette + Film Grain)
+    const savedQuality = (localStorage.getItem('arxis:renderQuality') as PostProcessQuality) || 'high';
+    this.postProcess = new PostProcessingPipeline(this.renderer, this.scene, this.camera, savedQuality);
+    (window as any).__postProcess = this.postProcess;
+    console.log(`✨ PostProcessingPipeline ativo [${savedQuality}]`);
+
+    // Background Manager - usa renderer para physical sky
     const savedPreset = localStorage.getItem('arxis:backgroundPreset');
-    const defaultBackground = savedPreset || import.meta.env.VITE_DEFAULT_BACKGROUND || 'HORIZON';
-    this.backgroundManager = new BackgroundManager(this.scene, this.camera, defaultBackground);
+    const defaultBackground = savedPreset || import.meta.env.VITE_DEFAULT_BACKGROUND || 'SKY_NOON';
+    this.backgroundManager = new BackgroundManager(this.scene, this.camera, defaultBackground, this.renderer);
     
     // Garantir que o grid é visível após criação (fix para sidebar iniciar fechada)
     setTimeout(() => {
@@ -420,7 +427,12 @@ export class ViewerHost {
       // Atualizar avatars (animações)
       this.avatarSystem.update(time);
 
-      this.renderer.render(this.scene, this.camera);
+      // Post-processing pipeline (SSAO + Bloom + SMAA + Vignette)
+      if (this.postProcess) {
+        this.postProcess.render();
+      } else {
+        this.renderer.render(this.scene, this.camera);
+      }
     };
 
     animate();
@@ -555,6 +567,7 @@ export class ViewerHost {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize(width, height);
+    this.postProcess?.setSize(width, height);
   }
 
   private getSafeViewportSize(): { width: number; height: number; usedFallback: boolean } {

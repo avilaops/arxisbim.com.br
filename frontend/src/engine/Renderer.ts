@@ -1,81 +1,98 @@
 import * as THREE from 'three';
+import { PostProcessingPipeline, PostProcessQuality } from './PostProcessingPipeline.js';
 
 /**
- * Renderer otimizado com configurações de alta performance
- * Superior ao Unity WebGL em termos de otimização e controle
+ * Renderer com pipeline de post-processing AAA
+ * SSAO + Unreal Bloom + SMAA + Film Grain + Vignette
  */
 export class Renderer {
-  public renderer: THREE.WebGLRenderer;
-  public domElement: HTMLElement;
+  public renderer:    THREE.WebGLRenderer;
+  public domElement:  HTMLElement;
+  private postProcess: PostProcessingPipeline | null = null;
 
   constructor() {
-    // Configuração de renderização de alta qualidade
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true, // Anti-aliasing para qualidade visual
-      powerPreference: 'high-performance', // Força uso de GPU dedicada
-      alpha: false, // Não precisamos de transparência no canvas
-      stencil: false, // Desativa stencil buffer se não usado
-      depth: true, // Buffer de profundidade essencial
-      logarithmicDepthBuffer: false, // Desativado para performance
-      precision: 'highp' // Precisão alta para cálculos
+      antialias: false,           // SMAA é melhor — desligar MSAA nativo
+      powerPreference: 'high-performance',
+      alpha: false,
+      stencil: true,              // SSAOPass precisa de stencil
+      depth: true,
+      logarithmicDepthBuffer: false,
+      precision: 'highp',
     });
 
-    // Configurações de renderização
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a 2x para performance
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Tone mapping para realismo (similar a engines modernas)
+    // HDR pipeline — tone mapping aplicado pelo OutputPass do composer
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 0.46;
 
-    // Sombras de alta qualidade
+    // Sombras
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras suaves
+    this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 
-    // Color management moderno
+    // Color space correto
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.sortObjects = true;
 
-    // Otimizações
-    this.renderer.sortObjects = true; // Ordena objetos para melhor culling
-    
-    // Adiciona ao DOM
     this.domElement = this.renderer.domElement;
     const container = document.getElementById('canvas-container');
-    if (container) {
-      container.appendChild(this.domElement);
-    }
+    if (container) container.appendChild(this.domElement);
 
-    // Event listener para resize
     window.addEventListener('resize', this.onWindowResize.bind(this));
-
-    // Configura pointer lock para controles FPS
     this.setupPointerLock();
+  }
+
+  /**
+   * Inicializa o post-processing pipeline.
+   * Deve ser chamado APÓS a cena e câmera estarem prontas.
+   */
+  public initPostProcessing(
+    scene:   THREE.Scene,
+    camera:  THREE.PerspectiveCamera,
+    quality: PostProcessQuality = 'high',
+  ): void {
+    if (this.postProcess) {
+      this.postProcess.dispose();
+    }
+    this.postProcess = new PostProcessingPipeline(this.renderer, scene, camera, quality);
+    console.log(`✨ Post-processing pipeline ativo [${quality}]`);
   }
 
   private setupPointerLock(): void {
     this.domElement.addEventListener('click', () => {
       this.domElement.requestPointerLock();
     });
-
     document.addEventListener('pointerlockchange', () => {
       if (document.pointerLockElement === this.domElement) {
-        console.log('🎮 Pointer lock ativado - Controles FPS ativos');
+        console.log('🎮 Pointer lock ativado');
       }
     });
   }
 
   private onWindowResize(): void {
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-  public render(scene: THREE.Scene, camera: THREE.Camera): void {
-    this.renderer.render(scene, camera);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.renderer.setSize(w, h);
+    this.postProcess?.setSize(w, h);
   }
 
   /**
-   * Atualiza configurações de qualidade para otimização dinâmica
+   * Renderiza a cena — usa post-processing se disponível
    */
-  public setQuality(quality: 'low' | 'medium' | 'high' | 'ultra'): void {
+  public render(scene: THREE.Scene, camera: THREE.Camera): void {
+    if (this.postProcess) {
+      this.postProcess.render();
+    } else {
+      this.renderer.render(scene, camera);
+    }
+  }
+
+  /**
+   * Troca preset de qualidade (low / medium / high / ultra)
+   */
+  public setQuality(quality: PostProcessQuality): void {
     switch (quality) {
       case 'low':
         this.renderer.setPixelRatio(1);
@@ -97,10 +114,17 @@ export class Renderer {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         break;
     }
+    this.postProcess?.setQuality(quality);
+  }
+
+  /** Acesso direto ao pipeline para ajustes em runtime */
+  public getPostProcess(): PostProcessingPipeline | null {
+    return this.postProcess;
   }
 
   public dispose(): void {
     window.removeEventListener('resize', this.onWindowResize.bind(this));
+    this.postProcess?.dispose();
     this.renderer.dispose();
     if (this.domElement.parentElement) {
       this.domElement.parentElement.removeChild(this.domElement);
