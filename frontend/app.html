@@ -821,6 +821,370 @@
     .sb-right { margin-left: auto; display: flex; }
     .statusbar .sb-item span { color: var(--text-secondary); }
 
+    /* ========== WELCOME OVERLAY ========== */
+    .welcome-overlay {
+      position: absolute;
+      top: var(--topbar-height);
+      left: 0; right: 0;
+      bottom: var(--statusbar-height);
+      z-index: 15;
+      display: flex;
+      align-items: stretch;
+      pointer-events: auto;
+      overflow: hidden;
+      background: var(--bg-app);
+    }
+    .welcome-overlay.hidden { display: none; }
+
+    .welcome-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 40px 48px 32px;
+      overflow-y: auto;
+    }
+
+    .welcome-greeting {
+      margin-bottom: 36px;
+    }
+
+    .welcome-greeting__sup {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .welcome-greeting__title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .welcome-greeting__sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .welcome-quickactions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+
+    .qa-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .qa-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .qa-card__icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .qa-card__icon.blue  { background: rgba(37,99,235,0.15); }
+    .qa-card__icon.purple { background: rgba(124,58,237,0.15); }
+    .qa-card__icon.green  { background: rgba(16,185,129,0.15); }
+    .qa-card__text strong { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .qa-card__text span   { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── Section label ── */
+    .welcome-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .welcome-section-label a {
+      font-weight: 500;
+      color: var(--accent-blue-l);
+      text-decoration: none;
+      font-size: 11px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* ── Project Cards ── */
+    .project-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .project-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .project-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .project-card__thumb {
+      height: 130px;
+      background: linear-gradient(135deg, #161c26 0%, #1a2333 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .project-card__thumb-icon {
+      font-size: 48px;
+      opacity: 0.25;
+    }
+    .project-card__thumb-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .project-card__thumb-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: rgba(17,24,39,0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent-blue-l);
+      backdrop-filter: blur(8px);
+    }
+    .project-card__thumb-status {
+      position: absolute;
+      bottom: 10px; left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .project-card__thumb-status .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .project-card__body {
+      padding: 14px 16px 16px;
+    }
+    .project-card__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .project-card__meta {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .project-card__meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .project-card__progress {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .project-card__progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 2px;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+    .project-card__footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .project-card__avatars {
+      display: flex;
+    }
+    .project-card__avatar {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--bg-card);
+      margin-left: -6px;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .project-card__avatars :first-child { margin-left: 0; }
+
+    /* ── AI Panel (welcome) ── */
+    .welcome-ai {
+      width: 300px;
+      flex-shrink: 0;
+      background: rgba(17,24,39,0.6);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(24px);
+    }
+    .welcome-ai__header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .welcome-ai__orb {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 16px rgba(124,58,237,0.4);
+      animation: orb-breathe 3s ease-in-out infinite;
+    }
+    @keyframes orb-breathe {
+      0%,100% { box-shadow: 0 0 16px rgba(124,58,237,0.4); }
+      50%      { box-shadow: 0 0 28px rgba(124,58,237,0.65); }
+    }
+    .welcome-ai__header-text strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .welcome-ai__header-text span {
+      font-size: 11px;
+      color: var(--accent-purple-light);
+    }
+    .welcome-ai__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+    .ai-suggestion-group {
+      margin-bottom: 20px;
+    }
+    .ai-suggestion-group__label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .ai-chip {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-chip:hover {
+      background: rgba(124,58,237,0.1);
+      border-color: rgba(124,58,237,0.25);
+      color: var(--text-primary);
+    }
+    .ai-chip .icon { font-size: 14px; flex-shrink: 0; }
+
+    .ai-context-card {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .ai-context-card__title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-purple-light);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-context-card__text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .welcome-ai__input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-color);
+    }
+    .welcome-ai__input {
+      width: 100%;
+      padding: 9px 38px 9px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      transition: var(--transition);
+    }
+    .welcome-ai__input:focus {
+      border-color: rgba(124,58,237,0.4);
+      background: rgba(255,255,255,0.07);
+    }
+    .welcome-ai__input::placeholder { color: var(--text-muted); }
+
     /* camera-mode-button dark */
     .camera-mode-button.active {
       background: var(--accent-blue) !important;
@@ -977,9 +1341,16 @@
 
       /* Push canvas up when bottom nav present */
       .canvas-area {
-        bottom: 56px;
-        height: calc(100vh - var(--topbar-height) - 56px);
+        bottom: 64px;
+        height: calc(100vh - var(--topbar-height) - 64px);
       }
+
+      /* Welcome overlay mobile */
+      .welcome-ai { display: none; }
+      .welcome-main { padding: 20px 16px 100px; }
+      .welcome-quickactions { grid-template-columns: 1fr; }
+      .welcome-greeting__title { font-size: 22px; }
+      .project-cards { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1054,6 +1425,86 @@
     <main class="canvas-area" id="viewer-canvas">
       <!-- ViewerHost será montado aqui -->
     </main>
+
+    <!-- Welcome Overlay (shown when no model is loaded) -->
+    <div class="welcome-overlay" id="welcome-overlay">
+      <div class="welcome-main">
+        <div class="welcome-greeting">
+          <div class="welcome-greeting__sup">ArxisVR · Plataforma BIM</div>
+          <div class="welcome-greeting__title">Olá, <span id="welcome-username">Nicolas</span> 👋</div>
+          <div class="welcome-greeting__sub">Continue de onde parou ou inicie um novo projeto.</div>
+        </div>
+
+        <div class="welcome-quickactions">
+          <div class="qa-card" data-action="upload-ifc">
+            <div class="qa-card__icon blue">📂</div>
+            <div class="qa-card__text">
+              <strong>Abrir IFC</strong>
+              <span>Carregue um modelo local ou da nuvem</span>
+            </div>
+          </div>
+          <div class="qa-card" id="qa-import">
+            <div class="qa-card__icon purple">☁️</div>
+            <div class="qa-card__text">
+              <strong>Importar projeto</strong>
+              <span>Conecte ao repositório BIM da equipe</span>
+            </div>
+          </div>
+          <div class="qa-card" id="qa-last">
+            <div class="qa-card__icon green">▶️</div>
+            <div class="qa-card__text">
+              <strong>Continuar último</strong>
+              <span id="qa-last-name">Nenhum projeto recente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-section-label">
+          Projetos recentes
+          <a href="#">Ver todos →</a>
+        </div>
+
+        <div class="project-cards" id="welcome-project-cards">
+          <!-- cards preenchidos via JS -->
+        </div>
+      </div>
+
+      <!-- AI Side Panel -->
+      <div class="welcome-ai">
+        <div class="welcome-ai__header">
+          <div class="welcome-ai__orb">🤖</div>
+          <div class="welcome-ai__header-text">
+            <strong>Arxis AI</strong>
+            <span>Pronto para ajudar</span>
+          </div>
+        </div>
+        <div class="welcome-ai__body">
+          <div class="ai-context-card">
+            <div class="ai-context-card__title">💡 Contexto detectado</div>
+            <div class="ai-context-card__text">Você tem modelos IFC disponíveis. Posso analisar conflitos, gerar relatórios ou criar cortes automáticos assim que abrir um.</div>
+          </div>
+
+          <div class="ai-suggestion-group">
+            <div class="ai-suggestion-group__label">Ações rápidas</div>
+            <button class="ai-chip" data-action="upload-ifc"><span class="icon">📁</span>Abrir modelo IFC</button>
+            <button class="ai-chip"><span class="icon">⚡</span>Encontrar conflitos</button>
+            <button class="ai-chip"><span class="icon">📊</span>Gerar relatório BIM</button>
+            <button class="ai-chip"><span class="icon">📐</span>Criar corte automático</button>
+            <button class="ai-chip"><span class="icon">🔢</span>Extrair quantitativos</button>
+          </div>
+
+          <div class="ai-suggestion-group">
+            <div class="ai-suggestion-group__label">Perguntar sobre BIM</div>
+            <button class="ai-chip"><span class="icon">🏗️</span>O que é IFC4?</button>
+            <button class="ai-chip"><span class="icon">🌐</span>Calcular área de pavimento</button>
+            <button class="ai-chip"><span class="icon">📋</span>Exportar para Navisworks</button>
+          </div>
+        </div>
+        <div class="welcome-ai__input-area">
+          <textarea class="welcome-ai__input" rows="2" placeholder="Pergunte à Arxis AI…"></textarea>
+        </div>
+      </div>
+    </div>
 
     <!-- Overlay Workspace (Top layer for floating elements) -->
     <div class="overlay-workspace">
@@ -1279,7 +1730,7 @@
   </div>
 
   <!-- Mobile Bottom Nav -->
-  <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" style="height:64px;align-items:flex-end;padding-bottom:10px;">
     <div class="mobile-nav-item active" data-mobile-view="viewer">
       <span class="mobile-nav-ico">🏗️</span>
       <span class="mobile-nav-lbl">Modelos</span>
@@ -1288,9 +1739,10 @@
       <span class="mobile-nav-ico">📐</span>
       <span class="mobile-nav-lbl">Ferramentas</span>
     </div>
-    <div class="mobile-nav-item ai-item" data-mobile-view="ai">
-      <div class="mobile-nav-ico-wrap">🤖</div>
-      <span class="mobile-nav-lbl">IA</span>
+    <!-- AI button — elevated center -->
+    <div class="mobile-nav-item ai-item" data-mobile-view="ai" style="position:relative;top:-14px;">
+      <div class="mobile-nav-ico-wrap" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4F46E5,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 22px rgba(124,58,237,0.55),0 0 0 3px rgba(17,24,39,1);border:2px solid rgba(139,92,246,0.4);">🤖</div>
+      <span class="mobile-nav-lbl" style="color:var(--accent-purple-light);margin-top:4px;">IA</span>
     </div>
     <div class="mobile-nav-item" data-mobile-view="clashes">
       <span class="mobile-nav-ico">⚡</span>
@@ -1435,6 +1887,125 @@
     }
     _applyMobileLayout();
     window.addEventListener('resize', _applyMobileLayout);
+  </script>
+
+  <!-- Welcome Overlay JS -->
+  <script>
+  (function() {
+    // Sample recent projects — in production these come from API/localStorage
+    const SAMPLE_PROJECTS = [
+      {
+        name: 'Hospital São Lucas',
+        type: 'IFC4',
+        icon: '🏥',
+        elements: 2847,
+        collaborators: [
+          { initial: 'N', color: '#2563EB' },
+          { initial: 'A', color: '#7C3AED' },
+          { initial: 'M', color: '#059669' },
+        ],
+        progress: 82,
+        lastEdit: 'Hoje, 15:41',
+        status: 'active',
+      },
+      {
+        name: 'Edifício Comercial Alpha',
+        type: 'IFC2x3',
+        icon: '🏢',
+        elements: 1203,
+        collaborators: [
+          { initial: 'N', color: '#2563EB' },
+          { initial: 'R', color: '#D97706' },
+        ],
+        progress: 45,
+        lastEdit: 'Ontem',
+        status: null,
+      },
+      {
+        name: 'Infraestrutura Hidráulica',
+        type: 'IFC4',
+        icon: '🔧',
+        elements: 634,
+        collaborators: [
+          { initial: 'N', color: '#2563EB' },
+        ],
+        progress: 18,
+        lastEdit: '3 dias atrás',
+        status: null,
+      },
+    ];
+
+    function renderProjectCards(projects) {
+      const container = document.getElementById('welcome-project-cards');
+      if (!container) return;
+      container.innerHTML = projects.map(p => {
+        const avatars = p.collaborators.map(c =>
+          `<div class="project-card__avatar" style="background:${c.color}">${c.initial}</div>`
+        ).join('');
+        const statusDot = p.status === 'active'
+          ? `<span class="dot"></span>Ativo` : '';
+        return `
+          <div class="project-card" data-project="${p.name}">
+            <div class="project-card__thumb">
+              <div class="project-card__thumb-grid"></div>
+              <div class="project-card__thumb-icon">${p.icon}</div>
+              <div class="project-card__thumb-badge">${p.type}</div>
+              ${statusDot ? `<div class="project-card__thumb-status">${statusDot}</div>` : ''}
+            </div>
+            <div class="project-card__body">
+              <div class="project-card__name">${p.name}</div>
+              <div class="project-card__meta">
+                <span class="project-card__meta-item">📦 ${p.elements.toLocaleString()} elementos</span>
+                <span class="project-card__meta-item">👥 ${p.collaborators.length}</span>
+              </div>
+              <div class="project-card__progress">
+                <div class="project-card__progress-bar" style="width:${p.progress}%"></div>
+              </div>
+              <div class="project-card__footer">
+                <span>${p.lastEdit}</span>
+                <div class="project-card__avatars">${avatars}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Update "continue last"
+      if (projects[0]) {
+        const el = document.getElementById('qa-last-name');
+        if (el) el.textContent = projects[0].name;
+      }
+    }
+
+    function initWelcome() {
+      renderProjectCards(SAMPLE_PROJECTS);
+
+      // Try to get username from localStorage / JWT
+      try {
+        const token = localStorage.getItem('arxisvr_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const name = payload.name || payload.email?.split('@')[0] || 'você';
+          const el = document.getElementById('welcome-username');
+          if (el) el.textContent = name.split(' ')[0];
+        }
+      } catch(_) {}
+
+      // Hide welcome when a model loads
+      window.ArxisWelcome = {
+        hide() {
+          const ov = document.getElementById('welcome-overlay');
+          if (ov) { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.4s'; setTimeout(() => ov.classList.add('hidden'), 400); }
+        },
+        show() {
+          const ov = document.getElementById('welcome-overlay');
+          if (ov) { ov.classList.remove('hidden'); requestAnimationFrame(() => { ov.style.opacity = '1'; }); }
+        }
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', initWelcome);
+  })();
   </script>
 
   <!-- Entry Point -->
