@@ -62,6 +62,8 @@ export class AdaptiveQualityManager {
   private fps:          number = 60;
   private frameCount:   number = 0;
   private lastCheck:    number = performance.now();
+  private startTime:    number = performance.now();
+  private warmupMs:     number = 8000;  // 8s warmup — ignora frames lentos de init
   private stableFrames: number = 0;
   private currentQualityIdx: number = 1; // começa em 'high'
   private currentPixelRatio:  number;
@@ -122,8 +124,11 @@ export class AdaptiveQualityManager {
 
     this.frameCount++;
     const now = performance.now();
-    const elapsed = now - this.lastCheck;
 
+    // Warmup: não avaliar durante os primeiros segundos (PMREM, CSM setup)
+    if (now - this.startTime < this.warmupMs) return;
+
+    const elapsed = now - this.lastCheck;
     if (elapsed < this.config.checkInterval) return;
 
     // Calcular FPS médio no intervalo
