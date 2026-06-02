@@ -1238,9 +1238,26 @@
         padding: 0 12px;
         height: var(--topbar-height);
       }
-      .header__nav { display: none; }
+      .header__nav { display: none !important; }
       .header__breadcrumb { display: none; }
       .header__logo { font-size: 14px; }
+
+      /* Hide React-injected header buttons on mobile */
+      .header__actions > *:not(#btn-arxis-ai):not(.header__avatar):not(#auth-button-container) {
+        display: none !important;
+      }
+      /* Compress header actions */
+      .header__actions { gap: 6px; }
+
+      /* Welcome overlay mobile: single column, scrollable */
+      .welcome-overlay {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .welcome-main {
+        flex: none;
+        overflow-y: visible;
+      }
 
       /* Desktop panels → hidden by default on mobile */
       .sidebar,
