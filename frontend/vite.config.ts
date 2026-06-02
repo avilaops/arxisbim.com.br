@@ -1,11 +1,83 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   root: __dirname,
   publicDir: 'public',
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      // Gerar SW apenas no build de produção (não interfere no dev)
+      devOptions: { enabled: false },
+      workbox: {
+        // Cache máximo de 7 dias para assets estáticos
+        // Chunks com hash no nome = imutáveis = cache forever
+        globPatterns: ['**/*.{js,css,wasm,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          // ── Chunks JS/WASM — cache-first (hash garante imutabilidade) ───────
+          {
+            urlPattern: /\/assets\/.*\.(js|wasm)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'arxisvr-assets-v1',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 dias
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // ── web-ifc WASM — separado, maior TTL ──────────────────────────────
+          {
+            urlPattern: /web-ifc.*\.(wasm|js)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'arxisvr-wasm-v1',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 60 }, // 60 dias
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // ── Fontes externas ──────────────────────────────────────────────────
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'arxisvr-fonts-v1',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // ── HTML — network-first (sempre pega versão mais nova) ─────────────
+          {
+            urlPattern: /\.(html)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'arxisvr-html-v1',
+              expiration: { maxAgeSeconds: 60 * 60 }, // 1 hora fallback
+              networkTimeoutSeconds: 3,
+            },
+          },
+        ],
+        // Não pré-cachear o web-ifc WASM no install (muito grande — lazy ok)
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limite por arquivo
+        skipWaiting: true,
+        clientsClaim: true,
+      },
+      manifest: {
+        name: 'ArxisVR — Plataforma BIM',
+        short_name: 'ArxisVR',
+        description: 'BIM com Copilot de IA e Realidade Estendida no navegador',
+        theme_color: '#0D1117',
+        background_color: '#0D1117',
+        display: 'standalone',
+        start_url: '/app.html',
+        icons: [
+          { src: '/logo.svg', sizes: 'any', type: 'image/svg+xml' },
+        ],
+      },
+    }),
+  ],
   resolve: {
     // Array form para permitir alias por regex (o shim do BufferGeometryUtils).
     alias: [

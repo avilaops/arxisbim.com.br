@@ -20,6 +20,7 @@ import { AvatarSystem } from '../features/virtual-meetings/avatar/AvatarSystem';
 import { IFCUploadManager } from '../systems/model/IFCUploadManager';
 import IFCSimpleLoader from './loaders/IFCSimpleLoader';
 import GLBLoader from './loaders/GLBLoader';
+import { ifcModelCache } from '../systems/model/IFCModelCache.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
 import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
@@ -96,8 +97,31 @@ export class ViewerHost {
       let loader;
       let model: THREE.Object3D | null = null;
       if (type === 'ifc') {
-        loader = new IFCSimpleLoader();
-        model = await loader.load(file);
+        // ── IFC cache: evitar re-processar o mesmo arquivo ────────────────────
+        if (file instanceof File) {
+          const buffer = await file.arrayBuffer();
+          const hash   = await ifcModelCache.hash(buffer);
+          const cached = await ifcModelCache.get(hash);
+
+          if (cached) {
+            // Cache hit — pular processamento pesado, usar dados cacheados
+            console.log(`⚡ IFC cache hit: ${file.name} — carregando do IndexedDB`);
+            // Reconstituir File do cache para o loader
+            const cachedFile = new File([cached.data], cached.name, { type: 'application/octet-stream' });
+            loader = new IFCSimpleLoader();
+            model  = await loader.load(cachedFile);
+          } else {
+            // Cache miss — processar normalmente e salvar
+            loader = new IFCSimpleLoader();
+            model  = await loader.load(file);
+            // Salvar no cache em background (não bloqueia)
+            ifcModelCache.set({ hash, name: file.name, size: buffer.byteLength, data: buffer, cachedAt: Date.now() })
+              .catch(() => {}); // silencioso se cache falhar
+          }
+        } else {
+          loader = new IFCSimpleLoader();
+          model  = await loader.load(file);
+        }
       } else if (type === 'glb') {
         loader = new GLBLoader();
         model = await loader.load(file);
@@ -301,6 +325,12 @@ export class ViewerHost {
     );
     (window as any).__adaptiveQuality = this.adaptiveQuality;
     console.log(`⚡ AdaptiveQuality ativo [${savedMode}]`);
+
+    // Cache de modelos IFC (IndexedDB)
+    (window as any).__ifcCache = ifcModelCache;
+    ifcModelCache.getStats().then(s =>
+      console.log(`💾 IFC cache: ${s.entries} modelos, ${s.totalMB}MB`),
+    );
 
     // ── Background Manager ────────────────────────────────────────────────────
     const savedPreset = localStorage.getItem('arxis:backgroundPreset');
