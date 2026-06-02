@@ -6,16 +6,26 @@
 import * as THREE from 'three';
 import { BACKGROUND_PRESETS, BackgroundPreset, getBackgroundPreset } from './BackgroundPresets';
 
+const GRID_MAX_SIZE_METERS = 2000;
+const GRID_MIN_SIZE_METERS = 10;
+
+interface GridRuntimeConfig {
+  enabled: boolean;
+  size: number;
+}
+
 export class BackgroundManager {
   private scene: THREE.Scene;
   private camera: THREE.Camera;
   private currentPreset: BackgroundPreset;
   private gridHelper: THREE.GridHelper | null = null;
   private fog: THREE.Fog | null = null;
+  private gridRuntime: GridRuntimeConfig;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera, presetId: string = 'HORIZON') {
     this.scene = scene;
     this.camera = camera;
+    this.gridRuntime = this.resolveGridRuntimeConfig();
     
     console.log('🔵 BackgroundManager constructor called with:', {
       presetId,
@@ -28,9 +38,36 @@ export class BackgroundManager {
     this.applyPreset(preset);
     console.log(`🌄 Background preset applied: ${preset.name}`, {
       gridEnabled: preset.grid?.enabled,
+      gridRuntime: this.gridRuntime,
       sceneChildren: this.scene.children.length,
       sceneChildrenNames: this.scene.children.map(c => c.name || c.type)
     });
+  }
+
+  private parseBoolean(value: string | null | undefined, fallback: boolean): boolean {
+    if (value === null || value === undefined || value === '') return fallback;
+    return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
+  }
+
+  private clampGridSize(size: number): number {
+    return Math.max(GRID_MIN_SIZE_METERS, Math.min(GRID_MAX_SIZE_METERS, size));
+  }
+
+  private resolveGridRuntimeConfig(): GridRuntimeConfig {
+    const envEnabled = this.parseBoolean((import.meta as any).env?.VITE_GRID_ENABLED, false);
+    const savedEnabled = localStorage.getItem('arxis:gridEnabled');
+    const enabled = this.parseBoolean(savedEnabled, envEnabled);
+
+    const envSizeRaw = Number((import.meta as any).env?.VITE_GRID_SIZE);
+    const envSize = Number.isFinite(envSizeRaw) && envSizeRaw > 0 ? envSizeRaw : 1000;
+
+    const savedSizeRaw = Number(localStorage.getItem('arxis:gridSize'));
+    const sizeCandidate = Number.isFinite(savedSizeRaw) && savedSizeRaw > 0 ? savedSizeRaw : envSize;
+
+    return {
+      enabled,
+      size: this.clampGridSize(sizeCandidate)
+    };
   }
 
   /**
@@ -108,12 +145,13 @@ export class BackgroundManager {
       console.log('🗑️ Old grid removed');
     }
 
-    if (preset.grid && preset.grid.enabled) {
+    if (preset.grid && preset.grid.enabled && this.gridRuntime.enabled) {
+      const gridSize = this.clampGridSize(this.gridRuntime.size || preset.grid.size);
       const gridColor = new THREE.Color(preset.grid.color);
       const centerLineColor = gridColor.clone().multiplyScalar(1.2);
 
       this.gridHelper = new THREE.GridHelper(
-        preset.grid.size,
+        gridSize,
         preset.grid.divisions,
         centerLineColor,
         gridColor
@@ -141,7 +179,8 @@ export class BackgroundManager {
       this.gridHelper.updateMatrixWorld(true);
       
       console.log(`✅ Grid configurado:`, {
-        size: preset.grid.size,
+        size: gridSize,
+        maxSize: GRID_MAX_SIZE_METERS,
         divisions: preset.grid.divisions,
         opacity: opacity,
         position: this.gridHelper.position.toArray(),
@@ -150,7 +189,7 @@ export class BackgroundManager {
         inScene: this.scene.getObjectByName('ground-grid') !== undefined
       });
     } else {
-      console.log('ℹ️ Grid desabilitado para este preset');
+      console.log('ℹ️ Grid desabilitado para este preset/runtime');
     }
   }
 
@@ -182,7 +221,7 @@ export class BackgroundManager {
    * Ensure grid is present in scene (fix if missing)
    */
   public ensureGridVisible(): void {
-    if (this.currentPreset.grid?.enabled) {
+    if (this.currentPreset.grid?.enabled && this.gridRuntime.enabled) {
       if (!this.gridHelper || !this.scene.getObjectByName('ground-grid')) {
         console.warn('⚠️ Grid missing from scene. Recreating...');
         this.applyGrid(this.currentPreset);
@@ -200,6 +239,29 @@ export class BackgroundManager {
     if (this.gridHelper && this.gridHelper.material instanceof THREE.Material) {
       this.gridHelper.material.opacity = Math.max(0, Math.min(1, opacity));
     }
+  }
+
+  /**
+   * Runtime grid config (persisted)
+   * size is clamped to [10, 2000] meters.
+   */
+  public setGridConfig(config: Partial<GridRuntimeConfig>): GridRuntimeConfig {
+    if (typeof config.enabled === 'boolean') {
+      this.gridRuntime.enabled = config.enabled;
+      localStorage.setItem('arxis:gridEnabled', String(config.enabled));
+    }
+
+    if (typeof config.size === 'number' && Number.isFinite(config.size)) {
+      this.gridRuntime.size = this.clampGridSize(config.size);
+      localStorage.setItem('arxis:gridSize', String(this.gridRuntime.size));
+    }
+
+    this.applyGrid(this.currentPreset);
+    return { ...this.gridRuntime };
+  }
+
+  public getGridConfig(): GridRuntimeConfig {
+    return { ...this.gridRuntime };
   }
 
   /**

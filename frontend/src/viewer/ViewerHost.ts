@@ -220,11 +220,6 @@ export class ViewerHost {
     // BIM Environment (iluminação profissional BIM/CAD)
     this.bimEnvironment = new BIMEnvironment(this.scene, BIM_PRESET_DEFAULT);
 
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(100, 100);
-    gridHelper.name = 'ground-grid';
-    this.scene.add(gridHelper);
-
     // HDRI Manager (skybox/environment)
     // NOTA: DESABILITADO TEMPORARIAMENTE - conflita com BackgroundManager
     // O HDRIManager sobrescreve scene.background, causando que o gradiente do BackgroundManager desapareça
@@ -305,6 +300,18 @@ export class ViewerHost {
       console.log('🔲 Toggling grid...');
       this.backgroundManager.toggleGrid();
     };
+
+    (window as any).setGridConfig = (config: { enabled?: boolean; size?: number }) => {
+      const applied = this.backgroundManager.setGridConfig(config || {});
+      console.log('🛠️ Grid config applied:', applied, '(max size: 2000m)');
+      return applied;
+    };
+
+    (window as any).getGridConfig = () => {
+      const cfg = this.backgroundManager.getGridConfig();
+      console.log('📐 Grid config:', cfg);
+      return cfg;
+    };
     
     (window as any).debugScene = () => {
       console.log('🔍 Scene Debug:', {
@@ -321,7 +328,7 @@ export class ViewerHost {
       });
     };
     
-    console.log('💡 Debug commands: fixGrid() | toggleGrid() | debugScene()');
+    console.log('💡 Debug commands: fixGrid() | toggleGrid() | setGridConfig({ enabled, size }) | getGridConfig() | debugScene()');
 
     // Resize observer
     this.resizeObserver = new ResizeObserver(() => {

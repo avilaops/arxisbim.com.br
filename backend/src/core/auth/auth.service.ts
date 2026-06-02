@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and, isNull } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { BillingService } from '../../modules/billing/billing.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
@@ -172,6 +173,8 @@ export class AuthService {
           isActive: true,
         })
         .returning();
+
+      await BillingService.initializeTenantFreeTier(tenantSlug);
     }
 
     if (!tenant.isActive) {
@@ -207,6 +210,8 @@ export class AuthService {
         isActive: true,
       })
       .returning();
+
+    await BillingService.initializeTenantFreeTier(tenantSlug);
 
     // Gerar tokens
     const token = this.generateAccessToken({

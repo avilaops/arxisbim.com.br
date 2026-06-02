@@ -19,6 +19,10 @@ export interface HDRIPreset {
   url: string;
   exposure?: number;
   rotation?: number;
+  /** Show HDRI as visible skybox. When false, uses solidBackground color instead. Default true. */
+  showBackground?: boolean;
+  /** Solid background color (used when showBackground=false). */
+  solidBackground?: number;
   fog?: {
     enabled: boolean;
     color: number;
@@ -41,11 +45,13 @@ export interface HDRIConfig {
 export const HDRI_PRESETS: Record<string, HDRIPreset> = {
   neutral: {
     id: 'neutral',
-    name: 'Neutral Studio',
-    description: 'Iluminação neutra e limpa, ideal para análise técnica',
+    name: 'Neutro',
+    description: 'Fundo cinza claro liso com iluminação suave, ideal para análise técnica',
     url: 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_08_2k.hdr',
     exposure: 1.0,
     rotation: 0,
+    showBackground: false,
+    solidBackground: 0xe8eaed,
     fog: {
       enabled: false,
       color: 0xcccccc,
@@ -139,13 +145,20 @@ export class HDRIManager {
 
     console.log(`[HDRIManager] Carregando preset: ${preset.name}`);
     
+    const showBg = preset.showBackground !== false;
+    
     try {
       await this.loadHDRI(preset.url, {
         ...this.config,
         exposure: preset.exposure || this.config.exposure,
         rotation: preset.rotation || this.config.rotation,
+        enableBackground: showBg,
         enableFog: preset.fog?.enabled || false
       });
+      
+      if (!showBg) {
+        this.scene.background = new THREE.Color(preset.solidBackground ?? 0xe8eaed);
+      }
       
       this.currentPreset = preset;
       

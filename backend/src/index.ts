@@ -7,6 +7,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
 import staticFiles from '@fastify/static';
+import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +30,8 @@ import { observabilityRoutes } from './routes/v1/observability/observability.rou
 import { storageRoutes } from './core/storage/storage.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
+import { BillingService } from './modules/billing/billing.service.js';
+import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
 import { scenarioRoutes } from './modules/scenario/api/scenario.routes.js';
 import { budgetsRoutes } from './modules/budgets/budgets.routes.js';
 import { MeetingsGateway } from './modules/virtual-meetings/meetings.gateway.js';
@@ -58,6 +61,9 @@ if (missingVars.length > 0) {
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
+const BILLING_RETRY_WORKER_ENABLED = process.env.BILLING_RETRY_WORKER_ENABLED !== 'false';
+const BILLING_RETRY_INTERVAL_MS = Math.max(15_000, Number(process.env.BILLING_RETRY_INTERVAL_MS || 60_000));
+const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BILLING_RETRY_BATCH_SIZE || 20)));
 
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
@@ -71,6 +77,33 @@ async function checkDatabaseConnection() {
   }
 }
 
+function getWorkerHealth() {
+  const workerStatus = billingRetryWorker.getStatus();
+  const workerHealthy = !workerStatus.enabled || !workerStatus.running || workerStatus.stats.consecutiveFailures < 5;
+
+  return {
+    workerStatus,
+    workerHealthy,
+  };
+}
+
+async function buildHealthPayload() {
+  const dbHealthy = await checkDatabaseConnection();
+  const { workerStatus, workerHealthy } = getWorkerHealth();
+  const status = dbHealthy && workerHealthy ? 'healthy' : 'degraded';
+
+  return {
+    status,
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    services: {
+      database: dbHealthy ? 'up' : 'down',
+      billingRetryWorker: workerHealthy ? 'up' : 'degraded',
+    },
+    worker: workerStatus,
+  };
+}
+
 // Create Fastify instance
 const server = Fastify({
   logger: {
@@ -79,6 +112,48 @@ const server = Fastify({
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,
   trustProxy: true,
+});
+
+const billingRetryWorker = createBillingRetryWorker({
+  enabled: BILLING_RETRY_WORKER_ENABLED,
+  intervalMs: BILLING_RETRY_INTERVAL_MS,
+  batchSize: BILLING_RETRY_BATCH_SIZE,
+  logger: server.log,
+  processDueStripeRetries: (tenantId?: string, limit?: number) =>
+    BillingService.processDueStripeRetries(tenantId, limit),
+  onSweepSuccess: async (result, context) => {
+    await observabilityService.recordMetric('billing.retry_worker.sweeps.total', 1, {
+      outcome: result.failed > 0 ? 'partial_failure' : 'success',
+    });
+
+    await observabilityService.recordMetric('billing.retry_worker.events.processed', result.processed, {
+      outcome: result.failed > 0 ? 'partial_failure' : 'success',
+    });
+
+    await observabilityService.recordMetric('billing.retry_worker.duration_ms', context.durationMs, {
+      outcome: result.failed > 0 ? 'partial_failure' : 'success',
+    });
+  },
+  onSweepError: async (error, context) => {
+    await observabilityService.recordMetric('billing.retry_worker.sweeps.total', 1, {
+      outcome: 'error',
+    });
+
+    await observabilityService.recordMetric('billing.retry_worker.duration_ms', context.durationMs, {
+      outcome: 'error',
+    });
+
+    await observabilityService.logError({
+      tenantId: 'system',
+      errorCode: 'BILLING_RETRY_WORKER_ERROR',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      severity: 'critical',
+      context: {
+        timestamp: context.timestamp,
+        durationMs: context.durationMs,
+      },
+    });
+  },
 });
 
 // =====================================
@@ -111,6 +186,13 @@ await server.register(multipart, {
     fileSize: 100 * 1024 * 1024, // 100MB max file size
     files: 1, // 1 file per request
   },
+} as any);
+
+await server.register(fastifyRawBody, {
+  field: 'rawBody',
+  global: false,
+  encoding: 'utf8',
+  runFirst: true,
 } as any);
 
 // Serve static files from frontend
@@ -260,18 +342,18 @@ server.decorate('authenticate', authenticateRequest);
 // =====================================
 
 server.get('/health', async (_request: FastifyRequest, reply: FastifyReply) => {
-  const dbHealthy = await checkDatabaseConnection();
-  
-  const health = {
-    status: dbHealthy ? 'healthy' : 'degraded',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    services: {
-      database: dbHealthy ? 'up' : 'down',
-    },
-  };
+  const health = await buildHealthPayload();
 
-  return reply.code(dbHealthy ? 200 : 503).send(health);
+  return reply.code(health.status === 'healthy' ? 200 : 503).send(health);
+});
+
+server.get('/health/worker', async (_request: FastifyRequest, reply: FastifyReply) => {
+  const { workerStatus, workerHealthy } = getWorkerHealth();
+  return reply.code(workerHealthy ? 200 : 503).send({
+    status: workerHealthy ? 'healthy' : 'degraded',
+    timestamp: new Date().toISOString(),
+    worker: workerStatus,
+  });
 });
 
 server.get('/health/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -285,18 +367,18 @@ server.get('/health/live', async (_request: FastifyRequest, reply: FastifyReply)
 
 // Health checks versionados para compatibilidade
 server.get('/api/v1/health', async (_request: FastifyRequest, reply: FastifyReply) => {
-  const dbHealthy = await checkDatabaseConnection();
-  
-  const health = {
-    status: dbHealthy ? 'healthy' : 'degraded',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    services: {
-      database: dbHealthy ? 'up' : 'down',
-    },
-  };
+  const health = await buildHealthPayload();
 
-  return reply.code(dbHealthy ? 200 : 503).send(health);
+  return reply.code(health.status === 'healthy' ? 200 : 503).send(health);
+});
+
+server.get('/api/v1/health/worker', async (_request: FastifyRequest, reply: FastifyReply) => {
+  const { workerStatus, workerHealthy } = getWorkerHealth();
+  return reply.code(workerHealthy ? 200 : 503).send({
+    status: workerHealthy ? 'healthy' : 'degraded',
+    timestamp: new Date().toISOString(),
+    worker: workerStatus,
+  });
 });
 
 server.get('/api/v1/health/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -348,6 +430,7 @@ signals.forEach((signal: NodeJS.Signals) => {
     server.log.info(`Received ${signal}, closing server...`);
     
     try {
+      billingRetryWorker.stop();
       await server.close();
       await sql.end();
       server.log.info('Server closed successfully');
@@ -365,6 +448,9 @@ signals.forEach((signal: NodeJS.Signals) => {
 
 try {
   await server.listen({ port: PORT, host: HOST });
+
+  // Initialize billing retry worker
+  billingRetryWorker.start();
   
   // Initialize Email Service
   await emailService.initialize();

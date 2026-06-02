@@ -1,7 +1,7 @@
 import { getAPIClient } from '../client';
 
 export type BillingPlanTier = 'free' | 'starter' | 'professional' | 'enterprise';
-export type BillingStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete';
+export type BillingStatus = 'trialing' | 'active' | 'past_due' | 'grace_period' | 'suspended' | 'canceled' | 'incomplete' | 'unpaid';
 export type BillingCycle = 'monthly' | 'yearly';
 
 export interface BillingPlanLimits {
@@ -74,6 +74,21 @@ export interface CheckoutResponse {
   mode: 'internal_manual' | 'external_provider';
 }
 
+export interface PortalRequest {
+  returnUrl?: string;
+}
+
+export interface PortalResponse {
+  provider: string;
+  portalUrl: string;
+  mode: 'internal_portal' | 'external_provider_portal' | 'no_subscription';
+  returnUrl?: string;
+}
+
+export interface BillingHistoryResponse {
+  invoices: Array<Record<string, any>>;
+}
+
 export class BillingService {
   private readonly endpoint = '/api/v1/billing';
 
@@ -85,16 +100,28 @@ export class BillingService {
 
   async getCurrent(): Promise<CurrentBillingResponse> {
     const client = getAPIClient();
-    const response = await client.get<CurrentBillingResponse>(`${this.endpoint}/current`);
+    const response = await client.get<CurrentBillingResponse>(`${this.endpoint}/current-subscription`);
     return response.data;
   }
 
   async createCheckout(input: CheckoutRequest): Promise<CheckoutResponse> {
     const client = getAPIClient();
-    const response = await client.post<CheckoutResponse>(`${this.endpoint}/checkout`, {
+    const response = await client.post<CheckoutResponse>(`${this.endpoint}/create-checkout`, {
       billingCycle: 'monthly',
       ...input,
     });
+    return response.data;
+  }
+
+  async createPortal(input: PortalRequest = {}): Promise<PortalResponse> {
+    const client = getAPIClient();
+    const response = await client.post<PortalResponse>(`${this.endpoint}/create-portal`, input);
+    return response.data;
+  }
+
+  async getHistory(): Promise<BillingHistoryResponse> {
+    const client = getAPIClient();
+    const response = await client.get<BillingHistoryResponse>(`${this.endpoint}/history`);
     return response.data;
   }
 }

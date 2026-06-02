@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { FederationController } from './federation.controller.js';
 import { FederationService } from './federation.service.js';
-import { authenticateRequest } from '../../core/auth/middleware.js';
+import { authenticateRequest, requireEntitlement } from '../../core/auth/middleware.js';
 
 /**
  * Federation routes - /api/v1/federation
@@ -12,6 +12,7 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 export async function federationRoutes(fastify: FastifyInstance) {
   const federationService = new FederationService();
   const federationController = new FederationController(federationService);
+  const federationAccessPreHandler = [authenticateRequest, requireEntitlement('can_use_integrations')];
 
   /**
    * Create federated model
@@ -52,7 +53,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.create(request, reply),
   });
 
@@ -73,7 +74,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getByProject(request, reply),
   });
 
@@ -94,7 +95,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getStats(request, reply),
   });
 
@@ -115,7 +116,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getById(request, reply),
   });
 
@@ -155,7 +156,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.update(request, reply),
   });
 
@@ -185,7 +186,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.addModel(request, reply),
   });
 
@@ -207,7 +208,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.removeModel(request, reply),
   });
 
@@ -243,7 +244,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.updateTransformation(request, reply),
   });
 
@@ -272,7 +273,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.updateVisibility(request, reply),
   });
 
@@ -293,7 +294,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.delete(request, reply),
   });
 
@@ -322,7 +323,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.clone(request, reply),
   });
 
@@ -361,7 +362,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.batchToggleVisibility(request, reply),
   });
 
@@ -382,7 +383,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.validateFederation(request, reply),
   });
 
@@ -403,7 +404,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.exportConfig(request, reply),
   });
 
@@ -434,7 +435,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.importConfig(request, reply),
   });
 
@@ -455,7 +456,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getHistory(request, reply),
   });
 
@@ -476,7 +477,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getAnalytics(request, reply),
   });
 
@@ -497,7 +498,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getOptimizationSuggestions(request, reply),
   });
 
@@ -519,7 +520,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.compare(request, reply),
   });
 
@@ -549,7 +550,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.createVersion(request, reply),
   });
 
@@ -570,7 +571,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getVersions(request, reply),
   });
 
@@ -592,7 +593,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.restoreVersion(request, reply),
   });
 
@@ -613,7 +614,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.scanConflicts(request, reply),
   });
 
@@ -634,7 +635,7 @@ export async function federationRoutes(fastify: FastifyInstance) {
       },
       security: [{ bearerAuth: [] }],
     },
-    preHandler: authenticateRequest,
+    preHandler: federationAccessPreHandler,
     handler: async (request, reply) => federationController.getConflictRecommendations(request, reply),
   });
 

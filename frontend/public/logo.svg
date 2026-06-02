@@ -1,13 +1,39 @@
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Minimalist Thin-Line isometric building (Luma style) -->
-  <circle cx="100" cy="100" r="90" stroke="rgba(0,0,0,0.06)" stroke-width="1.5"/>
-  <path d="M100 35L155 63.5V120.5L100 149L45 120.5V63.5L100 35Z" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
-  <path d="M100 35v114M45 63.5L100 92M155 63.5L100 92" stroke="#000000" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.3"/>
-  <!-- Elegant core ring with Luma soft purple tint -->
-  <circle cx="100" cy="92" r="12" fill="#C4B5F4" fill-opacity="0.3" stroke="#000000" stroke-width="1.2"/>
-  
-  <!-- Minimalist text "ArxisVR" in DM Sans styled shape -->
-  <text x="100" y="180" font-family="'DM Sans', sans-serif" font-size="16" font-weight="700" letter-spacing="-0.5px" text-anchor="middle" fill="#000000">
-    ArxisVR
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+
+  <!-- Background -->
+  <rect width="500" height="500" fill="#0D1117"/>
+
+  <!-- "A" mark — two legs, stroke-based, precision architectural feel -->
+  <!-- Left leg -->
+  <line x1="175" y1="320" x2="250" y2="148"
+    stroke="#FFFFFF" stroke-width="22" stroke-linecap="square"/>
+  <!-- Right leg -->
+  <line x1="325" y1="320" x2="250" y2="148"
+    stroke="#FFFFFF" stroke-width="22" stroke-linecap="square"/>
+
+  <!-- Crossbar — the AXIS, in electric blue -->
+  <line x1="204" y1="258" x2="296" y2="258"
+    stroke="#3B82F6" stroke-width="18" stroke-linecap="square"/>
+
+  <!-- Axis extension — subtle horizontal lines beyond the legs, suggesting measurement/precision -->
+  <line x1="155" y1="258" x2="195" y2="258"
+    stroke="#3B82F6" stroke-width="3" stroke-linecap="square" opacity="0.4"/>
+  <line x1="305" y1="258" x2="345" y2="258"
+    stroke="#3B82F6" stroke-width="3" stroke-linecap="square" opacity="0.4"/>
+
+  <!-- Small apex dot — the highest point, the "arx" -->
+  <rect x="240" y="140" width="20" height="20" fill="#3B82F6"/>
+
+  <!-- Wordmark -->
+  <text x="250" y="390"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="800" font-size="52" letter-spacing="10"
+    fill="#FFFFFF" text-anchor="middle">ARXIS</text>
+
+  <!-- VR label — small, subordinate -->
+  <text x="250" y="420"
+    font-family="'Inter', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="400" font-size="13" letter-spacing="5"
+    fill="#3B82F6" text-anchor="middle" opacity="0.8">VR PLATFORM</text>
+
 </svg>

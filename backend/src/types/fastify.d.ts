@@ -16,6 +16,7 @@ declare module 'fastify' {
       userId: string;
     };
     startTime?: number;
+    rawBody?: string;
   }
 
   interface FastifyInstance {

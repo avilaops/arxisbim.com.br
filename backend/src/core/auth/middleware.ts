@@ -1,6 +1,9 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { AuthService } from './auth.service.js';
 import { extractTenantContext, type UserContext } from '../tenancy/context.js';
+import { and, eq, gt, or } from 'drizzle-orm';
+import { db } from '../../shared/database/index.js';
+import { tenantEntitlements } from '../../shared/database/schema/index.js';
 
 const authService = new AuthService();
 
@@ -130,6 +133,61 @@ export function requireRole(...roles: Array<UserContext['role']>) {
       return reply.code(403).send({
         error: 'Forbidden',
         message: `Required role: ${roles.join(' or ')}`,
+      });
+    }
+  };
+}
+
+// =====================================
+// ENTITLEMENT CHECK
+// =====================================
+
+export function requireEntitlement(
+  entitlementKey: string,
+  options?: {
+    minNumericValue?: number;
+  }
+) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = (request as any).user as UserContext | undefined;
+
+    if (!user) {
+      return reply.code(401).send({
+        error: 'Unauthorized',
+        message: 'Authentication required',
+      });
+    }
+
+    const now = new Date();
+
+    const [entitlement] = await db
+      .select()
+      .from(tenantEntitlements)
+      .where(and(
+        eq(tenantEntitlements.tenantId, user.tenantId),
+        eq(tenantEntitlements.entitlementKey, entitlementKey),
+        or(
+          eq(tenantEntitlements.effectiveUntil, null as any),
+          gt(tenantEntitlements.effectiveUntil, now)
+        )
+      ))
+      .limit(1);
+
+    if (!entitlement || entitlement.isEnabled !== true) {
+      return reply.code(403).send({
+        error: 'Forbidden',
+        message: `Entitlement required: ${entitlementKey}`,
+      });
+    }
+
+    if (
+      typeof options?.minNumericValue === 'number'
+      && typeof entitlement.numericValue === 'number'
+      && entitlement.numericValue < options.minNumericValue
+    ) {
+      return reply.code(403).send({
+        error: 'Forbidden',
+        message: `Entitlement ${entitlementKey} requires minimum value ${options.minNumericValue}`,
       });
     }
   };

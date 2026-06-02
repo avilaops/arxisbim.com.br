@@ -12,8 +12,10 @@ import { AdminPanel } from '../../app/components/AdminPanel.js';
 import { FederatedModelsPanel } from '../../app/components/FederatedModelsPanel.js';
 import { SchedulingPanel } from '../../app/components/SchedulingPanel.js';
 import { MeetingsPanel } from '../../app/components/MeetingsPanel.js';
+import { BillingModal } from '../../app/components/BillingModal';
 import { commandRegistry } from '../../commands';
 import { appController } from '../../app/AppController';
+import { initHelpSystem } from '../../app/help/HelpSystem';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -66,6 +68,7 @@ async function init() {
 
   // Initialize Admin Panel
   const adminPanel = new AdminPanel();
+  const billingModal = new BillingModal();
 
   // Initialize Federated Models Panel
   const federatedPanel = new FederatedModelsPanel();
@@ -80,6 +83,22 @@ async function init() {
   const settingsBtn = document.querySelector('[title="Configurações"]');
   if (settingsBtn) {
     settingsBtn.addEventListener('click', () => adminPanel.open());
+  }
+
+  const actionsContainer = document.querySelector('.header__actions');
+  if (actionsContainer) {
+    const billingBtn = document.createElement('button');
+    billingBtn.className = 'icon-button';
+    billingBtn.setAttribute('title', 'Billing');
+    billingBtn.innerHTML = '<i class="lucide lucide-credit-card"></i>';
+    billingBtn.addEventListener('click', () => billingModal.open());
+
+    const notificationsBtn = actionsContainer.querySelector('[title="Notificações"]');
+    if (notificationsBtn?.parentElement === actionsContainer) {
+      actionsContainer.insertBefore(billingBtn, notificationsBtn);
+    } else {
+      actionsContainer.appendChild(billingBtn);
+    }
   }
 
   // Add button to open federated models panel in IFC section
@@ -848,4 +867,11 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => setTimeout(wireEnvironmentDropdown, 0));
 } else {
   setTimeout(wireEnvironmentDropdown, 0);
+}
+
+// Help System (tooltip + F1 + modo ajuda)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initHelpSystem, 0));
+} else {
+  setTimeout(initHelpSystem, 0);
 }
