@@ -28,8 +28,12 @@ import { federatedModelsRoutes } from './modules/federated-models/federated-mode
 import { collaborationRoutes } from './modules/collaboration/collaboration.routes.js';
 import { observabilityRoutes } from './routes/v1/observability/observability.routes.js';
 import { storageRoutes } from './core/storage/storage.routes.js';
+import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
+import { bimQueryRoutes } from './modules/bim-query/bim-query.routes.js';
+import { glbExportRoutes } from './modules/glb-export/glb-export.routes.js';
+import { quantitativos5DRoutes } from './modules/quantitativos-5d/quantitativos-5d.routes.js';
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
 import { scenarioRoutes } from './modules/scenario/api/scenario.routes.js';
@@ -418,6 +422,10 @@ await server.register(budgetsRoutes, { prefix: '/api/v1/budgets' });
 await server.register(observabilityRoutes, { prefix: '/api/v1/observability' });
 await server.register(scenarioRoutes, { prefix: '/api/v1' });
 await server.register(storageRoutes, { prefix: '/api/v1/storage' });
+await server.register(clashDetectionRoutes, { prefix: '/api/v1/clash-detection' });
+await server.register(bimQueryRoutes);
+await server.register(glbExportRoutes);
+await server.register(quantitativos5DRoutes);
 
 // =====================================
 // GRACEFUL SHUTDOWN

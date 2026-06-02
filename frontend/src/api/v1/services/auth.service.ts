@@ -51,7 +51,11 @@ export class AuthService {
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     const client = getAPIClient();
-    const response = await client.post<AuthResponse>(`${this.endpoint}/register`, data);
+    // Remove undefined fields to avoid zod validation errors
+    const payload = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined)
+    );
+    const response = await client.post<AuthResponse>(`${this.endpoint}/register`, payload);
     return response.data;
   }
 

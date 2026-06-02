@@ -1,7 +1,7 @@
 # ROADMAP - ArxisVR
 
-**Última Atualização:** 01/06/2026  
-**Status:** ✅ Fase Crítica Concluída - Produção Ready
+**Última Atualização:** 02/06/2026  
+**Status:** ✅ Fase Avançada Concluída - 5 Features BIM Implementadas
 
 ---
 
@@ -31,6 +31,11 @@
   - Project selector UI (7 tests)
   - Layer interactions (10 tests)
 - ✅ Documentation → Refs `services/` removidas, arquitetura atualizada
+
+#### Sessão 4 - Advanced BIM Features (02/06/2026)
+- ✅ BIM Query Language → SQL-like queries para BIM (backend + frontend + docs)
+- ✅ GLB Export → Exportação otimizada IFC→GLB com Draco compression
+- ✅ Quantitativos 5D → Cálculo de takeoff (volume, área, comprimento, custos)
 
 ### 🎯 STATUS DE BUILD
 
@@ -84,11 +89,11 @@ Este roadmap organiza a evolução do frontend ArxisVR em etapas modulares e pro
 - ⏳ 21- PluginService.md
 - ⏳ 23- AutomationService.md
 - ⏳ 24- IntegrationService.md
-- ⏳ 28- Quantitativos5D.md
-- ⏳ 29- ExportacaoGLB.md
-- ⏳ 30- SnapshotsPNG.md
-- ⏳ 31- PainelPropriedades.md
-- ⏳ 32- BIMQuery.md
+- ✅ 28- Quantitativos5D.md → Backend + Frontend + Docs (02/06/2026)
+- ✅ 29- ExportacaoGLB.md → Backend + Frontend + Docs (02/06/2026)
+- ✅ 30- SnapshotsPNG.md → Frontend + Docs (02/06/2026)
+- ✅ 31- PainelPropriedades.md → Frontend Service + Types + Docs (02/06/2026)
+- ✅ 32- BIMQuery.md → Backend + Frontend + Docs (02/06/2026)
 - ⏳ 33- MultiplayerRealtime.md
 
 ---
@@ -96,10 +101,11 @@ Este roadmap organiza a evolução do frontend ArxisVR em etapas modulares e pro
 ## 🚀 PRÓXIMAS ETAPAS
 
 ### Q3 2026 - Features Avançadas
-1. 🔧 Quantitativos 5D completos
-2. 🔧 Exportação GLB otimizada
-3. 🔧 BIM Query language
-4. 🔧 Snapshot PNG high-quality
+1. ✅ Quantitativos 5D completos (02/06/2026)
+2. ✅ Exportação GLB otimizada (02/06/2026)
+3. ✅ BIM Query language (02/06/2026)
+4. ✅ Snapshot PNG high-quality (02/06/2026)
+5. ✅ Painel de Propriedades IFC (02/06/2026)
 
 ### Q4 2026 - Limpeza & Otimização
 1. 📚 Converter TODOs restantes em GitHub Issues
@@ -131,16 +137,22 @@ Cada módulo deve conter:
 | **Etapas Macro** | 6/8 | 8 | 75% |
 | **Módulos Backend** | 4/4 | 4 | 100% |
 | **Módulos Frontend** | 4/4 | 4 | 100% |
-| **Features Avançadas** | 0/17 | 17 | 0% |
-| **TOTAL** | 14/33 | 33 | 42% |
+| **Features Avançadas** | 5/17 | 17 | 29.4% |
+| **TOTAL** | 19/33 | 33 | 57.6% |
 
 ### Análise
 - ✅ **Core Crítico:** 100% completo (build, CI/CD, multi-tenancy, IFC, LOD)
 - ✅ **Production Ready:** Sistema estável e deployável
-- ⏳ **Features Avançadas:** Planejadas para Q3-Q4 2026
+- ✅ **Features Avançadas BIM:** 5 features implementadas (Q3 2026)
+  - BIM Query Language (SQL-like queries para BIM)
+  - GLB Export (IFC → GLB com Draco compression)
+  - Quantitativos 5D (takeoff, volume, área, custos)
+  - Snapshots PNG (captura high-res, overlays, batch)
+  - Painel de Propriedades (exibição/edição de props IFC)
+- ⏳ **Próximas Prioridades:** Multiplayer Realtime, IntegrationService, AutomationService
 
 ---
 
 > **Recomendação:** Priorizar módulos centrais e deixar autenticação por último, garantindo integração fluida e arquitetura estável.
 
-> **Atualizado em:** 01/06/2026 após conclusão das Sessões 1, 2 e 3 de implementação crítica.
+> **Atualizado em:** 02/06/2026 após conclusão da Sessão 4 - 5 features BIM avançadas implementadas.

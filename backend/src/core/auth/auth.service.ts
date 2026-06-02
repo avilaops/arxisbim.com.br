@@ -42,6 +42,7 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
   tenantId: z.string().optional(),
   companyId: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 // Deriva slug de tenant a partir do domínio do email (ex: user@acme.com -> 'acme')
@@ -173,8 +174,6 @@ export class AuthService {
           isActive: true,
         })
         .returning();
-
-      await BillingService.initializeTenantFreeTier(tenantSlug);
     }
 
     if (!tenant.isActive) {

@@ -105,3 +105,45 @@ export const modelElements = pgTable('model_elements', {
   expressIdIdx: index('model_elements_express_id_idx').on(table.expressId),
   typeIdx: index('model_elements_type_idx').on(table.type),
 }));
+
+// =====================================
+// CLASH_DETECTIONS (resultados do motor de clash)
+// =====================================
+export const clashDetections = pgTable('clash_detections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  tenantId: varchar('tenant_id', { length: 255 }).notNull().references(() => tenants.tenantId, { onDelete: 'cascade' }),
+  federationId: uuid('federation_id').references(() => federatedModels.id, { onDelete: 'set null' }),
+  model1Id: uuid('model1_id').notNull().references(() => ifcModels.id, { onDelete: 'cascade' }),
+  model2Id: uuid('model2_id').notNull().references(() => ifcModels.id, { onDelete: 'cascade' }),
+  element1GlobalId: varchar('element1_global_id', { length: 50 }),
+  element1Type: varchar('element1_type', { length: 100 }),
+  element1Name: varchar('element1_name', { length: 255 }),
+  element2GlobalId: varchar('element2_global_id', { length: 50 }),
+  element2Type: varchar('element2_type', { length: 100 }),
+  element2Name: varchar('element2_name', { length: 255 }),
+  discipline1: varchar('discipline1', { length: 50 }),
+  discipline2: varchar('discipline2', { length: 50 }),
+  clashType: varchar('clash_type', { length: 20 }).notNull().default('hard'), // 'hard' | 'soft' | 'clearance'
+  severity: varchar('severity', { length: 20 }).notNull().default('medium'), // 'critical' | 'high' | 'medium' | 'low'
+  status: varchar('status', { length: 20 }).notNull().default('open'), // 'open' | 'review' | 'resolved' | 'accepted'
+  assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
+  location: jsonb('location').$type<{ x: number; y: number; z: number }>(),
+  overlap: jsonb('overlap').$type<{
+    min: [number, number, number];
+    max: [number, number, number];
+    volume?: number;
+  }>(),
+  description: text('description'),
+  resolution: text('resolution'),
+  scanRunId: uuid('scan_run_id'),
+  detectedAt: timestamp('detected_at').defaultNow().notNull(),
+  resolvedAt: timestamp('resolved_at'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  projectIdIdx: index('clash_detections_project_id_idx').on(table.projectId),
+  tenantIdIdx: index('clash_detections_tenant_id_idx').on(table.tenantId),
+  statusIdx: index('clash_detections_status_idx').on(table.status),
+  severityIdx: index('clash_detections_severity_idx').on(table.severity),
+  scanRunIdx: index('clash_detections_scan_run_id_idx').on(table.scanRunId),
+}));

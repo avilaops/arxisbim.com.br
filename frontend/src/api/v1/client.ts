@@ -128,6 +128,13 @@ export class HTTPClient {
    */
   private buildHeaders(config?: RequestConfig): Headers {
     const headers = new Headers(this.defaultHeaders);
+    
+    // Adiciona token JWT se disponível
+    const token = this.tokenGetter?.();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    
     // Merge com headers customizados
     if (config?.headers) {
       Object.entries(config.headers as Record<string, string>).forEach(([key, value]) => {

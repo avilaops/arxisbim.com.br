@@ -8,7 +8,7 @@ const authService = new AuthService();
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  tenantId: z.string().min(1),
+  tenantId: z.string().optional(),
   turnstileToken: z.string().optional(),
 });
 
@@ -16,7 +16,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(2),
-  tenantId: z.string().min(1),
+  tenantId: z.string().optional(),
   companyId: z.string().optional(),
   turnstileToken: z.string().optional(),
 });
@@ -89,13 +89,12 @@ export async function authRoutes(fastify: FastifyInstance) {
       tags: ['auth'],
       body: {
         type: 'object',
-        required: ['email', 'password', 'name', 'tenantId'],
+        required: ['email', 'password', 'name'],
         properties: {
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 8 },
           name: { type: 'string', minLength: 2 },
-          tenantId: { type: 'string', minLength: 1 },
-          companyId: { type: 'string' },
+          turnstileToken: { type: 'string' },
         },
       },
       response: {
@@ -122,6 +121,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     },
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
+        console.log('🔍 Register request.body:', JSON.stringify(request.body, null, 2));
         const body = registerSchema.parse(request.body);
         const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
         await verifyTurnstileToken(body.turnstileToken ?? '', ip);

@@ -39,6 +39,9 @@
         "@fastify/multipart": "^10.0.0",
         "@fastify/rate-limit": "^10.3.0",
         "@fastify/static": "^8.0.0",
+        "@gltf-transform/core": "^4.0.0",
+        "@gltf-transform/extensions": "^4.0.0",
+        "@gltf-transform/functions": "^4.0.0",
         "@opentelemetry/auto-instrumentations-node": "^0.76.0",
         "@opentelemetry/exporter-metrics-otlp-proto": "^0.218.0",
         "@opentelemetry/exporter-trace-otlp-proto": "^0.218.0",
@@ -61,6 +64,7 @@
         "socket.io": "^4.8.3",
         "stripe": "^22.2.0",
         "three": "^0.149.0",
+        "uuid": "^11.0.5",
         "web-ifc-three": "^0.0.126",
         "zod": "^4.4.3"
     },
