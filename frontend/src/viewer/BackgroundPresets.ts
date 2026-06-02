@@ -7,7 +7,8 @@ export interface BackgroundPreset {
   id: string;
   name: string;
   description: string;
-  type: 'gradient' | 'solid' | 'skybox';
+  type: 'gradient' | 'solid' | 'skybox' | 'physical-sky';
+  physicalSkyPreset?: string; // key em SKY_PRESETS do PhysicalSkyEnvironment
   colors: {
     top: string;
     bottom: string;
@@ -179,6 +180,40 @@ export const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
       color: '#DDB892',
       opacity: 0.25
     }
+  },
+
+  // ── Céus físicos (Preetham atmospheric scattering) ──────────────────
+  SKY_NOON: {
+    id: 'sky_noon',
+    name: '☀️ Meio-dia',
+    description: 'Céu físico — sol alto, atmosfera limpa',
+    type: 'physical-sky',
+    physicalSkyPreset: 'NOON',
+    colors: { top: '#87CEEB', bottom: '#c8dce8' },
+  },
+  SKY_MORNING: {
+    id: 'sky_morning',
+    name: '🌅 Manhã',
+    description: 'Céu físico — sol baixo pela manhã',
+    type: 'physical-sky',
+    physicalSkyPreset: 'MORNING',
+    colors: { top: '#a8c8e0', bottom: '#d4e8f4' },
+  },
+  SKY_GOLDEN: {
+    id: 'sky_golden',
+    name: '🌇 Golden Hour',
+    description: 'Céu físico — pôr do sol dramático',
+    type: 'physical-sky',
+    physicalSkyPreset: 'GOLDEN_HOUR',
+    colors: { top: '#ff9955', bottom: '#ffcc99' },
+  },
+  SKY_OVERCAST: {
+    id: 'sky_overcast',
+    name: '☁️ Nublado',
+    description: 'Céu físico — luz difusa, sem sombras duras',
+    type: 'physical-sky',
+    physicalSkyPreset: 'OVERCAST',
+    colors: { top: '#b8c8d4', bottom: '#d0d8e0' },
   },
 
   // Escuro - para contraste

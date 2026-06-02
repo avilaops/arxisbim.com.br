@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { BACKGROUND_PRESETS, BackgroundPreset, getBackgroundPreset } from './BackgroundPresets';
+import { PhysicalSkyEnvironment } from './PhysicalSkyEnvironment.js';
 
 const GRID_MAX_SIZE_METERS = 2000;
 const GRID_MIN_SIZE_METERS = 10;
@@ -17,12 +18,15 @@ interface GridRuntimeConfig {
 export class BackgroundManager {
   private scene: THREE.Scene;
   private camera: THREE.Camera;
+  private renderer: THREE.WebGLRenderer | null = null;
   private currentPreset: BackgroundPreset;
   private gridHelper: THREE.GridHelper | null = null;
   private fog: THREE.Fog | null = null;
   private gridRuntime: GridRuntimeConfig;
+  private physicalSky: PhysicalSkyEnvironment | null = null;
 
-  constructor(scene: THREE.Scene, camera: THREE.Camera, presetId: string = 'HORIZON') {
+  constructor(scene: THREE.Scene, camera: THREE.Camera, presetId: string = 'SKY_NOON', renderer?: THREE.WebGLRenderer) {
+    this.renderer = renderer ?? null;
     this.scene = scene;
     this.camera = camera;
     this.gridRuntime = this.resolveGridRuntimeConfig();
@@ -93,9 +97,36 @@ export class BackgroundManager {
   }
 
   /**
+   * Destroys current physical sky if active
+   */
+  private disposePhysicalSky(): void {
+    if (this.physicalSky) {
+      this.physicalSky.dispose();
+      this.physicalSky = null;
+    }
+  }
+
+  /**
    * Apply background gradient
    */
   private applyBackground(preset: BackgroundPreset): void {
+    // Physical sky — delega para PhysicalSkyEnvironment
+    if (preset.type === 'physical-sky') {
+      if (!this.renderer) {
+        console.warn('[BackgroundManager] renderer not provided — physical sky requires WebGLRenderer');
+        return;
+      }
+      this.disposePhysicalSky();
+      this.physicalSky = new PhysicalSkyEnvironment(
+        this.scene,
+        this.renderer,
+        preset.physicalSkyPreset ?? 'NOON'
+      );
+      return;
+    }
+
+    // Dispose physical sky when switching to flat preset
+    this.disposePhysicalSky();
     // SIMPLIFICADO: Usar apenas scene.background (sem sky dome)
     // Sky domes podem causar conflitos de rendering com viewports pequenos
     
@@ -265,9 +296,19 @@ export class BackgroundManager {
   }
 
   /**
+   * Fit physical sky to loaded model bounding box
+   */
+  public fitToModel(box: THREE.Box3): void {
+    if (this.physicalSky) {
+      this.physicalSky.fitToModel(box);
+    }
+  }
+
+  /**
    * Cleanup
    */
   public dispose(): void {
+    this.disposePhysicalSky();
     if (this.gridHelper) {
       this.scene.remove(this.gridHelper);
       this.gridHelper.dispose();
