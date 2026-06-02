@@ -387,48 +387,128 @@ async function init() {
 function updateModelInfoFromSelection(payload: any) {
   const el = document.getElementById('model-info');
   if (!el) return;
+
+  // ── Clear state ──────────────────────────────────────
   if (!payload) {
-    el.innerHTML = `<p style="color: var(--text-secondary); font-size: 13px;">
-      Selecione um modelo para ver detalhes
-    </p>`;
+    el.innerHTML = `
+      <div style="padding:8px 0;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.3">📐</div>
+        <p style="color:var(--text-secondary);font-size:12px;line-height:1.5">
+          Clique em um elemento do modelo para ver propriedades
+        </p>
+      </div>`;
+    _updateAIButton(null);
+    _updateStatusBar(null);
+    _updateBreadcrumb(null);
     return;
   }
+
+  // ── Extract data ─────────────────────────────────────
   const obj = payload.object3D;
-  const name = obj.name || (payload.expressID !== undefined ? `IFC #${payload.expressID}` : obj.type || 'Objeto');
-  let bboxLine = '';
-  
-  // Use window.THREE if available, otherwise skip bbox calculation
-  if (window.THREE) {
+  const name = obj?.name || (payload.expressID !== undefined ? `IFC #${payload.expressID}` : obj?.type || 'Elemento');
+  const ifcType = (payload.type || obj?.type || 'IFC').toUpperCase();
+  const expressID = payload.expressID;
+
+  // Bounding box → dimensions
+  let dims = { x: 0, y: 0, z: 0 };
+  if ((window as any).THREE && obj) {
     try {
-      const box = new window.THREE.Box3().setFromObject(obj);
+      const box = new (window as any).THREE.Box3().setFromObject(obj);
       if (!box.isEmpty()) {
-        const s = box.getSize(new window.THREE.Vector3());
-        bboxLine = `<div style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">
-          Dimensões: ${s.x.toFixed(2)} × ${s.y.toFixed(2)} × ${s.z.toFixed(2)} m
-        </div>`;
+        const s = box.getSize(new (window as any).THREE.Vector3());
+        dims = { x: parseFloat(s.x.toFixed(2)), y: parseFloat(s.y.toFixed(2)), z: parseFloat(s.z.toFixed(2)) };
       }
-    } catch (e) {
-      // Ignore bbox calculation errors
-    }
+    } catch (_) {}
   }
-  
-  const materialCount = obj.material
-    ? (Array.isArray(obj.material) ? obj.material.length : 1)
-    : 0;
+
+  const volume = (dims.x * dims.y * dims.z).toFixed(2);
+  const height = Math.max(dims.x, dims.y, dims.z).toFixed(2);
+
+  // ── Update status bar ────────────────────────────────
+  _updateStatusBar({ name, coords: obj?.position });
+
+  // ── Update breadcrumb ────────────────────────────────
+  _updateBreadcrumb({ element: name, ifcType });
+
+  // ── Update AI button ────────────────────────────────
+  _updateAIButton({ name, ifcType });
+
+  // ── Render summary card ──────────────────────────────
   el.innerHTML = `
-    <div style="font-size: 13px;">
-      <div style="color: var(--text-primary); font-weight: 600; margin-bottom: 6px;">
-        ${name}
-      </div>
-      <div style="color: var(--text-secondary); font-size: 12px;">
-        Tipo: <span style="color: var(--accent-blue);">${payload.type.toUpperCase()}</span>
-        ${obj.type && obj.type !== payload.type ? ` • ${obj.type}` : ''}
-      </div>
-      ${bboxLine}
-      ${materialCount > 0 ? `<div style="color: var(--text-secondary); font-size: 12px;">Materiais: ${materialCount}</div>` : ''}
-      ${payload.expressID !== undefined ? `<div style="color: var(--text-secondary); font-size: 12px;">ExpressID: ${payload.expressID}</div>` : ''}
+    <style>
+      .elem-dim-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0}
+      .elem-dim-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 6px;text-align:center}
+      .elem-dim-val{font-size:15px;font-weight:700;font-family:monospace;color:var(--text-primary)}
+      .elem-dim-lbl{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+      .elem-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;margin:2px}
+      .elem-tag-blue{background:rgba(37,99,235,.15);color:var(--accent-blue);border:1px solid rgba(37,99,235,.2)}
+      .elem-tag-amber{background:rgba(245,158,11,.15);color:#F59E0B;border:1px solid rgba(245,158,11,.2)}
+      .prop-kv{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+      .prop-kv:last-child{border:none}
+      .prop-kv-key{color:var(--text-muted)}
+      .prop-kv-val{color:var(--text-secondary);font-family:monospace}
+      .prop-kv-val.accent{color:var(--accent-blue)}
+    </style>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-.2px">${_esc(name)}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${_esc(ifcType)}${expressID !== undefined ? ` · ID ${expressID}` : ''}</div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <span class="elem-tag elem-tag-blue">📐 ${_esc(ifcType)}</span>
+      ${dims.y > 0 ? `<span class="elem-tag elem-tag-amber">↕ ${height}m alt.</span>` : ''}
+    </div>
+
+    ${dims.x > 0 ? `
+    <div class="elem-dim-grid">
+      <div class="elem-dim-box"><div class="elem-dim-val">${dims.x}</div><div class="elem-dim-lbl">Larg. m</div></div>
+      <div class="elem-dim-box"><div class="elem-dim-val">${dims.y}</div><div class="elem-dim-lbl">Alt. m</div></div>
+      <div class="elem-dim-box"><div class="elem-dim-val">${dims.z}</div><div class="elem-dim-lbl">Prof. m</div></div>
+    </div>` : ''}
+
+    <div style="margin-top:8px">
+      ${expressID !== undefined ? `<div class="prop-kv"><span class="prop-kv-key">Express ID</span><span class="prop-kv-val accent">#${expressID}</span></div>` : ''}
+      <div class="prop-kv"><span class="prop-kv-key">Tipo Three.js</span><span class="prop-kv-val">${_esc(obj?.type || '—')}</span></div>
+      ${volume !== '0.00' ? `<div class="prop-kv"><span class="prop-kv-key">Volume aprox.</span><span class="prop-kv-val">${volume} m³</span></div>` : ''}
     </div>
   `;
+}
+
+// ── Helpers ──────────────────────────────────────────────
+
+function _esc(s: string): string {
+  return String(s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c] || c));
+}
+
+function _updateStatusBar(data: { name: string; coords?: any } | null) {
+  const sb = (window as any).ArxisStatusBar;
+  if (!sb) return;
+  if (!data) { sb.setObject('—'); sb.setCoords(null, null, null); return; }
+  sb.setObject(data.name);
+  if (data.coords) sb.setCoords(data.coords.x, data.coords.y, data.coords.z);
+}
+
+function _updateBreadcrumb(data: { element: string; ifcType: string } | null) {
+  const sb = (window as any).ArxisStatusBar;
+  if (!sb) return;
+  if (!data) { return; }
+  sb.setBreadcrumb('Projeto', data.ifcType, data.element);
+}
+
+function _updateAIButton(data: { name: string; ifcType: string } | null) {
+  const btn = document.getElementById('btn-arxis-ai');
+  if (!btn) return;
+  if (!data) {
+    btn.innerHTML = `<div class="btn-arxis-ai__dot"></div> Arxis AI`;
+    btn.style.background = 'linear-gradient(135deg, #4F46E5, #7C3AED)';
+    btn.style.boxShadow = '0 0 14px rgba(124, 58, 237, 0.35)';
+    return;
+  }
+  const shortName = data.name.length > 14 ? data.name.slice(0, 12) + '…' : data.name;
+  btn.innerHTML = `<div class="btn-arxis-ai__dot" style="background:#FCA5A5"></div> Analisar ${_esc(shortName)}`;
+  btn.style.background = 'linear-gradient(135deg, #4F46E5, #7C3AED)';
+  btn.style.boxShadow = '0 0 14px rgba(124, 58, 237, 0.35)';
 }
 
 async function setupExportGLB() {
@@ -585,6 +665,8 @@ function setupIfcUpload() {
               loadedIfcModelId = uploadedModel.id;
               // Update IFC list
               await loadIfcModels();
+              // Update status bar with model info
+              (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
             } else {
               // Load locally without backend
               await ifcLoader.load(file);
