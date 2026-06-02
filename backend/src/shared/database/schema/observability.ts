@@ -52,6 +52,9 @@ export const userSessions = pgTable('user_sessions', {
   lastUsedAt: timestamp('last_used_at'),
   ipAddress: varchar('ip_address', { length: 255 }),
   isRevoked: boolean('is_revoked').default(false).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  accessTokenJti: varchar('access_token_jti', { length: 255 }),
+  userAgent: text('user_agent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   revokedAt: timestamp('revoked_at'),
 }, (table) => ({

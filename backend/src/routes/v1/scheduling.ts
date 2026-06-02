@@ -225,16 +225,14 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     const { taskId } = request.params as { taskId: string };
     const body = request.body as {
       elementId: string;
-      tenantId: string;
-      linkType?: string;
+      action?: string;
     };
 
     try {
       const [newLink] = await db.insert(taskElementLinks).values({
-        tenantId: body.tenantId,
         taskId,
         elementId: body.elementId,
-        ...(body.linkType && { linkType: body.linkType })
+        ...(body.action && { action: body.action })
       }).returning();
 
       return reply.status(201).send(newLink);
@@ -261,11 +259,13 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get simulations for a tenant (corrigir: timelineSimulations não tem scheduleId)
-  fastify.get('/tenants/:tenantId/simulations', async (request, reply) => {
-    const { tenantId } = request.params as { tenantId: string };
+  // Get simulations for a schedule
+  fastify.get('/schedules/:scheduleId/simulations', async (request, reply) => {
+    const { scheduleId } = request.params as { scheduleId: string };
     try {
-      const simulations = await db.select().from(timelineSimulations).where(eq(timelineSimulations.tenantId, tenantId)).orderBy(desc(timelineSimulations.createdAt));
+      const simulations = await db.select().from(timelineSimulations)
+        .where(eq(timelineSimulations.scheduleId, scheduleId))
+        .orderBy(desc(timelineSimulations.createdAt));
       return reply.send(simulations);
     } catch (error) {
       fastify.log.error(error);
@@ -273,26 +273,22 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Create simulation (corrigir: timelineSimulations não tem scheduleId)
-  fastify.post('/tenants/:tenantId/simulations', async (request, reply) => {
-    const { tenantId } = request.params as { tenantId: string };
+  // Create simulation
+  fastify.post('/schedules/:scheduleId/simulations', async (request, reply) => {
+    const { scheduleId } = request.params as { scheduleId: string };
     const body = request.body as {
-      name: string;
-      description?: string;
-      startDate?: string;
-      endDate?: string;
-      status?: string;
+      name?: string;
+      simulationDate?: string;
+      snapshot?: Record<string, any>;
     };
 
     try {
       const [newSimulation] = await db.insert(timelineSimulations).values({
-        tenantId,
+        scheduleId,
         name: body.name,
-        description: body.description,
-        startDate: body.startDate,
-        endDate: body.endDate,
-        status: body.status
-      } as any).returning();
+        simulationDate: body.simulationDate ? new Date(body.simulationDate) : undefined,
+        snapshot: body.snapshot,
+      }).returning();
 
       return reply.status(201).send(newSimulation);
     } catch (error) {
@@ -302,10 +298,11 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Delete simulation
-  fastify.delete('/simulations/:simulationId', async (request, reply) => {
-    const { simulationId } = request.params as { simulationId: string };
+  fastify.delete('/simulations/:scheduleId', async (request, reply) => {
+    const { scheduleId } = request.params as { scheduleId: string };
     try {
-      const [deletedSimulation] = await db.delete(timelineSimulations).where(eq(timelineSimulations.id, simulationId)).returning();
+      const [deletedSimulation] = await db.delete(timelineSimulations)
+        .where(eq(timelineSimulations.scheduleId, scheduleId)).returning();
       if (!deletedSimulation) {
         return reply.status(404).send({ error: 'Simulation not found' });
       }

@@ -14,12 +14,13 @@ function getDb() {
 
 export async function getTimelineSimulationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { tenantId } = (request.query as any);
-    if (!tenantId) {
-      return reply.code(400).send({ error: 'tenantId é obrigatório' });
+    const { scheduleId } = (request.query as any);
+    if (!scheduleId) {
+      return reply.code(400).send({ error: 'scheduleId é obrigatório' });
     }
     const db = getDb();
-    const result = await db.select().from(timelineSimulations).where(eq(timelineSimulations.tenantId, tenantId));
+    const result = await db.select().from(timelineSimulations)
+      .where(eq(timelineSimulations.scheduleId, scheduleId));
     reply.send(result);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao listar simulações', details: String(error) });
@@ -30,17 +31,14 @@ export async function createTimelineSimulationHandler(request: FastifyRequest, r
   try {
     const db = getDb();
     const body = request.body as any;
-    if (!body || !body.tenantId || !body.name) {
-      return reply.code(400).send({ error: 'tenantId e name são obrigatórios' });
+    if (!body || !body.scheduleId) {
+      return reply.code(400).send({ error: 'scheduleId é obrigatório' });
     }
     const [created] = await db.insert(timelineSimulations).values({
-      tenantId: body.tenantId,
+      scheduleId: body.scheduleId,
       name: body.name,
-      description: body.description,
-      startDate: body.startDate,
-      endDate: body.endDate,
-      status: body.status,
-      createdAt: new Date(),
+      simulationDate: body.simulationDate ? new Date(body.simulationDate) : undefined,
+      snapshot: body.snapshot,
     }).returning();
     reply.code(201).send(created);
   } catch (error) {
@@ -51,11 +49,13 @@ export async function createTimelineSimulationHandler(request: FastifyRequest, r
 export async function getTimelineSimulationHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { scheduleId } = (request.params as any);
+    if (!scheduleId) {
+      return reply.code(400).send({ error: 'scheduleId é obrigatório' });
     }
-    const [simulation] = await db.select().from(timelineSimulations).where(eq(timelineSimulations.id, id)).limit(1);
+    const [simulation] = await db.select().from(timelineSimulations)
+      .where(eq(timelineSimulations.scheduleId, scheduleId))
+      .limit(1);
     if (!simulation) {
       return reply.code(404).send({ error: 'Simulação não encontrada' });
     }
@@ -68,20 +68,18 @@ export async function getTimelineSimulationHandler(request: FastifyRequest, repl
 export async function updateTimelineSimulationHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
+    const { scheduleId } = (request.params as any);
     const body = request.body as any;
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    if (!scheduleId) {
+      return reply.code(400).send({ error: 'scheduleId é obrigatório' });
     }
     const [updated] = await db.update(timelineSimulations)
       .set({
         name: body.name,
-        description: body.description,
-        startDate: body.startDate,
-        endDate: body.endDate,
-        status: body.status,
+        simulationDate: body.simulationDate ? new Date(body.simulationDate) : undefined,
+        snapshot: body.snapshot,
       })
-      .where(eq(timelineSimulations.id, id))
+      .where(eq(timelineSimulations.scheduleId, scheduleId))
       .returning();
     if (!updated) {
       return reply.code(404).send({ error: 'Simulação não encontrada' });
@@ -95,11 +93,13 @@ export async function updateTimelineSimulationHandler(request: FastifyRequest, r
 export async function deleteTimelineSimulationHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { scheduleId } = (request.params as any);
+    if (!scheduleId) {
+      return reply.code(400).send({ error: 'scheduleId é obrigatório' });
     }
-    const deleted = await db.delete(timelineSimulations).where(eq(timelineSimulations.id, id)).returning();
+    const deleted = await db.delete(timelineSimulations)
+      .where(eq(timelineSimulations.scheduleId, scheduleId))
+      .returning();
     if (!deleted.length) {
       return reply.code(404).send({ error: 'Simulação não encontrada' });
     }

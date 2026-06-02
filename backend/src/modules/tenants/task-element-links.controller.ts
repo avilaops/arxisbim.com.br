@@ -14,12 +14,12 @@ function getDb() {
 
 export async function getTaskElementLinksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { tenantId } = (request.query as any);
-    if (!tenantId) {
-      return reply.code(400).send({ error: 'tenantId é obrigatório' });
+    const { taskId } = (request.query as any);
+    if (!taskId) {
+      return reply.code(400).send({ error: 'taskId é obrigatório' });
     }
     const db = getDb();
-    const result = await db.select().from(taskElementLinks).where(eq(taskElementLinks.tenantId, tenantId));
+    const result = await db.select().from(taskElementLinks).where(eq(taskElementLinks.taskId, taskId));
     reply.send(result);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao listar links', details: String(error) });
@@ -30,15 +30,13 @@ export async function createTaskElementLinkHandler(request: FastifyRequest, repl
   try {
     const db = getDb();
     const body = request.body as any;
-    if (!body || !body.tenantId || !body.taskId || !body.elementId) {
-      return reply.code(400).send({ error: 'tenantId, taskId e elementId são obrigatórios' });
+    if (!body || !body.taskId || !body.elementId) {
+      return reply.code(400).send({ error: 'taskId e elementId são obrigatórios' });
     }
     const [created] = await db.insert(taskElementLinks).values({
-      tenantId: body.tenantId,
       taskId: body.taskId,
       elementId: body.elementId,
-      linkType: body.linkType,
-      createdAt: new Date(),
+      action: body.action ?? body.linkType,
     }).returning();
     reply.code(201).send(created);
   } catch (error) {
@@ -72,9 +70,7 @@ export async function updateTaskElementLinkHandler(request: FastifyRequest, repl
       return reply.code(400).send({ error: 'id é obrigatório' });
     }
     const [updated] = await db.update(taskElementLinks)
-      .set({
-        linkType: body.linkType,
-      })
+      .set({ action: body.action ?? body.linkType })
       .where(eq(taskElementLinks.id, id))
       .returning();
     if (!updated) {
