@@ -368,6 +368,7 @@ async function init() {
   setupExportGLB();
   setupSnapshotPNG();
   setupKeyboardShortcuts();
+  setupAIButton();
 
   // Defer non-critical operations to idle time
   deferNonCritical(async () => {
@@ -663,6 +664,8 @@ function setupIfcUpload() {
               // Load the file locally for viewing
               await ifcLoader.load(file);
               loadedIfcModelId = uploadedModel.id;
+              // Hide welcome overlay when model loads
+              (window as any).ArxisWelcome?.hide?.();
               // Update IFC list
               await loadIfcModels();
               // Update status bar with model info
@@ -672,6 +675,8 @@ function setupIfcUpload() {
               await ifcLoader.load(file);
               console.log('IFC carregado localmente:', file.name);
               loadedIfcModelId = file.name;
+              // Hide welcome overlay when model loads
+              (window as any).ArxisWelcome?.hide?.();
             }
           } catch (err) {
             console.error('Erro ao carregar IFC:', err);
@@ -712,6 +717,7 @@ function setupDragDropIfc() {
           // Load the file locally for viewing
           await ifcLoader.load(file);
           loadedIfcModelId = uploadedModel.id;
+          (window as any).ArxisWelcome?.hide?.();
           // Update IFC list
           await loadIfcModels();
         } else {
@@ -719,6 +725,7 @@ function setupDragDropIfc() {
           await ifcLoader.load(file);
           console.log('IFC carregado localmente via drag-drop:', file.name);
           loadedIfcModelId = file.name;
+          (window as any).ArxisWelcome?.hide?.();
         }
       } catch (err) {
         console.error('Erro ao carregar IFC:', err);
@@ -890,6 +897,24 @@ async function loadIfcModels() {
       `;
     }
   }
+}
+
+function setupAIButton() {
+  const btn = document.getElementById('btn-arxis-ai');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const copilot = (window as any).__arxisCopilot;
+    if (copilot?.toggle) {
+      copilot.toggle();
+    } else {
+      // Copilot ainda carregando — aguardar e tentar novamente
+      const retry = setInterval(() => {
+        const c = (window as any).__arxisCopilot;
+        if (c?.toggle) { clearInterval(retry); c.toggle(); }
+      }, 200);
+      setTimeout(() => clearInterval(retry), 5000);
+    }
+  });
 }
 
 // Inicializar quando DOM estiver pronto

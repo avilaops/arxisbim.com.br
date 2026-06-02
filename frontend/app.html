@@ -1185,6 +1185,37 @@
     }
     .welcome-ai__input::placeholder { color: var(--text-muted); }
 
+    /* ── Welcome entry animations ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .welcome-greeting       { animation: fade-up 0.45s cubic-bezier(.4,0,.2,1) both; }
+    .welcome-quickactions   { animation: fade-up 0.45s cubic-bezier(.4,0,.2,1) 0.08s both; }
+    .welcome-section-label  { animation: fade-up 0.45s cubic-bezier(.4,0,.2,1) 0.14s both; }
+    .project-cards          { animation: fade-up 0.45s cubic-bezier(.4,0,.2,1) 0.2s both; }
+    .welcome-ai             { animation: fade-in 0.5s ease 0.1s both; }
+
+    /* Stagger project cards */
+    .project-card:nth-child(1) { animation: fade-up 0.4s cubic-bezier(.4,0,.2,1) 0.22s both; }
+    .project-card:nth-child(2) { animation: fade-up 0.4s cubic-bezier(.4,0,.2,1) 0.30s both; }
+    .project-card:nth-child(3) { animation: fade-up 0.4s cubic-bezier(.4,0,.2,1) 0.38s both; }
+
+    /* Progress bar fill animation via scale */
+    @keyframes bar-grow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    .project-card__progress-bar {
+      transform-origin: left center;
+      animation: bar-grow 0.7s cubic-bezier(.4,0,.2,1) 0.55s both;
+    }
+
     /* camera-mode-button dark */
     .camera-mode-button.active {
       background: var(--accent-blue) !important;
