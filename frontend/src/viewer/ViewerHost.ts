@@ -21,6 +21,8 @@ import { IFCUploadManager } from '../systems/model/IFCUploadManager';
 import IFCSimpleLoader from './loaders/IFCSimpleLoader';
 import GLBLoader from './loaders/GLBLoader';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
+import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
+import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
 
 
 /**
@@ -45,6 +47,8 @@ export class ViewerHost {
   public clippingGeometry!: ClippingGeometry;
   public ifcUploadManager!: IFCUploadManager;
   public postProcess!: PostProcessingPipeline;
+  public csm!: CascadedShadowManager;
+  public adaptiveQuality!: AdaptiveQualityManager;
   private clock!: THREE.Clock;
 
   /**
@@ -263,13 +267,33 @@ export class ViewerHost {
       this.initWebRTC(signalingServer);
     }
 
-    // Post-processing pipeline AAA (SSAO + Bloom + SMAA + Vignette + Film Grain)
+    // ── Post-processing pipeline AAA ──────────────────────────────────────────
     const savedQuality = (localStorage.getItem('arxis:renderQuality') as PostProcessQuality) || 'high';
     this.postProcess = new PostProcessingPipeline(this.renderer, this.scene, this.camera, savedQuality);
     (window as any).__postProcess = this.postProcess;
     console.log(`✨ PostProcessingPipeline ativo [${savedQuality}]`);
 
-    // Background Manager - usa renderer para physical sky
+    // ── Cascaded Shadow Maps (4 cascatas) ─────────────────────────────────────
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+    this.csm = new CascadedShadowManager(this.renderer, this.scene, this.camera, {
+      maxFar:        500,
+      cascades:      4,
+      shadowMapSize: 1024,
+      fade:          true,
+    });
+    (window as any).__csm = this.csm;
+    console.log('🌑 CSM ativo (4 cascatas)');
+
+    // ── Adaptive Quality (dynamic resolution + quality scaling) ───────────────
+    const savedMode = (localStorage.getItem('arxis:adaptiveMode') as AdaptiveMode) || 'balanced';
+    this.adaptiveQuality = new AdaptiveQualityManager(
+      this.renderer, savedMode, this.postProcess, this.csm,
+    );
+    (window as any).__adaptiveQuality = this.adaptiveQuality;
+    console.log(`⚡ AdaptiveQuality ativo [${savedMode}]`);
+
+    // ── Background Manager ────────────────────────────────────────────────────
     const savedPreset = localStorage.getItem('arxis:backgroundPreset');
     const defaultBackground = savedPreset || import.meta.env.VITE_DEFAULT_BACKGROUND || 'SKY_NOON';
     this.backgroundManager = new BackgroundManager(this.scene, this.camera, defaultBackground, this.renderer);
@@ -427,7 +451,13 @@ export class ViewerHost {
       // Atualizar avatars (animações)
       this.avatarSystem.update(time);
 
-      // Post-processing pipeline (SSAO + Bloom + SMAA + Vignette)
+      // CSM — atualizar frustum splits antes de renderizar
+      this.csm?.update();
+
+      // Adaptive quality — mede FPS e ajusta resolução/qualidade
+      this.adaptiveQuality?.tick();
+
+      // Post-processing pipeline (SSAO + Bloom + DoF + SMAA + Vignette)
       if (this.postProcess) {
         this.postProcess.render();
       } else {
