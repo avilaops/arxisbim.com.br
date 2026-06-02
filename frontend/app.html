@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="ArxisVR - Plataforma BIM Imersiva com IA e Realidade Aumentada" />
-  <meta name="theme-color" content="#2563eb" />
+  <meta name="theme-color" content="#111827" />
   <title>ArxisVR - Plataforma BIM</title>
   
   <!-- Favicon -->
@@ -29,32 +29,39 @@
     }
 
     :root {
-      /* Palette: Lu.ma Premium Light System */
-      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
-      --bg-panel: rgba(255, 255, 255, 0.78);
-      --bg-panel-solid: #ffffff;
-      --bg-card: rgba(255, 255, 255, 0.82);
-      --bg-card-hover: rgba(255, 255, 255, 0.95);
-      
-      --text-primary: #1A1A1A;
-      --text-secondary: #8E8E93;
-      --text-muted: #AEAEB2;
-      
-      --border-color: rgba(0, 0, 0, 0.06);
-      --border-hover: rgba(0, 0, 0, 0.12);
-      
-      --accent-blue: #007AFF;      /* Apple Blue */
-      --accent-purple: #C4B5F4;    /* Luma Soft Purple */
-      --accent-purple-light: #EDE9FF;
-      --accent-green: #34C759;     /* iOS Green */
-      --accent-red: #FF3B30;       /* iOS Red */
-      --accent-yellow: #FF9500;    /* iOS Orange */
-      
-      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.02);
-      --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.08);
-      
+      /* ── ArxisVR Dark Design System ── */
+      --bg-app:          #111827;
+      --bg-panel:        rgba(31, 41, 55, 0.95);
+      --bg-panel-solid:  #1F2937;
+      --bg-card:         rgba(31, 41, 55, 0.9);
+      --bg-card-hover:   rgba(55, 65, 81, 0.9);
+
+      --text-primary:    #F9FAFB;
+      --text-secondary:  #9CA3AF;
+      --text-muted:      #6B7280;
+
+      --border-color:    rgba(255, 255, 255, 0.08);
+      --border-hover:    rgba(255, 255, 255, 0.14);
+
+      --accent-blue:     #2563EB;
+      --accent-blue-l:   #3B82F6;
+      --accent-purple:   #8B5CF6;
+      --accent-purple-light: #A78BFA;
+      --accent-green:    #10B981;
+      --accent-red:      #EF4444;
+      --accent-yellow:   #F59E0B;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+
       --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Layout */
+      --topbar-height:   48px;
+      --statusbar-height: 26px;
+      --sidebar-width:   300px;
+      --right-panel-width: 320px;
     }
 
     body {
@@ -65,6 +72,12 @@
       height: 100vh;
       letter-spacing: -0.1px;
     }
+
+    /* ── Scrollbar dark ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
     /* Force Lucide icons to have ultra-thin, elegant strokes (Lu.ma style) */
     .lucide {
@@ -81,9 +94,9 @@
       width: 100vw;
       height: 100vh;
       display: grid;
-      grid-template-rows: 64px 1fr;
+      grid-template-rows: var(--topbar-height) 1fr var(--statusbar-height);
       overflow: hidden;
-      pointer-events: none; /* Let empty clicks pass down to Three.js canvas */
+      pointer-events: none;
     }
 
     /* Canvas is full screen at the bottom layer */
@@ -94,8 +107,8 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
-      background: #f8fafc;
-      pointer-events: auto; /* Enable 3D interactions */
+      background: #0D1117;
+      pointer-events: auto;
     }
 
     /* Overlay container for floating panels */
@@ -112,82 +125,106 @@
       pointer-events: none;
     }
 
-    /* ========== HEADER (LUMA STYLING) ========== */
+    /* ========== HEADER ========== */
     .header {
       grid-row: 1;
-      background: rgba(255, 255, 255, 0.85);
+      background: var(--bg-panel-solid);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 14px;
       z-index: 100;
       box-shadow: var(--shadow-sm);
-      backdrop-filter: blur(20px);
       pointer-events: auto;
+      height: var(--topbar-height);
     }
 
     .header__left {
       display: flex;
       align-items: center;
-      gap: 32px;
+      gap: 0;
     }
 
     .header__logo {
-      font-size: 22px;
+      font-size: 15px;
       font-weight: 700;
-      color: #000000;
-      letter-spacing: -0.6px;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      padding-right: 14px;
+      border-right: 1px solid var(--border-color);
+      margin-right: 10px;
+      flex-shrink: 0;
     }
+
+    .header__logo img {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Breadcrumb in header */
+    .header__breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .header__breadcrumb span { color: var(--text-secondary); }
+    .header__breadcrumb span:last-child { color: var(--text-primary); font-weight: 500; }
+    .header__breadcrumb-sep { color: var(--text-muted); font-size: 10px; }
 
     .header__nav {
       display: flex;
-      gap: 4px;
+      gap: 2px;
     }
 
     .nav-button {
-      padding: 8px 18px;
+      padding: 5px 12px;
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-secondary);
       cursor: pointer;
-      border-radius: 50px; /* Luma Pill buttons */
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 13px;
       font-weight: 500;
       transition: var(--transition);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      height: 32px;
     }
 
     .nav-button:hover {
-      background: rgba(0, 0, 0, 0.03);
-      color: #000000;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
     }
 
     .nav-button.active {
-      background: rgba(0, 0, 0, 0.05);
-      color: #000000;
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--accent-blue-l);
       font-weight: 600;
-      border-color: transparent;
+      border-color: rgba(37, 99, 235, 0.25);
     }
 
     .header__actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .icon-button {
-      width: 36px;
-      height: 36px;
-      border-radius: 50px; /* Perfect Circle */
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
-      background: rgba(255, 255, 255, 0.8);
-      color: var(--text-primary);
+      background: transparent;
+      color: var(--text-secondary);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -196,21 +233,66 @@
     }
 
     .icon-button:hover {
-      background: #ffffff;
-      border-color: rgba(0,0,0,0.15);
-      transform: scale(1.04);
+      background: rgba(255,255,255,0.07);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
     }
 
-    /* ========== PANELS GENERAL (GLASSMORPHISM LIGHT) ========== */
+    /* ── Arxis AI Button ── */
+    .btn-arxis-ai {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 0 14px rgba(124, 58, 237, 0.35);
+      height: 30px;
+      letter-spacing: 0.01em;
+    }
+    .btn-arxis-ai:hover {
+      box-shadow: 0 0 22px rgba(124, 58, 237, 0.55);
+      transform: translateY(-1px);
+    }
+    .btn-arxis-ai__dot {
+      width: 5px; height: 5px;
+      background: #C4B5F4;
+      border-radius: 50%;
+      animation: ai-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes ai-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ── User Avatar ── */
+    .header__avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB, #7C3AED);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    /* ========== PANELS GENERAL ========== */
     .glass-panel {
       background: var(--bg-panel);
       border: 1px solid var(--border-color);
-      border-radius: 22px; /* Smooth Luma cards */
-      backdrop-filter: blur(20px);
+      border-radius: 12px;
+      backdrop-filter: blur(16px);
       box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 64px - 32px);
+      height: calc(100vh - var(--topbar-height) - var(--statusbar-height) - 24px);
       pointer-events: auto;
       transition: var(--transition);
       position: relative;
@@ -224,7 +306,7 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #ffffff;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
       display: flex;
@@ -236,8 +318,8 @@
       box-shadow: var(--shadow-sm);
     }
     .panel-toggle:hover {
-      color: #000000;
-      border-color: rgba(0,0,0,0.15);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
       transform: scale(1.1);
     }
 
@@ -292,14 +374,15 @@
     }
 
     .sidebar__item:hover {
-      background: var(--bg-card-hover);
+      background: rgba(255,255,255,0.05);
       transform: translateX(2px);
     }
 
     .sidebar__item.active {
-      background: rgba(0, 0, 0, 0.05);
-      color: #000000;
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--accent-blue-l);
       font-weight: 600;
+      border-color: rgba(37,99,235,0.2);
     }
 
     .sidebar__icon {
@@ -308,7 +391,7 @@
     }
 
     .sidebar__item.active .sidebar__icon {
-      color: #000000;
+      color: var(--accent-blue-l);
     }
 
     /* ========== RIGHT PANEL ========== */
@@ -328,43 +411,42 @@
     }
 
     .panel__title {
-      font-size: 18px;
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 18px;
-      color: #000000;
-      letter-spacing: -0.4px;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       border-bottom: 1px solid var(--border-color);
       padding-bottom: 10px;
     }
 
     .panel__section {
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-color);
-      border-radius: 16px; /* Elegant rounded cards */
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: var(--shadow-sm);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
       transition: var(--transition);
     }
 
     .panel__section:hover {
-      border-color: rgba(0,0,0,0.12);
-      background: rgba(255, 255, 255, 0.9);
+      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .panel__section-title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--text-primary);
+      margin-bottom: 10px;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.06em;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .control-row {
@@ -445,43 +527,43 @@
 
     /* ========== BUTTONS (LUMA SPECIFIC - PILL SHAPE) ========== */
     .btn {
-      padding: 10px 18px;
-      border-radius: 50px; /* Luma Pill Button */
+      padding: 7px 14px;
+      border-radius: 7px;
       border: 1px solid var(--border-color);
       font-weight: 500;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       transition: var(--transition);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: var(--text-primary);
-      background: #ffffff;
+      background: rgba(255,255,255,0.06);
     }
 
     .btn:hover {
-      background: var(--bg-card-hover);
-      border-color: rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.1);
+      border-color: var(--border-hover);
     }
 
     .btn:active {
-      transform: scale(0.97); /* Luma scale effect on press */
+      transform: scale(0.97);
     }
 
     .btn-primary {
-      background: #000000; /* Luma Black CTA */
+      background: var(--accent-blue);
       color: #ffffff;
       border: none;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.35);
     }
 
     .btn-primary:hover {
-      background: #222222;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      background: var(--accent-blue-l);
+      box-shadow: 0 4px 14px rgba(37,99,235,0.45);
     }
 
     .btn-secondary {
-      background: #ffffff;
+      background: rgba(255,255,255,0.05);
       border-color: var(--border-color);
     }
 
@@ -499,12 +581,12 @@
     .floating-toggle-bar.right { right: 16px; }
     
     .floating-toggle-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%; /* Luma Circular floating action */
-      background: #ffffff;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-panel-solid);
       border: 1px solid var(--border-color);
-      color: #000000;
+      color: var(--text-secondary);
       display: none;
       align-items: center;
       justify-content: center;
@@ -513,9 +595,9 @@
       transition: var(--transition);
     }
     .floating-toggle-btn:hover {
-      background: #fafafa;
-      transform: scale(1.05);
-      border-color: rgba(0,0,0,0.15);
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
     }
 
     /* ========== SCENARIOS PANEL ========== */
@@ -594,35 +676,37 @@
       background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.1); color: #000000;
     }
 
-    /* ========== SELECTION ACTIONS BAR (LUMA GLASS PILL) ========== */
+    /* ========== SELECTION ACTIONS BAR ========== */
     .selection-actions {
       position: absolute;
-      bottom: 24px;
+      bottom: 16px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 100;
-      background: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 50px; /* High fidelity pill */
-      padding: 6px 12px;
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      border-radius: 24px;
+      padding: 5px 10px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      box-shadow: var(--shadow-lg);
-      font-size: 13px;
-      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(37,99,235,0.1);
+      font-size: 12px;
+      backdrop-filter: blur(16px);
       pointer-events: auto;
     }
     .selection-actions__label {
-      padding: 0 12px 0 6px; color: #000000; font-weight: 600;
-      border-right: 1px solid var(--border-color); max-width: 240px;
+      padding: 0 10px 0 4px; color: var(--accent-blue-l); font-weight: 600;
+      border-right: 1px solid var(--border-color); max-width: 220px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .selection-actions button {
-      padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border-color);
-      background: #ffffff; color: var(--text-primary); cursor: pointer;
+      padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.07); color: var(--text-secondary); cursor: pointer;
+      font-size: 11px; transition: var(--transition);
     }
     .selection-actions button:hover {
-      background: #000000; border-color: #000000; color: #ffffff;
+      background: var(--accent-blue); border-color: var(--accent-blue); color: #fff;
     }
 
     /* ========== DRAG & DROP OVERLAY ========== */
@@ -643,7 +727,7 @@
     .loading-screen {
       position: fixed;
       inset: 0;
-      background: #ffffff;
+      background: #111827;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -653,10 +737,10 @@
     }
 
     .loading-spinner {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(0,0,0,0.03);
-      border-top-color: #000000; /* Minimal black loader */
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255,255,255,0.08);
+      border-top-color: var(--accent-purple);
       border-radius: 50%;
       animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
@@ -673,10 +757,10 @@
 
     /* ========== SKELETON LOADING STATES ========== */
     .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
-      border-radius: 8px;
+      border-radius: 6px;
     }
 
     @keyframes shimmer {
@@ -699,21 +783,202 @@
       margin-bottom: 12px;
     }
 
-    /* ========== RESPONSIVE COLLAPSIBLE ADAPTABILITY ========== */
+    /* ========== STATUS BAR ========== */
+    .statusbar {
+      grid-row: 3;
+      background: #0D1117;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 12px;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'Cascadia Code', 'SF Mono', Consolas, monospace;
+      pointer-events: auto;
+      z-index: 100;
+      user-select: none;
+    }
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 10px;
+      border-right: 1px solid var(--border-color);
+      height: 100%;
+      white-space: nowrap;
+    }
+    .sb-item:first-child { padding-left: 0; }
+    .sb-item:last-child { border-right: none; }
+    .sb-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+    .sb-dot.green { background: var(--accent-green); }
+    .sb-dot.blue  { background: var(--accent-blue-l); }
+    .sb-dot.yellow { background: var(--accent-yellow); }
+    .sb-val { color: var(--text-secondary); }
+    .sb-right { margin-left: auto; display: flex; }
+    .statusbar .sb-item span { color: var(--text-secondary); }
+
+    /* camera-mode-button dark */
+    .camera-mode-button.active {
+      background: var(--accent-blue) !important;
+      border-color: var(--accent-blue) !important;
+      color: #fff !important;
+    }
+    .camera-mode-status {
+      background: rgba(255,255,255,0.04);
+      border-color: var(--border-color);
+    }
+    .camera-mode-status strong { color: var(--text-primary); }
+
+    /* ========== RESPONSIVE ========== */
     @media (max-width: 1024px) {
       .sidebar {
         position: absolute;
-        left: 16px;
-        top: 16px;
+        left: 12px;
+        top: 12px;
         z-index: 45;
-        max-height: calc(100% - 32px);
+        max-height: calc(100% - 24px);
+        width: 280px;
       }
       .right-panel {
         position: absolute;
-        right: 16px;
-        top: 16px;
+        right: 12px;
+        top: 12px;
         z-index: 45;
-        max-height: calc(100% - 32px);
+        max-height: calc(100% - 24px);
+        width: 280px;
+      }
+      .header__breadcrumb { display: none; }
+    }
+
+    /* ===== MOBILE (≤768px) ===== */
+    @media (max-width: 768px) {
+      :root {
+        --topbar-height: 52px;
+        --statusbar-height: 0px;
+      }
+
+      /* Canvas fills viewport */
+      .app-container {
+        grid-template-rows: var(--topbar-height) 1fr 0px;
+      }
+
+      /* Hide status bar on mobile */
+      .statusbar { display: none; }
+
+      /* Compact header */
+      .header {
+        padding: 0 12px;
+        height: var(--topbar-height);
+      }
+      .header__nav { display: none; }
+      .header__breadcrumb { display: none; }
+      .header__logo { font-size: 14px; }
+
+      /* Desktop panels → hidden by default on mobile */
+      .sidebar,
+      .right-panel {
+        display: none !important;
+      }
+      .floating-toggle-bar { display: none !important; }
+      .overlay-workspace { padding: 8px; }
+
+      /* ── Bottom Sheet ── */
+      .bottom-sheet {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--bg-panel-solid);
+        border-top: 1px solid var(--border-color);
+        border-radius: 18px 18px 0 0;
+        z-index: 200;
+        pointer-events: auto;
+        transform: translateY(calc(100% - 52px));
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+      }
+      .bottom-sheet.open {
+        transform: translateY(0);
+      }
+      .bottom-sheet__handle-area {
+        padding: 10px 0 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .bottom-sheet__handle {
+        width: 36px; height: 4px;
+        background: var(--border-hover);
+        border-radius: 2px;
+      }
+      .bottom-sheet__tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+      .bottom-sheet__tab {
+        flex: 1; padding: 8px 0; text-align: center;
+        font-size: 11px; font-weight: 500; color: var(--text-muted);
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      .bottom-sheet__tab.active {
+        color: var(--accent-blue-l);
+        border-bottom-color: var(--accent-blue);
+      }
+      .bottom-sheet__content {
+        overflow-y: auto;
+        padding: 12px 16px 20px;
+        flex: 1;
+      }
+
+      /* ── Bottom Nav ── */
+      .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--bg-panel-solid);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        z-index: 300;
+        pointer-events: auto;
+        padding: 6px 0 max(8px, env(safe-area-inset-bottom));
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
+      }
+      .mobile-nav-item {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; gap: 2px; padding: 4px 0;
+        cursor: pointer;
+      }
+      .mobile-nav-ico { font-size: 20px; line-height: 1; }
+      .mobile-nav-lbl { font-size: 9px; font-weight: 500; color: var(--text-muted); }
+      .mobile-nav-item.active .mobile-nav-lbl { color: var(--accent-blue-l); }
+      .mobile-nav-item.ai-item .mobile-nav-ico-wrap {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        margin-top: -22px;
+        box-shadow: 0 4px 18px rgba(124, 58, 237, 0.5);
+      }
+      .mobile-nav-item.ai-item .mobile-nav-lbl {
+        color: var(--accent-purple-light);
+        margin-top: 6px;
+      }
+
+      /* Push canvas up when bottom nav present */
+      .canvas-area {
+        bottom: 56px;
+        height: calc(100vh - var(--topbar-height) - 56px);
       }
     }
   </style>
@@ -730,7 +995,17 @@
     <!-- Header -->
     <header class="header">
       <div class="header__left">
-        <div class="header__logo">ArxisVR</div>
+        <div class="header__logo">
+          <img src="/logo-icon.svg" alt="ArxisVR" />
+          ArxisVR
+        </div>
+        <div class="header__breadcrumb" id="header-breadcrumb" style="display:none">
+          <span id="bc-project">—</span>
+          <span class="header__breadcrumb-sep">›</span>
+          <span id="bc-floor">—</span>
+          <span class="header__breadcrumb-sep">›</span>
+          <span id="bc-element">—</span>
+        </div>
         <nav class="header__nav">
           <button class="nav-button active" data-view="viewer">
             <i class="lucide lucide-layout-grid"></i> Workspace
@@ -767,6 +1042,11 @@
         <button class="icon-button" title="Configurações">
           <i class="lucide lucide-settings"></i>
         </button>
+        <button class="btn-arxis-ai" id="btn-arxis-ai" title="Arxis AI">
+          <div class="btn-arxis-ai__dot"></div>
+          Arxis AI
+        </button>
+        <div class="header__avatar" title="Perfil">A</div>
       </div>
     </header>
 
@@ -946,7 +1226,81 @@
         </div>
       </aside>
     </div>
+
+    <!-- Status Bar -->
+    <footer class="statusbar" id="statusbar">
+      <div class="sb-item">
+        <div class="sb-dot green"></div>
+        <span>Online</span>
+      </div>
+      <div class="sb-item" id="sb-object">
+        <span>Objeto:</span>
+        <span class="sb-val" id="sb-object-name">—</span>
+      </div>
+      <div class="sb-item" id="sb-coords">
+        <span>X:</span><span class="sb-val" id="sb-x">0.00</span>
+        &nbsp;<span>Y:</span><span class="sb-val" id="sb-y">0.00</span>
+        &nbsp;<span>Z:</span><span class="sb-val" id="sb-z">0.00</span>
+      </div>
+      <div class="sb-item" id="sb-model-info" style="display:none">
+        <span class="sb-val" id="sb-ifc-version">IFC</span>
+        &nbsp;·&nbsp;
+        <span class="sb-val" id="sb-element-count">0</span>
+        <span>&nbsp;elementos</span>
+      </div>
+      <div class="sb-right">
+        <div class="sb-item">
+          <div class="sb-dot blue"></div>
+          <span>FPS:</span><span class="sb-val" id="sb-fps">60</span>
+        </div>
+        <div class="sb-item">
+          <span>Mem:</span><span class="sb-val" id="sb-mem">—</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-val">WebGL 2</span>
+        </div>
+      </div>
+    </footer>
   </div>
+
+  <!-- Mobile Bottom Sheet (properties) -->
+  <div class="bottom-sheet" id="mobile-bottom-sheet">
+    <div class="bottom-sheet__handle-area" id="bs-handle">
+      <div class="bottom-sheet__handle"></div>
+    </div>
+    <div class="bottom-sheet__tabs">
+      <div class="bottom-sheet__tab active" data-bs-tab="props">Propriedades</div>
+      <div class="bottom-sheet__tab" data-bs-tab="tools">Ferramentas</div>
+      <div class="bottom-sheet__tab" data-bs-tab="ai">IA</div>
+    </div>
+    <div class="bottom-sheet__content" id="bs-content">
+      <p style="font-size:12px;color:var(--text-muted)">Selecione um elemento para ver propriedades.</p>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <div class="mobile-nav-item active" data-mobile-view="viewer">
+      <span class="mobile-nav-ico">🏗️</span>
+      <span class="mobile-nav-lbl">Modelos</span>
+    </div>
+    <div class="mobile-nav-item" data-mobile-view="tools">
+      <span class="mobile-nav-ico">📐</span>
+      <span class="mobile-nav-lbl">Ferramentas</span>
+    </div>
+    <div class="mobile-nav-item ai-item" data-mobile-view="ai">
+      <div class="mobile-nav-ico-wrap">🤖</div>
+      <span class="mobile-nav-lbl">IA</span>
+    </div>
+    <div class="mobile-nav-item" data-mobile-view="clashes">
+      <span class="mobile-nav-ico">⚡</span>
+      <span class="mobile-nav-lbl">Clashes</span>
+    </div>
+    <div class="mobile-nav-item" data-mobile-view="settings">
+      <span class="mobile-nav-ico">⚙️</span>
+      <span class="mobile-nav-lbl">Config</span>
+    </div>
+  </nav>
 
   <!-- Interactive Sidebar Toggles -->
   <script>
@@ -990,6 +1344,97 @@
         };
       }
     });
+  </script>
+
+  <!-- Status Bar + Mobile JS -->
+  <script>
+    // ── Status Bar live FPS & memory ──
+    let _sbFrames = 0, _sbLast = performance.now();
+    function _sbTick() {
+      _sbFrames++;
+      const now = performance.now();
+      if (now - _sbLast >= 1000) {
+        const fps = Math.round(_sbFrames * 1000 / (now - _sbLast));
+        const el = document.getElementById('sb-fps');
+        if (el) el.textContent = fps;
+        _sbFrames = 0; _sbLast = now;
+        // Memory (Chrome only)
+        if (performance.memory) {
+          const mb = (performance.memory.usedJSHeapSize / 1048576).toFixed(0);
+          const mem = document.getElementById('sb-mem');
+          if (mem) mem.textContent = mb + ' MB';
+        }
+      }
+      requestAnimationFrame(_sbTick);
+    }
+    requestAnimationFrame(_sbTick);
+
+    // Expose helpers for the app to update status bar
+    window.ArxisStatusBar = {
+      setObject(name) {
+        const el = document.getElementById('sb-object-name');
+        if (el) el.textContent = name || '—';
+      },
+      setCoords(x, y, z) {
+        const fmt = v => (v == null ? '—' : parseFloat(v).toFixed(2));
+        ['x','y','z'].forEach((a,i) => {
+          const el = document.getElementById('sb-' + a);
+          if (el) el.textContent = fmt([x,y,z][i]);
+        });
+      },
+      setModelInfo(ifcVersion, count) {
+        const info = document.getElementById('sb-model-info');
+        if (info) info.style.display = '';
+        const v = document.getElementById('sb-ifc-version');
+        const c = document.getElementById('sb-element-count');
+        if (v) v.textContent = ifcVersion || 'IFC';
+        if (c) c.textContent = count || 0;
+      },
+      setBreadcrumb(project, floor, element) {
+        const bc = document.getElementById('header-breadcrumb');
+        if (bc) bc.style.display = 'flex';
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+        set('bc-project', project); set('bc-floor', floor); set('bc-element', element);
+      }
+    };
+
+    // ── Mobile: Bottom Sheet toggle ──
+    const bs = document.getElementById('mobile-bottom-sheet');
+    const bsHandle = document.getElementById('bs-handle');
+    if (bs && bsHandle) {
+      bsHandle.addEventListener('click', () => bs.classList.toggle('open'));
+    }
+
+    // Bottom sheet tabs
+    document.querySelectorAll('[data-bs-tab]').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('[data-bs-tab]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // Mobile nav items
+    document.querySelectorAll('[data-mobile-view]').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('[data-mobile-view]').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const view = item.dataset.mobileView;
+        if (view === 'tools' || view === 'clashes') {
+          if (bs) bs.classList.add('open');
+        }
+      });
+    });
+
+    // ── Show/hide mobile elements based on screen size ──
+    function _applyMobileLayout() {
+      const isMobile = window.innerWidth <= 768;
+      const mobileNav = document.getElementById('mobile-bottom-nav');
+      const mobileBS  = document.getElementById('mobile-bottom-sheet');
+      if (mobileNav) mobileNav.style.display = isMobile ? 'flex' : 'none';
+      if (mobileBS)  mobileBS.style.display  = isMobile ? 'flex' : 'none';
+    }
+    _applyMobileLayout();
+    window.addEventListener('resize', _applyMobileLayout);
   </script>
 
   <!-- Entry Point -->
