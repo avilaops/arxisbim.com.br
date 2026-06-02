@@ -21,6 +21,8 @@ import { IFCUploadManager } from '../systems/model/IFCUploadManager';
 import IFCSimpleLoader from './loaders/IFCSimpleLoader';
 import GLBLoader from './loaders/GLBLoader';
 import { ifcModelCache } from '../systems/model/IFCModelCache.js';
+import { ProceduralClouds } from './ProceduralClouds.js';
+import { OcclusionCullingSystem } from '../engine/optimization/OcclusionCullingSystem.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
 import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
@@ -50,6 +52,8 @@ export class ViewerHost {
   public postProcess!: PostProcessingPipeline;
   public csm!: CascadedShadowManager;
   public adaptiveQuality!: AdaptiveQualityManager;
+  public clouds!: ProceduralClouds;
+  public occlusionCulling!: OcclusionCullingSystem;
   private clock!: THREE.Clock;
 
   /**
@@ -135,6 +139,8 @@ export class ViewerHost {
         this.postProcess?.enableAO();
         // CSM uniforms nos materiais do modelo
         this.csm?.applyToObject(model);
+        // Reconstruir occlusion culling com nova geometria
+        this.occlusionCulling?.updateOccluders();
         // Ajustar sombras e sky para o tamanho do modelo
         const box = new THREE.Box3().setFromObject(model);
         this.csm?.fitToModel?.(box);
@@ -341,6 +347,19 @@ export class ViewerHost {
     this.backgroundManager.onSunDirectionChanged = (dir: THREE.Vector3) => {
       this.csm?.setSunDirection(dir);
     };
+
+    // ── Nuvens procedurais ────────────────────────────────────────────────────
+    this.clouds = new ProceduralClouds(this.scene, 'partial');
+    (window as any).__clouds = this.clouds;
+
+    // ── Occlusion Culling ─────────────────────────────────────────────────────
+    this.occlusionCulling = new OcclusionCullingSystem(this.scene, this.camera, {
+      enabled:            true,
+      testInterval:       3,    // testa a cada 3 frames (não todo frame)
+      maxDistance:        150,
+      occluderThreshold:  4,
+    });
+    (window as any).__occlusionCulling = this.occlusionCulling;
     
     // Garantir que o grid é visível após criação (fix para sidebar iniciar fechada)
     setTimeout(() => {
@@ -497,6 +516,12 @@ export class ViewerHost {
 
       // CSM — atualizar frustum splits antes de renderizar
       this.csm?.update();
+
+      // Nuvens procedurais — animar drift de vento
+      this.clouds?.update();
+
+      // Occlusion culling — esconder objetos atrás de outros
+      this.occlusionCulling?.update();
 
       // Adaptive quality — mede FPS e ajusta resolução/qualidade
       this.adaptiveQuality?.tick();

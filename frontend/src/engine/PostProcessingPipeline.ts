@@ -21,7 +21,9 @@ import { ShaderPass }            from 'three/examples/jsm/postprocessing/ShaderP
 import { FilmPass }              from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { VignetteShader }        from 'three/examples/jsm/shaders/VignetteShader.js';
 import { FXAAShader }            from 'three/examples/jsm/shaders/FXAAShader.js';
-import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+import { GammaCorrectionShader }    from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+import { ChromaticAberrationShader } from './ChromaticAberrationShader.js';
+import { AtmosphericPerspectiveShader } from './AtmosphericPerspectiveShader.js';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +59,15 @@ export interface PostProcessConfig {
   vignetteDarkness: number;
   vignetteOffset:   number;
 
+  // Chromatic Aberration
+  chromaticAberration:          boolean;
+  chromaticAberrationIntensity: number;
+
+  // Atmospheric Perspective
+  atmosphericPerspective: boolean;
+  atmosphericDensity:     number;
+  atmosphericStart:       number;
+
   // Anti-aliasing
   smaa: boolean;
   fxaa: boolean;
@@ -70,6 +81,8 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     dof: false,   dofFocus: 50, dofAperture: 0.00002, dofMaxBlur: 0.005,
     grain: false, grainIntensity: 0,
     vignette: true, vignetteDarkness: 0.38, vignetteOffset: 0.88,
+    chromaticAberration: false, chromaticAberrationIntensity: 0,
+    atmosphericPerspective: false, atmosphericDensity: 0.001, atmosphericStart: 100,
     smaa: false, fxaa: true,
   },
   medium: {
@@ -79,6 +92,8 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     dof: false,   dofFocus: 50, dofAperture: 0.00002, dofMaxBlur: 0.006,
     grain: false, grainIntensity: 0,
     vignette: true, vignetteDarkness: 0.44, vignetteOffset: 0.92,
+    chromaticAberration: true, chromaticAberrationIntensity: 0.002,
+    atmosphericPerspective: true, atmosphericDensity: 0.0010, atmosphericStart: 80,
     smaa: true, fxaa: false,
   },
   high: {
@@ -88,6 +103,8 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     dof: true,    dofFocus: 60, dofAperture: 0.000025, dofMaxBlur: 0.008,
     grain: true,  grainIntensity: 0.028,
     vignette: true, vignetteDarkness: 0.50, vignetteOffset: 0.95,
+    chromaticAberration: true, chromaticAberrationIntensity: 0.0028,
+    atmosphericPerspective: true, atmosphericDensity: 0.0012, atmosphericStart: 70,
     smaa: true, fxaa: false,
   },
   ultra: {
@@ -97,6 +114,8 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     dof: true,    dofFocus: 60, dofAperture: 0.00003, dofMaxBlur: 0.010,
     grain: true,  grainIntensity: 0.022,
     vignette: true, vignetteDarkness: 0.52, vignetteOffset: 0.98,
+    chromaticAberration: true, chromaticAberrationIntensity: 0.003,
+    atmosphericPerspective: true, atmosphericDensity: 0.0014, atmosphericStart: 60,
     smaa: true, fxaa: false,
   },
 };
@@ -111,13 +130,15 @@ export class PostProcessingPipeline {
   private config:     PostProcessConfig;
 
   // Refs para ajuste em runtime
-  private bloomPass: UnrealBloomPass | null = null;
-  private saoPass:   SAOPass         | null = null;  // SAO = 4× faster than SSAO
-  private bokehPass: BokehPass       | null = null;
-  private filmPass:  FilmPass        | null = null;
-  private vigPass:   ShaderPass      | null = null;
-  private fxaaPass:  ShaderPass      | null = null;
-  private aoEnabled: boolean         = false;       // lazy: só liga com modelo
+  private bloomPass:  UnrealBloomPass | null = null;
+  private saoPass:    SAOPass         | null = null;
+  private bokehPass:  BokehPass       | null = null;
+  private filmPass:   FilmPass        | null = null;
+  private vigPass:    ShaderPass      | null = null;
+  private chromaPass: ShaderPass      | null = null;
+  private atmosPass:  ShaderPass      | null = null;
+  private fxaaPass:   ShaderPass      | null = null;
+  private aoEnabled:  boolean         = false;
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -213,7 +234,24 @@ export class PostProcessingPipeline {
       this.composer.addPass(this.fxaaPass);
     }
 
-    // 9. Gamma correction — último sempre
+    // 9. Atmospheric Perspective — névoa aérea azulada à distância
+    if (cfg.atmosphericPerspective) {
+      this.atmosPass = new ShaderPass(AtmosphericPerspectiveShader);
+      this.atmosPass.uniforms['cameraNear'].value  = this.camera.near;
+      this.atmosPass.uniforms['cameraFar'].value   = this.camera.far;
+      this.atmosPass.uniforms['fogDensity'].value  = cfg.atmosphericDensity;
+      this.atmosPass.uniforms['fogStart'].value    = cfg.atmosphericStart;
+      this.composer.addPass(this.atmosPass);
+    }
+
+    // 10. Chromatic Aberration — distorção de lente cromática
+    if (cfg.chromaticAberration) {
+      this.chromaPass = new ShaderPass(ChromaticAberrationShader);
+      this.chromaPass.uniforms['intensity'].value = cfg.chromaticAberrationIntensity;
+      this.composer.addPass(this.chromaPass);
+    }
+
+    // 11. Gamma correction — sempre último
     this.composer.addPass(new ShaderPass(GammaCorrectionShader));
   }
 
@@ -234,9 +272,10 @@ export class PostProcessingPipeline {
     const wasAoEnabled = this.aoEnabled;
     this.config = { ...QUALITY_PRESETS[quality] };
     this.composer.passes.splice(0);
-    this.bloomPass = null; this.saoPass   = null;
-    this.bokehPass = null; this.filmPass  = null;
-    this.vigPass   = null; this.fxaaPass  = null;
+    this.bloomPass  = null; this.saoPass    = null;
+    this.bokehPass  = null; this.filmPass   = null;
+    this.vigPass    = null; this.fxaaPass   = null;
+    this.chromaPass = null; this.atmosPass  = null;
     this.buildPasses();
     // Restore AO state after rebuild
     if (wasAoEnabled && this.saoPass) this.saoPass.enabled = true;
@@ -298,6 +337,26 @@ export class PostProcessingPipeline {
 
   public setDOFEnabled(enabled: boolean): void {
     if (this.bokehPass) this.bokehPass.enabled = enabled;
+  }
+
+  /** Chromatic Aberration: 0=off, 0.003=sutil, 0.01=forte */
+  public setChromaticAberration(intensity: number): void {
+    if (this.chromaPass) this.chromaPass.uniforms['intensity'].value = intensity;
+  }
+
+  /** Atmospheric Perspective em runtime */
+  public setAtmosphericPerspective(density: number, start?: number): void {
+    if (!this.atmosPass) return;
+    this.atmosPass.uniforms['fogDensity'].value = density;
+    if (start !== undefined) this.atmosPass.uniforms['fogStart'].value = start;
+  }
+
+  /** Atualiza near/far quando câmera muda */
+  public updateCameraParams(near: number, far: number): void {
+    if (this.atmosPass) {
+      this.atmosPass.uniforms['cameraNear'].value = near;
+      this.atmosPass.uniforms['cameraFar'].value  = far;
+    }
   }
 
   public getConfig(): PostProcessConfig { return { ...this.config }; }
