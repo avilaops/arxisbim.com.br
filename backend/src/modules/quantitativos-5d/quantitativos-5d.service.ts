@@ -12,7 +12,7 @@ import type {
   TakeoffRule,
   QuantityType,
   TakeoffCache,
-} from './quantitativos-5d.types';
+} from './quantitativos-5d.types.js';
 import { db } from '../../shared/database/db.js';
 import { modelElements, ifcModels } from '../../shared/database/schema/index.js';
 import { eq, inArray, and } from 'drizzle-orm';
@@ -236,16 +236,13 @@ export class Quantitativos5DService {
   // ==================== PRIVATE METHODS ====================
 
   private static async fetchElements(modelId: string, params: TakeoffParams) {
-    let query = db
-      .select()
-      .from(modelElements)
-      .where(eq(modelElements.modelId, modelId));
+    const conditions = [eq(modelElements.ifcModelId, modelId)];
 
     if (params.types && params.types.length > 0) {
-      query = query.where(inArray(modelElements.type, params.types));
+      conditions.push(inArray(modelElements.type, params.types));
     }
 
-    return await query;
+    return await db.select().from(modelElements).where(and(...conditions));
   }
 
   private static async calculateElementQuantities(
@@ -277,7 +274,7 @@ export class Quantitativos5DService {
       const result = this.calculateQuantity(element, properties, qtyType);
       if (result !== null) {
         quantities[qtyType] = result.value;
-        units[qtyType] = result.unit;
+        (units as Record<string, string>)[qtyType] = result.unit;
       }
     }
 

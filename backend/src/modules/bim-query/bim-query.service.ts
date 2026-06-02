@@ -106,27 +106,31 @@ export class BIMQueryService {
     }
 
     // Paginação
+    let finalQuery: typeof dbQuery = dbQuery;
     if (query.limit) {
-      dbQuery = dbQuery.limit(query.limit);
+      finalQuery = finalQuery.limit(query.limit) as typeof dbQuery;
       if (query.offset) {
-        dbQuery = dbQuery.offset(query.offset);
+        finalQuery = finalQuery.offset(query.offset) as typeof dbQuery;
       }
     }
 
-    const rows = await dbQuery;
+    const rows = await finalQuery;
 
     // Converter para BIMElement
-    const elements: BIMElement[] = rows.map((row) => ({
-      expressId: row.expressId,
-      type: row.type,
-      globalId: row.globalId || undefined,
-      properties: (row.properties as Record<string, any>) || {},
-      geometry: row.boundingBox
-        ? {
-            boundingBox: row.boundingBox as { min: [number, number, number]; max: [number, number, number] },
-          }
-        : undefined,
-    }));
+    const elements: BIMElement[] = rows.map((row) => {
+      const geo = row.geometry as { boundingBox?: { min: number[]; max: number[] }; vertices?: number } | null;
+      return {
+        expressId: row.expressId,
+        type: row.type,
+        globalId: row.globalId || undefined,
+        properties: (row.properties as Record<string, any>) || {},
+        geometry: geo?.boundingBox
+          ? {
+              boundingBox: geo.boundingBox as unknown as { min: [number, number, number]; max: [number, number, number] },
+            }
+          : undefined,
+      };
+    });
 
     // Aplicar filtros em memória (para filtros complexos não suportados pelo DB)
     return this.applyInMemoryFilters(elements, query);

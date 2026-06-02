@@ -7,7 +7,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Quantitativos5DService } from './quantitativos-5d.service.js';
-import type { TakeoffParams } from './quantitativos-5d.types';
+import type { TakeoffParams } from './quantitativos-5d.types.js';
 
 const TakeoffParamsSchema = z.object({
   types: z.array(z.string()).optional(),

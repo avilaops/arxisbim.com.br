@@ -14,7 +14,7 @@ import type {
   GLBExportRequest,
   GLBExportJob,
   GLBExportProgress,
-} from './glb-export.types';
+} from './glb-export.types.js';
 import { db } from '../../shared/database/db.js';
 import { modelElements, ifcModels } from '../../shared/database/schema/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -74,9 +74,9 @@ export class GLBExportService {
       mimeType: options.binary ? 'model/gltf-binary' : 'model/gltf+json',
       stats: {
         ...meshStats,
-        originalSize: meshStats.originalSize,
+        originalSize: 0,
         compressedSize: glb.byteLength,
-        compressionRatio: meshStats.originalSize > 0 ? glb.byteLength / meshStats.originalSize : 1,
+        compressionRatio: 1,
         processingTime,
       },
       options,
@@ -194,20 +194,17 @@ export class GLBExportService {
   private static async fetchElements(request: GLBExportRequest) {
     const { modelId, filter } = request;
 
-    let query = db
-      .select()
-      .from(modelElements)
-      .where(eq(modelElements.modelId, modelId));
+    const conditions = [eq(modelElements.ifcModelId, modelId)];
 
     if (filter?.expressIds && filter.expressIds.length > 0) {
-      query = query.where(inArray(modelElements.expressId, filter.expressIds));
+      conditions.push(inArray(modelElements.expressId, filter.expressIds));
     }
 
     if (filter?.types && filter.types.length > 0) {
-      query = query.where(inArray(modelElements.type, filter.types));
+      conditions.push(inArray(modelElements.type, filter.types));
     }
 
-    return await query;
+    return await db.select().from(modelElements).where(and(...conditions));
   }
 
   private static async convertElements(
@@ -316,7 +313,7 @@ export class GLBExportService {
     if (options.simplify && options.simplifyRatio) {
       // Note: simplification requires additional library like meshoptimizer
       // Simplified implementation here
-      transforms.push(weld({ tolerance: 0.0001 }));
+      transforms.push(weld());
     }
 
     if (transforms.length > 0) {
