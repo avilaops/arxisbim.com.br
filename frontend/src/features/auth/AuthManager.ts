@@ -31,6 +31,8 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
+  companyName?: string;
+  tenantId?: string;
   role?: string;
 }
 
