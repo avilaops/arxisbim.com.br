@@ -35,18 +35,18 @@ interface AdaptiveConfig {
 const MODE_CONFIGS: Record<AdaptiveMode, AdaptiveConfig> = {
   performance: {
     mode: 'performance', targetFPS: 60,
-    minPixelRatio: 0.5, maxPixelRatio: 1.0,
-    checkInterval: 2000, hysteresis: 5,
+    minPixelRatio: 0.75, maxPixelRatio: 1.0,
+    checkInterval: 3000, hysteresis: 6,
   },
   balanced: {
     mode: 'balanced', targetFPS: 45,
-    minPixelRatio: 0.75, maxPixelRatio: 1.5,
-    checkInterval: 3000, hysteresis: 8,
+    minPixelRatio: 0.85, maxPixelRatio: 1.5,
+    checkInterval: 4000, hysteresis: 10,   // mais lento para degradar
   },
   quality: {
     mode: 'quality', targetFPS: 30,
     minPixelRatio: 1.0, maxPixelRatio: 2.0,
-    checkInterval: 4000, hysteresis: 12,
+    checkInterval: 5000, hysteresis: 15,
   },
 };
 

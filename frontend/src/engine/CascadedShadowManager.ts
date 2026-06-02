@@ -124,6 +124,19 @@ export class CascadedShadowManager {
     });
   }
 
+  /**
+   * Ajusta maxFar e shadow camera ao bounding box do modelo carregado
+   */
+  public fitToModel(box: THREE.Box3): void {
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const newFar = Math.min(Math.max(maxDim * 4, 100), 1000);
+    this.csm.maxFar = newFar;
+    this.csm.updateFrustums();
+    console.log(`📐 CSM fitted to model: maxFar=${newFar.toFixed(0)}m`);
+  }
+
   public dispose(): void {
     this.csm.dispose();
   }

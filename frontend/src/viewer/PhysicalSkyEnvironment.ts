@@ -181,11 +181,14 @@ export class PhysicalSkyEnvironment {
     // Atualizar exposure do renderer
     this.renderer.toneMappingExposure = preset.exposure;
 
-    // Gerar environment map do céu para IBL (reflections)
-    this.updateEnvironmentMap();
+    // Marcar env map como dirty — será gerado no próximo tick (não bloqueia o frame atual)
+    this.markEnvMapDirty();
 
     // Fog derivado da cor do horizonte
     this.updateFog(preset);
+
+    // Gerar env map agora (lazy)
+    this.updateEnvironmentMap();
 
     console.log(`☀️ Sky preset: ${key ?? preset.label} (elevation=${preset.elevation}°)`);
   }
@@ -194,19 +197,34 @@ export class PhysicalSkyEnvironment {
    * Gera PMREM do céu atual e aplica como environment map na cena
    * → materiais StandardMaterial recebem reflexos do céu automaticamente
    */
+  private envMapDirty = true;
+  private lastEnvMap: THREE.Texture | null = null;
+
   private updateEnvironmentMap(): void {
-    // Renderiza o céu atual para um CubeRenderTarget e gera o PMREM
-    // Isso dá IBL correto (reflection + diffuse) derivado do sky shader
+    // PMREM é caro — gerar de forma diferida (próximo frame, uma vez por preset)
+    if (!this.envMapDirty) return;
+    this.envMapDirty = false;
+
+    // Descartar env map anterior
+    if (this.lastEnvMap) {
+      this.lastEnvMap.dispose();
+      this.lastEnvMap = null;
+    }
+
     const skyScene = new THREE.Scene();
     const skyCopy = this.sky.clone() as Sky;
-    skyCopy.material = this.sky.material; // compartilha uniforms atuais
+    skyCopy.material = this.sky.material;
     skyScene.add(skyCopy);
 
     const rt = this.pmremGenerator.fromScene(skyScene as any);
+    this.lastEnvMap = rt.texture;
     this.scene.environment = rt.texture;
 
-    // Limpeza — não descartar rt.texture pois está em uso na scene
     skyScene.remove(skyCopy);
+  }
+
+  private markEnvMapDirty(): void {
+    this.envMapDirty = true;
   }
 
   /**

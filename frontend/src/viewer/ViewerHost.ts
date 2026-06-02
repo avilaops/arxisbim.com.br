@@ -107,6 +107,14 @@ export class ViewerHost {
       if (model) {
         this.scene.add(model);
         if (this.onModelLoaded) this.onModelLoaded(model);
+        // Ativar AO após primeiro modelo carregado (SAO precisa de geometria)
+        this.postProcess?.enableAO();
+        // CSM uniforms nos materiais do modelo
+        this.csm?.applyToObject(model);
+        // Ajustar sombras e sky para o tamanho do modelo
+        const box = new THREE.Box3().setFromObject(model);
+        this.csm?.fitToModel?.(box);
+        this.backgroundManager?.fitToModel?.(box);
       }
       return model;
     } catch (error: any) {

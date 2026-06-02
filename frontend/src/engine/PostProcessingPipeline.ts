@@ -14,7 +14,7 @@ import * as THREE from 'three';
 import { EffectComposer }        from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass }            from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass }       from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { SSAOPass }              from 'three/examples/jsm/postprocessing/SSAOPass.js';
+import { SAOPass }               from 'three/examples/jsm/postprocessing/SAOPass.js';
 import { SMAAPass }              from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { BokehPass }             from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { ShaderPass }            from 'three/examples/jsm/postprocessing/ShaderPass.js';
@@ -112,11 +112,12 @@ export class PostProcessingPipeline {
 
   // Refs para ajuste em runtime
   private bloomPass: UnrealBloomPass | null = null;
-  private ssaoPass:  SSAOPass        | null = null;
+  private saoPass:   SAOPass         | null = null;  // SAO = 4× faster than SSAO
   private bokehPass: BokehPass       | null = null;
   private filmPass:  FilmPass        | null = null;
   private vigPass:   ShaderPass      | null = null;
   private fxaaPass:  ShaderPass      | null = null;
+  private aoEnabled: boolean         = false;       // lazy: só liga com modelo
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -149,13 +150,20 @@ export class PostProcessingPipeline {
     // 1. Base render
     this.composer.addPass(new RenderPass(this.scene, this.camera));
 
-    // 2. SSAO — oclusão ambiente (Lumen AO equivalent)
+    // 2. SAO — Scalable Ambient Obscurance (4× mais rápido que SSAOPass)
+    //    Lazy: começa desabilitado, liga apenas quando modelo é carregado
     if (cfg.ssao) {
-      this.ssaoPass = new SSAOPass(this.scene, this.camera, w, h);
-      this.ssaoPass.kernelRadius = cfg.ssaoRadius;
-      this.ssaoPass.minDistance  = cfg.ssaoMinDist;
-      this.ssaoPass.maxDistance  = cfg.ssaoMaxDist;
-      this.composer.addPass(this.ssaoPass);
+      this.saoPass = new SAOPass(this.scene, this.camera, false, true);
+      this.saoPass.params.saoBias         = 0.5;
+      this.saoPass.params.saoIntensity    = 0.18;
+      this.saoPass.params.saoScale        = 1;
+      this.saoPass.params.saoKernelRadius = cfg.ssaoRadius * 10;
+      this.saoPass.params.saoMinResolution = 0;
+      this.saoPass.params.saoBlur         = true;
+      this.saoPass.params.saoBlurRadius   = 8;
+      this.saoPass.params.saoBlurStdDev   = 4;
+      this.saoPass.enabled = this.aoEnabled;  // desabilitado até modelo carregar
+      this.composer.addPass(this.saoPass);
     }
 
     // 3. Unreal Bloom — UE4/5 Temporal Bloom
@@ -218,18 +226,39 @@ export class PostProcessingPipeline {
   public setSize(w: number, h: number): void {
     this.composer.setSize(w, h);
     this.fxaaPass?.uniforms['resolution'].value.set(1 / w, 1 / h);
-    this.ssaoPass?.setSize(w, h);
+    this.saoPass?.setSize(w, h);
     if (this.bloomPass) this.bloomPass.resolution.set(w, h);
   }
 
   public setQuality(quality: PostProcessQuality): void {
+    const wasAoEnabled = this.aoEnabled;
     this.config = { ...QUALITY_PRESETS[quality] };
     this.composer.passes.splice(0);
-    this.bloomPass = null; this.ssaoPass  = null;
+    this.bloomPass = null; this.saoPass   = null;
     this.bokehPass = null; this.filmPass  = null;
     this.vigPass   = null; this.fxaaPass  = null;
     this.buildPasses();
+    // Restore AO state after rebuild
+    if (wasAoEnabled && this.saoPass) this.saoPass.enabled = true;
+    this.aoEnabled = wasAoEnabled;
     console.log(`🎬 PostProcess → ${quality} (${this.composer.passes.length} passes)`);
+  }
+
+  /**
+   * Ligar AO — chamar APÓS primeiro modelo IFC ser carregado
+   * Evita rodar SAO em cena vazia (caro e inútil)
+   */
+  public enableAO(): void {
+    this.aoEnabled = true;
+    if (this.saoPass) {
+      this.saoPass.enabled = true;
+      console.log('🌑 SAO (Ambient Occlusion) ativado');
+    }
+  }
+
+  public disableAO(): void {
+    this.aoEnabled = false;
+    if (this.saoPass) this.saoPass.enabled = false;
   }
 
   /** Bloom: strength 0–3, radius 0–1, threshold 0–1 */
@@ -254,7 +283,7 @@ export class PostProcessingPipeline {
   }
 
   public setSSAOEnabled(enabled: boolean): void {
-    if (this.ssaoPass) this.ssaoPass.enabled = enabled;
+    if (enabled) this.enableAO(); else this.disableAO();
   }
 
   public setVignette(darkness: number, offset?: number): void {
