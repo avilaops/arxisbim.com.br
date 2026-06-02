@@ -1479,7 +1479,7 @@
       <div class="welcome-main">
         <div class="welcome-greeting">
           <div class="welcome-greeting__sup">ArxisVR · Plataforma BIM</div>
-          <div class="welcome-greeting__title">Olá, <span id="welcome-username">Nicolas</span> 👋</div>
+          <div class="welcome-greeting__title" id="welcome-greeting-title">Olá 👋</div>
           <div class="welcome-greeting__sub">Continue de onde parou ou inicie um novo projeto.</div>
         </div>
 
@@ -2028,16 +2028,23 @@
     function initWelcome() {
       renderProjectCards(SAMPLE_PROJECTS);
 
-      // Try to get username from localStorage / JWT
+      // Build greeting from JWT name or just "Olá"
       try {
-        const token = localStorage.getItem('arxisvr_token');
-        if (token) {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const name = payload.name || payload.email?.split('@')[0] || 'você';
-          const el = document.getElementById('welcome-username');
-          if (el) el.textContent = name.split(' ')[0];
+        const titleEl = document.getElementById('welcome-greeting-title');
+        if (titleEl) {
+          const token = localStorage.getItem('arxisvr_token');
+          let firstName = '';
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const raw = payload.name || payload.email?.split('@')[0] || '';
+            firstName = raw.split(' ')[0].trim();
+          }
+          titleEl.textContent = firstName ? `Olá, ${firstName} 👋` : 'Olá 👋';
         }
-      } catch(_) {}
+      } catch(_) {
+        const titleEl = document.getElementById('welcome-greeting-title');
+        if (titleEl) titleEl.textContent = 'Olá 👋';
+      }
 
       // Hide welcome when a model loads
       window.ArxisWelcome = {
