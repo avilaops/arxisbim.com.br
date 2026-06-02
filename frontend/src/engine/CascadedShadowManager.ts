@@ -31,7 +31,7 @@ const CSM_DEFAULT: CSMConfig = {
   cascades:     4,
   shadowMapSize: 1024,
   fade:         true,
-  lightIntensity: 1.8,
+  lightIntensity: 1.0,  // CSM distribui entre cascatas — não multiplicar por 4
   lightColor:   0xfff5e0,
   lightDirection: new THREE.Vector3(-1, -2, -1).normalize(),
 };

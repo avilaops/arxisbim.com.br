@@ -24,6 +24,7 @@ export class BackgroundManager {
   private fog: THREE.Fog | null = null;
   private gridRuntime: GridRuntimeConfig;
   private physicalSky: PhysicalSkyEnvironment | null = null;
+  public onSunDirectionChanged?: (dir: THREE.Vector3) => void;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera, presetId: string = 'SKY_NOON', renderer?: THREE.WebGLRenderer) {
     this.renderer = renderer ?? null;
@@ -116,12 +117,19 @@ export class BackgroundManager {
         console.warn('[BackgroundManager] renderer not provided — physical sky requires WebGLRenderer');
         return;
       }
-      this.disposePhysicalSky();
-      this.physicalSky = new PhysicalSkyEnvironment(
-        this.scene,
-        this.renderer,
-        preset.physicalSkyPreset ?? 'NOON'
-      );
+      if (!this.physicalSky) {
+        // Criar nova instância apenas se não existir
+        this.physicalSky = new PhysicalSkyEnvironment(
+          this.scene,
+          this.renderer,
+          preset.physicalSkyPreset ?? 'NOON'
+        );
+      } else {
+        // Trocar apenas o preset
+        this.physicalSky.setPreset(preset.physicalSkyPreset ?? 'NOON');
+      }
+      // Notificar CSM da nova direção do sol
+      this.onSunDirectionChanged?.(this.physicalSky.sunDirection);
       return;
     }
 

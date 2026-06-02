@@ -285,10 +285,11 @@ export class ViewerHost {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
     this.csm = new CascadedShadowManager(this.renderer, this.scene, this.camera, {
-      maxFar:        500,
-      cascades:      4,
-      shadowMapSize: 1024,
-      fade:          true,
+      maxFar:         500,
+      cascades:       4,
+      shadowMapSize:  1024,
+      fade:           true,
+      lightIntensity: 1.0,  // intensidade correta — não multiplicar por 4 cascatas
     });
     (window as any).__csm = this.csm;
     console.log('🌑 CSM ativo (4 cascatas)');
@@ -305,6 +306,11 @@ export class ViewerHost {
     const savedPreset = localStorage.getItem('arxis:backgroundPreset');
     const defaultBackground = savedPreset || import.meta.env.VITE_DEFAULT_BACKGROUND || 'SKY_NOON';
     this.backgroundManager = new BackgroundManager(this.scene, this.camera, defaultBackground, this.renderer);
+
+    // Sincronizar direção do sol do PhysicalSky com o CSM
+    this.backgroundManager.onSunDirectionChanged = (dir: THREE.Vector3) => {
+      this.csm?.setSunDirection(dir);
+    };
     
     // Garantir que o grid é visível após criação (fix para sidebar iniciar fechada)
     setTimeout(() => {

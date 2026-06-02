@@ -68,13 +68,9 @@ export class BIMEnvironment {
    * Configura todo o ambiente
    */
   private setup(): void {
-    // DESABILITADO - BackgroundManager controla sky/fog/ground
-    // this.setupSky();
-    // this.setupFog();
-    // this.setupGround();
-    this.setupLighting(); // Manter apenas iluminação
-    
-    console.log('🌍 BIM Environment: Iluminação ativada (sky/fog/ground controlados por BackgroundManager)');
+    // Iluminação desabilitada — PhysicalSkyEnvironment + CSM gerenciam luzes
+    // Evitar acúmulo: BIMEnvironment + PhysicalSky + CSM = ~10 de intensidade → branco
+    console.log('🌍 BIM Environment: iluminação delegada ao PhysicalSkyEnvironment + CSM');
   }
 
   /**

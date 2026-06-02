@@ -90,6 +90,7 @@ export class PhysicalSkyEnvironment {
   private pmremGenerator: THREE.PMREMGenerator;
   private groundPlane: THREE.Mesh | null = null;
   private currentPreset: SkyPreset;
+  public sunDirection: THREE.Vector3 = new THREE.Vector3(-1, -2, -1).normalize();
 
   constructor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, presetKey = 'NOON') {
     this.scene = scene;
@@ -104,21 +105,13 @@ export class PhysicalSkyEnvironment {
     this.sky.name = 'physical-sky';
     this.scene.add(this.sky);
 
-    // Luzes
-    this.sunLight = new THREE.DirectionalLight(0xfff5e0, 1.8);
-    this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.set(4096, 4096);
-    this.sunLight.shadow.camera.near = 0.5;
-    this.sunLight.shadow.camera.far = 800;
-    this.sunLight.shadow.camera.left = -200;
-    this.sunLight.shadow.camera.right = 200;
-    this.sunLight.shadow.camera.top = 200;
-    this.sunLight.shadow.camera.bottom = -200;
-    this.sunLight.shadow.bias = -0.0002;
-    this.sunLight.shadow.normalBias = 0.02;
+    // Luz ambiente suave — complementa o CSM (que já provê direcionais)
+    // Não adicionar DirectionalLight aqui: CSM já cria 4 deles
+    this.sunLight = new THREE.DirectionalLight(0xfff5e0, 0.0); // intensidade 0 — placeholder para sync direção
+    this.sunLight.visible = false; // invisível, usado só para calcular posição do sol
     this.scene.add(this.sunLight);
 
-    this.ambientLight = new THREE.AmbientLight(0xc8d8e8, 0.35);
+    this.ambientLight = new THREE.AmbientLight(0xc8d8e8, 0.5);
     this.scene.add(this.ambientLight);
 
     // Ground plane
@@ -169,14 +162,15 @@ export class PhysicalSkyEnvironment {
     this.sunLight.target.position.set(0, 0, 0);
     this.sunLight.target.updateMatrixWorld();
 
-    // Ajustar intensidade e cor por horário
+    // Ajustar ambient por horário (directional é gerenciado pelo CSM)
     const isGolden = preset.elevation < 10;
     const isOvercast = preset.turbidity > 15;
 
-    this.sunLight.intensity = isOvercast ? 0.6 : isGolden ? 1.2 : 1.8;
-    this.sunLight.color.set(isGolden ? 0xff9955 : isOvercast ? 0xd0d8e0 : 0xfff5e0);
-    this.ambientLight.intensity = isOvercast ? 0.7 : 0.35;
+    this.ambientLight.intensity = isOvercast ? 0.7 : isGolden ? 0.4 : 0.5;
     this.ambientLight.color.set(isOvercast ? 0xd0d8e8 : isGolden ? 0xffaa66 : 0xc8d8e8);
+
+    // Expor direção do sol para CSM sincronizar
+    this.sunDirection = this.sun.clone().negate().normalize();
 
     // Atualizar exposure do renderer
     this.renderer.toneMappingExposure = preset.exposure;
