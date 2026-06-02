@@ -23,6 +23,9 @@ import GLBLoader from './loaders/GLBLoader';
 import { ifcModelCache } from '../systems/model/IFCModelCache.js';
 import { ProceduralClouds } from './ProceduralClouds.js';
 import { OcclusionCullingSystem } from '../engine/optimization/OcclusionCullingSystem.js';
+import { ifcMaterialLibrary } from './IFCMaterialLibrary.js';
+import { Stars } from './Stars.js';
+import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
 import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
@@ -54,6 +57,7 @@ export class ViewerHost {
   public adaptiveQuality!: AdaptiveQualityManager;
   public clouds!: ProceduralClouds;
   public occlusionCulling!: OcclusionCullingSystem;
+  public stars!: Stars;
   private clock!: THREE.Clock;
 
   /**
@@ -135,9 +139,11 @@ export class ViewerHost {
       if (model) {
         this.scene.add(model);
         if (this.onModelLoaded) this.onModelLoaded(model);
+        // Aplicar materiais PBR por tipo IFC (concreto, vidro, metal, etc.)
+        ifcMaterialLibrary.applyToObject(model);
         // Ativar AO após primeiro modelo carregado (SAO precisa de geometria)
         this.postProcess?.enableAO();
-        // CSM uniforms nos materiais do modelo
+        // CSM uniforms nos materiais do modelo (depois de PBR)
         this.csm?.applyToObject(model);
         // Reconstruir occlusion culling com nova geometria
         this.occlusionCulling?.updateOccluders();
@@ -351,6 +357,30 @@ export class ViewerHost {
     // ── Nuvens procedurais ────────────────────────────────────────────────────
     this.clouds = new ProceduralClouds(this.scene, 'partial');
     (window as any).__clouds = this.clouds;
+
+    // ── Estrelas (visíveis quando sol abaixo do horizonte) ────────────────────
+    this.stars = new Stars(this.scene, 3000);
+    (window as any).__stars = this.stars;
+
+    // ── Sun Calculator API ────────────────────────────────────────────────────
+    (window as any).__sunCalc = SunPositionCalculator;
+    (window as any).__locations = COMMON_LOCATIONS;
+
+    // Helper: aplicar posição do sol por GPS+horário
+    (window as any).setSunByLocation = (locKey: string, date?: Date) => {
+      const loc = COMMON_LOCATIONS[locKey];
+      if (!loc) { console.warn('Local não encontrado:', Object.keys(COMMON_LOCATIONS)); return; }
+      const pos = SunPositionCalculator.calculate(date ?? new Date(), loc);
+      const presetKey = SunPositionCalculator.suggestSkyPreset(pos.elevation);
+      console.log(`☀️ Sol em ${locKey}: elev=${pos.elevation.toFixed(1)}° azim=${pos.azimuth.toFixed(1)}° → ${presetKey}`);
+      // Aplica preset e ajusta sun position manualmente
+      const physSky = (this.backgroundManager as any).physicalSky;
+      if (physSky) {
+        physSky.setSunPosition?.(pos.elevation, pos.azimuth);
+        this.stars?.updateBySunElevation(pos.elevation);
+      }
+      return pos;
+    };
 
     // ── Occlusion Culling ─────────────────────────────────────────────────────
     this.occlusionCulling = new OcclusionCullingSystem(this.scene, this.camera, {

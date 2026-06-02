@@ -24,6 +24,7 @@ import { FXAAShader }            from 'three/examples/jsm/shaders/FXAAShader.js'
 import { GammaCorrectionShader }    from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 import { ChromaticAberrationShader } from './ChromaticAberrationShader.js';
 import { AtmosphericPerspectiveShader } from './AtmosphericPerspectiveShader.js';
+import { GodRaysShader }                 from './GodRaysShader.js';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,11 @@ export interface PostProcessConfig {
   atmosphericDensity:     number;
   atmosphericStart:       number;
 
+  // God Rays
+  godRays:          boolean;
+  godRaysIntensity: number;
+  godRaysSamples:   number;
+
   // Anti-aliasing
   smaa: boolean;
   fxaa: boolean;
@@ -83,6 +89,7 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     vignette: true, vignetteDarkness: 0.38, vignetteOffset: 0.88,
     chromaticAberration: false, chromaticAberrationIntensity: 0,
     atmosphericPerspective: false, atmosphericDensity: 0.001, atmosphericStart: 100,
+    godRays: false, godRaysIntensity: 0, godRaysSamples: 0,
     smaa: false, fxaa: true,
   },
   medium: {
@@ -94,6 +101,7 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     vignette: true, vignetteDarkness: 0.44, vignetteOffset: 0.92,
     chromaticAberration: true, chromaticAberrationIntensity: 0.002,
     atmosphericPerspective: true, atmosphericDensity: 0.0010, atmosphericStart: 80,
+    godRays: false, godRaysIntensity: 0, godRaysSamples: 0,
     smaa: true, fxaa: false,
   },
   high: {
@@ -105,6 +113,7 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     vignette: true, vignetteDarkness: 0.50, vignetteOffset: 0.95,
     chromaticAberration: true, chromaticAberrationIntensity: 0.0028,
     atmosphericPerspective: true, atmosphericDensity: 0.0012, atmosphericStart: 70,
+    godRays: true, godRaysIntensity: 0.15, godRaysSamples: 50,
     smaa: true, fxaa: false,
   },
   ultra: {
@@ -116,6 +125,7 @@ const QUALITY_PRESETS: Record<PostProcessQuality, PostProcessConfig> = {
     vignette: true, vignetteDarkness: 0.52, vignetteOffset: 0.98,
     chromaticAberration: true, chromaticAberrationIntensity: 0.003,
     atmosphericPerspective: true, atmosphericDensity: 0.0014, atmosphericStart: 60,
+    godRays: true, godRaysIntensity: 0.20, godRaysSamples: 80,
     smaa: true, fxaa: false,
   },
 };
@@ -137,6 +147,7 @@ export class PostProcessingPipeline {
   private vigPass:    ShaderPass      | null = null;
   private chromaPass: ShaderPass      | null = null;
   private atmosPass:  ShaderPass      | null = null;
+  private godRaysPass: ShaderPass     | null = null;
   private fxaaPass:   ShaderPass      | null = null;
   private aoEnabled:  boolean         = false;
 
@@ -244,7 +255,15 @@ export class PostProcessingPipeline {
       this.composer.addPass(this.atmosPass);
     }
 
-    // 10. Chromatic Aberration — distorção de lente cromática
+    // 10. God Rays — raios crepusculares emanando do sol
+    if (cfg.godRays) {
+      this.godRaysPass = new ShaderPass(GodRaysShader);
+      this.godRaysPass.uniforms['intensity'].value = cfg.godRaysIntensity;
+      this.godRaysPass.uniforms['samples'].value   = cfg.godRaysSamples;
+      this.composer.addPass(this.godRaysPass);
+    }
+
+    // 11. Chromatic Aberration — distorção de lente cromática
     if (cfg.chromaticAberration) {
       this.chromaPass = new ShaderPass(ChromaticAberrationShader);
       this.chromaPass.uniforms['intensity'].value = cfg.chromaticAberrationIntensity;
@@ -276,6 +295,7 @@ export class PostProcessingPipeline {
     this.bokehPass  = null; this.filmPass   = null;
     this.vigPass    = null; this.fxaaPass   = null;
     this.chromaPass = null; this.atmosPass  = null;
+    this.godRaysPass = null;
     this.buildPasses();
     // Restore AO state after rebuild
     if (wasAoEnabled && this.saoPass) this.saoPass.enabled = true;
@@ -349,6 +369,17 @@ export class PostProcessingPipeline {
     if (!this.atmosPass) return;
     this.atmosPass.uniforms['fogDensity'].value = density;
     if (start !== undefined) this.atmosPass.uniforms['fogStart'].value = start;
+  }
+
+  /** Atualiza posição do sol em screen-space para God Rays */
+  public setSunScreenPosition(x: number, y: number): void {
+    if (this.godRaysPass) {
+      this.godRaysPass.uniforms['sunPosScreen'].value = [x, y];
+    }
+  }
+
+  public setGodRaysIntensity(intensity: number): void {
+    if (this.godRaysPass) this.godRaysPass.uniforms['intensity'].value = intensity;
   }
 
   /** Atualiza near/far quando câmera muda */
