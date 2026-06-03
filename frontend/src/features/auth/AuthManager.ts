@@ -117,13 +117,23 @@ class AuthManager {
   /**
    * Register new user
    */
-  async register(data: RegisterData): Promise<User> {
+  async register(data: RegisterData): Promise<User | { requiresEmailVerification: true; message: string; user: any }> {
     const authService = getAuthService();
-    const response = await authService.register(data);
+    const response = await authService.register(data) as any;
 
-    // Save tokens
-    localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    // Email verification required — return as-is without saving tokens
+    if (response?.requiresEmailVerification) {
+      console.log('📧 Email verification required for:', response.user?.email);
+      return response;
+    }
+
+    // Save tokens (legacy flow without email verification)
+    if (response.accessToken) {
+      localStorage.setItem(TOKEN_KEY, response.accessToken);
+    }
+    if (response.refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    }
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
 
     // Update state
@@ -138,10 +148,8 @@ class AuthManager {
     await this.refreshBillingLicense();
 
     console.log('✅ Registered and logged in as:', this.currentUser.email);
-    
-    // Show success notification
     notificationManager.success(`Conta criada com sucesso! Bem-vindo, ${this.currentUser.name}!`, 4000);
-    
+
     return this.currentUser;
   }
 

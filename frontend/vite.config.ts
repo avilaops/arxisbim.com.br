@@ -103,6 +103,7 @@ export default defineConfig({
         app: resolve(__dirname, 'app.html'),
         login: resolve(__dirname, 'login.html'),
         register: resolve(__dirname, 'register.html'),
+        verifyEmail: resolve(__dirname, 'verify-email.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
         arCalibration: resolve(__dirname, 'ar-calibration.html'),
       },

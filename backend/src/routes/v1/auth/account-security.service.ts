@@ -58,55 +58,78 @@ export class AccountSecurityService {
   /**
    * Verificar email usando token
    */
-  async verifyEmail(verificationToken: string, tenantId: string): Promise<{ success: boolean; userId?: string }> {
+  async verifyEmail(verificationToken: string, tenantId?: string): Promise<{ success: boolean; userId?: string }> {
     const now = new Date();
 
-    // Buscar tokens válidos
-    const tokens = await this.db
-      .select()
-      .from(authTokens)
-      .where(
-        and(
+    // Buscar token por valor exato (plain text) — sem bcrypt
+    const whereClause = tenantId
+      ? and(
           eq(authTokens.tenantId, tenantId),
+          eq(authTokens.token, verificationToken),
           eq(authTokens.tokenType, 'email_verification'),
           eq(authTokens.isUsed, false),
           gte(authTokens.expiresAt, now)
         )
-      );
+      : and(
+          eq(authTokens.token, verificationToken),
+          eq(authTokens.tokenType, 'email_verification'),
+          eq(authTokens.isUsed, false),
+          gte(authTokens.expiresAt, now)
+        );
 
-    // Verificar cada token
-    for (const tokenRecord of tokens) {
-      const isMatch = await bcrypt.compare(verificationToken, tokenRecord.token);
-      if (isMatch) {
-        // Marcar email como verificado
-        await this.db
-          .update(users)
-          .set({ 
-            emailVerified: true,
-            emailVerifiedAt: new Date(),
-          })
-          .where(eq(users.id, tokenRecord.userId));
+    const [tokenRecord] = await this.db
+      .select()
+      .from(authTokens)
+      .where(whereClause)
+      .limit(1);
 
-        // Marcar token como usado
-        await this.db
-          .update(authTokens)
-          .set({ isUsed: true, usedAt: new Date() })
-          .where(eq(authTokens.id, tokenRecord.id));
-
-        // Log de auditoria
-        await observabilityService.logAudit({
-          tenantId,
-          userId: tokenRecord.userId,
-          action: 'email.verified',
-          resource: 'auth',
-          resourceId: tokenRecord.userId,
-        }).catch(err => console.error('Failed to log audit:', err));
-
-        return { success: true, userId: tokenRecord.userId };
-      }
+    if (!tokenRecord) {
+      return { success: false };
     }
 
-    return { success: false };
+    const resolvedTenantId = tenantId || tokenRecord.tenantId;
+
+    // Ativar usuário e marcar email como verificado
+    await this.db
+      .update(users)
+      .set({
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+        isActive: true,   // ativa a conta após confirmação
+      })
+      .where(eq(users.id, tokenRecord.userId));
+
+    // Marcar token como usado
+    await this.db
+      .update(authTokens)
+      .set({ isUsed: true, usedAt: new Date() })
+      .where(eq(authTokens.id, tokenRecord.id));
+
+    // Log de auditoria
+    await observabilityService.logAudit({
+      tenantId: resolvedTenantId,
+      userId: tokenRecord.userId,
+      action: 'email.verified',
+      resource: 'auth',
+      resourceId: tokenRecord.userId,
+    }).catch(err => console.error('Failed to log audit:', err));
+
+    // Buscar dados do usuário para enviar email de boas-vindas
+    const [verifiedUser] = await this.db
+      .select({ email: users.email, name: users.name, tenantId: users.tenantId })
+      .from(users)
+      .where(eq(users.id, tokenRecord.userId))
+      .limit(1);
+
+    if (verifiedUser) {
+      emailService.sendWelcomeEmail(
+        verifiedUser.email,
+        verifiedUser.name,
+        verifiedUser.tenantId
+      ).catch(err => console.error('Failed to send welcome email:', err));
+    }
+
+    return { success: true, userId: tokenRecord.userId };
   }
 
   /**

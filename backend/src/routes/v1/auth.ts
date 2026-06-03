@@ -70,7 +70,7 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
       },
       response: {
         201: {
-          description: 'User registered successfully',
+          description: 'User registered — email verification required',
           type: 'object',
           properties: {
             user: {
@@ -84,8 +84,8 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
                 companyId: { type: 'string', nullable: true },
               },
             },
-            accessToken: { type: 'string' },
-            refreshToken: { type: 'string' },
+            requiresEmailVerification: { type: 'boolean' },
+            message: { type: 'string' },
           },
         },
         400: {
@@ -188,6 +188,12 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           return reply.code(400).send({
             error: 'Validation Error',
             message: error.errors[0]?.message || 'Invalid input',
+          });
+        }
+        if (error.code === 'EMAIL_NOT_VERIFIED') {
+          return reply.code(403).send({
+            error: 'EmailNotVerified',
+            message: error.message,
           });
         }
         return reply.code(401).send({
@@ -873,15 +879,9 @@ export async function authRoutes(server: FastifyInstance): Promise<void> {
           request.body
         );
         const headerTenantId = request.headers['x-tenant-id'] as string;
-        const finalTenantId = tenantId || headerTenantId;
+        const finalTenantId = tenantId || headerTenantId || undefined;
 
-        if (!finalTenantId) {
-          return reply.code(400).send({
-            error: 'Bad Request',
-            message: 'tenantId is required',
-          });
-        }
-
+        // tenantId now optional — verifyEmail can look it up from the token
         const result = await accountSecurityService.verifyEmail(
           verificationToken,
           finalTenantId

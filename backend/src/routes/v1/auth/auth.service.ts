@@ -114,7 +114,7 @@ export class AuthService {
     // Hash password with configurable rounds
     const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
-    // Create user (tenant-isolated)
+    // Create user (tenant-isolated) — inactive until email is verified
     const [newUser] = await this.db
       .insert(users)
       .values({
@@ -124,7 +124,8 @@ export class AuthService {
         tenantId,
         companyId: input.companyId || null,
         role,
-        isActive: true,
+        isActive: false,        // activated after email verification
+        emailVerified: false,
         permissions: [],
       })
       .returning();
@@ -150,24 +151,10 @@ export class AuthService {
       { tenant: newUser.tenantId }
     ).catch(err => console.error('Failed to increment counter:', err));
 
-    // Enviar email de boas-vindas
-    await emailService.sendWelcomeEmail(
-      newUser.email,
-      newUser.name,
-      newUser.tenantId
-    );
+    // Gerar e enviar token de verificação de email
+    await this.sendEmailVerification(newUser.id, newUser.tenantId);
 
-    // Generate tokens with tenant context
-    const accessToken = this.generateAccessToken(
-      newUser.id,
-      newUser.tenantId,
-      newUser.role
-    );
-    const { token: refreshToken, sessionId } = await this.createSession(
-      newUser.id,
-      newUser.tenantId
-    );
-
+    // NÃO geramos tokens de acesso — usuário precisa verificar email primeiro
     return {
       user: {
         id: newUser.id,
@@ -177,9 +164,8 @@ export class AuthService {
         tenantId: newUser.tenantId,
         companyId: newUser.companyId,
       },
-      accessToken,
-      refreshToken,
-      sessionId,
+      requiresEmailVerification: true,
+      message: 'Conta criada com sucesso. Verifique seu email para ativar a conta.',
     };
   }
 
@@ -218,6 +204,13 @@ export class AuthService {
 
     if (!isValidPassword) {
       throw new Error('Invalid credentials');
+    }
+
+    // Require email verification before login
+    if (!user.emailVerified) {
+      const err: any = new Error('Por favor, verifique seu email antes de fazer login. Verifique sua caixa de entrada.');
+      err.code = 'EMAIL_NOT_VERIFIED';
+      throw err;
     }
 
     // Update last login

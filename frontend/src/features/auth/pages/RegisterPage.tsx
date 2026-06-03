@@ -29,13 +29,22 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await authManager.register({
+      const result: any = await authManager.register({
         name: name.trim(),
         email: email.trim(),
         password,
         companyName: companyName.trim(),
         turnstileToken: turnstileToken.current,
       } as any);
+
+      // Se o servidor retornou requiresEmailVerification, mostrar mensagem
+      if (result?.requiresEmailVerification) {
+        setError(''); // limpar erros
+        window.location.href = `/verify-email.html?email=${encodeURIComponent(email.trim())}`;
+        return;
+      }
+
+      // Fallback: se por algum motivo já tiver token, vai para app
       window.location.href = '/app.html';
     } catch (err: any) {
       setError(err?.message || 'Não foi possível criar a conta.');
