@@ -139,7 +139,7 @@ export class EmailService {
     resetToken: string,
     tenantId: string
   ): Promise<void> {
-    const resetUrl = `${this.frontendUrl}/reset-password?token=${resetToken}&tenant=${tenantId}`;
+    const resetUrl = `${this.frontendUrl}/reset-password.html?token=${resetToken}&tenant=${tenantId}`;
 
     const html = `
 <!DOCTYPE html>

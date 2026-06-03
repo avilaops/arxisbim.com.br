@@ -79,6 +79,22 @@ export class AuthService {
   }
 
   /**
+   * Solicita email de redefinição de senha
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const client = getAPIClient();
+    await client.post(`${this.endpoint}/forgot-password`, { email });
+  }
+
+  /**
+   * Redefine senha com token recebido por email
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const client = getAPIClient();
+    await client.post(`${this.endpoint}/reset-password`, { token, newPassword });
+  }
+
+  /**
    * Verifica se o token ainda é válido
    */
   async verifyToken(): Promise<boolean> {

@@ -36,7 +36,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       tags: ['auth'],
       body: {
         type: 'object',
-        required: ['email', 'password', 'tenantId'],
+        required: ['email', 'password'],
         properties: {
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 8 },

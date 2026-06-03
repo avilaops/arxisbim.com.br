@@ -59,7 +59,12 @@ export default function LoginPage() {
           </label>
 
           <label className="auth-field">
-            <span className="auth-label">Senha</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span className="auth-label">Senha</span>
+              <a className="auth-link" href="/forgot-password.html" style={{ fontSize: 13 }}>
+                Esqueci minha senha
+              </a>
+            </div>
             <input
               className="auth-input"
               type="password"
