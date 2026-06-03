@@ -1,26 +1,35 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { observabilityService } from '../observability/service.js';
 
 /**
  * Email Service para ArxisVR
- * Usa SMTP real quando configurado (SMTP_HOST + SMTP_USER + SMTP_PASSWORD)
- * Cai para modo log quando não configurado
+ * Prioridade: Resend API (RESEND_API_KEY) > SMTP > modo log
  */
 export class EmailService {
   private initialized = false;
   private transporter: Transporter | null = null;
+  private resend: Resend | null = null;
   private readonly appName = 'ArxisVR';
   private readonly frontendUrl: string;
   private readonly fromAddress: string;
 
   constructor() {
     this.frontendUrl = process.env.FRONTEND_URL || 'https://www.arxisvr.avilaops.com';
-    this.fromAddress = process.env.EMAIL_FROM || 'noreply@arxisvr.avilaops.com';
+    this.fromAddress = process.env.EMAIL_FROM || 'onboarding@resend.dev';
   }
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
+
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      this.resend = new Resend(resendKey);
+      this.initialized = true;
+      console.log('✅ Email service inicializado com Resend');
+      return;
+    }
 
     const host = process.env.SMTP_HOST;
     const user = process.env.SMTP_USER;
@@ -36,19 +45,17 @@ export class EmailService {
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
         });
-
-        // Verificar conexão
         await this.transporter.verify();
         this.initialized = true;
         console.log(`✅ Email service inicializado com SMTP: ${host}:${port}`);
       } catch (err: any) {
         console.error(`❌ SMTP falhou (${host}:${port}): ${err.message}. Usando modo log.`);
         this.transporter = null;
-        this.initialized = true; // modo log
+        this.initialized = true;
       }
     } else {
       this.initialized = true;
-      console.log('✅ Email service inicializado (modo log — SMTP_HOST/USER/PASSWORD não configurados)');
+      console.log('✅ Email service inicializado (modo log)');
     }
   }
 
@@ -57,6 +64,17 @@ export class EmailService {
   }
 
   private async send(to: string, subject: string, html: string): Promise<void> {
+    if (this.resend) {
+      const { error } = await this.resend.emails.send({
+        from: `${this.appName} <${this.fromAddress}>`,
+        to,
+        subject,
+        html,
+      });
+      if (error) throw new Error(error.message);
+      return;
+    }
+
     if (this.transporter) {
       await this.transporter.sendMail({
         from: `"${this.appName}" <${this.fromAddress}>`,
@@ -64,11 +82,11 @@ export class EmailService {
         subject,
         html,
       });
-    } else {
-      // Modo log — útil em dev e quando SMTP não está configurado
-      console.log(`📧 [EMAIL LOG] Para: ${to} | Assunto: ${subject}`);
-      console.log(`📧 [EMAIL LOG] HTML preview (primeiros 300 chars): ${html.replace(/<[^>]+>/g, '').substring(0, 300)}`);
+      return;
     }
+
+    console.log(`📧 [EMAIL LOG] Para: ${to} | Assunto: ${subject}`);
+    console.log(`📧 [EMAIL LOG] HTML preview: ${html.replace(/<[^>]+>/g, '').substring(0, 300)}`);
   }
 
   /**
