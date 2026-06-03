@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArxisVR — Mockup Redesign</title>
+<style>
+  :root {
+    --bg:        #111827;
+    --surface:   #1F2937;
+    --surface2:  #374151;
+    --border:    #374151;
+    --blue:      #2563EB;
+    --blue-l:    #3B82F6;
+    --purple:    #8B5CF6;
+    --purple-l:  #A78BFA;
+    --text:      #F9FAFB;
+    --text-2:    #9CA3AF;
+    --text-3:    #6B7280;
+    --green:     #10B981;
+    --red:       #EF4444;
+    --amber:     #F59E0B;
+    --r:         10px;
+    --r-sm:      6px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0D1117; font-family: 'Inter', -apple-system, sans-serif; color:var(--text); min-height:100vh; }
+
+  /* ═══════════════════════════════════════
+     TOGGLE BAR
+  ══════════════════════════════════════ */
+  .toggle-bar {
+    position: fixed; top:0; left:0; right:0; z-index:1000;
+    background:#0D1117; border-bottom:1px solid #1f2937;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px;
+  }
+  .toggle-bar .label { color:var(--text-2); font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-right:8px; }
+  .tab-btn {
+    padding:6px 18px; border-radius:20px; border:1px solid var(--border);
+    background:transparent; color:var(--text-2); font-size:13px; cursor:pointer; transition:all .2s;
+  }
+  .tab-btn.active { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600; }
+  .tab-btn:hover:not(.active) { border-color:var(--blue-l); color:var(--text); }
+
+  /* ═══════════════════════════════════════
+     SCREENS WRAPPER
+  ══════════════════════════════════════ */
+  .screens { padding-top:56px; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  /* ═══════════════════════════════════════
+     DESKTOP LAYOUT
+  ══════════════════════════════════════ */
+  .desktop-shell {
+    display:grid;
+    grid-template-rows: 48px 1fr 28px;
+    grid-template-columns: 52px 220px 1fr 280px;
+    height: calc(100vh - 56px);
+    background:var(--bg);
+  }
+
+  /* TOP BAR */
+  .topbar {
+    grid-column: 1 / -1;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:0; padding:0 16px;
+  }
+  .topbar-logo { display:flex; align-items:center; gap:8px; padding:0 12px 0 0; border-right:1px solid var(--border); margin-right:12px; }
+  .logo-icon { width:26px; height:26px; }
+  .logo-icon path, .logo-icon circle { stroke: var(--purple-l); }
+  .topbar-logo span { font-size:14px; font-weight:700; color:var(--text); letter-spacing:-.02em; }
+  .topbar-proj { display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:var(--r-sm); background:var(--surface2); font-size:12px; color:var(--text-2); cursor:pointer; border:1px solid var(--border); }
+  .topbar-proj .proj-name { color:var(--text); font-weight:500; }
+  .topbar-sep { color:var(--text-3); margin:0 4px; }
+  .topbar-breadcrumb { font-size:11px; color:var(--text-3); display:flex; align-items:center; gap:4px; margin-left:8px; }
+  .topbar-breadcrumb span { color:var(--text-2); }
+  .topbar-breadcrumb span:last-child { color:var(--text); }
+  .topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .ai-btn {
+    display:flex; align-items:center; gap:6px;
+    background:linear-gradient(135deg, #4F46E5, #7C3AED);
+    border:none; color:#fff; padding:6px 14px; border-radius:20px;
+    font-size:12px; font-weight:600; cursor:pointer;
+    box-shadow:0 0 16px #7C3AED44;
+    transition:all .2s;
+  }
+  .ai-btn:hover { box-shadow:0 0 24px #7C3AED77; transform:translateY(-1px); }
+  .ai-dot { width:6px; height:6px; background:#A78BFA; border-radius:50%; animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @keyframes pulse-ring { 0%{opacity:.6;transform:scale(1)} 100%{opacity:0;transform:scale(1.3)} }
+  .avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#2563EB,#7C3AED); display:flex;align-items:center;justify-content:center; font-size:11px;font-weight:700; cursor:pointer; }
+  .icon-btn { width:30px;height:30px; border-radius:var(--r-sm); border:1px solid var(--border); background:transparent; color:var(--text-2); display:flex;align-items:center;justify-content:center; font-size:14px; cursor:pointer; transition:all .15s; }
+  .icon-btn:hover { background:var(--surface2); color:var(--text); }
+
+  /* ICON NAV (far left) */
+  .icon-nav {
+    grid-row: 2; grid-column: 1;
+    background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:4px;
+  }
+  .nav-icon { width:36px;height:36px; border-radius:8px; display:flex;align-items:center;justify-content:center; font-size:16px; cursor:pointer; color:var(--text-3); transition:all .15s; position:relative; }
+  .nav-icon.active { background:#2563EB22; color:var(--blue-l); }
+  .nav-icon.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:20px; background:var(--blue); border-radius:0 3px 3px 0; }
+  .nav-icon:hover:not(.active) { background:var(--surface2); color:var(--text-2); }
+  .nav-spacer { flex:1; }
+
+  /* LEFT PANEL */
+  .left-panel {
+    grid-row: 2; grid-column: 2;
+    background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .panel-header { padding:12px 14px 8px; display:flex; align-items:center; justify-content:space-between; }
+  .panel-title { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); }
+  .panel-search { margin:0 10px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); padding:6px 10px; font-size:12px; color:var(--text); outline:none; width:calc(100% - 20px); }
+  .panel-search::placeholder { color:var(--text-3); }
+  .tree { padding:4px 0; overflow-y:auto; flex:1; }
+  .tree-item { display:flex; align-items:center; gap:6px; padding:5px 14px; font-size:12px; color:var(--text-2); cursor:pointer; transition:background .1s; }
+  .tree-item:hover { background:rgba(255,255,255,.04); }
+  .tree-item.selected { background:#2563EB18; color:var(--blue-l); }
+  .tree-item .ico { font-size:12px; opacity:.7; }
+  .tree-item .badge { margin-left:auto; font-size:10px; background:var(--surface2); padding:1px 5px; border-radius:10px; color:var(--text-3); }
+  .tree-group { padding:6px 14px 2px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--text-3); margin-top:4px; }
+
+  /* VIEWPORT */
+  .viewport {
+    grid-row: 2; grid-column: 3;
+    background:#0D1117; position:relative; overflow:hidden;
+  }
+  .viewport-bg {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 30% 40%, #2563EB0A 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 60%, #7C3AED08 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, #1f293722 39px, #1f293722 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, #1f293722 39px, #1f293722 40px);
+  }
+  .viewport-model {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  }
+  /* Fake isometric BIM model */
+  .bim-model { position:relative; width:420px; height:320px; }
+  .bim-model svg { width:100%; height:100%; filter: drop-shadow(0 20px 40px #2563EB33); }
+  .viewport-toolbar {
+    position:absolute; top:12px; left:12px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .vp-btn {
+    width:32px; height:32px; border-radius:var(--r-sm);
+    background:rgba(31,41,55,.9); border:1px solid var(--border);
+    color:var(--text-2); font-size:13px; display:flex;align-items:center;justify-content:center;
+    cursor:pointer; backdrop-filter:blur(8px); transition:all .15s;
+  }
+  .vp-btn:hover { background:var(--surface2); color:var(--text); }
+  .vp-btn.active { background:#2563EB33; border-color:var(--blue); color:var(--blue-l); }
+  .viewport-controls {
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    display:flex; gap:4px; background:rgba(31,41,55,.9); border:1px solid var(--border);
+    border-radius:24px; padding:4px 8px; backdrop-filter:blur(8px);
+  }
+  .vc-btn { padding:4px 10px; border-radius:16px; font-size:11px; font-weight:500; color:var(--text-2); cursor:pointer; transition:all .15s; }
+  .vc-btn.active { background:var(--blue); color:#fff; }
+  .vc-btn:hover:not(.active) { color:var(--text); background:var(--surface2); }
+  .selection-tag {
+    position:absolute; top:12px; right:12px;
+    background:rgba(31,41,55,.95); border:1px solid var(--blue); border-radius:var(--r);
+    padding:8px 12px; font-size:11px; backdrop-filter:blur(8px);
+    min-width:160px;
+  }
+  .sel-label { color:var(--text-3); font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .sel-name { color:var(--blue-l); font-weight:600; margin:2px 0; }
+  .sel-type { color:var(--text-2); font-size:10px; }
+  .minimap {
+    position:absolute; bottom:12px; right:12px;
+    width:80px; height:60px; background:rgba(17,24,39,.9); border:1px solid var(--border);
+    border-radius:var(--r-sm); overflow:hidden; backdrop-filter:blur(8px);
+  }
+  .minimap svg { width:100%; height:100%; opacity:.6; }
+
+  /* AI PANEL (slides over viewport) */
+  .ai-panel {
+    position:absolute; top:0; right:0; bottom:0; width:280px;
+    background:rgba(17,24,39,.95); border-left:1px solid #4F46E533;
+    backdrop-filter:blur(16px); display:flex; flex-direction:column;
+    padding:16px; gap:12px;
+    transform:translateX(100%); transition:transform .25s ease;
+  }
+  .ai-panel.open { transform:translateX(0); }
+  .ai-panel-header { display:flex; align-items:center; gap:8px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .ai-panel-icon { width:32px;height:32px; background:linear-gradient(135deg,#4F46E5,#7C3AED); border-radius:8px; display:flex;align-items:center;justify-content:center; font-size:16px; }
+  .ai-panel-title { font-weight:700; font-size:14px; }
+  .ai-panel-sub { font-size:11px; color:var(--purple-l); }
+  .ai-context { background:#4F46E511; border:1px solid #4F46E533; border-radius:var(--r-sm); padding:10px 12px; font-size:11px; }
+  .ai-context .ctx-label { color:var(--purple-l); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+  .ai-suggestions { display:flex; flex-direction:column; gap:6px; }
+  .ai-sug {
+    display:flex; align-items:center; gap:8px; padding:8px 10px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm);
+    font-size:12px; cursor:pointer; transition:all .15s;
+  }
+  .ai-sug:hover { border-color:var(--purple); background:#4F46E511; }
+  .ai-sug .sug-ico { font-size:14px; }
+  .ai-sug .sug-txt { color:var(--text-2); }
+  .ai-sug .sug-arr { margin-left:auto; color:var(--text-3); font-size:10px; }
+  .ai-input-wrap { margin-top:auto; display:flex; gap:6px; }
+  .ai-input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-sm); padding:8px 10px; font-size:12px; color:var(--text); outline:none; }
+  .ai-input:focus { border-color:var(--purple); }
+  .ai-send { width:32px;height:32px; background:var(--purple); border:none; border-radius:var(--r-sm); color:#fff; cursor:pointer; font-size:14px; display:flex;align-items:center;justify-content:center; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    grid-row: 2; grid-column: 4;
+    background:var(--surface); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .prop-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .prop-tab { flex:1; padding:8px; text-align:center; font-size:11px; font-weight:500; color:var(--text-3); cursor:pointer; transition:all .15s; border-bottom:2px solid transparent; }
+  .prop-tab.active { color:var(--blue-l); border-bottom-color:var(--blue); }
+  .prop-section { padding:12px 14px; border-bottom:1px solid #1f293788; }
+  .prop-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); margin-bottom:8px; }
+  .prop-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
+  .prop-key { font-size:11px; color:var(--text-3); }
+  .prop-val { font-size:11px; color:var(--text-2); font-family:monospace; }
+  .prop-val.highlight { color:var(--blue-l); }
+  .prop-val.warn { color:var(--amber); }
+  .clash-item { display:flex; align-items:center; gap:8px; padding:6px 8px; background:var(--surface2); border-radius:var(--r-sm); margin-bottom:6px; font-size:11px; cursor:pointer; border:1px solid transparent; }
+  .clash-item:hover { border-color:var(--red); }
+  .clash-dot { width:8px;height:8px; border-radius:50%; background:var(--red); flex-shrink:0; }
+  .clash-dot.warn { background:var(--amber); }
+  .clash-info { flex:1; }
+  .clash-name { color:var(--text); font-weight:500; }
+  .clash-desc { color:var(--text-3); font-size:10px; margin-top:1px; }
+
+  /* STATUS BAR */
+  .statusbar {
+    grid-column: 1 / -1;
+    background:#0D1117; border-top:1px solid #1f2937;
+    display:flex; align-items:center; gap:16px; padding:0 14px;
+    font-size:10px; color:var(--text-3); font-family:monospace;
+  }
+  .sb-item { display:flex; align-items:center; gap:4px; }
+  .sb-item .dot { width:5px;height:5px; border-radius:50%; }
+  .sb-item .dot.green { background:var(--green); }
+  .sb-item .dot.blue { background:var(--blue); }
+  .sb-sep { color:#374151; margin:0 4px; }
+  .sb-right { margin-left:auto; display:flex; gap:16px; }
+
+  /* ═══════════════════════════════════════
+     MOBILE LAYOUT
+  ══════════════════════════════════════ */
+  .mobile-wrapper {
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:20px; gap:32px; background:#0D1117; min-height:calc(100vh - 56px);
+  }
+  .phone-frame {
+    width:375px; flex-shrink:0;
+    background:var(--bg); border-radius:40px;
+    border:2px solid #374151;
+    overflow:hidden; position:relative;
+    box-shadow: 0 40px 80px #00000088, 0 0 0 1px #ffffff08;
+  }
+  .phone-notch {
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:32px; background:#0D1117; border-radius:0 0 20px 20px;
+    z-index:10;
+  }
+
+  /* Mobile TopBar */
+  .m-topbar {
+    background:var(--surface); height:52px;
+    display:flex; align-items:center; padding:0 16px; gap:10px;
+    border-bottom:1px solid var(--border); padding-top:8px;
+  }
+  .m-logo-ico { width:24px;height:24px; }
+  .m-logo-ico path, .m-logo-ico circle { stroke:var(--purple-l); }
+  .m-proj-name { font-size:13px; font-weight:600; color:var(--text); flex:1; }
+  .m-proj-sub { font-size:10px; color:var(--text-3); }
+  .m-ai-pill {
+    display:flex;align-items:center;gap:4px; padding:4px 10px;
+    background:linear-gradient(135deg,#4F46E5,#7C3AED); border-radius:14px;
+    font-size:11px; font-weight:600; color:#fff;
+    box-shadow:0 0 12px #7C3AED44;
+  }
+
+  /* Mobile Viewer */
+  .m-viewer {
+    height:520px; background:#0D1117; position:relative; overflow:hidden;
+  }
+  .m-viewer-bg {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 40% 50%, #2563EB0D 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 29px, #1f293718 29px, #1f293718 30px),
+      repeating-linear-gradient(90deg, transparent, transparent 29px, #1f293718 29px, #1f293718 30px);
+  }
+  .m-viewer-model { position:absolute; inset:0; display:flex;align-items:center;justify-content:center; }
+  .m-viewer-tools {
+    position:absolute; left:12px; top:12px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .m-vp-btn { width:36px;height:36px; background:rgba(31,41,55,.9); border:1px solid var(--border); border-radius:10px; display:flex;align-items:center;justify-content:center; font-size:15px; color:var(--text-2); backdrop-filter:blur(8px); }
+  .m-selection-tag {
+    position:absolute; top:12px; right:12px;
+    background:rgba(31,41,55,.95); border:1px solid var(--blue);
+    border-radius:10px; padding:8px 10px; font-size:11px;
+    backdrop-filter:blur(8px); min-width:130px;
+  }
+
+  /* Bottom Sheet */
+  .bottom-sheet {
+    background:var(--surface); border-top:1px solid var(--border);
+    border-radius:20px 20px 0 0;
+  }
+  .bs-handle { width:36px;height:4px; background:var(--border); border-radius:2px; margin:10px auto 0; }
+  .bs-tabs { display:flex; border-bottom:1px solid var(--border); margin-top:4px; }
+  .bs-tab { flex:1; padding:10px 0; text-align:center; font-size:11px; font-weight:500; color:var(--text-3); border-bottom:2px solid transparent; }
+  .bs-tab.active { color:var(--blue-l); border-bottom-color:var(--blue); }
+  .bs-content { padding:12px 14px; max-height:200px; overflow-y:auto; }
+  .bs-prop-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #1f293744; }
+  .bs-prop-row:last-child { border:none; }
+  .bs-key { font-size:11px; color:var(--text-3); }
+  .bs-val { font-size:11px; color:var(--text-2); font-family:monospace; }
+
+  /* Mobile Bottom Nav */
+  .m-bottomnav {
+    background:var(--surface); border-top:1px solid var(--border);
+    display:flex; padding:8px 0 14px;
+  }
+  .m-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; cursor:pointer; }
+  .m-nav-ico { font-size:18px; }
+  .m-nav-lbl { font-size:9px; font-weight:500; color:var(--text-3); }
+  .m-nav-item.active .m-nav-ico { filter: none; }
+  .m-nav-item.active .m-nav-lbl { color:var(--blue-l); }
+  .m-nav-item.ai-nav .m-nav-ico-wrap {
+    width:44px;height:44px;
+    background:linear-gradient(135deg,#4F46E5,#7C3AED);
+    border-radius:14px; display:flex;align-items:center;justify-content:center;
+    font-size:20px; margin-top:-20px;
+    box-shadow:0 4px 16px #7C3AED66;
+  }
+
+  /* ═══════════════════════════════════════
+     EMPTY STATE (mobile 2)
+  ══════════════════════════════════════ */
+  .phone-frame.empty { }
+  .empty-state { padding:24px 20px; display:flex; flex-direction:column; gap:16px; }
+  /* ── Empty State v2 ── */
+  .empty-greeting { font-size:20px; font-weight:700; margin-bottom:4px; letter-spacing:-.3px; }
+  .empty-sub { font-size:12px; color:var(--text-3); line-height:1.5; }
+  .quick-actions { display:flex; gap:8px; }
+  .qa-btn {
+    flex:1; background:var(--surface2); border:1px solid var(--border);
+    border-radius:14px; padding:14px 10px; text-align:center; cursor:pointer;
+    transition:all .2s; position:relative; overflow:hidden;
+  }
+  .qa-btn::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(37,99,235,.08), transparent);
+    opacity:0; transition:opacity .2s;
+  }
+  .qa-btn:hover { border-color:var(--blue); transform:translateY(-1px); box-shadow:0 4px 16px rgba(37,99,235,.15); }
+  .qa-btn:hover::before { opacity:1; }
+  .qa-ico { font-size:24px; margin-bottom:6px; display:block; }
+  .qa-lbl { font-size:11px; font-weight:600; color:var(--text-2); }
+
+  /* Project cards v2 — with depth & progress */
+  .recent-section { }
+  .recent-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .recent-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); }
+  .recent-see-all { font-size:11px; color:var(--blue-l); cursor:pointer; }
+
+  .proj-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    margin-bottom:10px; cursor:pointer; transition:all .2s;
+    overflow:hidden; position:relative;
+  }
+  .proj-card::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:var(--proj-color, var(--blue));
+    opacity:.6;
+  }
+  .proj-card:hover { border-color:rgba(255,255,255,.15); transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+  .proj-card-thumb {
+    width:100%; height:72px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px;
+    position:relative; overflow:hidden;
+  }
+  .proj-card-thumb-bg {
+    position:absolute; inset:0;
+    background:var(--proj-gradient, linear-gradient(135deg,#2563EB18,#7C3AED18));
+  }
+  /* Fake isometric lines in thumbnail */
+  .proj-card-thumb-grid {
+    position:absolute; inset:0; opacity:.12;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 11px, rgba(255,255,255,.4) 11px, rgba(255,255,255,.4) 12px),
+      repeating-linear-gradient(90deg, transparent, transparent 11px, rgba(255,255,255,.4) 11px, rgba(255,255,255,.4) 12px);
+  }
+  .proj-card-thumb-ico { position:relative; z-index:1; }
+
+  .proj-card-body { padding:10px 12px 12px; }
+  .proj-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .proj-name-txt { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; }
+  .proj-badge { font-size:9px; font-weight:700; padding:2px 7px; border-radius:6px; flex-shrink:0; margin-top:1px; }
+  .proj-badge.ifc  { background:#2563EB22; color:var(--blue-l);   border:1px solid rgba(37,99,235,.2); }
+  .proj-badge.bim  { background:#8B5CF622; color:var(--purple-l); border:1px solid rgba(139,92,246,.2); }
+  .proj-badge.ifc2 { background:#F59E0B18; color:var(--amber);    border:1px solid rgba(245,158,11,.2); }
+
+  .proj-meta-row { display:flex; align-items:center; gap:10px; font-size:10px; color:var(--text-3); margin-bottom:8px; flex-wrap:wrap; }
+  .proj-meta-item { display:flex; align-items:center; gap:3px; }
+
+  /* Progress bar */
+  .proj-progress { }
+  .proj-progress-header { display:flex; justify-content:space-between; font-size:10px; color:var(--text-3); margin-bottom:4px; }
+  .proj-progress-pct { color:var(--text-2); font-weight:600; }
+  .proj-progress-bar { height:3px; background:rgba(255,255,255,.08); border-radius:2px; overflow:hidden; }
+  .proj-progress-fill { height:100%; border-radius:2px; transition:width .3s ease; }
+
+  .proj-card-footer { padding:8px 12px; border-top:1px solid rgba(255,255,255,.05); display:flex; align-items:center; justify-content:space-between; }
+  .proj-continue-btn {
+    font-size:11px; font-weight:600; color:var(--blue-l);
+    background:rgba(37,99,235,.12); border:1px solid rgba(37,99,235,.2);
+    border-radius:8px; padding:4px 10px; cursor:pointer; transition:all .15s;
+  }
+  .proj-continue-btn:hover { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .proj-edited { font-size:10px; color:var(--text-3); }
+
+  /* ── Element Summary Card (right panel) ── */
+  .elem-summary {
+    padding:14px; border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .elem-summary__name { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-.3px; }
+  .elem-summary__type { font-size:11px; color:var(--text-3); margin:2px 0 10px; }
+  .elem-summary__tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .elem-tag {
+    display:flex;align-items:center;gap:4px;
+    font-size:11px; padding:3px 8px; border-radius:6px;
+    font-weight:500;
+  }
+  .elem-tag.blue  { background:rgba(37,99,235,.15); color:var(--blue-l); }
+  .elem-tag.amber { background:rgba(245,158,11,.15); color:var(--amber); }
+  .elem-tag.red   { background:rgba(239,68,68,.15);  color:var(--red); animation:pulse-glow 2s infinite; }
+  .elem-tag.green { background:rgba(16,185,129,.15); color:var(--green); }
+  @keyframes pulse-glow {
+    0%,100%{box-shadow:none} 50%{box-shadow:0 0 8px rgba(239,68,68,.4)}
+  }
+  .elem-dims { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .elem-dim {
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07);
+    border-radius:8px; padding:8px; text-align:center;
+  }
+  .elem-dim__val { font-size:14px; font-weight:700; color:var(--text); font-family:monospace; }
+  .elem-dim__lbl { font-size:9px; color:var(--text-3); margin-top:2px; text-transform:uppercase; letter-spacing:.05em; }
+
+  /* ── Clash items visual ── */
+  .clash-v2 {
+    padding:8px 10px; border-radius:8px; margin-bottom:6px;
+    border:1px solid; cursor:pointer; transition:all .15s;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .clash-v2.red   { background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.25); }
+  .clash-v2.amber { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.25); }
+  .clash-v2:hover { filter:brightness(1.15); transform:translateX(2px); }
+  .clash-v2__ico { font-size:16px; flex-shrink:0; margin-top:1px; }
+  .clash-v2__body { flex:1; }
+  .clash-v2__name { font-size:12px; font-weight:600; color:var(--text); }
+  .clash-v2__meta { font-size:10px; color:var(--text-3); margin-top:2px; line-height:1.5; }
+  .clash-v2__action { font-size:10px; font-weight:600; margin-top:4px; }
+  .clash-v2.red   .clash-v2__action { color:var(--red); }
+  .clash-v2.amber .clash-v2__action { color:var(--amber); }
+
+  /* ── AI contextual badge ── */
+  .ai-ctx-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:4px 12px; border-radius:16px;
+    background:linear-gradient(135deg,rgba(79,70,229,.9),rgba(124,58,237,.9));
+    color:#fff; font-size:11px; font-weight:700;
+    box-shadow:0 0 12px rgba(124,58,237,.4);
+    border:none; cursor:pointer; transition:all .2s;
+    white-space:nowrap;
+  }
+  .ai-ctx-badge:hover { box-shadow:0 0 20px rgba(124,58,237,.6); transform:translateY(-1px); }
+
+  /* ── Sync indicator ── */
+  .sync-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:10px; color:var(--green); font-weight:500;
+  }
+  .sync-dot { width:5px;height:5px; border-radius:50%; background:var(--green); }
+
+  /* ── Mobile bottom sheet 3-state ── */
+  .bs-state-peek {
+    height:56px; overflow:hidden;
+    display:flex; align-items:center; padding:0 16px; gap:10px;
+  }
+  .bs-peek-name { font-size:13px; font-weight:700; flex:1; }
+  .bs-peek-type { font-size:11px; color:var(--text-3); }
+  .bs-peek-clash { font-size:11px; color:var(--red); font-weight:600; }
+
+  /* ═══════════════════════════════════════
+     ANNOTATION / LEGEND
+  ══════════════════════════════════════ */
+  .annotation-panel {
+    width:320px; flex-shrink:0;
+    display:flex; flex-direction:column; gap:16px;
+    padding-top:10px;
+  }
+  .ann-title { font-size:13px; font-weight:700; color:var(--text); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .ann-item { display:flex; gap:10px; align-items:flex-start; }
+  .ann-num { width:22px;height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:11px; font-weight:700; display:flex;align-items:center;justify-content:center; flex-shrink:0; margin-top:1px; }
+  .ann-text { font-size:12px; color:var(--text-2); line-height:1.5; }
+  .ann-text strong { color:var(--text); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- TOGGLE BAR -->
+<div class="toggle-bar">
+  <span class="label">Visualizar:</span>
+  <button class="tab-btn active" onclick="showScreen('desktop')">🖥️ Desktop</button>
+  <button class="tab-btn" onclick="showScreen('mobile')">📱 Mobile — App</button>
+  <button class="tab-btn" onclick="showScreen('empty')">✨ Empty State</button>
+</div>
+
+<div class="screens">
+
+  <!-- ══════════════════════════════════
+       SCREEN: DESKTOP
+  ══════════════════════════════════ -->
+  <div class="screen active" id="screen-desktop">
+  <div class="desktop-shell">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-logo">
+        <svg class="logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 8L54 20.7v25.4L32 56L10 43.1V17.7L32 8Z" stroke="#A78BFA" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M32 8v48M10 17.7L32 30.4M54 20.7L32 30.4" stroke="#A78BFA" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.5"/>
+          <circle cx="32" cy="30.4" r="5" fill="#C4B5F4" fill-opacity="0.4" stroke="#A78BFA" stroke-width="1.2"/>
+        </svg>
+        <span>ArxisVR</span>
+      </div>
+      <div class="topbar-proj">
+        <span>📁</span>
+        <span class="proj-name">Hospital São Lucas</span>
+        <span style="color:var(--text-3);font-size:10px;">▼</span>
+      </div>
+      <div class="topbar-breadcrumb">
+        <span>Piso 2</span>
+        <span style="color:var(--text-3)">›</span>
+        <span>Estrutura</span>
+        <span style="color:var(--text-3)">›</span>
+        <span>Pilar A-32</span>
+      </div>
+      <div class="topbar-right">
+        <div class="icon-btn">🔍</div>
+        <div class="icon-btn">🔔</div>
+        <div class="icon-btn">⚙️</div>
+        <span class="sync-badge"><div class="sync-dot"></div>Salvo</span>
+        <button class="ai-btn" onclick="toggleAI()" style="background:linear-gradient(135deg,#EF4444,#7C3AED);box-shadow:0 0 14px rgba(239,68,68,.35)">
+          <div class="ai-dot" style="background:#FCA5A5"></div>
+          Resolver 2 conflitos
+        </button>
+        <div class="avatar">NA</div>
+      </div>
+    </header>
+
+    <!-- ICON NAV -->
+    <nav class="icon-nav">
+      <div class="nav-icon active" title="Modelos">🏗️</div>
+      <div class="nav-icon" title="Cronograma 4D">📅</div>
+      <div class="nav-icon" title="Orçamento 5D">💰</div>
+      <div class="nav-icon" title="Clash Detection">⚡</div>
+      <div class="nav-icon" title="Reuniões XR">🥽</div>
+      <div class="nav-icon" title="Relatórios">📊</div>
+      <div class="nav-spacer"></div>
+      <div class="nav-icon" title="Ajuda">❓</div>
+    </nav>
+
+    <!-- LEFT PANEL -->
+    <aside class="left-panel">
+      <div class="panel-header">
+        <span class="panel-title">Estrutura do Modelo</span>
+        <span style="font-size:11px;color:var(--text-3);cursor:pointer;">＋</span>
+      </div>
+      <input class="panel-search" placeholder="Buscar elementos..." />
+      <div class="tree">
+        <div class="tree-group">Disciplinas</div>
+        <div class="tree-item">
+          <span class="ico">▶</span> Arquitetura <span class="badge">128</span>
+        </div>
+        <div class="tree-item selected">
+          <span class="ico">▼</span> Estrutura <span class="badge">64</span>
+        </div>
+        <div class="tree-item" style="padding-left:28px">
+          <span class="ico">📦</span> Pilares <span class="badge">32</span>
+        </div>
+        <div class="tree-item selected" style="padding-left:42px">
+          <span class="ico">🔷</span> Pilar A-32
+        </div>
+        <div class="tree-item" style="padding-left:42px">
+          <span class="ico">🔷</span> Pilar B-14
+        </div>
+        <div class="tree-item" style="padding-left:28px">
+          <span class="ico">📦</span> Vigas <span class="badge">18</span>
+        </div>
+        <div class="tree-item" style="padding-left:28px">
+          <span class="ico">📦</span> Lajes <span class="badge">14</span>
+        </div>
+        <div class="tree-item">
+          <span class="ico">▶</span> MEP <span class="badge">87</span>
+        </div>
+        <div class="tree-item">
+          <span class="ico">▶</span> Instalações <span class="badge">43</span>
+        </div>
+        <div class="tree-group" style="margin-top:8px;">Fases</div>
+        <div class="tree-item">
+          <span class="ico">✅</span> Fundação
+        </div>
+        <div class="tree-item selected">
+          <span class="ico">🔄</span> Estrutura
+        </div>
+        <div class="tree-item">
+          <span class="ico">⏳</span> Vedação
+        </div>
+      </div>
+    </aside>
+
+    <!-- VIEWPORT -->
+    <main class="viewport">
+      <div class="viewport-bg"></div>
+      <div class="viewport-model">
+        <!-- Fake BIM Model SVG -->
+        <svg width="460" height="340" viewBox="0 0 460 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid floor -->
+          <g opacity=".2">
+            <line x1="80" y1="260" x2="380" y2="260" stroke="#374151" stroke-width="1"/>
+            <line x1="80" y1="260" x2="180" y2="320" stroke="#374151" stroke-width="1"/>
+            <line x1="180" y1="200" x2="180" y2="320" stroke="#374151" stroke-width=".5" stroke-dasharray="4 4"/>
+            <line x1="230" y1="220" x2="230" y2="320" stroke="#374151" stroke-width=".5" stroke-dasharray="4 4"/>
+            <line x1="280" y1="200" x2="280" y2="300" stroke="#374151" stroke-width=".5" stroke-dasharray="4 4"/>
+            <line x1="330" y1="180" x2="330" y2="280" stroke="#374151" stroke-width=".5" stroke-dasharray="4 4"/>
+          </g>
+          <!-- Main building volumes -->
+          <!-- Block 1 - main tower -->
+          <path d="M130 240 L200 200 L260 200 L260 80 L200 80 L130 120 Z" fill="#1F2937" stroke="#374151" stroke-width="1.2"/>
+          <path d="M260 80 L330 40 L330 160 L260 200 Z" fill="#111827" stroke="#374151" stroke-width="1"/>
+          <path d="M130 120 L200 80 L260 80 L260 200 L200 200 Z" fill="#243044" stroke="#4B5563" stroke-width="1"/>
+          <!-- Highlighted column (selected) -->
+          <path d="M195 200 L205 200 L205 80 L195 80 Z" fill="#2563EB33" stroke="#3B82F6" stroke-width="1.5"/>
+          <path d="M195 200 L205 200 L210 196 L200 196 Z" fill="#2563EB22" stroke="#3B82F6" stroke-width="1"/>
+          <!-- Windows -->
+          <rect x="215" y="100" width="20" height="14" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".8"/>
+          <rect x="245" y="100" width="20" height="14" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".5"/>
+          <rect x="215" y="125" width="20" height="14" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".7"/>
+          <rect x="245" y="125" width="20" height="14" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".4"/>
+          <rect x="215" y="150" width="20" height="14" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".6"/>
+          <!-- Side block -->
+          <path d="M260 200 L330 160 L330 260 L260 300 Z" fill="#1A2332" stroke="#374151" stroke-width="1"/>
+          <path d="M260 200 L330 160 L330 260 L260 300 Z" fill="transparent" stroke="#2563EB18" stroke-width="1"/>
+          <!-- Clash indicator -->
+          <circle cx="310" cy="190" r="8" fill="#EF444433" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text x="306" y="194" fill="#EF4444" font-size="8" font-weight="bold">!</text>
+          <!-- Dimension lines -->
+          <line x1="130" y1="270" x2="260" y2="270" stroke="#374151" stroke-width=".8" stroke-dasharray="4 4"/>
+          <text x="190" y="282" fill="#6B7280" font-size="9" text-anchor="middle">18.4m</text>
+          <!-- Glow effect on selected column -->
+          <path d="M195 200 L205 200 L205 80 L195 80 Z" fill="none" stroke="#60A5FA" stroke-width="2" stroke-dasharray="6 4" opacity=".6">
+            <animate attributeName="stroke-dashoffset" values="0;-20" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+        </svg>
+      </div>
+
+      <!-- Viewport Toolbar -->
+      <div class="viewport-toolbar">
+        <div class="vp-btn active" title="Selecionar">↖</div>
+        <div class="vp-btn" title="Orbitar">⟳</div>
+        <div class="vp-btn" title="Medir">📏</div>
+        <div class="vp-btn" title="Corte">✂️</div>
+        <div class="vp-btn" title="Isolar">👁</div>
+        <div style="height:8px"></div>
+        <div class="vp-btn" title="Zoom In">+</div>
+        <div class="vp-btn" title="Zoom Out">−</div>
+        <div class="vp-btn" title="Reset câmera">⊙</div>
+      </div>
+
+      <!-- Viewport controls -->
+      <div class="viewport-controls">
+        <div class="vc-btn active">3D</div>
+        <div class="vc-btn">Planta</div>
+        <div class="vc-btn">Corte</div>
+        <div class="vc-btn">Fachada</div>
+        <div class="vc-btn">VR 🥽</div>
+      </div>
+
+      <!-- Selection tag -->
+      <div class="selection-tag">
+        <div class="sel-label">Selecionado</div>
+        <div class="sel-name">Pilar A-32</div>
+        <div class="sel-type">IfcColumn · Concreto C30</div>
+      </div>
+
+      <!-- Mini-map -->
+      <div class="minimap">
+        <svg viewBox="0 0 80 60" fill="none">
+          <rect x="5" y="5" width="50" height="40" fill="#1F2937" stroke="#374151" stroke-width=".8"/>
+          <rect x="15" y="10" width="30" height="25" fill="#243044" stroke="#4B5563" stroke-width=".5"/>
+          <circle cx="28" cy="22" r="3" fill="#2563EB" opacity=".8"/>
+          <rect x="60" y="25" width="10" height="5" fill="#2563EB55" stroke="#2563EB" stroke-width=".5"/>
+        </svg>
+      </div>
+
+      <!-- AI Panel -->
+      <div class="ai-panel" id="ai-panel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-icon">🤖</div>
+          <div>
+            <div class="ai-panel-title">Arxis AI</div>
+            <div class="ai-panel-sub">Contexto: Pilar A-32</div>
+          </div>
+        </div>
+        <div class="ai-context">
+          <div class="ctx-label">Detectado</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:2px;">IFC Column · IfcStructuralMember · Conflito detectado em Z+1.4m</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Sugestões</div>
+        <div class="ai-suggestions">
+          <div class="ai-sug">
+            <span class="sug-ico">⚡</span>
+            <span class="sug-txt">Analisar clash detectado</span>
+            <span class="sug-arr">→</span>
+          </div>
+          <div class="ai-sug">
+            <span class="sug-ico">✂️</span>
+            <span class="sug-txt">Gerar corte automático</span>
+            <span class="sug-arr">→</span>
+          </div>
+          <div class="ai-sug">
+            <span class="sug-ico">📊</span>
+            <span class="sug-txt">Relatório deste elemento</span>
+            <span class="sug-arr">→</span>
+          </div>
+          <div class="ai-sug">
+            <span class="sug-ico">💰</span>
+            <span class="sug-txt">Estimar custo estrutural</span>
+            <span class="sug-arr">→</span>
+          </div>
+          <div class="ai-sug">
+            <span class="sug-ico">📅</span>
+            <span class="sug-txt">Ver no cronograma 4D</span>
+            <span class="sug-arr">→</span>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input class="ai-input" placeholder="Perguntar sobre este elemento…"/>
+          <button class="ai-send">↑</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL -->
+    <aside class="right-panel">
+      <!-- Element Summary Card -->
+      <div class="elem-summary">
+        <div class="elem-summary__name">Pilar A-32</div>
+        <div class="elem-summary__type">IfcColumn · Concreto C30 · GUID 3XZ9K…A2</div>
+        <div class="elem-summary__tags">
+          <span class="elem-tag blue">📐 Estrutura</span>
+          <span class="elem-tag blue">P2 — Piso 2</span>
+          <span class="elem-tag amber">⚠ Revisão</span>
+          <span class="elem-tag red">🔴 2 Clashes</span>
+        </div>
+        <div class="elem-dims">
+          <div class="elem-dim"><div class="elem-dim__val">3.20</div><div class="elem-dim__lbl">Altura (m)</div></div>
+          <div class="elem-dim"><div class="elem-dim__val">60×60</div><div class="elem-dim__lbl">Seção (cm)</div></div>
+          <div class="elem-dim"><div class="elem-dim__val">1.15</div><div class="elem-dim__lbl">Vol (m³)</div></div>
+        </div>
+      </div>
+
+      <div class="prop-tabs" style="margin-top:0">
+        <div class="prop-tab active">Detalhes</div>
+        <div class="prop-tab">Clashes <span style="background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:middle;">2</span></div>
+        <div class="prop-tab">4D</div>
+      </div>
+
+      <div style="padding:10px 12px;overflow-y:auto;flex:1;">
+        <!-- Clashes visuais -->
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:8px;">Conflitos detectados</div>
+
+        <div class="clash-v2 red">
+          <span class="clash-v2__ico">🔴</span>
+          <div class="clash-v2__body">
+            <div class="clash-v2__name">Tubo HVAC-07</div>
+            <div class="clash-v2__meta">Interferência direta · 2.1 cm<br>Local: Piso 2 · Z +1.40m</div>
+            <div class="clash-v2__action">→ Ir para local · Analisar</div>
+          </div>
+        </div>
+
+        <div class="clash-v2 amber">
+          <span class="clash-v2__ico">🟠</span>
+          <div class="clash-v2__body">
+            <div class="clash-v2__name">Cabo Elétrico-12</div>
+            <div class="clash-v2__meta">Proximidade crítica · 6 cm<br>Local: Piso 2 · Parede NE</div>
+            <div class="clash-v2__action">→ Ir para local · Analisar</div>
+          </div>
+        </div>
+
+        <!-- Propriedades compactas -->
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin:14px 0 8px;">Identificação</div>
+        <div class="prop-row"><span class="prop-key">Material</span><span class="prop-val">Concreto C30 (fck)</span></div>
+        <div class="prop-row"><span class="prop-key">Fase</span><span class="prop-val">Estrutura</span></div>
+        <div class="prop-row"><span class="prop-key">Disciplina</span><span class="prop-val">Estrutural</span></div>
+        <div class="prop-row"><span class="prop-key">GUID</span><span class="prop-val highlight">3XZ9K…A2</span></div>
+
+        <!-- AI contextual suggestion -->
+        <div style="margin-top:14px;padding:10px 12px;background:linear-gradient(135deg,rgba(79,70,229,.1),rgba(124,58,237,.08));border:1px solid rgba(124,58,237,.22);border-radius:10px;">
+          <div style="font-size:10px;color:var(--purple-l);font-weight:600;margin-bottom:5px;">🤖 Sugestão Arxis AI</div>
+          <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;line-height:1.5;">HVAC-07 requer relocação de ~5cm para eliminar interferência crítica.</div>
+          <button class="ai-ctx-badge">Resolver 2 conflitos →</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- STATUS BAR -->
+    <footer class="statusbar">
+      <div class="sb-item"><div class="dot green"></div>Online</div>
+      <span class="sb-sep">|</span>
+      <div class="sb-item">Objeto: <span style="color:var(--text-2);margin-left:3px">Pilar A-32</span></div>
+      <span class="sb-sep">|</span>
+      <div class="sb-item">X: 12.40 · Y: 0.00 · Z: 8.50</div>
+      <span class="sb-sep">|</span>
+      <div class="sb-item">IFC 4.3 · 64 elementos</div>
+      <div class="sb-right">
+        <div class="sb-item"><div class="dot blue"></div>FPS: 60</div>
+        <span class="sb-sep">|</span>
+        <div class="sb-item">Mem: 1.2 GB</div>
+        <span class="sb-sep">|</span>
+        <div class="sb-item">WebGL 2.0</div>
+      </div>
+    </footer>
+
+  </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN: MOBILE
+  ══════════════════════════════════ -->
+  <div class="screen" id="screen-mobile">
+  <div class="mobile-wrapper">
+
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+
+      <!-- Top Bar -->
+      <div class="m-topbar">
+        <svg class="m-logo-ico" viewBox="0 0 64 64" fill="none">
+          <path d="M32 8L54 20.7v25.4L32 56L10 43.1V17.7L32 8Z" stroke="#A78BFA" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M32 8v48M10 17.7L32 30.4M54 20.7L32 30.4" stroke="#A78BFA" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.5"/>
+          <circle cx="32" cy="30.4" r="5" fill="#C4B5F4" fill-opacity="0.4" stroke="#A78BFA" stroke-width="1.2"/>
+        </svg>
+        <div style="flex:1">
+          <div class="m-proj-name">Hospital São Lucas</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:1px;display:flex;align-items:center;gap:4px">
+            Piso 2 · Estrutura
+            <span style="color:var(--green);font-size:9px">● Sincronizado</span>
+          </div>
+        </div>
+        <!-- AI contextual: muda quando há clash selecionado -->
+        <div class="m-ai-pill" style="background:linear-gradient(135deg,#EF4444,#7C3AED);box-shadow:0 0 10px rgba(239,68,68,.4)"><span>🤖</span> Resolver 2</div>
+        <div style="width:6px"></div>
+        <div style="font-size:18px;color:var(--text-3)">☰</div>
+      </div>
+
+      <!-- 3D Viewer -->
+      <div class="m-viewer">
+        <div class="m-viewer-bg"></div>
+        <div class="m-viewer-model">
+          <svg width="300" height="280" viewBox="0 0 300 280" fill="none">
+            <g opacity=".15">
+              <line x1="30" y1="200" x2="270" y2="200" stroke="#374151" stroke-width="1"/>
+              <line x1="30" y1="200" x2="100" y2="240" stroke="#374151" stroke-width="1"/>
+            </g>
+            <path d="M60 190 L130 155 L200 155 L200 60 L130 60 L60 95 Z" fill="#1F2937" stroke="#374151" stroke-width="1.2"/>
+            <path d="M200 60 L250 30 L250 125 L200 155 Z" fill="#111827" stroke="#374151" stroke-width="1"/>
+            <path d="M60 95 L130 60 L200 60 L200 155 L130 155 Z" fill="#243044" stroke="#4B5563" stroke-width="1"/>
+            <path d="M125 155 L135 155 L135 60 L125 60 Z" fill="#2563EB33" stroke="#3B82F6" stroke-width="1.5"/>
+            <rect x="148" y="78" width="16" height="11" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".8"/>
+            <rect x="170" y="78" width="16" height="11" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".5"/>
+            <rect x="148" y="98" width="16" height="11" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".6"/>
+            <rect x="170" y="98" width="16" height="11" rx="1" fill="#2563EB22" stroke="#2563EB" stroke-width=".8" opacity=".4"/>
+            <circle cx="220" cy="95" r="7" fill="#EF444433" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <text x="217" y="99" fill="#EF4444" font-size="7" font-weight="bold">!</text>
+            <path d="M125 155 L135 155 L135 60 L125 60 Z" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-dasharray="5 3" opacity=".7">
+              <animate attributeName="stroke-dashoffset" values="0;-16" dur="1.5s" repeatCount="indefinite"/>
+            </path>
+          </svg>
+        </div>
+        <!-- Toolbar -->
+        <div class="m-viewer-tools">
+          <div class="m-vp-btn">↖</div>
+          <div class="m-vp-btn">⟳</div>
+          <div class="m-vp-btn">+</div>
+          <div class="m-vp-btn">−</div>
+        </div>
+        <!-- Selection -->
+        <div class="m-selection-tag">
+          <div class="sel-label">Selecionado</div>
+          <div class="sel-name">Pilar A-32</div>
+          <div class="sel-type">IfcColumn</div>
+          <div style="margin-top:4px;font-size:10px;color:var(--red)">⚠ 2 clashes</div>
+        </div>
+      </div>
+
+      <!-- Bottom Sheet — 3 estados Maps-style -->
+      <div class="bottom-sheet" id="mobile-bs">
+        <div class="bs-handle" onclick="cycleBSState()" style="cursor:pointer"></div>
+
+        <!-- PEEK: nome + clash + seta -->
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;" onclick="cycleBSState()">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--text)">Pilar A-32</div>
+            <div style="font-size:10px;color:var(--text-3)">IfcColumn · Concreto C30</div>
+          </div>
+          <span style="background:rgba(239,68,68,.15);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;border:1px solid rgba(239,68,68,.25);flex-shrink:0">⚠ 2 clashes</span>
+          <span id="bs-chevron" style="color:var(--text-3);font-size:11px;transition:transform .2s">︿</span>
+        </div>
+
+        <!-- MEDIUM/FULL content -->
+        <div id="bs-expand" style="overflow:hidden;max-height:0;transition:max-height .3s ease">
+          <div class="bs-tabs" style="border-top:1px solid rgba(255,255,255,.06)">
+            <div class="bs-tab active">Propriedades</div>
+            <div class="bs-tab">Clashes <span style="background:var(--red);color:#fff;font-size:9px;padding:1px 4px;border-radius:6px;margin-left:2px;">2</span></div>
+            <div class="bs-tab">4D / 5D</div>
+            <div class="bs-tab">IA</div>
+          </div>
+          <!-- Dims grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:10px 12px 0">
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:6px;text-align:center">
+              <div style="font-size:13px;font-weight:700;font-family:monospace">3.20</div>
+              <div style="font-size:9px;color:var(--text-3);margin-top:1px">ALTURA m</div>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:6px;text-align:center">
+              <div style="font-size:13px;font-weight:700;font-family:monospace">60×60</div>
+              <div style="font-size:9px;color:var(--text-3);margin-top:1px">SEÇÃO cm</div>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:6px;text-align:center">
+              <div style="font-size:13px;font-weight:700;font-family:monospace">1.15</div>
+              <div style="font-size:9px;color:var(--text-3);margin-top:1px">VOL m³</div>
+            </div>
+          </div>
+          <!-- Clashes -->
+          <div style="padding:8px 12px 4px">
+            <div class="clash-v2 red" style="margin-bottom:5px">
+              <span class="clash-v2__ico">🔴</span>
+              <div class="clash-v2__body">
+                <div class="clash-v2__name">Tubo HVAC-07</div>
+                <div class="clash-v2__meta">2.1cm · Z +1.40m · Piso 2</div>
+                <div class="clash-v2__action">→ Zoom automático · Analisar</div>
+              </div>
+            </div>
+            <div class="clash-v2 amber">
+              <span class="clash-v2__ico">🟠</span>
+              <div class="clash-v2__body">
+                <div class="clash-v2__name">Cabo Elétrico-12</div>
+                <div class="clash-v2__meta">6cm · Parede NE · Piso 2</div>
+                <div class="clash-v2__action">→ Zoom automático · Analisar</div>
+              </div>
+            </div>
+          </div>
+          <!-- AI mobile contextual -->
+          <div style="margin:4px 12px 14px;padding:9px 12px;background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(124,58,237,.1));border:1px solid rgba(239,68,68,.2);border-radius:10px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px">🤖</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:var(--text-2)">HVAC-07 requer relocação de 5cm</div>
+            </div>
+            <button class="ai-ctx-badge" style="font-size:10px;padding:4px 10px">Resolver →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="m-bottomnav">
+        <div class="m-nav-item active">
+          <span class="m-nav-ico">🏗️</span>
+          <span class="m-nav-lbl" style="color:var(--blue-l)">Modelos</span>
+        </div>
+        <div class="m-nav-item">
+          <span class="m-nav-ico">📐</span>
+          <span class="m-nav-lbl">Ferramentas</span>
+        </div>
+        <div class="m-nav-item ai-nav">
+          <div class="m-nav-ico-wrap">🤖</div>
+          <span class="m-nav-lbl" style="color:var(--purple-l);margin-top:6px">IA</span>
+        </div>
+        <div class="m-nav-item">
+          <span class="m-nav-ico">⚡</span>
+          <span class="m-nav-lbl">Clashes</span>
+        </div>
+        <div class="m-nav-item">
+          <span class="m-nav-ico">⚙️</span>
+          <span class="m-nav-lbl">Config</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotations -->
+    <div class="annotation-panel">
+      <div class="ann-title">📱 Decisões de Design Mobile</div>
+      <div class="ann-item">
+        <div class="ann-num">1</div>
+        <div class="ann-text"><strong>Viewer 3D ocupa ~80% da tela</strong> — modelo sempre visível, nenhum painel competindo</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">2</div>
+        <div class="ann-text"><strong>Bottom sheet deslizante</strong> para propriedades — aparece apenas ao selecionar um objeto</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">3</div>
+        <div class="ann-text"><strong>Topo compacto</strong> — só logo, nome do projeto e botão IA. Sem menus pesados.</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">4</div>
+        <div class="ann-text"><strong>Bottom nav 5 itens</strong> com botão IA elevado (floating action) no centro</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">5</div>
+        <div class="ann-text"><strong>Selection tag flutuante</strong> no canto superior direito — contexto sem cobrir o modelo</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">6</div>
+        <div class="ann-text"><strong>Clashes visíveis no viewer</strong> como ícone ⚡ vermelho direto no modelo 3D</div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN: EMPTY STATE
+  ══════════════════════════════════ -->
+  <div class="screen" id="screen-empty">
+  <div class="mobile-wrapper">
+
+    <div class="phone-frame empty">
+      <div class="phone-notch"></div>
+
+      <!-- Top Bar -->
+      <div class="m-topbar" style="padding-top:36px">
+        <svg class="m-logo-ico" viewBox="0 0 64 64" fill="none">
+          <path d="M32 8L54 20.7v25.4L32 56L10 43.1V17.7L32 8Z" stroke="#A78BFA" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M32 8v48M10 17.7L32 30.4M54 20.7L32 30.4" stroke="#A78BFA" stroke-width="1.2" stroke-linejoin="round" stroke-opacity="0.5"/>
+          <circle cx="32" cy="30.4" r="5" fill="#C4B5F4" fill-opacity="0.4" stroke="#A78BFA" stroke-width="1.2"/>
+        </svg>
+        <div style="flex:1">
+          <div class="m-proj-name">ArxisVR</div>
+          <div class="m-proj-sub" style="color:var(--green)">● Online</div>
+        </div>
+        <div class="avatar">NA</div>
+      </div>
+
+      <!-- Empty State Content v2 -->
+      <div class="empty-state" style="padding:28px 18px 0; display:flex; flex-direction:column; gap:20px; overflow-y:auto; flex:1;">
+
+        <!-- Greeting — with breathing room -->
+        <div style="padding-top:6px">
+          <div class="empty-greeting">Olá, Nicolas 👋</div>
+          <div class="empty-sub" style="margin-top:4px">Continue de onde parou ou abra um novo modelo</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="qa-btn">
+            <span class="qa-ico">📂</span>
+            <div class="qa-lbl">Abrir IFC</div>
+          </div>
+          <div class="qa-btn">
+            <span class="qa-ico">☁️</span>
+            <div class="qa-lbl">Importar</div>
+          </div>
+          <div class="qa-btn">
+            <span class="qa-ico">🔗</span>
+            <div class="qa-lbl">Colaborar</div>
+          </div>
+        </div>
+
+        <!-- Project Cards v2 -->
+        <div class="recent-section">
+          <div class="recent-header">
+            <div class="recent-title">Recentes</div>
+            <div class="recent-see-all">Ver todos →</div>
+          </div>
+
+          <!-- Card 1: In progress, high completion -->
+          <div class="proj-card" style="--proj-color:#3B82F6; --proj-gradient:linear-gradient(135deg,#2563EB22,#1e40af18)">
+            <div class="proj-card-thumb">
+              <div class="proj-card-thumb-bg"></div>
+              <div class="proj-card-thumb-grid"></div>
+              <span class="proj-card-thumb-ico">🏥</span>
+            </div>
+            <div class="proj-card-body">
+              <div class="proj-card-top">
+                <div class="proj-name-txt">Hospital São Lucas</div>
+                <span class="proj-badge ifc">IFC4</span>
+              </div>
+              <div class="proj-meta-row">
+                <span class="proj-meta-item">📦 64 elementos</span>
+                <span class="proj-meta-item">👥 3 colaboradores</span>
+                <span class="proj-meta-item">📐 Estrutural</span>
+              </div>
+              <div class="proj-progress">
+                <div class="proj-progress-header">
+                  <span>Progresso</span>
+                  <span class="proj-progress-pct">82%</span>
+                </div>
+                <div class="proj-progress-bar">
+                  <div class="proj-progress-fill" style="width:82%; background:linear-gradient(90deg,#2563EB,#3B82F6)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="proj-card-footer">
+              <span class="proj-edited">🕐 Hoje, 14h32</span>
+              <button class="proj-continue-btn">Continuar →</button>
+            </div>
+          </div>
+
+          <!-- Card 2: Medium progress -->
+          <div class="proj-card" style="--proj-color:#8B5CF6; --proj-gradient:linear-gradient(135deg,#7C3AED18,#4F46E518)">
+            <div class="proj-card-thumb">
+              <div class="proj-card-thumb-bg"></div>
+              <div class="proj-card-thumb-grid"></div>
+              <span class="proj-card-thumb-ico">🏢</span>
+            </div>
+            <div class="proj-card-body">
+              <div class="proj-card-top">
+                <div class="proj-name-txt">Edifício Comercial Centro</div>
+                <span class="proj-badge bim">BIM</span>
+              </div>
+              <div class="proj-meta-row">
+                <span class="proj-meta-item">📦 128 elementos</span>
+                <span class="proj-meta-item">👥 7 colaboradores</span>
+              </div>
+              <div class="proj-progress">
+                <div class="proj-progress-header">
+                  <span>Progresso</span>
+                  <span class="proj-progress-pct">45%</span>
+                </div>
+                <div class="proj-progress-bar">
+                  <div class="proj-progress-fill" style="width:45%; background:linear-gradient(90deg,#7C3AED,#A78BFA)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="proj-card-footer">
+              <span class="proj-edited">🕐 Ontem, 09h15</span>
+              <button class="proj-continue-btn">Continuar →</button>
+            </div>
+          </div>
+
+          <!-- Card 3: Low progress, older -->
+          <div class="proj-card" style="--proj-color:#F59E0B; --proj-gradient:linear-gradient(135deg,#F59E0B14,#D9770618)">
+            <div class="proj-card-thumb">
+              <div class="proj-card-thumb-bg"></div>
+              <div class="proj-card-thumb-grid"></div>
+              <span class="proj-card-thumb-ico">🏭</span>
+            </div>
+            <div class="proj-card-body">
+              <div class="proj-card-top">
+                <div class="proj-name-txt">Industrial Campinas</div>
+                <span class="proj-badge ifc2">IFC2</span>
+              </div>
+              <div class="proj-meta-row">
+                <span class="proj-meta-item">📦 43 elementos</span>
+                <span class="proj-meta-item">👥 2 colaboradores</span>
+              </div>
+              <div class="proj-progress">
+                <div class="proj-progress-header">
+                  <span>Progresso</span>
+                  <span class="proj-progress-pct">18%</span>
+                </div>
+                <div class="proj-progress-bar">
+                  <div class="proj-progress-fill" style="width:18%; background:linear-gradient(90deg,#D97706,#F59E0B)"></div>
+                </div>
+              </div>
+            </div>
+            <div class="proj-card-footer">
+              <span class="proj-edited">🕐 3 dias atrás</span>
+              <button class="proj-continue-btn">Continuar →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Proativa -->
+        <div style="background:linear-gradient(135deg,rgba(79,70,229,.12),rgba(124,58,237,.08)); border:1px solid rgba(124,58,237,.25); border-radius:16px; padding:14px; margin-bottom:80px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:30px;height:30px;background:linear-gradient(135deg,#4F46E5,#7C3AED);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🤖</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--purple-l)">Arxis AI</div>
+              <div style="font-size:10px;color:var(--text-3)">Você abriu Hospital.ifc ontem. Deseja continuar?</div>
+            </div>
+            <div style="margin-left:auto;width:6px;height:6px;background:#A78BFA;border-radius:50%;animation:pulse 1.5s infinite;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;">
+              <span>📂</span> Abrir Hospital São Lucas
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;">
+              <span>⚡</span> Encontrar conflitos no modelo
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;">
+              <span>📊</span> Gerar relatório de progresso
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;">
+              <span>📐</span> Medir elementos do projeto
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text-3);">Perguntar algo…</div>
+            <div style="width:34px;height:34px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">↑</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav v2 — Elevated AI center -->
+      <div style="position:relative; background:var(--surface); border-top:1px solid rgba(255,255,255,.06); padding:8px 0 16px; flex-shrink:0;">
+        <!-- Subtle top glow -->
+        <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:80px;height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.6),transparent);"></div>
+        <div style="display:flex; align-items:flex-end;">
+          <!-- Início -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;">
+            <span style="font-size:20px">🏠</span>
+            <span style="font-size:9px;font-weight:600;color:var(--blue-l)">Início</span>
+          </div>
+          <!-- Projetos -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;">
+            <span style="font-size:20px;opacity:.6">📂</span>
+            <span style="font-size:9px;font-weight:500;color:var(--text-3)">Projetos</span>
+          </div>
+          <!-- IA — Elevated FAB -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;">
+            <div style="
+              width:52px;height:52px;
+              background:linear-gradient(135deg,#4F46E5,#7C3AED);
+              border-radius:16px;
+              display:flex;align-items:center;justify-content:center;
+              font-size:24px;
+              margin-top:-28px;
+              box-shadow:0 8px 24px rgba(124,58,237,.55), 0 2px 8px rgba(0,0,0,.4), 0 0 0 3px rgba(139,92,246,.2);
+              position:relative;
+            ">
+              🤖
+              <!-- pulse ring -->
+              <div style="position:absolute;inset:-4px;border-radius:20px;border:1px solid rgba(139,92,246,.3);animation:pulse-ring 2s ease-out infinite;"></div>
+            </div>
+            <span style="font-size:9px;font-weight:700;color:var(--purple-l);margin-top:6px;">Arxis AI</span>
+          </div>
+          <!-- Equipe -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;">
+            <span style="font-size:20px;opacity:.6">👥</span>
+            <span style="font-size:9px;font-weight:500;color:var(--text-3)">Equipe</span>
+          </div>
+          <!-- Config -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;">
+            <span style="font-size:20px;opacity:.6">⚙️</span>
+            <span style="font-size:9px;font-weight:500;color:var(--text-3)">Config</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotations v2 -->
+    <div class="annotation-panel">
+      <div class="ann-title">✨ Empty State v2 — O que mudou</div>
+      <div class="ann-item">
+        <div class="ann-num">1</div>
+        <div class="ann-text"><strong>Mais respiro no topo</strong> — padding-top extra antes do greeting dá sensação de refinamento e hierarquia clara</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">2</div>
+        <div class="ann-text"><strong>Cards com thumbnail + barra de progresso</strong> — cada projeto tem cor própria, % de completude, nº de colaboradores e timestamp</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">3</div>
+        <div class="ann-text"><strong>Dados vivos nos cards</strong> — 82% / 45% / 18% criam percepção de sistema ativo, não estático</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">4</div>
+        <div class="ann-text"><strong>Botão "Continuar →"</strong> em cada card — CTA claro que reduz fricção de retomada</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">5</div>
+        <div class="ann-text"><strong>IA proativa com contexto</strong> — "Você abriu Hospital.ifc ontem" + 4 sugestões acionáveis. Puxa o usuário em vez de só esperar</div>
+      </div>
+      <div class="ann-item">
+        <div class="ann-num">6</div>
+        <div class="ann-text"><strong>Bottom nav Discord-style</strong> — FAB da IA elevado com shadow gradient + pulse ring animado + glow no topo da barra</div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+</div><!-- /screens -->
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleAI() {
+  const panel = document.getElementById('ai-panel');
+  panel.classList.toggle('open');
+}
+
+// Bottom sheet 3 estados: peek → medium → full → peek
+let _bsState = 0;
+function cycleBSState() {
+  _bsState = (_bsState + 1) % 3;
+  const exp = document.getElementById('bs-expand');
+  const chev = document.getElementById('bs-chevron');
+  if (!exp) return;
+  const heights = ['0', '240px', '460px'];
+  exp.style.maxHeight = heights[_bsState];
+  if (chev) chev.style.transform = _bsState > 0 ? 'rotate(180deg)' : '';
+}
+</script>
+</body>
+</html>

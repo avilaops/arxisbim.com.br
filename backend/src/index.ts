@@ -212,13 +212,20 @@ await server.register(helmet, {
   contentSecurityPolicy: false,
 } as any);
 
-// Rate limiting
+// Rate limiting — only API routes, skip static assets
 await server.register(rateLimit, {
   global: true,
-  max: 100,
+  max: 300,
   timeWindow: '1 minute',
   cache: 10000,
   allowList: ['127.0.0.1'],
+  keyGenerator: (req: any) => req.ip,
+  skip: (req: any) => !req.url?.startsWith('/api/'),
+  errorResponseBuilder: (_req: any, context: any) => ({
+    statusCode: 429,
+    error: 'Too Many Requests',
+    message: `Rate limit exceeded. Try again in ${Math.ceil(context.ttl / 1000)}s.`,
+  }),
 } as any);
 
 // Multipart for file uploads
