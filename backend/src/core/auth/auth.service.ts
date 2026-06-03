@@ -381,6 +381,74 @@ export class AuthService {
   }
 
   /**
+   * Alterar senha (usuário autenticado)
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const [user] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user) throw new Error('Usuário não encontrado');
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) throw new Error('Senha atual incorreta');
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
+  }
+
+  /**
+   * Solicitar reset de senha (forgot password)
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+    // Silencioso se email não existe (segurança)
+    if (!user || !user.isActive) return;
+
+    const resetToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // Invalidar tokens anteriores
+    await this.db.delete(authTokens).where(and(
+      eq(authTokens.userId, user.id),
+      eq(authTokens.tokenType, 'password_reset'),
+      eq(authTokens.isUsed, false)
+    ));
+
+    await this.db.insert(authTokens).values({
+      userId: user.id,
+      tenantId: user.tenantId,
+      token: resetToken,
+      tokenType: 'password_reset',
+      expiresAt,
+      isUsed: false,
+      metadata: { email: user.email },
+    });
+
+    await emailService.sendPasswordReset(user.email, user.name, resetToken, user.tenantId);
+  }
+
+  /**
+   * Redefinir senha com token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const now = new Date();
+    const [tokenRecord] = await this.db
+      .select()
+      .from(authTokens)
+      .where(and(
+        eq(authTokens.token, token),
+        eq(authTokens.tokenType, 'password_reset'),
+        eq(authTokens.isUsed, false),
+        gte(authTokens.expiresAt, now)
+      ))
+      .limit(1);
+
+    if (!tokenRecord) throw new Error('Token inválido ou expirado');
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, tokenRecord.userId));
+    await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
+  }
+
+  /**
    * Buscar usuário por ID
    */
   async getUserById(userId: string) {

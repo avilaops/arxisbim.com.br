@@ -217,6 +217,100 @@ export async function authRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * POST /auth/change-password
+   * Alterar senha (autenticado)
+   */
+  fastify.post('/change-password', {
+    schema: {
+      description: 'Alterar senha do usuário autenticado',
+      tags: ['auth'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['currentPassword', 'newPassword'],
+        properties: {
+          currentPassword: { type: 'string', minLength: 8 },
+          newPassword: { type: 'string', minLength: 8 },
+        },
+      },
+      response: {
+        200: { type: 'object', properties: { message: { type: 'string' } } },
+      },
+    },
+    preHandler: [fastify.authenticate],
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+        const { currentPassword, newPassword } = request.body as any;
+        await authService.changePassword(userId, currentPassword, newPassword);
+        return reply.send({ message: 'Senha alterada com sucesso' });
+      } catch (error: any) {
+        return reply.status(400).send({ error: error.message || 'Falha ao alterar senha' });
+      }
+    },
+  });
+
+  /**
+   * POST /auth/forgot-password
+   * Solicitar reset de senha
+   */
+  fastify.post('/forgot-password', {
+    schema: {
+      description: 'Solicitar email de redefinição de senha',
+      tags: ['auth'],
+      body: {
+        type: 'object',
+        required: ['email'],
+        properties: { email: { type: 'string', format: 'email' } },
+      },
+      response: {
+        200: { type: 'object', properties: { message: { type: 'string' } } },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { email } = request.body as any;
+        await authService.forgotPassword(email);
+        // Sempre retorna 200 por segurança
+        return reply.send({ message: 'Se o email existir, você receberá um link de redefinição.' });
+      } catch (error: any) {
+        return reply.send({ message: 'Se o email existir, você receberá um link de redefinição.' });
+      }
+    },
+  });
+
+  /**
+   * POST /auth/reset-password
+   * Redefinir senha com token
+   */
+  fastify.post('/reset-password', {
+    schema: {
+      description: 'Redefinir senha com token',
+      tags: ['auth'],
+      body: {
+        type: 'object',
+        required: ['token', 'newPassword'],
+        properties: {
+          token: { type: 'string' },
+          newPassword: { type: 'string', minLength: 8 },
+        },
+      },
+      response: {
+        200: { type: 'object', properties: { message: { type: 'string' } } },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { token, newPassword } = request.body as any;
+        await authService.resetPassword(token, newPassword);
+        return reply.send({ message: 'Senha redefinida com sucesso. Faça login com a nova senha.' });
+      } catch (error: any) {
+        return reply.status(400).send({ error: error.message || 'Falha ao redefinir senha' });
+      }
+    },
+  });
+
+  /**
    * GET /auth/me
    * Obter usuário atual
    */
