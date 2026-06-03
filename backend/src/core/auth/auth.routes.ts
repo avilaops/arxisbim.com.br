@@ -72,8 +72,11 @@ export async function authRoutes(fastify: FastifyInstance) {
         await verifyTurnstileToken(body.turnstileToken ?? '', ip);
         const result = await authService.login(body);
         return reply.send(result);
-      } catch (error) {
+      } catch (error: any) {
         fastify.log.error(error);
+        if (error?.code === 'EMAIL_NOT_VERIFIED') {
+          return reply.status(403).send({ error: 'EMAIL_NOT_VERIFIED', message: error.message });
+        }
         return reply.status(401).send({ error: error instanceof Error ? error.message : 'Login failed' });
       }
     },
@@ -167,6 +170,48 @@ export async function authRoutes(fastify: FastifyInstance) {
       } catch (error) {
         fastify.log.error(error);
         return reply.status(401).send({ error: 'Invalid refresh token' });
+      }
+    },
+  });
+
+  /**
+   * POST /auth/verify-email
+   * Verificar email com token
+   */
+  fastify.post('/verify-email', {
+    schema: {
+      description: 'Verificar email com token',
+      tags: ['auth'],
+      body: {
+        type: 'object',
+        required: ['verificationToken'],
+        properties: {
+          verificationToken: { type: 'string' },
+          tenantId: { type: 'string' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            userId: { type: 'string' },
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { verificationToken } = request.body as any;
+        const result = await authService.verifyEmail(verificationToken);
+        if (!result.success) {
+          return reply.status(400).send({ error: 'Token inválido ou expirado', message: 'Token inválido ou expirado' });
+        }
+        return reply.send({ success: true, userId: result.userId, message: 'Email verificado com sucesso! Você já pode fazer login.' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        return reply.status(400).send({ error: error.message || 'Verificação falhou' });
       }
     },
   });

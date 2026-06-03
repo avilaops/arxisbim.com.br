@@ -1,11 +1,14 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, gte } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { authTokens } from '../../shared/database/schema/observability.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
+import { emailService } from '../email/email.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 
 interface JWTPayload {
   userId: string;
@@ -100,6 +103,13 @@ export class AuthService {
       throw new Error('Credenciais inválidas');
     }
 
+    // Email deve estar verificado
+    if (!user.emailVerified) {
+      const err: any = new Error('Verifique seu email antes de fazer login. Confira sua caixa de entrada.');
+      err.code = 'EMAIL_NOT_VERIFIED';
+      throw err;
+    }
+
     // Verificar se o tenant está ativo
     const [tenant] = await this.db
       .select()
@@ -187,14 +197,23 @@ export class AuthService {
       .where(eq(users.email, validated.email))
       .limit(1);
 
+    // Email já existe — se não verificado, reenviar; se verificado, erro
     if (existingUser) {
+      if (!existingUser.emailVerified) {
+        await this.sendVerificationEmail(existingUser.id, existingUser.email, existingUser.tenantId);
+        return {
+          user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, tenantId: existingUser.tenantId, companyId: existingUser.companyId || undefined, role: existingUser.role, permissions: existingUser.permissions || [] },
+          requiresEmailVerification: true,
+          message: 'Esta conta ainda não foi verificada. Reenviamos o email de confirmação.',
+        } as any;
+      }
       throw new Error('Email já cadastrado');
     }
 
     // Hash da senha
     const passwordHash = await bcrypt.hash(validated.password, 10);
 
-    // Criar usuário
+    // Criar usuário inativo até verificar email
     const [newUser] = await this.db
       .insert(users)
       .values({
@@ -206,27 +225,14 @@ export class AuthService {
         role: 'user',
         permissions: [],
         emailVerified: false,
-        isActive: true,
+        isActive: false,
       })
       .returning();
 
     await BillingService.initializeTenantFreeTier(tenantSlug);
 
-    // Gerar tokens
-    const token = this.generateAccessToken({
-      userId: newUser.id,
-      email: newUser.email,
-      tenantId: newUser.tenantId,
-      companyId: newUser.companyId || undefined,
-      role: newUser.role,
-      permissions: newUser.permissions || [],
-    });
-
-    const refreshToken = this.generateRefreshToken({
-      userId: newUser.id,
-      email: newUser.email,
-      tenantId: newUser.tenantId,
-    });
+    // Enviar email de verificação
+    await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
 
     return {
       user: {
@@ -238,9 +244,72 @@ export class AuthService {
         role: newUser.role,
         permissions: newUser.permissions || [],
       },
-      token,
-      refreshToken,
-    };
+      requiresEmailVerification: true,
+      message: 'Conta criada com sucesso. Verifique seu email para ativar a conta.',
+    } as any;
+  }
+
+  /**
+   * Gerar e enviar token de verificação de email
+   */
+  private async sendVerificationEmail(userId: string, email: string, tenantId: string): Promise<void> {
+    const verificationToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Invalidar tokens anteriores do mesmo tipo
+    await this.db
+      .delete(authTokens)
+      .where(and(
+        eq(authTokens.userId, userId),
+        eq(authTokens.tokenType, 'email_verification'),
+        eq(authTokens.isUsed, false)
+      ));
+
+    await this.db.insert(authTokens).values({
+      userId,
+      tenantId,
+      token: verificationToken,
+      tokenType: 'email_verification',
+      expiresAt,
+      isUsed: false,
+      metadata: { email },
+    });
+
+    // Buscar nome do usuário
+    const [user] = await this.db.select({ name: users.name }).from(users).where(eq(users.id, userId)).limit(1);
+    const name = user?.name || email.split('@')[0];
+
+    await emailService.sendEmailVerification(email, name, verificationToken, tenantId);
+  }
+
+  /**
+   * Verificar email com token
+   */
+  async verifyEmail(token: string): Promise<{ success: boolean; userId?: string }> {
+    const now = new Date();
+    const [tokenRecord] = await this.db
+      .select()
+      .from(authTokens)
+      .where(and(
+        eq(authTokens.token, token),
+        eq(authTokens.tokenType, 'email_verification'),
+        eq(authTokens.isUsed, false),
+        gte(authTokens.expiresAt, now)
+      ))
+      .limit(1);
+
+    if (!tokenRecord) return { success: false };
+
+    await this.db.update(users).set({ emailVerified: true, isActive: true, emailVerifiedAt: new Date() }).where(eq(users.id, tokenRecord.userId));
+    await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
+
+    // Enviar email de boas-vindas
+    const [verifiedUser] = await this.db.select({ email: users.email, name: users.name, tenantId: users.tenantId }).from(users).where(eq(users.id, tokenRecord.userId)).limit(1);
+    if (verifiedUser) {
+      emailService.sendWelcomeEmail(verifiedUser.email, verifiedUser.name, verifiedUser.tenantId).catch(() => {});
+    }
+
+    return { success: true, userId: tokenRecord.userId };
   }
 
   /**
