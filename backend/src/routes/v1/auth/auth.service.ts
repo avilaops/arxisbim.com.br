@@ -108,6 +108,23 @@ export class AuthService {
       .limit(1);
 
     if (existingUser.length > 0) {
+      const existing = existingUser[0];
+      // Se a conta existe mas o email não foi verificado, reenviar verificação
+      if (!existing.emailVerified) {
+        await this.sendEmailVerification(existing.id, existing.tenantId);
+        return {
+          user: {
+            id: existing.id,
+            email: existing.email,
+            name: existing.name,
+            role: existing.role,
+            tenantId: existing.tenantId,
+            companyId: existing.companyId,
+          },
+          requiresEmailVerification: true,
+          message: 'Esta conta ainda não foi verificada. Reenviamos o email de confirmação.',
+        } as any;
+      }
       throw new Error('Já existe uma conta com este email');
     }
 
