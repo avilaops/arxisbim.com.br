@@ -62,6 +62,18 @@ const refreshTokenSchema = z.object({
 
 export async function authRoutes(fastify: FastifyInstance) {
   /**
+   * Hook: remover Content-Type de DELETE sem body (evita erro de JSON vazio)
+   */
+  fastify.addHook('preParsing', async (request) => {
+    if (request.method === 'DELETE') {
+      const ct = request.headers['content-type'];
+      if (ct?.includes('application/json') && !request.headers['content-length']) {
+        delete (request.headers as any)['content-type'];
+      }
+    }
+  });
+
+  /**
    * POST /auth/login
    * Login com email e senha
    */
