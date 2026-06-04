@@ -678,11 +678,11 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   function oauthRedirect(reply: FastifyReply, tokens: { token: string; refreshToken: string } | null, error?: string) {
     if (error) {
-      return reply.redirect(`${frontendUrl}/login?oauth_error=${encodeURIComponent(error)}`);
+      return reply.redirect(`${frontendUrl}/login.html?oauth_error=${encodeURIComponent(error)}`);
     }
-    // Pass tokens via URL fragment — frontend stores them and redirects to app
+    // Pass tokens via URL fragment — frontend reads from oauth-callback.html
     return reply.redirect(
-      `${frontendUrl}/oauth/callback#token=${tokens!.token}&refreshToken=${tokens!.refreshToken}`,
+      `${frontendUrl}/oauth-callback.html#token=${tokens!.token}&refreshToken=${tokens!.refreshToken}`,
     );
   }
 
