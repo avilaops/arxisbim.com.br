@@ -5,6 +5,23 @@ import { AuthService, getLoginFailCount, recordIpFailure, isIpBlocked } from './
 import { verifyTurnstileToken } from './turnstile.js';
 import { oauthService } from './oauth.service.js';
 
+// Safe error message — never expose DB queries or stack traces to clients.
+// Auth-domain errors (with a .code) keep their message; everything else → generic.
+function safeAuthError(error: unknown): string {
+  if (error instanceof Error) {
+    const e = error as any;
+    // Known auth domain error codes — safe to forward
+    if (e.code && typeof e.code === 'string') return e.message;
+    // Drizzle wraps DB errors as "Failed query: SELECT ..." — never expose
+    if (e.message?.startsWith('Failed query:')) return 'Internal server error';
+    // Short messages without SQL are likely safe (e.g. 'Conta inativa', 'Invalid credentials')
+    if (e.message && e.message.length < 120 && !e.message.includes('SELECT') && !e.message.includes('INSERT')) {
+      return e.message;
+    }
+  }
+  return 'Internal server error';
+}
+
 // Middleware de rate limit por rota — cria um preHandler que conta por IP
 function createRateLimit(max: number, windowMs: number) {
   const store = new Map<string, { count: number; resetAt: number }>();
@@ -131,13 +148,14 @@ export async function authRoutes(fastify: FastifyInstance) {
         const result = await authService.login({ ...body, ip, userAgent: ua });
         return reply.send(result);
       } catch (error: any) {
-        fastify.log.error(error);
+        // Log full cause so Render logs show the real DB/auth error
+        fastify.log.error({ err: error, cause: error?.cause?.message ?? null }, 'login error');
         const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
         recordIpFailure(ip);
         if (error?.code === 'EMAIL_NOT_VERIFIED') {
           return reply.status(403).send({ error: 'EMAIL_NOT_VERIFIED', message: error.message });
         }
-        return reply.status(401).send({ error: error instanceof Error ? error.message : 'Login failed' });
+        return reply.status(401).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -193,7 +211,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.status(201).send(result);
       } catch (error) {
         fastify.log.error(error);
-        return reply.status(400).send({ error: error instanceof Error ? error.message : 'Registration failed' });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -317,7 +335,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         await authService.revokeSession(id, userId);
         return reply.send({ message: 'Sessão encerrada.' });
       } catch (error: any) {
-        return reply.status(403).send({ error: error.message || 'Não autorizado' });
+        return reply.status(403).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -388,7 +406,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.send({ success: true, userId: result.userId, message: 'Email verificado com sucesso! Você já pode fazer login.' });
       } catch (error: any) {
         fastify.log.error(error);
-        return reply.status(400).send({ error: error.message || 'Verificação falhou' });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -422,7 +440,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         await authService.changePassword(userId, currentPassword, newPassword);
         return reply.send({ message: 'Senha alterada com sucesso' });
       } catch (error: any) {
-        return reply.status(400).send({ error: error.message || 'Falha ao alterar senha' });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -484,7 +502,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         await authService.resetPassword(token, newPassword);
         return reply.send({ message: 'Senha redefinida com sucesso. Faça login com a nova senha.' });
       } catch (error: any) {
-        return reply.status(400).send({ error: error.message || 'Falha ao redefinir senha' });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -560,7 +578,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         // Never expose raw secret to client — only QR + backup codes
         return reply.send({ qrCodeDataUrl: result.qrCodeDataUrl, backupCodes: result.backupCodes });
       } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -592,7 +610,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         await totpService.verifySetup(userId, code);
         return reply.send({ message: '2FA ativado com sucesso.' });
       } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -624,7 +642,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         await totpService.disable(userId, code);
         return reply.send({ message: '2FA desativado.' });
       } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
+        return reply.status(400).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -665,7 +683,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.send(result);
       } catch (error: any) {
         fastify.log.error(error);
-        return reply.status(401).send({ error: error.message || 'Código inválido' });
+        return reply.status(401).send({ error: safeAuthError(error) });
       }
     },
   });
@@ -727,7 +745,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         return oauthRedirect(reply, result);
       } catch (err: any) {
         fastify.log.error(err);
-        return oauthRedirect(reply, null, err.message || 'Google login failed');
+        return oauthRedirect(reply, null, safeAuthError(err));
       }
     },
   });
@@ -770,7 +788,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         return oauthRedirect(reply, result);
       } catch (err: any) {
         fastify.log.error(err);
-        return oauthRedirect(reply, null, err.message || 'GitHub login failed');
+        return oauthRedirect(reply, null, safeAuthError(err));
       }
     },
   });
