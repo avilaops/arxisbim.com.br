@@ -108,6 +108,7 @@ export default defineConfig({
         resetPassword: resolve(__dirname, 'reset-password.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
         arCalibration: resolve(__dirname, 'ar-calibration.html'),
+        oauthCallback: resolve(__dirname, 'oauth-callback.html'),
       },
       output: {
         manualChunks: (id) => {

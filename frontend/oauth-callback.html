@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrando... - ArxisVR</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    body { margin:0; background:#0f1117; display:flex; align-items:center; justify-content:center; height:100vh; font-family:'DM Sans',sans-serif; color:#fff; }
+    .spinner { width:40px; height:40px; border:3px solid rgba(255,255,255,.15); border-top-color:#7c3aed; border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    p { margin-top:16px; color:rgba(255,255,255,.5); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <p>Finalizando login...</p>
+  </div>
+  <script type="module" src="/src/app/entrypoints/oauth-callback-main.tsx"></script>
+</body>
+</html>
