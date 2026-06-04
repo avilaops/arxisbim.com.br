@@ -72,6 +72,8 @@ export const users = pgTable('users', {
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
   twoFactorBackupCodes: text('two_factor_backup_codes'),
+  oauthProvider: varchar('oauth_provider', { length: 50 }),
+  oauthId: varchar('oauth_id', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastLoginAt: timestamp('last_login_at'),
   isActive: boolean('is_active').default(true).notNull(),

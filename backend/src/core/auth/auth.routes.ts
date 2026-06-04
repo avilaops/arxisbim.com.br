@@ -1,7 +1,9 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
+import { randomBytes as cryptoRandomBytes } from 'crypto';
 import { AuthService, getLoginFailCount } from './auth.service.js';
 import { verifyTurnstileToken } from './turnstile.js';
+import { oauthService } from './oauth.service.js';
 
 // Middleware de rate limit por rota — cria um preHandler que conta por IP
 function createRateLimit(max: number, windowMs: number) {
@@ -661,4 +663,110 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
     },
   });
+
+  // =====================================
+  // B4 — OAuth Social Login
+  // =====================================
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  function oauthRedirect(reply: FastifyReply, tokens: { token: string; refreshToken: string } | null, error?: string) {
+    if (error) {
+      return reply.redirect(`${frontendUrl}/login?oauth_error=${encodeURIComponent(error)}`);
+    }
+    // Pass tokens via URL fragment — frontend stores them and redirects to app
+    return reply.redirect(
+      `${frontendUrl}/oauth/callback#token=${tokens!.token}&refreshToken=${tokens!.refreshToken}`,
+    );
+  }
+
+  /**
+   * GET /auth/google
+   * Redirect user to Google OAuth consent screen.
+   */
+  fastify.get('/google', {
+    schema: { description: 'Redirect to Google OAuth', tags: ['auth'] },
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      if (!clientId) return reply.status(501).send({ error: 'Google OAuth not configured' });
+
+      const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/v1/auth/google/callback`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email profile',
+        access_type: 'offline',
+        prompt: 'select_account',
+      });
+      return reply.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+    },
+  });
+
+  /**
+   * GET /auth/google/callback
+   * Google OAuth callback — exchange code for tokens.
+   */
+  fastify.get('/google/callback', {
+    schema: { description: 'Google OAuth callback', tags: ['auth'] },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { code, error } = request.query as Record<string, string>;
+        if (error || !code) return oauthRedirect(reply, null, error || 'No code received');
+
+        const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/v1/auth/google/callback`;
+        const profile = await oauthService.fetchGoogleProfile(code, redirectUri);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        const result = await oauthService.loginOrCreate(profile, ip, request.headers['user-agent']);
+        return oauthRedirect(reply, result);
+      } catch (err: any) {
+        fastify.log.error(err);
+        return oauthRedirect(reply, null, err.message || 'Google login failed');
+      }
+    },
+  });
+
+  /**
+   * GET /auth/github
+   * Redirect user to GitHub OAuth consent screen.
+   */
+  fastify.get('/github', {
+    schema: { description: 'Redirect to GitHub OAuth', tags: ['auth'] },
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
+      const clientId = process.env.GITHUB_CLIENT_ID;
+      if (!clientId) return reply.status(501).send({ error: 'GitHub OAuth not configured' });
+
+      const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/v1/auth/github/callback`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: 'read:user user:email',
+        state: cryptoRandomBytes(16).toString('hex'),
+      });
+      return reply.redirect(`https://github.com/login/oauth/authorize?${params}`);
+    },
+  });
+
+  /**
+   * GET /auth/github/callback
+   * GitHub OAuth callback — exchange code for tokens.
+   */
+  fastify.get('/github/callback', {
+    schema: { description: 'GitHub OAuth callback', tags: ['auth'] },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { code, error } = request.query as Record<string, string>;
+        if (error || !code) return oauthRedirect(reply, null, error || 'No code received');
+
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        const profile = await oauthService.fetchGitHubProfile(code);
+        const result = await oauthService.loginOrCreate(profile, ip, request.headers['user-agent']);
+        return oauthRedirect(reply, result);
+      } catch (err: any) {
+        fastify.log.error(err);
+        return oauthRedirect(reply, null, err.message || 'GitHub login failed');
+      }
+    },
+  });
 }
+
