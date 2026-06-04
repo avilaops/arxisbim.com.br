@@ -5,7 +5,10 @@ import { ClientEvents, ServerEvents } from './events.js';
 import type { JoinRoomRequest, UpdateAvatarRequest } from './types.js';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'arxis-super-secret-2026';
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be defined in .env');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;

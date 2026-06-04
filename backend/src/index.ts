@@ -53,6 +53,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 const requiredEnvVars: string[] = [
   'DATABASE_URL',
   'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
 ];
 
 const missingVars = requiredEnvVars.filter((varName: string) => !process.env[varName]);

@@ -11,6 +11,10 @@ beforeAll(() => {
     process.env.JWT_SECRET = 'test-jwt-secret-key-for-vitest-tests-only-do-not-use-in-production';
   }
 
+  if (!process.env.JWT_REFRESH_SECRET) {
+    process.env.JWT_REFRESH_SECRET = 'test-jwt-refresh-secret-for-vitest-tests-only-do-not-use-in-production';
+  }
+
   if (!process.env.DATABASE_URL) {
     process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/arxisvr_test';
   }

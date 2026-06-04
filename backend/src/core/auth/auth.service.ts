@@ -56,7 +56,7 @@ function tenantFromEmail(email: string): string {
   return base.toLowerCase().replace(/[^a-z0-9-]/g, '-');
 }
 
-const BCRYPT_ROUNDS = 12;
+const BCRYPT_ROUNDS = Math.max(10, parseInt(process.env.BCRYPT_ROUNDS || '12', 10));
 
 // Hash dummy pré-computado para proteger contra timing attack.
 // Garante tempo de resposta constante mesmo quando o usuário não existe.
@@ -70,7 +70,7 @@ export class AuthService {
   private refreshTokenExpiry = '7d';
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/arxisvr';
+    const connectionString = process.env.DATABASE_URL!;
     const client = postgres(connectionString);
     this.db = drizzle(client, { schema: { users, tenants } });
     
@@ -350,24 +350,31 @@ export class AuthService {
 
       // A5 — Refresh Token Rotation: validar token contra user_sessions
       const now = new Date();
+
+      // Buscar sessão SEM filtrar isRevoked — distinguir revogada de inexistente
       const [session] = await this.db
         .select()
         .from(userSessions)
-        .where(and(
-          eq(userSessions.refreshToken, refreshToken),
-          eq(userSessions.isRevoked, false),
-          gte(userSessions.expiresAt, now),
-        ))
+        .where(eq(userSessions.refreshToken, refreshToken))
         .limit(1);
 
       if (!session) {
-        // Token não encontrado ou já revogado — possível reuso após comprometimento
-        // Revogar TODAS as sessões do usuário como precaução
+        // Token JWT válido mas sem registro no DB — forjado ou deletado manualmente.
+        // Nuke nuclear: revogar todas as sessões do usuário.
         await this.db
           .update(userSessions)
           .set({ isRevoked: true, revokedAt: now, isActive: false })
           .where(eq(userSessions.userId, payload.userId));
         throw new Error('TOKEN_REUSE_DETECTED');
+      }
+
+      if (session.isRevoked) {
+        // Sessão revogada por logout ou rotação anterior — não é ataque, só rejeitar.
+        throw new Error('TOKEN_REVOKED');
+      }
+
+      if (session.expiresAt < now) {
+        throw new Error('TOKEN_EXPIRED');
       }
 
       // Buscar usuário
@@ -418,8 +425,8 @@ export class AuthService {
 
       return { token: newToken, refreshToken: newRefreshToken };
     } catch (error: any) {
-      if (error.message === 'TOKEN_REUSE_DETECTED') throw error;
-      // Log diagnóstico detalhado
+      const passthrough = ['TOKEN_REUSE_DETECTED', 'TOKEN_REVOKED', 'TOKEN_EXPIRED'];
+      if (passthrough.includes(error.message)) throw error;
       console.error('[refreshToken] error:', error?.name, '|', error?.message, '| code:', error?.code, '| detail:', error?.detail, '| constraint:', error?.constraint);
       throw new Error('Token de refresh inválido');
     }
@@ -539,7 +546,11 @@ export class AuthService {
    * Gerar refresh token
    */
   private generateRefreshToken(payload: Pick<JWTPayload, 'userId' | 'email' | 'tenantId'>): string {
-    return jwt.sign(payload, this.jwtRefreshSecret as string, { expiresIn: this.refreshTokenExpiry } as jwt.SignOptions);
+    return jwt.sign(
+      { ...payload, jti: randomBytes(16).toString('hex') },
+      this.jwtRefreshSecret as string,
+      { expiresIn: this.refreshTokenExpiry } as jwt.SignOptions,
+    );
   }
 
   /**
@@ -635,5 +646,46 @@ export class AuthService {
       emailVerified: user.emailVerified,
       isActive: user.isActive,
     };
+  }
+
+  /**
+   * Alias para getSessions — compatibilidade com código legado
+   */
+  async getUserSessions(userId: string, _tenantId?: string) {
+    return this.getSessions(userId);
+  }
+
+  /**
+   * Atualizar perfil do usuário
+   */
+  async updateProfile(userId: string, _tenantId: string, data: { name?: string; companyId?: string }) {
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.companyId !== undefined) updateData.companyId = data.companyId;
+
+    const [updated] = await this.db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updated) throw new Error('Usuário não encontrado');
+
+    return {
+      id: updated.id,
+      email: updated.email,
+      name: updated.name,
+      tenantId: updated.tenantId,
+      companyId: updated.companyId || undefined,
+      role: updated.role,
+      permissions: updated.permissions || [],
+    };
+  }
+
+  /**
+   * Solicitar reset de senha
+   */
+  async requestPasswordReset(email: string, _tenantId?: string): Promise<void> {
+    return this.forgotPassword(email);
   }
 }

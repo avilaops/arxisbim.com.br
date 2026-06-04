@@ -37,6 +37,7 @@ const forgotPasswordLimit   = createRateLimit(5,  60_000);
 const resetPasswordLimit    = createRateLimit(10, 60_000);
 const verifyEmailLimit      = createRateLimit(10, 60_000);
 const refreshLimit          = createRateLimit(20, 60_000);
+const changePasswordLimit   = createRateLimit(5,  60_000);
 
 const authService = new AuthService();
 
@@ -225,6 +226,12 @@ export async function authRoutes(fastify: FastifyInstance) {
         if (error?.message === 'TOKEN_REUSE_DETECTED') {
           return reply.status(401).send({ error: 'TOKEN_REUSE_DETECTED', message: 'Reuso de token detectado. Todas as sessões foram encerradas por segurança.' });
         }
+        if (error?.message === 'TOKEN_REVOKED') {
+          return reply.status(401).send({ error: 'TOKEN_REVOKED', message: 'Sessão encerrada. Faça login novamente.' });
+        }
+        if (error?.message === 'TOKEN_EXPIRED') {
+          return reply.status(401).send({ error: 'TOKEN_EXPIRED', message: 'Sessão expirada. Faça login novamente.' });
+        }
         return reply.status(401).send({ error: 'Invalid refresh token' });
       }
     },
@@ -381,6 +388,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Alterar senha (autenticado)
    */
   fastify.post('/change-password', {
+    preHandler: [changePasswordLimit, fastify.authenticate],
     schema: {
       description: 'Alterar senha do usuário autenticado',
       tags: ['auth'],
@@ -397,7 +405,6 @@ export async function authRoutes(fastify: FastifyInstance) {
         200: { type: 'object', properties: { message: { type: 'string' } } },
       },
     },
-    preHandler: [fastify.authenticate],
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { userId } = (request as any).user;
