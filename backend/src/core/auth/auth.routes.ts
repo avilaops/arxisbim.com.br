@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { randomBytes as cryptoRandomBytes } from 'crypto';
-import { AuthService, getLoginFailCount } from './auth.service.js';
+import { AuthService, getLoginFailCount, recordIpFailure, isIpBlocked } from './auth.service.js';
 import { verifyTurnstileToken } from './turnstile.js';
 import { oauthService } from './oauth.service.js';
 
@@ -120,6 +120,10 @@ export async function authRoutes(fastify: FastifyInstance) {
       try {
         const body = loginSchema.parse(request.body);
         const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        // M2 layer 3: block IP with > 20 failures in 15 min
+        if (isIpBlocked(ip)) {
+          return reply.status(429).send({ error: 'IP_BLOCKED', message: 'Too many failed attempts from this IP' });
+        }
         // M2 layer 2: require Turnstile when email is above failure threshold
         const captchaRequired = getLoginFailCount(body.email) >= 5;
         await verifyTurnstileToken(body.turnstileToken ?? '', ip, captchaRequired);
@@ -128,6 +132,8 @@ export async function authRoutes(fastify: FastifyInstance) {
         return reply.send(result);
       } catch (error: any) {
         fastify.log.error(error);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        recordIpFailure(ip);
         if (error?.code === 'EMAIL_NOT_VERIFIED') {
           return reply.status(403).send({ error: 'EMAIL_NOT_VERIFIED', message: error.message });
         }

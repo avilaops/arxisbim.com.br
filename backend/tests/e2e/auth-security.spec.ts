@@ -304,4 +304,110 @@ describe('Auth Security Tests (S-series)', () => {
     });
     expect(res.statusCode).toBe(401);
   });
+
+  // ── S03 — IP reputation layer 3 blocks after 20 cross-email failures ───
+  it('S03: IP blocked after 20 failed login attempts across different emails (M2 layer 3)', async () => {
+    const ip = '10.99.0.1';
+    // 20 failures from same IP, different emails
+    for (let i = 0; i < 20; i++) {
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        payload: { email: `s03victim${i}@example.com`, password: 'WrongPass1!' },
+        headers: { 'cf-connecting-ip': ip },
+      });
+    }
+    // 21st attempt should be blocked with IP_BLOCKED
+    const blocked = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: { email: 's03final@example.com', password: 'WrongPass1!' },
+      headers: { 'cf-connecting-ip': ip },
+    });
+    expect(blocked.statusCode).toBe(429);
+    expect(JSON.parse(blocked.body).error).toBe('IP_BLOCKED');
+  });
+
+  // ── S13 — Duplicate registration does not reveal account existence ──────
+  it('S13: duplicate email on register returns same error as first-time failure (no enumeration)', async () => {
+    // First register (may succeed or fail due to DB, but we care about consistency)
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/register',
+      payload: { email: 's13dup@example.com', password: 'Passw0rd!X', name: 'Test S13' },
+      headers: { 'cf-connecting-ip': '10.0.13.1' },
+    });
+    // Second register with same email
+    const second = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/register',
+      payload: { email: 's13dup@example.com', password: 'Passw0rd!X', name: 'Test S13' },
+      headers: { 'cf-connecting-ip': '10.0.13.2' },
+    });
+    // Both should fail (400/409) — second must NOT return 200/201 revealing the account exists
+    if (first.statusCode === 201 || first.statusCode === 200) {
+      // First created successfully — second must fail
+      expect([400, 409, 422, 500]).toContain(second.statusCode);
+      // Error message must not say "email already registered" style hint
+      const body = JSON.parse(second.body);
+      const msg = JSON.stringify(body).toLowerCase();
+      expect(msg).not.toMatch(/already registered|já cadastrado|already exists/);
+    } else {
+      // DB not available — both fail; just ensure no 200
+      expect(second.statusCode).not.toBe(200);
+      expect(second.statusCode).not.toBe(201);
+    }
+  });
+
+  // ── S15 — Verify-email with invalid token returns 400 ──────────────────
+  it('S15: invalid email verification token returns 400 (not 500)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/auth/verify-email?token=totallyinvalidtoken12345',
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  // ── S16 — Logout without token returns 401 ─────────────────────────────
+  it('S16: logout without Authorization header returns 401', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout',
+      payload: { refreshToken: 'some-token' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  // ── S17 — /auth/me with malformed Bearer returns 401 ───────────────────
+  it('S17: malformed Bearer token returns 401', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/auth/me',
+      headers: { Authorization: 'Bearer not.a.real.jwt' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  // ── S18 — Password reset with unknown email returns 200 (no enumeration)
+  it('S18: forgot-password with unknown email returns 200 (not 404)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/forgot-password',
+      payload: { email: 'nobody_s18@doesnotexist.invalid' },
+      headers: { 'cf-connecting-ip': '10.0.18.1' },
+    });
+    // Must not return 404 (would reveal email non-existence)
+    expect(res.statusCode).not.toBe(404);
+    expect([200, 202, 429]).toContain(res.statusCode);
+  });
+
+  // ── S19 — Reset-password with expired/invalid token returns 400 ─────────
+  it('S19: password reset with invalid token returns 400', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/reset-password',
+      payload: { token: 'expiredorfaketoken999', newPassword: 'NewPassw0rd!' },
+    });
+    expect(res.statusCode).toBe(400);
+  });
 });

@@ -65,6 +65,31 @@ const loginFailWindow = new Map<string, { count: number; resetAt: number }>();
 const FAIL_WINDOW_MS = 5 * 60 * 1000;
 const FAIL_THRESHOLD = 5;
 
+// M2 Layer 3 — IP reputation: bloqueia IPs com > 20 falhas em 15 min (cross-email)
+const ipFailWindow = new Map<string, { count: number; resetAt: number; blocked: boolean }>();
+const IP_FAIL_WINDOW_MS = 15 * 60 * 1000;
+const IP_FAIL_THRESHOLD = 20;
+
+export function recordIpFailure(ip: string): void {
+  const now = Date.now();
+  const entry = ipFailWindow.get(ip);
+  if (!entry || now > entry.resetAt) {
+    ipFailWindow.set(ip, { count: 1, resetAt: now + IP_FAIL_WINDOW_MS, blocked: false });
+    return;
+  }
+  entry.count++;
+  if (entry.count >= IP_FAIL_THRESHOLD && !entry.blocked) {
+    entry.blocked = true;
+    console.warn(`[auth] IP blocked due to ${entry.count} failures: ${ip}`);
+  }
+}
+
+export function isIpBlocked(ip: string): boolean {
+  const entry = ipFailWindow.get(ip);
+  if (!entry || Date.now() > entry.resetAt) return false;
+  return entry.blocked;
+}
+
 function recordLoginFailure(email: string, tenantId: string): void {
   const key = email.toLowerCase();
   const now = Date.now();
