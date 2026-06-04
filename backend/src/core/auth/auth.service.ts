@@ -419,8 +419,8 @@ export class AuthService {
       return { token: newToken, refreshToken: newRefreshToken };
     } catch (error: any) {
       if (error.message === 'TOKEN_REUSE_DETECTED') throw error;
-      // Log diagnóstico — remover após confirmar causa raiz
-      console.error('[refreshToken] error type:', error?.name, '| message:', error?.message);
+      // Log diagnóstico detalhado
+      console.error('[refreshToken] error:', error?.name, '|', error?.message, '| code:', error?.code, '| detail:', error?.detail, '| constraint:', error?.constraint);
       throw new Error('Token de refresh inválido');
     }
   }

@@ -73,6 +73,7 @@ jobs:
         env:
           DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
           JWT_SECRET: ci-smoke-secret-not-for-prod
+          JWT_REFRESH_SECRET: ci-refresh-secret-not-for-prod
           HOST: 127.0.0.1
           PORT: '3001'
           NODE_ENV: test
