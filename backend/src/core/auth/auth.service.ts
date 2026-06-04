@@ -173,8 +173,25 @@ export class AuthService {
       whereClauses.push(eq(users.tenantId, validated.tenantId));
     }
 
+    // Explicit column list — never fails due to optional columns (oauth_*, two_factor_*)
+    // that may be missing in older DB instances without all migrations applied.
     const [user] = await this.db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        passwordHash: users.passwordHash,
+        tenantId: users.tenantId,
+        companyId: users.companyId,
+        role: users.role,
+        permissions: users.permissions,
+        emailVerified: users.emailVerified,
+        emailVerifiedAt: users.emailVerifiedAt,
+        twoFactorEnabled: users.twoFactorEnabled,
+        twoFactorSecret: users.twoFactorSecret,
+        isActive: users.isActive,
+        lastLoginAt: users.lastLoginAt,
+      })
       .from(users)
       .where(and(...whereClauses))
       .limit(1);
@@ -315,7 +332,7 @@ export class AuthService {
 
     // Email é único globalmente — verifica duplicidade sem filtrar por tenant
     const [existingUser] = await this.db
-      .select()
+      .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, emailVerified: users.emailVerified })
       .from(users)
       .where(eq(users.email, validated.email))
       .limit(1);
@@ -479,7 +496,7 @@ export class AuthService {
 
       // Buscar usuário
       const [user] = await this.db
-        .select()
+        .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, isActive: users.isActive })
         .from(users)
         .where(eq(users.id, payload.userId))
         .limit(1);
@@ -674,7 +691,7 @@ export class AuthService {
    * Alterar senha (usuário autenticado)
    */
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    const [user] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [user] = await this.db.select({ id: users.id, passwordHash: users.passwordHash, tenantId: users.tenantId }).from(users).where(eq(users.id, userId)).limit(1);
     if (!user) throw new Error('Usuário não encontrado');
 
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
@@ -690,7 +707,7 @@ export class AuthService {
    * Solicitar reset de senha (forgot password)
    */
   async forgotPassword(email: string): Promise<void> {
-    const [user] = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+    const [user] = await this.db.select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, isActive: users.isActive }).from(users).where(eq(users.email, email)).limit(1);
     // Silencioso se email não existe (segurança)
     if (!user || !user.isActive) return;
 
@@ -751,7 +768,7 @@ export class AuthService {
    */
   async getUserById(userId: string) {
     const [user] = await this.db
-      .select()
+      .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, emailVerified: users.emailVerified, isActive: users.isActive })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -812,7 +829,7 @@ export class AuthService {
    */
   async completeLogin(userId: string, tenantId: string, ip?: string, userAgent?: string): Promise<{ user: any; token: string; refreshToken: string }> {
     const [user] = await this.db
-      .select()
+      .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, isActive: users.isActive })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
