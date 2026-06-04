@@ -43,6 +43,7 @@ import { MeetingsGateway } from './modules/virtual-meetings/meetings.gateway.js'
 import { NotificationsGateway } from './modules/notifications/notifications.gateway.js';
 import { authenticateRequest } from './core/auth/middleware.js';
 import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
+import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
 import { observabilityService, logger } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
@@ -197,6 +198,12 @@ const billingRetryWorker = createBillingRetryWorker({
       },
     });
   },
+});
+
+const emailQueueWorker = createEmailQueueWorker({
+  intervalMs: 5 * 60 * 1000, // 5 min
+  batchSize: 20,
+  logger: server.log,
 });
 
 const authCleanupWorker = createAuthCleanupWorker({
@@ -491,6 +498,7 @@ signals.forEach((signal: NodeJS.Signals) => {
     try {
       billingRetryWorker.stop();
       authCleanupWorker.stop();
+      emailQueueWorker.stop();
       await server.close();
       await sql.end();
       server.log.info('Server closed successfully');
@@ -516,6 +524,9 @@ try {
 
   // Initialize auth cleanup worker (runs every 6h)
   authCleanupWorker.start();
+
+  // Initialize email queue retry worker (runs every 5 min)
+  emailQueueWorker.start();
   
   // Initialize Email Service
   await emailService.initialize();

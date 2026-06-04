@@ -34,3 +34,6 @@ export * from './virtual-meetings.js';
 
 // BIM 5D Budgets & Cost Items
 export * from './budgets.js';
+
+// Email Queue (retry for transactional emails)
+export * from './email-queue.js';

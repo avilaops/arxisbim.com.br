@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { Resend } from 'resend';
 import { observabilityService } from '../observability/service.js';
+import { enqueueEmail } from './email-queue.worker.js';
 
 /**
  * Email Service para ArxisVR
@@ -63,7 +64,20 @@ export class EmailService {
     return this.initialized;
   }
 
-  private async send(to: string, subject: string, html: string): Promise<void> {
+  private async send(to: string, subject: string, html: string, metadata?: { emailType?: string; tenantId?: string }): Promise<void> {
+    try {
+      await this.sendDirect(to, subject, html);
+    } catch (err: any) {
+      // Direct send failed — enqueue for retry
+      console.warn(`[email] direct send failed, enqueueing: to=${to} err=${err.message}`);
+      await enqueueEmail({ to, subject, html, metadata }).catch(() => {
+        // Enqueue itself failed (DB down) — log and move on, do not block caller
+        console.error(`[email] enqueue also failed: to=${to} subject=${subject}`);
+      });
+    }
+  }
+
+  private async sendDirect(to: string, subject: string, html: string): Promise<void> {
     if (this.resend) {
       const { error } = await this.resend.emails.send({
         from: `${this.appName} <${this.fromAddress}>`,
@@ -139,7 +153,7 @@ export class EmailService {
 </html>`;
 
     try {
-      await this.send(to, `Confirme seu email — ${this.appName}`, html);
+      await this.send(to, `Confirme seu email — ${this.appName}`, html, { emailType: 'email_verification', tenantId });
       observabilityService.recordMetric('email.verification.sent', 1);
       console.log(`📧 Email de verificação enviado para ${to}`);
     } catch (error: any) {
@@ -188,7 +202,7 @@ export class EmailService {
 </html>`;
 
     try {
-      await this.send(to, `Redefinição de senha — ${this.appName}`, html);
+      await this.send(to, `Redefinição de senha — ${this.appName}`, html, { emailType: 'password_reset', tenantId });
       observabilityService.recordMetric('email.password_reset.sent', 1);
       console.log(`📧 Email de reset de senha enviado para ${to}`);
     } catch (error: any) {

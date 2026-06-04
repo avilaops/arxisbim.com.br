@@ -35,20 +35,58 @@ interface AuthResponse {
   refreshToken?: string;
 }
 
+// M7 — senha forte: min 8 chars, 1 maiúscula, 1 número, 1 especial
+const strongPassword = z
+  .string()
+  .min(8, 'Senha deve ter no mínimo 8 caracteres')
+  .regex(/[A-Z]/, 'Senha deve conter ao menos uma letra maiúscula')
+  .regex(/[0-9]/, 'Senha deve conter ao menos um número')
+  .regex(/[^A-Za-z0-9]/, 'Senha deve conter ao menos um caractere especial');
+
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: z.string().min(1),  // login: não revalida força — senha pode ser legada
   tenantId: z.string().optional(),
 });
 
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: strongPassword,
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
   tenantId: z.string().optional(),
   companyId: z.string().optional(),
   turnstileToken: z.string().optional(),
 });
+
+// M2 — Credential stuffing layer 1: contador de falhas por email
+// Janela deslizante de 5 min. Alerta se > 5 falhas no mesmo email.
+const loginFailWindow = new Map<string, { count: number; resetAt: number }>();
+const FAIL_WINDOW_MS = 5 * 60 * 1000;
+const FAIL_THRESHOLD = 5;
+
+function recordLoginFailure(email: string, tenantId: string): void {
+  const key = email.toLowerCase();
+  const now = Date.now();
+  const entry = loginFailWindow.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    loginFailWindow.set(key, { count: 1, resetAt: now + FAIL_WINDOW_MS });
+    return;
+  }
+
+  entry.count++;
+  if (entry.count === FAIL_THRESHOLD) {
+    // Alerta — não lança exceção, só registra
+    observabilityService.logAudit({
+      tenantId,
+      action: 'auth.credential_stuffing.alert',
+      resource: 'auth',
+      metadata: { email, failCount: entry.count, windowMs: FAIL_WINDOW_MS },
+    }).catch(() => {});
+    observabilityService.incrementCounter(tenantId, 'auth.credential_stuffing.alerts', { email: email.split('@')[1] ?? 'unknown' }).catch(() => {});
+    console.warn(`[auth] credential stuffing alert: ${entry.count} failures for ${email} in ${FAIL_WINDOW_MS / 1000}s`);
+  }
+}
 
 // Deriva slug de tenant a partir do domínio do email (ex: user@acme.com -> 'acme')
 function tenantFromEmail(email: string): string {
@@ -112,6 +150,7 @@ export class AuthService {
       await bcrypt.compare(validated.password, DUMMY_HASH);
       observabilityService.logAudit({ tenantId: 'system', action: 'auth.login.failed', resource: 'auth', metadata: { reason: 'user_not_found', ip: credentials.ip } }).catch(() => {});
       observabilityService.incrementCounter('system', 'auth.login.failed', { reason: 'user_not_found' }).catch(() => {});
+      recordLoginFailure(validated.email, 'system');
       throw new Error('Credenciais inválidas');
     }
 
@@ -122,6 +161,7 @@ export class AuthService {
     if (!isValidPassword) {
       observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.failed', resource: 'auth', resourceId: user.id, metadata: { reason: 'wrong_password', ip: credentials.ip } }).catch(() => {});
       observabilityService.incrementCounter(user.tenantId, 'auth.login.failed', { reason: 'wrong_password' }).catch(() => {});
+      recordLoginFailure(validated.email, user.tenantId);
       throw new Error('Credenciais inválidas');
     }
 
@@ -595,6 +635,7 @@ export class AuthService {
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) throw new Error('Senha atual incorreta');
 
+    strongPassword.parse(newPassword);
     const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
   }
@@ -650,6 +691,7 @@ export class AuthService {
 
     if (!tokenRecord) throw new Error('Token inválido ou expirado');
 
+    strongPassword.parse(newPassword);
     const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, tokenRecord.userId));
     await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
