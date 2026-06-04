@@ -1,7 +1,18 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 import { z } from 'zod';
 import { AuthService } from './auth.service.js';
 import { verifyTurnstileToken } from './turnstile.js';
+
+// Rate limits por rota de autenticação (mais restritivos que o global)
+const AUTH_RATE_LIMITS = {
+  login:          { max: 10, timeWindow: '1 minute' },
+  register:       { max: 5,  timeWindow: '1 minute' },
+  forgotPassword: { max: 5,  timeWindow: '1 minute' },
+  resetPassword:  { max: 10, timeWindow: '1 minute' },
+  verifyEmail:    { max: 10, timeWindow: '1 minute' },
+  refresh:        { max: 20, timeWindow: '1 minute' },
+};
 
 const authService = new AuthService();
 
@@ -31,6 +42,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Login com email e senha
    */
   fastify.post('/login', {
+    config: { rateLimit: AUTH_RATE_LIMITS.login },
     schema: {
       description: 'Login com email e senha',
       tags: ['auth'],
@@ -87,6 +99,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Registrar novo usuário
    */
   fastify.post('/register', {
+    config: { rateLimit: AUTH_RATE_LIMITS.register },
     schema: {
       description: 'Registrar novo usuário',
       tags: ['auth'],
@@ -142,6 +155,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Refresh access token
    */
   fastify.post('/refresh', {
+    config: { rateLimit: AUTH_RATE_LIMITS.refresh },
     schema: {
       description: 'Refresh access token',
       tags: ['auth'],
@@ -179,6 +193,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Verificar email com token
    */
   fastify.post('/verify-email', {
+    config: { rateLimit: AUTH_RATE_LIMITS.verifyEmail },
     schema: {
       description: 'Verificar email com token',
       tags: ['auth'],
@@ -255,6 +270,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Solicitar reset de senha
    */
   fastify.post('/forgot-password', {
+    config: { rateLimit: AUTH_RATE_LIMITS.forgotPassword },
     schema: {
       description: 'Solicitar email de redefinição de senha',
       tags: ['auth'],
@@ -284,6 +300,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Redefinir senha com token
    */
   fastify.post('/reset-password', {
+    config: { rateLimit: AUTH_RATE_LIMITS.resetPassword },
     schema: {
       description: 'Redefinir senha com token',
       tags: ['auth'],

@@ -56,6 +56,12 @@ function tenantFromEmail(email: string): string {
   return base.toLowerCase().replace(/[^a-z0-9-]/g, '-');
 }
 
+const BCRYPT_ROUNDS = 12;
+
+// Hash dummy pré-computado para proteger contra timing attack.
+// Garante tempo de resposta constante mesmo quando o usuário não existe.
+const DUMMY_HASH = bcrypt.hashSync('arxisvr-timing-protection-dummy-2026', BCRYPT_ROUNDS);
+
 export class AuthService {
   private db;
   private jwtSecret: string;
@@ -68,8 +74,14 @@ export class AuthService {
     const client = postgres(connectionString);
     this.db = drizzle(client, { schema: { users, tenants } });
     
-    this.jwtSecret = process.env.JWT_SECRET || 'arxis-super-secret-2026';
-    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'arxis-refresh-secret-2026';
+    if (!process.env.JWT_SECRET) {
+      throw new Error('CRITICAL: JWT_SECRET environment variable is not set. Refusing to start.');
+    }
+    if (!process.env.JWT_REFRESH_SECRET) {
+      throw new Error('CRITICAL: JWT_REFRESH_SECRET environment variable is not set. Refusing to start.');
+    }
+    this.jwtSecret = process.env.JWT_SECRET;
+    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
   }
 
   /**
@@ -95,6 +107,8 @@ export class AuthService {
       .limit(1);
 
     if (!user) {
+      // Timing attack protection: sempre executar bcrypt mesmo quando usuário não existe
+      await bcrypt.compare(validated.password, DUMMY_HASH);
       throw new Error('Credenciais inválidas');
     }
 
@@ -213,7 +227,7 @@ export class AuthService {
     }
 
     // Hash da senha
-    const passwordHash = await bcrypt.hash(validated.password, 10);
+    const passwordHash = await bcrypt.hash(validated.password, BCRYPT_ROUNDS);
 
     // Criar usuário inativo até verificar email
     const [newUser] = await this.db
@@ -392,7 +406,7 @@ export class AuthService {
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) throw new Error('Senha atual incorreta');
 
-    const newHash = await bcrypt.hash(newPassword, 10);
+    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
   }
 
@@ -445,7 +459,7 @@ export class AuthService {
 
     if (!tokenRecord) throw new Error('Token inválido ou expirado');
 
-    const newHash = await bcrypt.hash(newPassword, 10);
+    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, tokenRecord.userId));
     await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
   }
