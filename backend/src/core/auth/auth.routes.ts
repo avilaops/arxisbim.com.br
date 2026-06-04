@@ -106,7 +106,8 @@ export async function authRoutes(fastify: FastifyInstance) {
         const body = loginSchema.parse(request.body);
         const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
         await verifyTurnstileToken(body.turnstileToken ?? '', ip);
-        const result = await authService.login(body);
+        const ua = request.headers['user-agent'];
+        const result = await authService.login({ ...body, ip, userAgent: ua });
         return reply.send(result);
       } catch (error: any) {
         fastify.log.error(error);
@@ -203,11 +204,119 @@ export async function authRoutes(fastify: FastifyInstance) {
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const body = refreshTokenSchema.parse(request.body);
-        const result = await authService.refreshToken(body.refreshToken);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        const ua = request.headers['user-agent'];
+        const result = await authService.refreshToken(body.refreshToken, ip, ua);
         return reply.send(result);
+      } catch (error: any) {
+        fastify.log.error(error);
+        if (error?.message === 'TOKEN_REUSE_DETECTED') {
+          return reply.status(401).send({ error: 'TOKEN_REUSE_DETECTED', message: 'Reuso de token detectado. Todas as sessões foram encerradas por segurança.' });
+        }
+        return reply.status(401).send({ error: 'Invalid refresh token' });
+      }
+    },
+  });
+
+  /**
+   * POST /auth/logout
+   * Logout — revoga refresh token da sessão atual
+   */
+  fastify.post('/logout', {
+    schema: {
+      description: 'Logout — revoga sessão atual',
+      tags: ['auth'],
+      body: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: { refreshToken: { type: 'string' } },
+      },
+      response: {
+        200: { type: 'object', properties: { message: { type: 'string' } } },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { refreshToken } = request.body as any;
+        await authService.logout(refreshToken);
+        return reply.send({ message: 'Logout realizado com sucesso.' });
+      } catch {
+        return reply.send({ message: 'Logout realizado.' });
+      }
+    },
+  });
+
+  /**
+   * GET /auth/sessions
+   * Listar sessões ativas do usuário autenticado
+   */
+  fastify.get('/sessions', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      description: 'Listar sessões ativas',
+      tags: ['auth'],
+      security: [{ bearerAuth: [] }],
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+        const sessions = await authService.getSessions(userId);
+        return reply.send(sessions);
       } catch (error) {
         fastify.log.error(error);
-        return reply.status(401).send({ error: 'Invalid refresh token' });
+        return reply.status(500).send({ error: 'Falha ao buscar sessões' });
+      }
+    },
+  });
+
+  /**
+   * DELETE /auth/sessions/:id
+   * Revogar sessão específica
+   */
+  fastify.delete('/sessions/:id', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      description: 'Revogar sessão específica',
+      tags: ['auth'],
+      security: [{ bearerAuth: [] }],
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+        const { id } = request.params as any;
+        await authService.revokeSession(id, userId);
+        return reply.send({ message: 'Sessão encerrada.' });
+      } catch (error: any) {
+        return reply.status(403).send({ error: error.message || 'Não autorizado' });
+      }
+    },
+  });
+
+  /**
+   * DELETE /auth/sessions
+   * Revogar todas as outras sessões
+   */
+  fastify.delete('/sessions', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      description: 'Revogar todas as outras sessões',
+      tags: ['auth'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: { refreshToken: { type: 'string' } },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+        const { refreshToken } = request.body as any;
+        const revoked = await authService.revokeAllOtherSessions(userId, refreshToken);
+        return reply.send({ message: `${revoked} sessão(ões) encerrada(s).`, revoked });
+      } catch (error: any) {
+        return reply.status(500).send({ error: 'Falha ao encerrar sessões' });
       }
     },
   });

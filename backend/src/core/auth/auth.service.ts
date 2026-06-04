@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, and, isNull, gte } from 'drizzle-orm';
+import { eq, and, gte, lt } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
-import { authTokens } from '../../shared/database/schema/observability.js';
+import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
 import { emailService } from '../email/email.service.js';
 import bcrypt from 'bcryptjs';
@@ -87,7 +87,7 @@ export class AuthService {
   /**
    * Login com email e senha
    */
-  async login(credentials: { email: string; password: string; tenantId?: string }): Promise<AuthResponse> {
+  async login(credentials: { email: string; password: string; tenantId?: string; ip?: string; userAgent?: string }): Promise<AuthResponse> {
     // Validar input
     const validated = loginSchema.parse(credentials);
 
@@ -157,6 +157,18 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       tenantId: user.tenantId,
+    });
+
+    // Criar sessão rastreável
+    await this.db.insert(userSessions).values({
+      userId: user.id,
+      tenantId: user.tenantId,
+      refreshToken,
+      ipAddress: credentials.ip,
+      userAgent: credentials.userAgent,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      isRevoked: false,
+      isActive: true,
     });
 
     return {
@@ -331,9 +343,32 @@ export class AuthService {
   /**
    * Refresh token
    */
-  async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
+  async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<{ token: string; refreshToken: string }> {
     try {
+      // Verificar assinatura JWT
       const payload = jwt.verify(refreshToken, this.jwtRefreshSecret) as JWTPayload;
+
+      // A5 — Refresh Token Rotation: validar token contra user_sessions
+      const now = new Date();
+      const [session] = await this.db
+        .select()
+        .from(userSessions)
+        .where(and(
+          eq(userSessions.refreshToken, refreshToken),
+          eq(userSessions.isRevoked, false),
+          gte(userSessions.expiresAt, now),
+        ))
+        .limit(1);
+
+      if (!session) {
+        // Token não encontrado ou já revogado — possível reuso após comprometimento
+        // Revogar TODAS as sessões do usuário como precaução
+        await this.db
+          .update(userSessions)
+          .set({ isRevoked: true, revokedAt: now, isActive: false })
+          .where(eq(userSessions.userId, payload.userId));
+        throw new Error('TOKEN_REUSE_DETECTED');
+      }
 
       // Buscar usuário
       const [user] = await this.db
@@ -346,10 +381,17 @@ export class AuthService {
         throw new Error('Usuário inativo');
       }
 
+      // Revogar sessão atual (rotação)
+      await this.db
+        .update(userSessions)
+        .set({ isRevoked: true, revokedAt: now, isActive: false })
+        .where(eq(userSessions.id, session.id));
+
       // Gerar novos tokens
       const newToken = this.generateAccessToken({
         userId: user.id,
         email: user.email,
+        name: user.name,
         tenantId: user.tenantId,
         companyId: user.companyId || undefined,
         role: user.role,
@@ -362,13 +404,115 @@ export class AuthService {
         tenantId: user.tenantId,
       });
 
-      return {
-        token: newToken,
+      // Criar nova sessão
+      await this.db.insert(userSessions).values({
+        userId: user.id,
+        tenantId: user.tenantId,
         refreshToken: newRefreshToken,
-      };
-    } catch (error) {
+        ipAddress: ip || session.ipAddress || undefined,
+        userAgent: userAgent || session.userAgent || undefined,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        isRevoked: false,
+        isActive: true,
+      });
+
+      return { token: newToken, refreshToken: newRefreshToken };
+    } catch (error: any) {
+      if (error.message === 'TOKEN_REUSE_DETECTED') throw error;
       throw new Error('Token de refresh inválido');
     }
+  }
+
+  /**
+   * Logout — revoga refresh token da sessão atual
+   */
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) return;
+    const now = new Date();
+    await this.db
+      .update(userSessions)
+      .set({ isRevoked: true, revokedAt: now, isActive: false })
+      .where(eq(userSessions.refreshToken, refreshToken));
+  }
+
+  /**
+   * Listar sessões ativas do usuário
+   */
+  async getSessions(userId: string): Promise<Array<{
+    id: string; ipAddress: string | null; userAgent: string | null;
+    createdAt: Date; lastActivityAt: Date; expiresAt: Date;
+  }>> {
+    const now = new Date();
+    return this.db
+      .select({
+        id: userSessions.id,
+        ipAddress: userSessions.ipAddress,
+        userAgent: userSessions.userAgent,
+        createdAt: userSessions.createdAt,
+        lastActivityAt: userSessions.lastActivityAt,
+        expiresAt: userSessions.expiresAt,
+      })
+      .from(userSessions)
+      .where(and(
+        eq(userSessions.userId, userId),
+        eq(userSessions.isRevoked, false),
+        gte(userSessions.expiresAt, now),
+      ))
+      .orderBy(userSessions.lastActivityAt);
+  }
+
+  /**
+   * Revogar sessão específica (apenas do próprio usuário)
+   */
+  async revokeSession(sessionId: string, requestingUserId: string): Promise<void> {
+    const [session] = await this.db
+      .select({ id: userSessions.id, userId: userSessions.userId })
+      .from(userSessions)
+      .where(eq(userSessions.id, sessionId))
+      .limit(1);
+
+    if (!session || session.userId !== requestingUserId) {
+      throw new Error('Sessão não encontrada');
+    }
+
+    await this.db
+      .update(userSessions)
+      .set({ isRevoked: true, revokedAt: new Date(), isActive: false })
+      .where(eq(userSessions.id, sessionId));
+  }
+
+  /**
+   * Revogar todas as sessões exceto a atual
+   */
+  async revokeAllOtherSessions(userId: string, currentRefreshToken: string): Promise<number> {
+    const now = new Date();
+    const result = await this.db
+      .update(userSessions)
+      .set({ isRevoked: true, revokedAt: now, isActive: false })
+      .where(and(
+        eq(userSessions.userId, userId),
+        eq(userSessions.isRevoked, false),
+      ))
+      .returning({ id: userSessions.id });
+
+    // Reativar a sessão atual (não deve ser revogada)
+    const [current] = await this.db
+      .select()
+      .from(userSessions)
+      .where(and(
+        eq(userSessions.userId, userId),
+        eq(userSessions.refreshToken, currentRefreshToken),
+      ))
+      .limit(1);
+
+    if (current) {
+      await this.db
+        .update(userSessions)
+        .set({ isRevoked: false, revokedAt: null as any, isActive: true })
+        .where(eq(userSessions.id, current.id));
+    }
+
+    return result.length - (current ? 1 : 0);
   }
 
   /**
