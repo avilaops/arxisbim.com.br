@@ -1,8 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { eq, and, gte, lt, desc } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
 import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
+import { passwordHistory } from '../../shared/database/schema/password-history.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
 import { emailService } from '../email/email.service.js';
 import { observabilityService } from '../observability/service.js';
@@ -103,6 +104,7 @@ function tenantFromEmail(email: string): string {
 }
 
 const BCRYPT_ROUNDS = Math.max(10, parseInt(process.env.BCRYPT_ROUNDS || '12', 10));
+const PASSWORD_HISTORY_DEPTH = parseInt(process.env.PASSWORD_HISTORY_DEPTH || '3', 10);
 
 // Hash dummy pré-computado para proteger contra timing attack.
 // Garante tempo de resposta constante mesmo quando o usuário não existe.
@@ -655,6 +657,7 @@ export class AuthService {
 
     strongPassword.parse(newPassword);
     const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.checkAndSavePasswordHistory(userId, user.tenantId, newPassword, newHash);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
   }
 
@@ -711,6 +714,7 @@ export class AuthService {
 
     strongPassword.parse(newPassword);
     const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.checkAndSavePasswordHistory(tokenRecord.userId, tokenRecord.tenantId, newPassword, newHash);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, tokenRecord.userId));
     await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
     observabilityService.logAudit({ tenantId: tokenRecord.tenantId, userId: tokenRecord.userId, action: 'auth.password_reset.completed', resource: 'auth', resourceId: tokenRecord.userId }).catch(() => {});
@@ -742,6 +746,39 @@ export class AuthService {
       emailVerified: user.emailVerified,
       isActive: user.isActive,
     };
+  }
+
+  /**
+   * B3 — Verifica que a nova senha não repete nenhuma das últimas N.
+   * Se passar, persiste o novo hash no histórico e descarta os excedentes.
+   */
+  private async checkAndSavePasswordHistory(userId: string, tenantId: string, newPasswordPlain: string, newHash: string): Promise<void> {
+    const history = await this.db
+      .select({ id: passwordHistory.id, hash: passwordHistory.hash })
+      .from(passwordHistory)
+      .where(eq(passwordHistory.userId, userId))
+      .orderBy(desc(passwordHistory.createdAt))
+      .limit(PASSWORD_HISTORY_DEPTH);
+
+    for (const entry of history) {
+      const reused = await bcrypt.compare(newPasswordPlain, entry.hash);
+      if (reused) throw new Error(`Esta senha já foi usada recentemente. Escolha uma diferente.`);
+    }
+
+    // Salvar novo hash
+    await this.db.insert(passwordHistory).values({ userId, tenantId, hash: newHash });
+
+    // Apagar registros excedentes (manter apenas os últimos N)
+    const all = await this.db
+      .select({ id: passwordHistory.id })
+      .from(passwordHistory)
+      .where(eq(passwordHistory.userId, userId))
+      .orderBy(desc(passwordHistory.createdAt));
+
+    const toDelete = all.slice(PASSWORD_HISTORY_DEPTH).map(r => r.id);
+    for (const id of toDelete) {
+      await this.db.delete(passwordHistory).where(eq(passwordHistory.id, id));
+    }
   }
 
   /**

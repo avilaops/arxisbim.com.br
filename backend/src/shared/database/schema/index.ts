@@ -37,3 +37,6 @@ export * from './budgets.js';
 
 // Email Queue (retry for transactional emails)
 export * from './email-queue.js';
+
+// Password history (prevent reuse of last N passwords)
+export * from './password-history.js';
