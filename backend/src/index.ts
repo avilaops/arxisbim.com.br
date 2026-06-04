@@ -264,7 +264,8 @@ const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 
 await server.register(staticFiles, {
   root: frontendDistPath,
-  prefix: '/', // Serve from root
+  prefix: '/',
+  wildcard: false,  // Prevent catch-all /* from shadowing API GET routes
 });
 
 // =====================================
