@@ -88,6 +88,13 @@ function recordLoginFailure(email: string, tenantId: string): void {
   }
 }
 
+/** Expõe contagem atual de falhas para o route handler (M2 layer 2). */
+export function getLoginFailCount(email: string): number {
+  const entry = loginFailWindow.get(email.toLowerCase());
+  if (!entry || Date.now() > entry.resetAt) return 0;
+  return entry.count;
+}
+
 // Deriva slug de tenant a partir do domínio do email (ex: user@acme.com -> 'acme')
 function tenantFromEmail(email: string): string {
   const domain = email.split('@')[1] || 'public';
@@ -191,6 +198,17 @@ export class AuthService {
 
     observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.success', resource: 'auth', resourceId: user.id, metadata: { ip: credentials.ip, userAgent: credentials.userAgent } }).catch(() => {});
     observabilityService.incrementCounter(user.tenantId, 'auth.login.total', { success: 'true' }).catch(() => {});
+
+    // B2 — 2FA: se ativo, emitir challenge token em vez de tokens reais
+    if (user.twoFactorEnabled) {
+      const { totpService } = await import('./totp.service.js');
+      const challengeToken = totpService.issueChallengeToken(user.id, user.tenantId);
+      return {
+        user: { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, companyId: user.companyId || undefined, role: user.role, permissions: user.permissions || [] },
+        requires2FA: true,
+        challengeToken,
+      } as any;
+    }
 
     // Gerar tokens
     const token = this.generateAccessToken({
@@ -723,6 +741,55 @@ export class AuthService {
       permissions: user.permissions || [],
       emailVerified: user.emailVerified,
       isActive: user.isActive,
+    };
+  }
+
+  /**
+   * B2 — Completar login após 2FA verificado.
+   * Chamado pelo /auth/2fa/verify-login depois de validar o TOTP.
+   */
+  async completeLogin(userId: string, tenantId: string, ip?: string, userAgent?: string): Promise<{ user: any; token: string; refreshToken: string }> {
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user || !user.isActive) throw new Error('Usuário inativo');
+
+    const token = this.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      tenantId: user.tenantId,
+      companyId: user.companyId || undefined,
+      role: user.role,
+      permissions: user.permissions || [],
+    });
+
+    const refreshToken = this.generateRefreshToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: user.tenantId,
+    });
+
+    await this.db.insert(userSessions).values({
+      userId: user.id,
+      tenantId: user.tenantId,
+      refreshToken,
+      ipAddress: ip,
+      userAgent,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      isRevoked: false,
+      isActive: true,
+    });
+
+    observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.2fa_complete', resource: 'auth', resourceId: user.id }).catch(() => {});
+
+    return {
+      user: { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, companyId: user.companyId || undefined, role: user.role, permissions: user.permissions || [] },
+      token,
+      refreshToken,
     };
   }
 
