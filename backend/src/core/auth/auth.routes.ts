@@ -1,18 +1,42 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import { z } from 'zod';
 import { AuthService } from './auth.service.js';
 import { verifyTurnstileToken } from './turnstile.js';
 
-// Rate limits por rota de autenticação (mais restritivos que o global)
-const AUTH_RATE_LIMITS = {
-  login:          { max: 10, timeWindow: '1 minute' },
-  register:       { max: 5,  timeWindow: '1 minute' },
-  forgotPassword: { max: 5,  timeWindow: '1 minute' },
-  resetPassword:  { max: 10, timeWindow: '1 minute' },
-  verifyEmail:    { max: 10, timeWindow: '1 minute' },
-  refresh:        { max: 20, timeWindow: '1 minute' },
-};
+// Middleware de rate limit por rota — cria um preHandler que conta por IP
+function createRateLimit(max: number, windowMs: number) {
+  const store = new Map<string, { count: number; resetAt: number }>();
+
+  return async function rateLimitMiddleware(request: FastifyRequest, reply: FastifyReply) {
+    const ip = (request.headers['cf-connecting-ip'] as string) ?? request.ip ?? 'unknown';
+    const now = Date.now();
+    const entry = store.get(ip);
+
+    if (!entry || now > entry.resetAt) {
+      store.set(ip, { count: 1, resetAt: now + windowMs });
+      return;
+    }
+
+    entry.count++;
+    if (entry.count > max) {
+      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      reply.header('Retry-After', retryAfter);
+      return reply.status(429).send({
+        statusCode: 429,
+        error: 'Too Many Requests',
+        message: `Rate limit exceeded. Try again in ${retryAfter}s.`,
+      });
+    }
+  };
+}
+
+// Limites específicos para cada rota de autenticação
+const loginRateLimit        = createRateLimit(10, 60_000);
+const registerRateLimit     = createRateLimit(5,  60_000);
+const forgotPasswordLimit   = createRateLimit(5,  60_000);
+const resetPasswordLimit    = createRateLimit(10, 60_000);
+const verifyEmailLimit      = createRateLimit(10, 60_000);
+const refreshLimit          = createRateLimit(20, 60_000);
 
 const authService = new AuthService();
 
@@ -42,7 +66,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Login com email e senha
    */
   fastify.post('/login', {
-    config: { rateLimit: AUTH_RATE_LIMITS.login },
+    preHandler: [loginRateLimit],
     schema: {
       description: 'Login com email e senha',
       tags: ['auth'],
@@ -99,7 +123,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Registrar novo usuário
    */
   fastify.post('/register', {
-    config: { rateLimit: AUTH_RATE_LIMITS.register },
+    preHandler: [registerRateLimit],
     schema: {
       description: 'Registrar novo usuário',
       tags: ['auth'],
@@ -155,7 +179,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Refresh access token
    */
   fastify.post('/refresh', {
-    config: { rateLimit: AUTH_RATE_LIMITS.refresh },
+    preHandler: [refreshLimit],
     schema: {
       description: 'Refresh access token',
       tags: ['auth'],
@@ -193,7 +217,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Verificar email com token
    */
   fastify.post('/verify-email', {
-    config: { rateLimit: AUTH_RATE_LIMITS.verifyEmail },
+    preHandler: [verifyEmailLimit],
     schema: {
       description: 'Verificar email com token',
       tags: ['auth'],
@@ -270,7 +294,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Solicitar reset de senha
    */
   fastify.post('/forgot-password', {
-    config: { rateLimit: AUTH_RATE_LIMITS.forgotPassword },
+    preHandler: [forgotPasswordLimit],
     schema: {
       description: 'Solicitar email de redefinição de senha',
       tags: ['auth'],
@@ -300,7 +324,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Redefinir senha com token
    */
   fastify.post('/reset-password', {
-    config: { rateLimit: AUTH_RATE_LIMITS.resetPassword },
+    preHandler: [resetPasswordLimit],
     schema: {
       description: 'Redefinir senha com token',
       tags: ['auth'],
