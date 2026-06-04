@@ -5,6 +5,7 @@ import { users, tenants } from '../../shared/database/schema/tenants.js';
 import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
 import { emailService } from '../email/email.service.js';
+import { observabilityService } from '../observability/service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
@@ -109,12 +110,18 @@ export class AuthService {
     if (!user) {
       // Timing attack protection: sempre executar bcrypt mesmo quando usuário não existe
       await bcrypt.compare(validated.password, DUMMY_HASH);
+      observabilityService.logAudit({ tenantId: 'system', action: 'auth.login.failed', resource: 'auth', metadata: { reason: 'user_not_found', ip: credentials.ip } }).catch(() => {});
+      observabilityService.incrementCounter('system', 'auth.login.failed', { reason: 'user_not_found' }).catch(() => {});
       throw new Error('Credenciais inválidas');
     }
 
     // Verificar senha
+    const bcryptStart = Date.now();
     const isValidPassword = await bcrypt.compare(validated.password, user.passwordHash);
+    observabilityService.recordHistogram(user.tenantId, 'auth.bcrypt.duration_ms', Date.now() - bcryptStart, { operation: 'compare' }).catch(() => {});
     if (!isValidPassword) {
+      observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.failed', resource: 'auth', resourceId: user.id, metadata: { reason: 'wrong_password', ip: credentials.ip } }).catch(() => {});
+      observabilityService.incrementCounter(user.tenantId, 'auth.login.failed', { reason: 'wrong_password' }).catch(() => {});
       throw new Error('Credenciais inválidas');
     }
 
@@ -141,6 +148,9 @@ export class AuthService {
       .update(users)
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, user.id));
+
+    observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.success', resource: 'auth', resourceId: user.id, metadata: { ip: credentials.ip, userAgent: credentials.userAgent } }).catch(() => {});
+    observabilityService.incrementCounter(user.tenantId, 'auth.login.total', { success: 'true' }).catch(() => {});
 
     // Gerar tokens
     const token = this.generateAccessToken({
@@ -259,6 +269,9 @@ export class AuthService {
 
     await BillingService.initializeTenantFreeTier(tenantSlug);
 
+    observabilityService.logAudit({ tenantId: tenantSlug, userId: newUser.id, action: 'auth.register', resource: 'user', resourceId: newUser.id, metadata: { email: newUser.email } }).catch(() => {});
+    observabilityService.incrementCounter(tenantSlug, 'auth.register.total', { success: 'true' }).catch(() => {});
+
     // Enviar email de verificação
     await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
 
@@ -330,6 +343,8 @@ export class AuthService {
 
     await this.db.update(users).set({ emailVerified: true, isActive: true, emailVerifiedAt: new Date() }).where(eq(users.id, tokenRecord.userId));
     await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
+
+    observabilityService.logAudit({ tenantId: tokenRecord.tenantId, userId: tokenRecord.userId, action: 'auth.email_verified', resource: 'user', resourceId: tokenRecord.userId }).catch(() => {});
 
     // Enviar email de boas-vindas
     const [verifiedUser] = await this.db.select({ email: users.email, name: users.name, tenantId: users.tenantId }).from(users).where(eq(users.id, tokenRecord.userId)).limit(1);
@@ -423,10 +438,16 @@ export class AuthService {
         isActive: true,
       });
 
+      observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.token.refresh', resource: 'auth', resourceId: user.id, metadata: { ip } }).catch(() => {});
+      observabilityService.incrementCounter(user.tenantId, 'auth.token.refresh.total', { success: 'true' }).catch(() => {});
+
       return { token: newToken, refreshToken: newRefreshToken };
     } catch (error: any) {
       const passthrough = ['TOKEN_REUSE_DETECTED', 'TOKEN_REVOKED', 'TOKEN_EXPIRED'];
-      if (passthrough.includes(error.message)) throw error;
+      if (passthrough.includes(error.message)) {
+        observabilityService.incrementCounter('system', 'auth.token.refresh.failed', { reason: error.message }).catch(() => {});
+        throw error;
+      }
       console.error('[refreshToken] error:', error?.name, '|', error?.message, '| code:', error?.code, '| detail:', error?.detail, '| constraint:', error?.constraint);
       throw new Error('Token de refresh inválido');
     }
@@ -438,10 +459,16 @@ export class AuthService {
   async logout(refreshToken: string): Promise<void> {
     if (!refreshToken) return;
     const now = new Date();
-    await this.db
+    const [session] = await this.db
       .update(userSessions)
       .set({ isRevoked: true, revokedAt: now, isActive: false })
-      .where(eq(userSessions.refreshToken, refreshToken));
+      .where(eq(userSessions.refreshToken, refreshToken))
+      .returning({ userId: userSessions.userId, tenantId: userSessions.tenantId });
+
+    if (session) {
+      observabilityService.logAudit({ tenantId: session.tenantId, userId: session.userId, action: 'auth.logout', resource: 'auth', resourceId: session.userId }).catch(() => {});
+      observabilityService.incrementCounter(session.tenantId, 'auth.logout.total').catch(() => {});
+    }
   }
 
   /**
@@ -484,10 +511,15 @@ export class AuthService {
       throw new Error('Sessão não encontrada');
     }
 
-    await this.db
+    const [revoked] = await this.db
       .update(userSessions)
       .set({ isRevoked: true, revokedAt: new Date(), isActive: false })
-      .where(eq(userSessions.id, sessionId));
+      .where(eq(userSessions.id, sessionId))
+      .returning({ tenantId: userSessions.tenantId });
+
+    if (revoked) {
+      observabilityService.logAudit({ tenantId: revoked.tenantId, userId: requestingUserId, action: 'auth.session.revoked', resource: 'session', resourceId: sessionId }).catch(() => {});
+    }
   }
 
   /**
@@ -596,6 +628,8 @@ export class AuthService {
     });
 
     await emailService.sendPasswordReset(user.email, user.name, resetToken, user.tenantId);
+    observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.password_reset.requested', resource: 'auth', resourceId: user.id }).catch(() => {});
+    observabilityService.incrementCounter(user.tenantId, 'auth.password_reset.total', { step: 'requested' }).catch(() => {});
   }
 
   /**
@@ -619,6 +653,8 @@ export class AuthService {
     const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, tokenRecord.userId));
     await this.db.update(authTokens).set({ isUsed: true, usedAt: new Date() }).where(eq(authTokens.id, tokenRecord.id));
+    observabilityService.logAudit({ tenantId: tokenRecord.tenantId, userId: tokenRecord.userId, action: 'auth.password_reset.completed', resource: 'auth', resourceId: tokenRecord.userId }).catch(() => {});
+    observabilityService.incrementCounter(tokenRecord.tenantId, 'auth.password_reset.total', { step: 'completed' }).catch(() => {});
   }
 
   /**
