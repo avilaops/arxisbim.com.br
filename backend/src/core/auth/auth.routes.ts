@@ -356,6 +356,7 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Obter usuário atual
    */
   fastify.get('/me', {
+    preHandler: [fastify.authenticate],
     schema: {
       description: 'Obter usuário atual',
       tags: ['auth'],
