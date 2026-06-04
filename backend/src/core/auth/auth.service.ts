@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 interface JWTPayload {
   userId: string;
   email: string;
+  name?: string;
   tenantId: string;
   companyId?: string;
   role: string;
@@ -131,6 +132,7 @@ export class AuthService {
     const token = this.generateAccessToken({
       userId: user.id,
       email: user.email,
+      name: user.name,
       tenantId: user.tenantId,
       companyId: user.companyId || undefined,
       role: user.role,

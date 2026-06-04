@@ -44,7 +44,11 @@ declare global {
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
-let PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '123e4567-e89b-12d3-a456-426614174000';
+let PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '';
+window.addEventListener('arxisvr:project-selected', (e: Event) => {
+  const id = (e as CustomEvent).detail?.projectId;
+  if (id) PROJECT_ID = id;
+});
 let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 
 let viewerHost: ViewerHost | null = null;

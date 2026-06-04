@@ -2025,8 +2025,38 @@
       }
     }
 
-    function initWelcome() {
-      renderProjectCards(SAMPLE_PROJECTS);
+    async function fetchRealProjects() {
+      try {
+        const token = localStorage.getItem('arxisvr_token');
+        if (!token) return null;
+        const res = await fetch('/api/v1/projects', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.projects || data.data || []);
+        if (!list.length) return null;
+        return list.map(p => ({
+          id: p.id,
+          name: p.name || 'Projeto',
+          type: p.ifcVersion || 'IFC4',
+          icon: '🏗️',
+          elements: p.elementCount || 0,
+          collaborators: [{ initial: 'N', color: '#2563EB' }],
+          progress: 50,
+          lastEdit: p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('pt-BR') : '—',
+          status: p.status === 'active' ? 'active' : null,
+        }));
+      } catch { return null; }
+    }
+
+    async function initWelcome() {
+      const realProjects = await fetchRealProjects();
+      renderProjectCards(realProjects && realProjects.length ? realProjects : SAMPLE_PROJECTS);
+
+      // Expor o primeiro projeto real para o app-main usar como PROJECT_ID
+      if (realProjects && realProjects[0]?.id) {
+        localStorage.setItem('arxisvr_project_id', realProjects[0].id);
+        window.dispatchEvent(new CustomEvent('arxisvr:project-selected', { detail: { projectId: realProjects[0].id } }));
+      }
 
       // Build greeting from JWT name or just "Olá"
       try {
