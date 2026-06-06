@@ -522,7 +522,9 @@ signals.forEach((signal: NodeJS.Signals) => {
 // =====================================
 
 try {
-  await runMigrations();
+  await runMigrations().catch((err: unknown) => {
+    console.error('⚠️  Migration error (non-fatal): server will start with existing schema', err instanceof Error ? err.message : err);
+  });
 
   await server.listen({ port: PORT, host: HOST });
 
