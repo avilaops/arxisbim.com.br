@@ -27,6 +27,7 @@ import { ifcRoutes } from './modules/ifc/ifc.routes.js';
 import { federationRoutes } from './modules/federation/federation.routes.js';
 import { federatedModelsRoutes } from './modules/federated-models/federated-models.routes.js';
 import { collaborationRoutes } from './modules/collaboration/collaboration.routes.js';
+import { sessionsRoutes } from './modules/sessions/sessions.routes.js';
 import { observabilityRoutes } from './routes/v1/observability/observability.routes.js';
 import { storageRoutes } from './core/storage/storage.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
@@ -88,8 +89,12 @@ async function runMigrations() {
     )
   `;
 
-  const migrationsDir = path.join(__dirname, '../../migrations');
-  if (!fs.existsSync(migrationsDir)) return;
+  // __dirname = backend/dist/ → ../migrations = backend/migrations/
+  const migrationsDir = path.join(__dirname, '../migrations');
+  if (!fs.existsSync(migrationsDir)) {
+    console.warn(`⚠️  Migrations dir not found: ${migrationsDir} — skipping`);
+    return;
+  }
 
   const files = fs.readdirSync(migrationsDir)
     .filter(f => f.endsWith('.sql'))
@@ -475,6 +480,7 @@ await server.register(ifcRoutes, { prefix: '/api/v1/ifc' });
 await server.register(federationRoutes, { prefix: '/api/v1/federation' });
 await server.register(federatedModelsRoutes);
 await server.register(collaborationRoutes, { prefix: '/api/v1/collaboration' });
+await server.register(sessionsRoutes, { prefix: '/api/v1/sessions' });
 await server.register(notificationsRoutes, { prefix: '/api/v1/notifications' });
 await server.register(billingRoutes, { prefix: '/api/v1/billing' });
 await server.register(budgetsRoutes, { prefix: '/api/v1/budgets' });
