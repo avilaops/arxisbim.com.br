@@ -97,10 +97,12 @@ export class CollaborationPresenceSystem {
         this.latestPositions.set(participantId, pos);
         if (rot) this.latestRotations.set(participantId, rot);
 
-        // Follow mode: mover câmera local
+        // Follow mode: mover câmera local (FPSControls pausado enquanto seguindo)
         if (this.followTargetId === participantId && rot) {
           this.camera.position.set(pos[0], pos[1], pos[2]);
-          this.camera.rotation.set(rot[0], rot[1], rot[2]);
+          this.camera.quaternion.setFromEuler(
+            new THREE.Euler(rot[0], rot[1], rot[2], 'YXZ'),
+          );
         }
 
         const name = this.resolveName(participantId);
@@ -164,6 +166,10 @@ export class CollaborationPresenceSystem {
       bar.style.display = 'flex';
       bar.querySelector('#collab-follow-name')!.textContent = `📍 Seguindo ${name}`;
     }
+    // Pausar FPS controls para câmera não lutar contra o follow
+    const vh = (window as any).__viewerHost;
+    if (vh?.fpsControls) vh.fpsControls.setEnabled(false);
+    if (vh?.droneControls) vh.droneControls.setEnabled(false);
     CollaborationToast.show(`📍 Seguindo ${name}`, 'info');
   }
 
@@ -171,6 +177,9 @@ export class CollaborationPresenceSystem {
     this.followTargetId = null;
     const bar = document.getElementById('collab-follow-bar');
     if (bar) bar.style.display = 'none';
+    // Restaurar controles
+    const vh = (window as any).__viewerHost;
+    if (vh?.fpsControls) vh.fpsControls.setEnabled(true);
   }
 
   // ─── Private ─────────────────────────────────────────────────────────────────

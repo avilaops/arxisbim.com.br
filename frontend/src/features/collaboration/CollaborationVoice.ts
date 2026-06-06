@@ -63,6 +63,8 @@ export class CollaborationVoice {
     const unsubAction = MultiplayerRealtimeService.onAction(async (action: any) => {
       const { from } = action;
       if (!from || from === this.localId) return;
+      // Filtrar: só processar mensagens direcionadas a este participante
+      if (action.to && action.to !== this.localId) return;
 
       switch (action.type) {
         case 'webrtc_offer':
@@ -204,10 +206,11 @@ export class CollaborationVoice {
     this.updateVoiceUI();
   }
 
-  /** Envia sinal para um peer específico via sync_action (relay pelo signaling server) */
-  private sendSignal(to: string, payload: object): void {
+  /** Envia sinal para um peer específico via sync_action (relay pelo signaling server).
+   *  O campo `to` é incluído para que o receptor filtre mensagens não endereçadas a ele. */
+  private sendSignal(to: string, payload: Record<string, unknown>): void {
     try {
-      MultiplayerRealtimeService.syncAction({ type: `_webrtc_${to}` as any, ...payload } as any);
+      MultiplayerRealtimeService.syncAction({ ...payload, to } as any);
     } catch { /* not connected */ }
   }
 
