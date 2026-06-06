@@ -23,8 +23,21 @@ export class Engine {
 
     for (const s of this.systems) if (s.enabled && s.start) s.start(this.ctx);
 
-    const loop = () => {
+    // Throttle to 30 FPS when tab is hidden (background) to avoid blocking the event loop.
+    // This keeps async callbacks (WebSocket, fetch, setTimeout) responsive even when the
+    // tab is not focused.
+    const TARGET_INTERVAL_BG = 1000 / 30; // 30 fps background cap
+    let lastFrameTime = 0;
+
+    const loop = (now: number) => {
       if (!this.running) return;
+
+      const isHidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      if (isHidden && now - lastFrameTime < TARGET_INTERVAL_BG) {
+        requestAnimationFrame(loop);
+        return;
+      }
+      lastFrameTime = now;
 
       const dt = this.time.tick();
 
