@@ -6,6 +6,7 @@
 import { MultiplayerRealtimeService } from '../features/multiplayer-realtime/multiplayer-realtime.service';
 import type { ChatMessage } from '../features/multiplayer-realtime/multiplayer-realtime.types';
 import { resolveApiBaseUrl } from '../config/apiBaseUrl';
+import { CollaborationPresenceSystem } from '../features/collaboration/CollaborationPresenceSystem';
 
 const API = resolveApiBaseUrl();
 
@@ -23,6 +24,7 @@ export class CollaborationPanel {
 
   private sessionId: string | null = null;
   private accessToken: string | null = null;
+  private presenceSystem: CollaborationPresenceSystem | null = null;
 
   // Plans that can initiate calls
   private static readonly CALL_PLANS = ['pro', 'professional', 'enterprise', 'business'];
@@ -187,6 +189,7 @@ export class CollaborationPanel {
       const localLink = `${window.location.origin}/join.html?token=${roomId}`;
       this.showInviteLink(localLink);
       this.updateCallButton();
+      this.startPresence();
     } catch {
       this.setStatus('disconnected', '🔴 Erro ao conectar');
       this.joinBtn.disabled = false;
@@ -206,6 +209,7 @@ export class CollaborationPanel {
       this.leaveBtn.style.display = '';
       this.setStatus('connected', `🟢 Sessão ativa`);
       this.updateCallButton();
+      this.startPresence();
     } catch {
       this.setStatus('disconnected', '🔴 Erro no WebSocket');
       this.joinBtn.disabled = false;
@@ -347,6 +351,7 @@ export class CollaborationPanel {
         this.leaveBtn.style.display = '';
         this.setStatus('connected', `🟢 ${guestName ?? 'Convidado'}`);
         this.updateCallButton();
+        this.startPresence();
       } catch {
         this.setStatus('disconnected', '🔴 Erro ao entrar na sessão');
       }
@@ -376,6 +381,7 @@ export class CollaborationPanel {
         this.leaveBtn.style.display = '';
         this.setStatus('connected', '🟢 Sessão ativa');
         this.updateCallButton();
+        this.startPresence();
       } catch {
         // Token expirou — limpar e deixar host criar nova sessão
         localStorage.removeItem('arxisvr_host_session_id');
@@ -386,6 +392,20 @@ export class CollaborationPanel {
     }
   }
 
+  /** Inicia o sistema de presença 3D (cursors dos outros no viewer) */
+  private startPresence(): void {
+    this.presenceSystem?.dispose();
+    // Pega a câmera e a cena do ViewerHost exposto globalmente
+    const vh = (window as any).__viewerHost;
+    if (!vh?.camera || !vh?.scene) {
+      console.warn('[CollaborationPanel] ViewerHost não encontrado — presença 3D desabilitada');
+      return;
+    }
+    this.presenceSystem = new CollaborationPresenceSystem(vh.scene, vh.camera);
+    this.presenceSystem.start();
+    console.log('[CollaborationPanel] Presence system iniciado ✅');
+  }
+
   private async handleLeave(): Promise<void> {
     if (this.sessionId) {
       const authToken = localStorage.getItem('arxisvr_token');
@@ -394,6 +414,8 @@ export class CollaborationPanel {
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
       }).catch(() => {});
     }
+    this.presenceSystem?.dispose();
+    this.presenceSystem = null;
     MultiplayerRealtimeService.leaveRoom();
     localStorage.removeItem('arxisvr_host_session_id');
     localStorage.removeItem('arxisvr_host_session_token');
