@@ -7,6 +7,7 @@ import { MultiplayerRealtimeService } from '../features/multiplayer-realtime/mul
 import type { ChatMessage } from '../features/multiplayer-realtime/multiplayer-realtime.types';
 import { resolveApiBaseUrl } from '../config/apiBaseUrl';
 import { CollaborationPresenceSystem } from '../features/collaboration/CollaborationPresenceSystem';
+import { CollaborationVoice } from '../features/collaboration/CollaborationVoice';
 
 const API = resolveApiBaseUrl();
 
@@ -25,6 +26,7 @@ export class CollaborationPanel {
   private sessionId: string | null = null;
   private accessToken: string | null = null;
   private presenceSystem: CollaborationPresenceSystem | null = null;
+  private voiceSystem: CollaborationVoice | null = null;
 
   // Plans that can initiate calls
   private static readonly CALL_PLANS = ['pro', 'professional', 'enterprise', 'business'];
@@ -264,35 +266,28 @@ export class CollaborationPanel {
   }
 
   private showCallModal(): void {
-    const existing = document.getElementById('collab-call-modal');
-    if (existing) { existing.remove(); return; }
+    // Toggle: se já há voz ativa, encerrar
+    if (this.voiceSystem) {
+      this.voiceSystem.dispose();
+      this.voiceSystem = null;
+      this.callBtn.textContent = '📞 Chamada';
+      this.appendSystemMessage('📞 Chamada encerrada');
+      return;
+    }
 
-    const modal = document.createElement('div');
-    modal.id = 'collab-call-modal';
-    modal.className = 'collab-call-modal';
-    modal.innerHTML = `
-      <div class="collab-call-modal__inner">
-        <div class="collab-call-modal__icon">📞</div>
-        <div class="collab-call-modal__title">Chamada iniciada</div>
-        <div class="collab-call-modal__sub">Os participantes foram notificados. Aguardando conexão...</div>
-        <div class="collab-call-modal__participants" id="call-participants"></div>
-        <button class="collab-panel__btn collab-panel__btn--danger" id="call-end-btn">Encerrar chamada</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
+    const localId =
+      MultiplayerRealtimeService.getCurrentParticipant()?.id ??
+      localStorage.getItem('arxisvr_participant_id') ??
+      `local_${Date.now()}`;
 
-    // Populate with current participants
-    const parts = MultiplayerRealtimeService.getParticipants();
-    const el = document.getElementById('call-participants')!;
-    el.innerHTML = parts.map(p => `<span class="call-participant">🟢 ${p.user.name}</span>`).join('') || '<span style="color:#64748b">Nenhum participante ainda</span>';
-
-    document.getElementById('call-end-btn')?.addEventListener('click', () => {
-      modal.remove();
+    this.voiceSystem = new CollaborationVoice(localId);
+    this.voiceSystem.start().then(() => {
+      this.callBtn.textContent = '🔴 Em chamada';
+      this.appendSystemMessage('📞 Chamada de voz iniciada');
+    }).catch(() => {
+      this.voiceSystem = null;
       this.callBtn.textContent = '📞 Chamada';
     });
-
-    this.callBtn.textContent = '🔴 Em chamada';
-    this.appendSystemMessage('📞 Chamada iniciada pelo host');
   }
 
   private showInviteLink(link: string): void {
@@ -416,6 +411,8 @@ export class CollaborationPanel {
     }
     this.presenceSystem?.dispose();
     this.presenceSystem = null;
+    this.voiceSystem?.dispose();
+    this.voiceSystem = null;
     MultiplayerRealtimeService.leaveRoom();
     localStorage.removeItem('arxisvr_host_session_id');
     localStorage.removeItem('arxisvr_host_session_token');
