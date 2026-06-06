@@ -21,7 +21,7 @@ const PORT               = process.env.PORT || process.env.SIGNALING_PORT || 300
 const HEARTBEAT_INTERVAL = 30_000;
 const LOG_VERBOSE        = process.env.LOG_VERBOSE === 'true';
 const JWT_SECRET         = process.env.JWT_SECRET;
-const BACKEND_URL        = process.env.BACKEND_INTERNAL_URL || 'http://localhost:3001';
+const BACKEND_URL        = process.env.BACKEND_URL || process.env.BACKEND_INTERNAL_URL || 'http://localhost:3001';
 
 if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET não configurado — tokens de participante não serão validados.');
