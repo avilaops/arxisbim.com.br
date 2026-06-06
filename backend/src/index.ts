@@ -532,6 +532,27 @@ try {
     console.error('⚠️  Migration error (non-fatal): server will start with existing schema', err instanceof Error ? err.message : err);
   });
 
+  // Create pre-verified test user for UI/multiplayer testing (idempotent)
+  await (async () => {
+    try {
+      const testEmail = 'test@arxisvr.dev';
+      const [existing] = await sql<{ id: string }[]>`SELECT id FROM users WHERE email = ${testEmail} LIMIT 1`;
+      if (!existing) {
+        const bcryptMod = await import('bcryptjs');
+        const bcryptLib = (bcryptMod as any).default ?? bcryptMod;
+        const hash = await bcryptLib.hash('Test@12345', 12);
+        await sql`INSERT INTO users (email, name, password_hash, tenant_id, role, permissions, email_verified, email_verified_at, is_active)
+          VALUES (${testEmail}, ${'Test User'}, ${hash}, ${'arxisvr'}, ${'user'}, ${'[]'}, ${true}, ${new Date()}, ${true})`;
+        console.log('✅ Test user created: test@arxisvr.dev / Test@12345');
+      } else {
+        await sql`UPDATE users SET email_verified = true, is_active = true WHERE email = ${testEmail}`;
+        console.log('✅ Test user ensured: test@arxisvr.dev');
+      }
+    } catch (e) {
+      console.warn('⚠️ Test user creation failed (non-fatal):', (e as Error).message);
+    }
+  })();
+
   await server.listen({ port: PORT, host: HOST });
 
   // Initialize billing retry worker
