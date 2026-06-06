@@ -76,21 +76,32 @@ jobs:
         env:
           DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
           JWT_SECRET: ci-smoke-secret-not-for-prod
+          JWT_REFRESH_SECRET: ci-refresh-secret-not-for-prod
           HOST: 127.0.0.1
           PORT: '3001'
+          NODE_ENV: test
         run: |
-          node dist/index.js &
+          timeout 60s node dist/index.js > backend.log 2>&1 &
           PID=$!
           ok=0
-          for i in $(seq 1 25); do
-            if curl -sf http://127.0.0.1:3001/health/live >/dev/null; then
-              echo "✅ backend respondeu em /health/live"
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:3001/health/live >/dev/null 2>&1; then
+              echo "✅ backend respondeu em /health/live após ${i} tentativas"
               ok=1
               break
             fi
-            sleep 1
+            if ! kill -0 $PID 2>/dev/null; then
+              echo "❌ backend crashou! Logs:"
+              cat backend.log
+              exit 1
+            fi
+            sleep 2
           done
+          echo "=== Backend logs ==="
+          cat backend.log 2>/dev/null || true
+          echo "==================="
           kill $PID 2>/dev/null || true
+          wait $PID 2>/dev/null || true
           if [ "$ok" -ne 1 ]; then
             echo "❌ backend não respondeu a tempo"
             exit 1
