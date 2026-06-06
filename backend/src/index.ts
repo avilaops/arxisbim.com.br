@@ -522,6 +522,12 @@ signals.forEach((signal: NodeJS.Signals) => {
 // =====================================
 
 try {
+  // Emergency patch: ensure critical columns exist before anything else.
+  // Uses IF NOT EXISTS — safe to run on every startup even if already applied.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_provider VARCHAR(50)`.catch(() => {});
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_id VARCHAR(255)`.catch(() => {});
+  console.log('✅ Critical columns ensured (oauth_provider, oauth_id)');
+
   await runMigrations().catch((err: unknown) => {
     console.error('⚠️  Migration error (non-fatal): server will start with existing schema', err instanceof Error ? err.message : err);
   });
