@@ -1,33 +1,461 @@
 /**
  * ArxisVR Signaling Server
- * WebSocket server para coordenação WebRTC (signaling)
- * 
- * Suporta:
- * - Gerenciamento de salas
- * - Troca de SDP (offer/answer)
- * - ICE candidate exchange
- * - Avatar/position sync
- * - Auto-cleanup de usuários desconectados
+ *
+ * WebSocket server para coordenação multiplayer em tempo real.
+ * - Valida token JWT do participante no join_room
+ * - Persiste SessionEvents via HTTP interno (backend :3000)
+ * - Gerencia presença (online/offline/reconnecting)
+ * - Relay de offer/answer/ice_candidate para WebRTC
  * - Heartbeat para detectar conexões mortas
  */
 
 const WebSocket = require('ws');
-const http = require('http');
-const path = require('path');
+const http      = require('http');
+const https     = require('https');
+const path      = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
-// ========== CONFIGURAÇÃO ==========
+// ========== CONFIG ==========
 
-const PORT = process.env.SIGNALING_PORT || process.env.PORT || 8080;
-const HEARTBEAT_INTERVAL = 30000; // 30 segundos
-const LOG_VERBOSE = process.env.LOG_VERBOSE === 'true';
+const PORT               = process.env.PORT || process.env.SIGNALING_PORT || 3002;
+const HEARTBEAT_INTERVAL = 30_000;
+const LOG_VERBOSE        = process.env.LOG_VERBOSE === 'true';
+const JWT_SECRET         = process.env.JWT_SECRET;
+const BACKEND_URL        = process.env.BACKEND_INTERNAL_URL || 'http://localhost:3001';
 
-// ========== ESTADO DO SERVIDOR ==========
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET não configurado — tokens de participante não serão validados.');
+}
 
-const rooms = new Map(); // roomId -> Set<WebSocket>
-const users = new Map(); // WebSocket -> { userId, roomId }
+// ========== JWT (sem dep externa: usa backend/node_modules) ==========
 
-// ========== SERVIDOR HTTP + WEBSOCKET ==========
+let jwt;
+try {
+  jwt = require(path.resolve(__dirname, '..', 'backend', 'node_modules', 'jsonwebtoken'));
+} catch {
+  // fallback: tenta global
+  try { jwt = require('jsonwebtoken'); } catch { jwt = null; }
+}
+
+function verifyParticipantToken(token) {
+  if (!jwt || !JWT_SECRET) return null;
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+// ========== ESTADO ==========
+
+// roomId -> Map<socketId, { ws, participantId, userId, role, permissions }>
+const rooms = new Map();
+// ws -> { participantId, userId, roomId, role, permissions, sessionId }
+const clients = new Map();
+
+// ========== HTTP helper para persistir eventos ==========
+
+function persistEvent(sessionId, participantId, type, payload) {
+  if (!sessionId) return; // sessão sem backend tracking (modo legado)
+
+  const body = JSON.stringify({ sessionId, actorId: participantId, type, payload });
+  const url = new URL(`${BACKEND_URL}/api/v1/sessions/${sessionId}/events/internal`);
+  const lib = url.protocol === 'https:' ? https : http;
+
+  const req = lib.request({
+    hostname: url.hostname,
+    port:     url.port || (url.protocol === 'https:' ? 443 : 80),
+    path:     url.pathname,
+    method:   'POST',
+    headers:  {
+      'Content-Type':   'application/json',
+      'Content-Length': Buffer.byteLength(body),
+      'X-Internal-Key': process.env.INTERNAL_API_KEY || 'internal',
+    },
+  }, (res) => {
+    if (res.statusCode >= 400) {
+      let body = '';
+      res.on('data', d => body += d);
+      res.on('end', () => console.warn(`[Event] persist ${type} → ${res.statusCode}:`, body.slice(0, 200)));
+    } else if (LOG_VERBOSE) {
+      console.log(`[Event] persisted ${type} → ${res.statusCode}`);
+    }
+  });
+
+  req.on('error', (e) => {
+    console.warn(`[Event] persist failed (${type}):`, e.message);
+  });
+  req.write(body);
+  req.end();
+}
+
+function updatePresence(sessionId, participantId, socketId, status) {
+  if (!sessionId || !participantId) return;
+
+  const body = JSON.stringify({ participantId, socketId, status });
+  const url = new URL(`${BACKEND_URL}/api/v1/sessions/${sessionId}/presence`);
+  const lib = url.protocol === 'https:' ? https : http;
+
+  const req = lib.request({
+    hostname: url.hostname,
+    port:     url.port || 80,
+    path:     url.pathname,
+    method:   'PUT',
+    headers:  {
+      'Content-Type':   'application/json',
+      'Content-Length': Buffer.byteLength(body),
+      'X-Internal-Key': process.env.INTERNAL_API_KEY || 'internal',
+    },
+  });
+  req.on('error', () => {});
+  req.write(body);
+  req.end();
+}
+
+// ========== UTILS ==========
+
+let _socketCounter = 0;
+function newSocketId() { return `ws_${++_socketCounter}_${Date.now()}`; }
+
+function send(ws, obj) {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj));
+  }
+}
+
+function broadcastToRoom(roomId, obj, excludeWs = null) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  const data = JSON.stringify(obj);
+  room.forEach(({ ws }) => {
+    if (ws !== excludeWs && ws.readyState === WebSocket.OPEN) ws.send(data);
+  });
+}
+
+function getRoomMembers(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return [];
+  return Array.from(room.values()).map(c => ({
+    participantId: c.participantId,
+    userId:        c.userId,
+    displayName:   c.displayName,
+    role:          c.role,
+  }));
+}
+
+function findWsByParticipantId(participantId) {
+  for (const [ws, c] of clients.entries()) {
+    if (c.participantId === participantId && ws.readyState === WebSocket.OPEN) return ws;
+  }
+  return null;
+}
+
+function cleanupClient(ws) {
+  const c = clients.get(ws);
+  if (!c) return;
+
+  const { participantId, userId, roomId, sessionId, socketId } = c;
+
+  if (roomId) {
+    const room = rooms.get(roomId);
+    if (room) {
+      room.delete(socketId);
+      broadcastToRoom(roomId, { type: 'user_left', participantId, userId, timestamp: Date.now() });
+      if (room.size === 0) {
+        rooms.delete(roomId);
+        console.log(`[Room] 🗑️  ${roomId} vazia, removida`);
+      } else {
+        console.log(`[Room] 👋 ${userId || participantId} saiu de ${roomId} (${room.size} restantes)`);
+      }
+    }
+  }
+
+  updatePresence(sessionId, participantId, socketId, 'offline');
+  persistEvent(sessionId, participantId, 'participant_left', { userId, roomId });
+
+  clients.delete(ws);
+}
+
+// ========== HANDLERS ==========
+
+function handleJoinRoom(ws, msg) {
+  const { roomId, userId, accessToken, displayName } = msg;
+
+  // --- Validar token de participante ---
+  let participantId = userId; // fallback para modo room_XXX (autenticado via frontend)
+  let role          = 'viewer';
+  let permissions   = [];
+  let sessionId     = null;
+
+  if (accessToken) {
+    // Modo backend: validar JWT de sessão
+    const payload = verifyParticipantToken(accessToken);
+    if (!payload) {
+      send(ws, { type: 'error', error: 'Invalid or expired access token' });
+      ws.close(4001, 'Unauthorized');
+      return;
+    }
+    participantId = payload.participantId;
+    role          = payload.role;
+    permissions   = payload.permissions || [];
+    sessionId     = payload.sessionId;
+  } else if (!userId) {
+    // Modo room_XXX: userId obrigatório (frontend exige conta antes do join)
+    send(ws, { type: 'error', error: 'Authentication required: provide accessToken or userId' });
+    ws.close(4001, 'Unauthorized');
+    return;
+  }
+
+  if (!roomId) {
+    send(ws, { type: 'error', error: 'Missing roomId' });
+    return;
+  }
+
+  const socketId = ws._arxisSocketId;
+
+  // Criar sala se não existe
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, new Map());
+    console.log(`[Room] 🆕 ${roomId} criada`);
+  }
+
+  const room = rooms.get(roomId);
+
+  // Guardar estado do cliente
+  const resolvedName = displayName || userId || participantId;
+  clients.set(ws, { participantId, userId: userId || participantId, displayName: resolvedName, roomId, sessionId, role, permissions, socketId });
+  room.set(socketId, { ws, participantId, userId: userId || participantId, displayName: resolvedName, role, permissions });
+
+  const members = getRoomMembers(roomId).filter(m => m.participantId !== participantId);
+  // members already have displayName from room map
+
+  console.log(`[Room] ✅ ${userId || participantId} (${role}) → ${roomId} (total: ${room.size})`);
+
+  // Confirma para quem entrou
+  send(ws, {
+    type: 'room_joined',
+    roomId,
+    participantId,
+    userId: userId || participantId,
+    role,
+    permissions,
+    members,
+    timestamp: Date.now(),
+  });
+
+  // Notifica os outros
+  broadcastToRoom(roomId, {
+    type: 'user_joined',
+    participantId,
+    userId: userId || participantId,
+    displayName: resolvedName,
+    role,
+    timestamp: Date.now(),
+  }, ws);
+
+  // Persistência
+  updatePresence(sessionId, participantId, socketId, 'online');
+  persistEvent(sessionId, participantId, 'participant_joined', {
+    userId: userId || participantId,
+    role,
+    roomId,
+  });
+
+  // Marca first join
+  if (sessionId && participantId) {
+    const body = JSON.stringify({ participantId });
+    const url  = new URL(`${BACKEND_URL}/api/v1/sessions/${sessionId}/participants/${participantId}/joined`);
+    const lib  = url.protocol === 'https:' ? https : http;
+    const req  = lib.request({
+      hostname: url.hostname, port: url.port || 80, path: url.pathname, method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), 'X-Internal-Key': process.env.INTERNAL_API_KEY || 'internal' },
+    });
+    req.on('error', () => {});
+    req.write(body);
+    req.end();
+  }
+}
+
+function handleLeaveRoom(ws) {
+  cleanupClient(ws);
+  clients.delete(ws);
+}
+
+function handleOffer(ws, msg) {
+  const { to, offer } = msg;
+  const from = clients.get(ws)?.participantId;
+  const target = findWsByParticipantId(to);
+  if (target) send(target, { type: 'offer', from, offer, timestamp: Date.now() });
+}
+
+function handleAnswer(ws, msg) {
+  const { to, answer } = msg;
+  const from = clients.get(ws)?.participantId;
+  const target = findWsByParticipantId(to);
+  if (target) send(target, { type: 'answer', from, answer, timestamp: Date.now() });
+}
+
+function handleIceCandidate(ws, msg) {
+  const { to, candidate } = msg;
+  const from = clients.get(ws)?.participantId;
+  const target = findWsByParticipantId(to);
+  if (target) send(target, { type: 'ice_candidate', from, candidate, timestamp: Date.now() });
+}
+
+function handlePositionUpdate(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+  broadcastToRoom(c.roomId, {
+    type: 'position_update',
+    participantId: c.participantId,
+    userId: c.userId,
+    x: msg.x, y: msg.y, z: msg.z, yaw: msg.yaw,
+    timestamp: Date.now(),
+  }, ws);
+  // position_update é de alta frequência — não persiste no DB
+}
+
+function handleAvatarUpdate(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+  broadcastToRoom(c.roomId, {
+    type: 'avatar_update',
+    participantId: c.participantId,
+    userId: c.userId,
+    avatarConfig: msg.avatarConfig,
+    timestamp: Date.now(),
+  }, ws);
+}
+
+function handleMaterialChanged(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+
+  // Verifica permissão de mutação
+  if (!c.permissions.includes('mutate') && c.role !== 'architect') {
+    send(ws, { type: 'error', error: 'No permission to mutate objects' });
+    return;
+  }
+
+  broadcastToRoom(c.roomId, {
+    type: 'material_changed',
+    participantId: c.participantId,
+    object: msg.object,
+    material: msg.material,
+    timestamp: Date.now(),
+  }, ws);
+
+  persistEvent(c.sessionId, c.participantId, 'material_changed', {
+    object: msg.object,
+    material: msg.material,
+  });
+}
+
+function handleObjectMoved(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+
+  if (!c.permissions.includes('mutate') && c.role !== 'architect') {
+    send(ws, { type: 'error', error: 'No permission to move objects' });
+    return;
+  }
+
+  broadcastToRoom(c.roomId, {
+    type: 'object_moved',
+    participantId: c.participantId,
+    object: msg.object,
+    position: msg.position,
+    rotation: msg.rotation,
+    timestamp: Date.now(),
+  }, ws);
+
+  persistEvent(c.sessionId, c.participantId, 'object_moved', {
+    object: msg.object,
+    position: msg.position,
+    rotation: msg.rotation,
+  });
+}
+
+function handleLaserPointed(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+
+  broadcastToRoom(c.roomId, {
+    type: 'laser_pointed',
+    participantId: c.participantId,
+    userId: c.userId,
+    x: msg.x, y: msg.y, z: msg.z,
+    timestamp: Date.now(),
+  }, ws);
+
+  // Salva apenas se tiver texto (comentário fixo)
+  if (msg.text) {
+    persistEvent(c.sessionId, c.participantId, 'annotation_added', {
+      x: msg.x, y: msg.y, z: msg.z,
+      text: msg.text,
+    });
+  }
+}
+
+function handleAnnotation(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+
+  broadcastToRoom(c.roomId, {
+    type: 'annotation_added',
+    participantId: c.participantId,
+    userId: c.userId,
+    x: msg.x, y: msg.y, z: msg.z,
+    text: msg.text,
+    timestamp: Date.now(),
+  }, ws);
+
+  persistEvent(c.sessionId, c.participantId, 'annotation_added', {
+    x: msg.x, y: msg.y, z: msg.z,
+    text: msg.text,
+  });
+}
+
+function handleChatMessage(ws, msg) {
+  const c = clients.get(ws);
+  if (!c?.roomId) return;
+
+  broadcastToRoom(c.roomId, {
+    type: 'chat_message',
+    participantId: c.participantId,
+    userId: c.userId,
+    content: msg.content,
+    timestamp: Date.now(),
+  }, ws);
+
+  persistEvent(c.sessionId, c.participantId, 'chat_message', {
+    content: msg.content,
+  });
+}
+
+// ========== DISPATCHER ==========
+
+function handleMessage(ws, msg) {
+  switch (msg.type) {
+    case 'ping':              send(ws, { type: 'pong', timestamp: Date.now() }); break;
+    case 'join_room':         handleJoinRoom(ws, msg); break;
+    case 'leave_room':        handleLeaveRoom(ws); break;
+    case 'offer':             handleOffer(ws, msg); break;
+    case 'answer':            handleAnswer(ws, msg); break;
+    case 'ice_candidate':     handleIceCandidate(ws, msg); break;
+    case 'position_update':   handlePositionUpdate(ws, msg); break;
+    case 'avatar_update':     handleAvatarUpdate(ws, msg); break;
+    case 'material_changed':  handleMaterialChanged(ws, msg); break;
+    case 'object_moved':      handleObjectMoved(ws, msg); break;
+    case 'laser_pointed':     handleLaserPointed(ws, msg); break;
+    case 'annotation_added':  handleAnnotation(ws, msg); break;
+    case 'chat_message':      handleChatMessage(ws, msg); break;
+    default:
+      if (LOG_VERBOSE) console.warn(`[WS] tipo desconhecido: ${msg.type}`);
+  }
+}
+
+// ========== SERVIDOR ==========
 
 const server = http.createServer((req, res) => {
   if (req.url === '/health') {
@@ -35,8 +463,8 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       status: 'ok',
       rooms: rooms.size,
-      connections: users.size,
-      uptime: process.uptime()
+      connections: clients.size,
+      uptime: process.uptime(),
     }));
   } else {
     res.writeHead(404);
@@ -46,439 +474,66 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocket.Server({ server });
 
-// ========== FUNÇÕES AUXILIARES ==========
-
-/**
- * Broadcast mensagem para todos na sala (exceto sender)
- */
-function broadcastToRoom(roomId, message, excludeSocket = null) {
-  const room = rooms.get(roomId);
-  if (!room) return;
-
-  const data = JSON.stringify(message);
-  
-  room.forEach((client) => {
-    if (client !== excludeSocket && client.readyState === WebSocket.OPEN) {
-      client.send(data);
-    }
-  });
-
-  if (LOG_VERBOSE) {
-    console.log(`[Broadcast] Room ${roomId}: ${message.type}`);
-  }
-}
-
-/**
- * Encontra socket do usuário pelo userId
- */
-function findUserSocket(targetUserId) {
-  for (const [socket, user] of users.entries()) {
-    if (user.userId === targetUserId && socket.readyState === WebSocket.OPEN) {
-      return socket;
-    }
-  }
-  return null;
-}
-
-/**
- * Pega lista de userIds na sala
- */
-function getRoomUsers(roomId) {
-  const room = rooms.get(roomId);
-  if (!room) return [];
-
-  return Array.from(room)
-    .map(socket => users.get(socket)?.userId)
-    .filter(Boolean);
-}
-
-/**
- * Limpa usuário desconectado
- */
-function cleanupUser(ws) {
-  const user = users.get(ws);
-  if (!user) return;
-
-  const { userId, roomId } = user;
-
-  // Remove da sala
-  if (roomId) {
-    const room = rooms.get(roomId);
-    if (room) {
-      room.delete(ws);
-      
-      // Notifica outros usuários
-      broadcastToRoom(roomId, {
-        type: 'user_left',
-        userId,
-        timestamp: Date.now()
-      });
-
-      // Remove sala se vazia
-      if (room.size === 0) {
-        rooms.delete(roomId);
-        console.log(`[Room] 🗑️  Sala vazia deletada: ${roomId}`);
-      } else {
-        console.log(`[Room] 👋 User ${userId} saiu (${room.size} restantes)`);
-      }
-    }
-  }
-
-  users.delete(ws);
-  console.log(`[Connection] ❌ Desconectado: ${userId}`);
-}
-
-// ========== HANDLERS DE MENSAGENS ==========
-
-function handleJoinRoom(ws, message) {
-  const { roomId, userId } = message;
-
-  if (!roomId || !userId) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      error: 'Missing roomId or userId'
-    }));
-    return;
-  }
-
-  // Criar sala se não existe
-  if (!rooms.has(roomId)) {
-    rooms.set(roomId, new Set());
-    console.log(`[Room] 🆕 Nova sala criada: ${roomId}`);
-  }
-
-  // Adicionar user
-  users.set(ws, { userId, roomId });
-  const room = rooms.get(roomId);
-  room.add(ws);
-
-  // Get existing users
-  const existingUsers = getRoomUsers(roomId).filter(id => id !== userId);
-
-  console.log(`[Room] ✅ User ${userId} entrou em ${roomId} (total: ${room.size})`);
-
-  // Confirmar para user
-  ws.send(JSON.stringify({
-    type: 'room_joined',
-    roomId,
-    userId,
-    users: existingUsers,
-    timestamp: Date.now()
-  }));
-
-  // Notificar outros users
-  broadcastToRoom(roomId, {
-    type: 'user_joined',
-    userId,
-    timestamp: Date.now()
-  }, ws);
-}
-
-function handleLeaveRoom(ws, message) {
-  const user = users.get(ws);
-  if (!user) return;
-
-  const { userId, roomId } = user;
-
-  if (roomId) {
-    const room = rooms.get(roomId);
-    if (room) {
-      room.delete(ws);
-      
-      // Notifica outros
-      broadcastToRoom(roomId, {
-        type: 'user_left',
-        userId,
-        timestamp: Date.now()
-      });
-
-      // Remove sala se vazia
-      if (room.size === 0) {
-        rooms.delete(roomId);
-        console.log(`[Room] 🗑️  Sala vazia deletada: ${roomId}`);
-      }
-    }
-  }
-
-  // Atualizar user (remover roomId mas manter conexão)
-  users.set(ws, { userId, roomId: null });
-
-  ws.send(JSON.stringify({
-    type: 'room_left',
-    roomId,
-    timestamp: Date.now()
-  }));
-
-  console.log(`[Room] 👋 User ${userId} saiu de ${roomId}`);
-}
-
-function handleOffer(ws, message) {
-  const { to, from, offer } = message;
-
-  if (!to || !from || !offer) {
-    console.warn('[WebRTC] ⚠️  Offer inválido: campos faltando');
-    return;
-  }
-
-  const targetSocket = findUserSocket(to);
-  if (targetSocket) {
-    targetSocket.send(JSON.stringify({
-      type: 'offer',
-      from,
-      offer,
-      timestamp: Date.now()
-    }));
-    
-    if (LOG_VERBOSE) {
-      console.log(`[WebRTC] 📤 Offer: ${from} → ${to}`);
-    }
-  } else {
-    console.warn(`[WebRTC] ⚠️  User ${to} não encontrado para offer`);
-  }
-}
-
-function handleAnswer(ws, message) {
-  const { to, from, answer } = message;
-
-  if (!to || !from || !answer) {
-    console.warn('[WebRTC] ⚠️  Answer inválido: campos faltando');
-    return;
-  }
-
-  const targetSocket = findUserSocket(to);
-  if (targetSocket) {
-    targetSocket.send(JSON.stringify({
-      type: 'answer',
-      from,
-      answer,
-      timestamp: Date.now()
-    }));
-    
-    if (LOG_VERBOSE) {
-      console.log(`[WebRTC] 📥 Answer: ${from} → ${to}`);
-    }
-  } else {
-    console.warn(`[WebRTC] ⚠️  User ${to} não encontrado para answer`);
-  }
-}
-
-function handleIceCandidate(ws, message) {
-  const { to, from, candidate } = message;
-
-  if (!to || !from || !candidate) {
-    return; // Silencioso - muito verbose
-  }
-
-  const targetSocket = findUserSocket(to);
-  if (targetSocket) {
-    targetSocket.send(JSON.stringify({
-      type: 'ice_candidate',
-      from,
-      candidate,
-      timestamp: Date.now()
-    }));
-    
-    // Não loga - muito verbose
-  }
-}
-
-function handleAvatarUpdate(ws, message) {
-  const user = users.get(ws);
-  if (!user || !user.roomId) return;
-
-  const { roomId, userId } = user;
-  const { avatarConfig } = message;
-
-  broadcastToRoom(roomId, {
-    type: 'avatar_update',
-    userId,
-    avatarConfig,
-    timestamp: Date.now()
-  }, ws);
-
-  if (LOG_VERBOSE) {
-    console.log(`[Avatar] 👤 Update: ${userId}`);
-  }
-}
-
-function handlePositionUpdate(ws, message) {
-  const user = users.get(ws);
-  if (!user || !user.roomId) return;
-
-  const { roomId, userId } = user;
-  const { x, y, z, yaw } = message;
-
-  broadcastToRoom(roomId, {
-    type: 'position_update',
-    userId,
-    x, y, z, yaw,
-    timestamp: Date.now()
-  }, ws);
-
-  // Não loga - muito frequent
-}
-
-function handleMessage(ws, message) {
-  const { type } = message;
-
-  switch (type) {
-    case 'ping':
-      ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
-      break;
-
-    case 'join_room':
-      handleJoinRoom(ws, message);
-      break;
-
-    case 'leave_room':
-      handleLeaveRoom(ws, message);
-      break;
-
-    case 'offer':
-      handleOffer(ws, message);
-      break;
-
-    case 'answer':
-      handleAnswer(ws, message);
-      break;
-
-    case 'ice_candidate':
-      handleIceCandidate(ws, message);
-      break;
-
-    case 'avatar_update':
-      handleAvatarUpdate(ws, message);
-      break;
-
-    case 'position_update':
-      handlePositionUpdate(ws, message);
-      break;
-
-    default:
-      console.warn(`[Warning] ⚠️  Tipo de mensagem desconhecido: ${type}`);
-  }
-}
-
-// ========== CONEXÃO WEBSOCKET ==========
-
 wss.on('connection', (ws, req) => {
-  const clientIp = req.socket.remoteAddress;
-  console.log(`[Connection] ✅ Nova conexão de ${clientIp}`);
+  ws._arxisSocketId = newSocketId();
+  const ip = req.socket.remoteAddress;
+  console.log(`[WS] ✅ Conexão ${ws._arxisSocketId} de ${ip}`);
 
-  // Heartbeat
   ws.isAlive = true;
-  ws.on('pong', () => {
-    ws.isAlive = true;
-  });
+  ws.on('pong', () => { ws.isAlive = true; });
 
-  // Mensagens
   ws.on('message', (data) => {
     try {
-      const message = JSON.parse(data.toString());
-      handleMessage(ws, message);
-    } catch (error) {
-      console.error('[Error] ❌ JSON inválido:', error.message);
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Invalid JSON'
-      }));
+      handleMessage(ws, JSON.parse(data.toString()));
+    } catch (e) {
+      send(ws, { type: 'error', error: 'Invalid JSON' });
     }
   });
 
-  // Desconexão
-  ws.on('close', () => {
-    cleanupUser(ws);
-  });
-
-  // Erro
-  ws.on('error', (error) => {
-    console.error('[Error] ❌ WebSocket error:', error.message);
-    cleanupUser(ws);
+  ws.on('close', () => cleanupClient(ws));
+  ws.on('error', (e) => {
+    console.error('[WS] error:', e.message);
+    cleanupClient(ws);
   });
 });
 
 // ========== HEARTBEAT ==========
 
-const heartbeatInterval = setInterval(() => {
+const heartbeat = setInterval(() => {
   wss.clients.forEach((ws) => {
-    if (ws.isAlive === false) {
-      console.log('[Heartbeat] 💀 Client timeout, terminando conexão');
-      cleanupUser(ws);
+    if (!ws.isAlive) {
+      cleanupClient(ws);
       return ws.terminate();
     }
-
     ws.isAlive = false;
     ws.ping();
   });
 }, HEARTBEAT_INTERVAL);
 
-// Cleanup on server close
-wss.on('close', () => {
-  clearInterval(heartbeatInterval);
-});
+wss.on('close', () => clearInterval(heartbeat));
 
-// ========== STATS LOG (opcional) ==========
-
-if (LOG_VERBOSE) {
-  setInterval(() => {
-    if (rooms.size > 0 || users.size > 0) {
-      console.log(`\n[Stats] 📊 Salas: ${rooms.size} | Conexões: ${users.size}`);
-      rooms.forEach((room, roomId) => {
-        console.log(`  └─ ${roomId}: ${room.size} usuários`);
-      });
-    }
-  }, 60000); // A cada minuto
-}
-
-// ========== INICIALIZAÇÃO ==========
+// ========== START ==========
 
 server.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════╗
-║                                                ║
 ║   🚀 ArxisVR Signaling Server                  ║
-║                                                ║
-║   Port:       ${PORT.toString().padEnd(33)} ║
-║   WebSocket:  ws://localhost:${PORT.toString().padEnd(21)} ║
-║   Health:     http://localhost:${PORT}/health${' '.repeat(12)} ║
-║                                                ║
-║   Status:     🟢 ONLINE                        ║
-║                                                ║
-╚════════════════════════════════════════════════╝
-  `);
-  console.log('Aguardando conexões...\n');
+║   Port:    ${String(PORT).padEnd(36)}║
+║   Backend: ${BACKEND_URL.padEnd(36)}║
+║   Auth:    ${JWT_SECRET ? '🔒 JWT ativo' : '⚠️  sem JWT (modo dev)'.padEnd(25)}        ║
+╚════════════════════════════════════════════════╝`);
 });
 
 // ========== GRACEFUL SHUTDOWN ==========
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-
 function gracefulShutdown() {
-  console.log('\n[Shutdown] 🛑 Desligando servidor...');
-  
-  // Notifica todos os clientes
+  console.log('\n[Shutdown] 🛑 Encerrando...');
   wss.clients.forEach((ws) => {
-    try {
-      ws.send(JSON.stringify({
-        type: 'server_shutdown',
-        message: 'Server is shutting down'
-      }));
-      ws.close(1001, 'Server shutdown');
-    } catch (err) {
-      // Ignora erros ao fechar
-    }
+    try { ws.send(JSON.stringify({ type: 'server_shutdown' })); ws.close(1001); } catch {}
   });
-
-  // Fecha servidor
-  server.close(() => {
-    console.log('[Shutdown] ✅ Servidor fechado com sucesso');
-    process.exit(0);
-  });
-
-  // Força saída após 5s
-  setTimeout(() => {
-    console.error('[Shutdown] ⚠️  Forçando saída...');
-    process.exit(1);
-  }, 5000);
+  server.close(() => { console.log('[Shutdown] ✅ OK'); process.exit(0); });
+  setTimeout(() => process.exit(1), 5000);
 }
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT',  gracefulShutdown);

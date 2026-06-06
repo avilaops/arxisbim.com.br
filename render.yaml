@@ -60,15 +60,28 @@ services:
         sync: false
 
   # -------------------------------------------------------------------
-  # Signaling server (WebRTC/colaboração) — serviço separado, já tem
-  # Dockerfile próprio. Descomente para subir junto.
+  # Signaling server (WebRTC/colaboração) — serviço separado via Docker.
+  # URL pública: https://arxisvr-signaling.onrender.com
+  # Defina VITE_WS_URL no serviço arxisvr como:
+  #   wss://arxisvr-signaling.onrender.com
   # -------------------------------------------------------------------
-  # - type: web
-  #   name: arxisvr-signaling
-  #   runtime: docker
-  #   plan: free
-  #   region: oregon
-  #   branch: main
-  #   dockerfilePath: ./signaling-server/Dockerfile
-  #   dockerContext: .
-  #   healthCheckPath: /
+  - type: web
+    name: arxisvr-signaling
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./signaling-server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false
+      - key: BACKEND_URL
+        value: https://www.arxisvr.avilaops.com
+      - key: INTERNAL_API_KEY
+        sync: false
+      # PORT é injetado automaticamente pelo Render — NÃO definir aqui.
