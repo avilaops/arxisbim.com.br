@@ -207,6 +207,36 @@ async function init() {
       // Hide copilot's own floating toggle — header "Arxis AI" btn is the single entry point
       const selfToggle = document.querySelector('.arxis-copilot-toggle') as HTMLElement | null;
       if (selfToggle) selfToggle.style.display = 'none';
+
+      // Wire welcome-ai panel as a LAUNCHER for the Copilot (not a separate AI)
+      // Chips send a pre-filled message; textarea submits on Enter/click
+      document.querySelectorAll('.welcome-ai .ai-chip').forEach(chip => {
+        (chip as HTMLElement).addEventListener('click', () => {
+          const msg = (chip as HTMLElement).innerText.trim();
+          copilot.open();
+          // Inject message after open animation settles
+          setTimeout(() => {
+            const inp = document.querySelector('.arxis-copilot-input, [data-copilot-input]') as HTMLInputElement | null;
+            if (inp) { inp.value = msg; inp.dispatchEvent(new Event('input')); }
+          }, 300);
+        });
+      });
+      const welcomeTextarea = document.querySelector('.welcome-ai__input') as HTMLTextAreaElement | null;
+      if (welcomeTextarea) {
+        welcomeTextarea.addEventListener('keydown', (e: KeyboardEvent) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const msg = welcomeTextarea.value.trim();
+            if (!msg) return;
+            copilot.open();
+            setTimeout(() => {
+              const inp = document.querySelector('.arxis-copilot-input, [data-copilot-input]') as HTMLInputElement | null;
+              if (inp) { inp.value = msg; inp.dispatchEvent(new Event('input')); }
+              welcomeTextarea.value = '';
+            }, 300);
+          }
+        });
+      }
       console.log('ArxisVR Copilot inicializado');
     }).catch(err => console.error('Failed to load ArxisCopilot:', err));
   }, 100);
@@ -663,20 +693,41 @@ function setupNavigation() {
           break;
 
         case 'bim4d':
-          // Open Scheduling panel directly
           if (PROJECT_ID) {
             schedulingPanel.open(PROJECT_ID);
           } else {
-            showNavToast('📅 Planejamento 4D — selecione um projeto primeiro para acessar o cronograma.');
+            (window as any).__showModuleModal?.('📅 Planejamento 4D', `
+              <p style="margin-bottom:14px;">Selecione um projeto para acessar o cronograma vinculado ao modelo IFC.</p>
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:600;color:#22c55e;margin-bottom:6px;">✓ Disponível</div>
+                <div>Cronograma 4D com simulação de fases</div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;">Em desenvolvimento</div>
+                <div>• Dependências entre tarefas</div>
+                <div>• Recursos e alocação</div>
+                <div>• Linha do tempo avançada</div>
+              </div>
+            `);
           }
-          // Revert tab to active state (it's a modal, not a page switch)
           navButtons.forEach(b => b.classList.remove('active'));
           (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
           break;
 
         case 'ar':
-          // Open Meetings panel (XR Imersivo → collaborative session)
-          showNavToast('🥽 XR Imersivo — modo AR/VR em desenvolvimento. Use Reuniões XR para colaboração em tempo real.');
+          (window as any).__showModuleModal?.('🥽 Imersão XR', `
+            <p style="margin-bottom:14px;">Modo de realidade aumentada e virtual — acessível via headset WebXR ou celular.</p>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:600;color:#22c55e;margin-bottom:6px;">✓ Disponível agora</div>
+              <div>Reuniões XR — colaboração em tempo real no modelo</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:6px;">Em desenvolvimento</div>
+              <div>• Visita AR no celular (câmera)</div>
+              <div>• Quest / Vive — VR nativo</div>
+              <div>• Anotações imersivas</div>
+            </div>
+          `);
           navButtons.forEach(b => b.classList.remove('active'));
           (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
           break;

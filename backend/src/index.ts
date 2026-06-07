@@ -309,18 +309,25 @@ await server.register(staticFiles, {
   wildcard: false,  // Prevent catch-all /* from shadowing API GET routes
 });
 
-// SPA / HTML fallback — serves known HTML pages; unknown non-API paths fall back to app.html
+// HTML page fallback — explicit whitelist only; everything else gets a real 404
+// Assets, WebSocket upgrades, /socket.io/, /metrics, etc. are NOT captured here
+// because @fastify/static serves exact file matches before this handler runs.
+const HTML_PAGES = new Set([
+  'app', 'join', 'login', 'register', 'verify-email',
+  'forgot-password', 'reset-password', 'admin', 'dashboard',
+  'privacy', 'terms', 'lgpd', 'cookies', 'ar-calibration', 'oauth-callback',
+]);
 server.setNotFoundHandler(async (request, reply) => {
   const url = request.url.split('?')[0];
-  // Don't intercept API routes
-  if (url.startsWith('/api/') || url.startsWith('/health')) {
+  // Hard 404 for any non-GET or path outside known HTML pages
+  if (request.method !== 'GET') {
     return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
   }
-  // Serve the matching HTML file if it exists, else fallback to app.html
-  const knownPages = ['join', 'login', 'register', 'verify-email', 'forgot-password', 'reset-password', 'admin', 'dashboard', 'privacy', 'terms', 'lgpd', 'cookies'];
-  const pageName = url.replace(/^\//, '').replace(/\.html$/, '').split('/')[0];
-  const target = knownPages.includes(pageName) ? `${pageName}.html` : 'app.html';
-  return reply.sendFile(target, frontendDistPath);
+  const segment = url.replace(/^\//, '').replace(/\.html$/, '').split('/')[0];
+  if (!HTML_PAGES.has(segment)) {
+    return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
+  }
+  return reply.sendFile(`${segment}.html`, frontendDistPath);
 });
 
 // =====================================
