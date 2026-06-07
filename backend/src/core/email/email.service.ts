@@ -17,7 +17,7 @@ export class EmailService {
   private readonly fromAddress: string;
 
   constructor() {
-    this.frontendUrl = process.env.FRONTEND_URL || 'https://www.arxisvr.avilaops.com';
+    this.frontendUrl = process.env.FRONTEND_URL || 'https://arxisvr.avilaops.com';
     this.fromAddress = process.env.EMAIL_FROM || 'onboarding@resend.dev';
   }
 

@@ -108,7 +108,7 @@ export class ARViewController extends EventTarget {
     this.renderer = renderer;
     
     this.options = {
-      serverUrl: 'https://arxis-api.avila.inc',
+      serverUrl: 'https://api.arxisvr.avilaops.com',
       enableTracking: true,
       enablePlaneDetection: false,
       enableLightEstimation: true,

@@ -56,7 +56,7 @@ export class ARIntegrationExample {
 
     // 1. Cria Marker Registry
     this.markerRegistry = new MarkerRegistry({
-      serverUrl: 'https://arxis-api.avila.inc',
+      serverUrl: 'https://api.arxisvr.avilaops.com',
       projectId: this.projectId,
       autoSync: true,
       cacheEnabled: true
@@ -87,7 +87,7 @@ export class ARIntegrationExample {
       this.camera,
       this.renderer,
       {
-        serverUrl: 'https://arxis-api.avila.inc',
+        serverUrl: 'https://api.arxisvr.avilaops.com',
         enableTracking: true,
         enablePlaneDetection: false,
         enableLightEstimation: true,

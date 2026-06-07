@@ -74,7 +74,7 @@ export interface GeneratedQRCode {
 
 export class QRCodeGenerator {
   private static readonly ARXIS_DEEPLINK_SCHEME = 'arxisvr://';
-  private static readonly ARXIS_WEB_URL = 'https://arxisvr.avila.inc';
+  private static readonly ARXIS_WEB_URL = 'https://arxisvr.avilaops.com';
 
   constructor() {}
 
