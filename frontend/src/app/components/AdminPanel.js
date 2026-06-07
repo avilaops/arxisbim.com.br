@@ -111,7 +111,7 @@ class AdminPanel {
   }
 
   async deleteTenant(tenantId) {
-    // TODO: Add custom confirmation UI
+    if (!confirm(`Deletar tenant "${tenantId}"? Esta ação remove todos os dados vinculados e não pode ser desfeita.`)) return;
     this.loading = true;
     this.error = null;
     this.render();
@@ -120,7 +120,7 @@ class AdminPanel {
       await tenantService.deleteTenant(tenantId);
       await this.loadTenants();
     } catch (err) {
-      this.error = 'Failed to delete tenant';
+      this.error = err?.message || 'Erro ao deletar tenant';
       console.error('Failed to delete tenant:', err);
       this.loading = false;
       this.render();

@@ -259,7 +259,10 @@ class TenantService {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete tenant');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body?.error || body?.message || `Erro ${response.status} ao deletar tenant`);
+    }
   }
 
   // Companies

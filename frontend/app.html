@@ -302,6 +302,8 @@
       height: calc(100vh - var(--topbar-height) - var(--statusbar-height) - 28px);
       z-index: 900;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ========== PANELS GENERAL ========== */
@@ -2296,7 +2298,13 @@
 
   <!-- Collaboration Panel (body-level for correct z-index stacking above all panels) -->
   <aside class="collab-floating-panel glass-panel" id="collab-floating-panel" style="display:none;">
-    <div id="collab-panel-mount" style="height:100%;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 0;flex-shrink:0;">
+      <span style="font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:0.05em;text-transform:uppercase;">Colaboração</span>
+      <button id="btn-collab-close" title="Fechar" style="background:none;border:none;color:#64748b;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center;line-height:1;" onmouseover="this.style.color='#e2e8f0';this.style.background='#334155'" onmouseout="this.style.color='#64748b';this.style.background='none'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="collab-panel-mount" style="flex:1;min-height:0;overflow:hidden;"></div>
   </aside>
 
   <!-- Entry Point -->

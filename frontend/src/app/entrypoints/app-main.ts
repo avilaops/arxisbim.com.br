@@ -417,10 +417,38 @@ async function init() {
   // Toggle button para abrir/fechar painel de colaboração
   const btnCollabToggle = document.getElementById('btn-collab-toggle');
   const collabFloating = document.getElementById('collab-floating-panel');
+
+  const closeCollabPanel = () => {
+    if (collabFloating) collabFloating.style.display = 'none';
+  };
+  const openCollabPanel = () => {
+    if (collabFloating) collabFloating.style.display = 'flex';
+  };
+
   if (btnCollabToggle && collabFloating) {
-    btnCollabToggle.addEventListener('click', () => {
+    btnCollabToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isOpen = collabFloating.style.display !== 'none';
-      collabFloating.style.display = isOpen ? 'none' : 'block';
+      if (isOpen) closeCollabPanel(); else openCollabPanel();
+    });
+
+    // Botão X dentro do painel
+    const btnCollabClose = document.getElementById('btn-collab-close');
+    if (btnCollabClose) {
+      btnCollabClose.addEventListener('click', (e) => { e.stopPropagation(); closeCollabPanel(); });
+    }
+
+    // Fechar ao clicar fora do painel
+    document.addEventListener('click', (e) => {
+      if (collabFloating.style.display === 'none') return;
+      if (!collabFloating.contains(e.target as Node) && e.target !== btnCollabToggle) {
+        closeCollabPanel();
+      }
+    });
+
+    // Tecla ESC fecha o painel
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && collabFloating.style.display !== 'none') closeCollabPanel();
     });
   }
 
