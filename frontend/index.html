@@ -11,13 +11,20 @@
   <meta property="og:title" content="ArxisVR — Plataforma BIM com IA e Realidade Estendida" />
   <meta property="og:description" content="Viewer IFC 1:1, BIM 4D/5D, coordenação assistida por IA e VR/AR no navegador. Tudo em uma plataforma." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://arxisvr.com/" />
+  <meta property="og:url" content="https://www.arxisvr.avilaops.com/" />
+  <meta property="og:image" content="https://www.arxisvr.avilaops.com/og-image.png" />
+  <meta property="og:site_name" content="ArxisVR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ArxisVR — Plataforma BIM com IA e Realidade Estendida" />
+  <meta name="twitter:description" content="Viewer IFC 1:1, BIM 4D/5D, coordenação IA e VR/AR no navegador." />
+  <meta name="twitter:image" content="https://www.arxisvr.avilaops.com/og-image.png" />
+  <link rel="canonical" href="https://www.arxisvr.avilaops.com/" />
 
   <title>ArxisVR — Plataforma BIM com IA e Realidade Estendida</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Lucide Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
@@ -126,7 +133,38 @@
     .btn-primary:hover { background: #222222; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
     .btn-lg { padding: 14px 26px; font-size: 15px; font-weight: 600; }
 
-    @media (max-width: 760px) { .nav-links { display: none; } }
+    /* HAMBURGER */
+    .nav-hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      padding: 8px; cursor: pointer; background: none; border: none;
+    }
+    .nav-hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: #000; border-radius: 2px; transition: var(--transition);
+    }
+    .mobile-nav {
+      display: none; position: fixed; inset: 0; top: 68px; z-index: 49;
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+      padding: 24px; flex-direction: column; gap: 8px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      padding: 14px 16px; border-radius: 12px; font-size: 16px; font-weight: 500;
+      color: var(--text-primary); border: 1px solid transparent;
+      transition: var(--transition);
+    }
+    .mobile-nav a:hover { background: rgba(0,0,0,0.04); }
+    .mobile-nav .mobile-cta-row {
+      display: flex; gap: 8px; margin-top: 12px; padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+    .mobile-nav .mobile-cta-row .btn { flex: 1; justify-content: center; }
+    @media (max-width: 760px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .nav-cta .btn { display: none; }
+      .lang-switcher { display: none; }
+    }
 
     /* GRADIENT TEXT */
     .grad {
@@ -392,10 +430,10 @@
     }
     .feature:hover { border-color: rgba(0,0,0,0.12); background: #ffffff; transform: translateY(-2px); }
     .feature-icon {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(196, 181, 244, 0.15);
-      border: 1px solid rgba(196, 181, 244, 0.3);
+      background: rgba(91, 141, 239, 0.08);
+      border: 1px solid rgba(91, 141, 239, 0.15);
       margin-bottom: 18px; font-size: 20px;
     }
     .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; color: #000000; }
@@ -526,6 +564,37 @@
     .foot-legal a { color: var(--text-muted); font-size: 13px; transition: var(--transition); }
     .foot-legal a:hover { color: var(--text-secondary); }
 
+    /* SCROLL REVEAL */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* TRUST LOGOS */
+    .trust-band {
+      padding: 28px 0 0; text-align: center;
+    }
+    .trust-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 18px; font-weight: 600; }
+    .trust-logos { display: flex; align-items: center; justify-content: center; gap: 36px; flex-wrap: wrap; opacity: 0.45; }
+    .trust-logos span {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-secondary);
+      filter: grayscale(1);
+    }
+
+    /* FAQ */
+    .faq { max-width: 720px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--border-color); }
+    .faq-q {
+      width: 100%; text-align: left; padding: 20px 0; background: none; border: none;
+      font-family: inherit; font-size: 16px; font-weight: 600; color: #000;
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .faq-q::after { content: "+"; font-size: 22px; font-weight: 300; color: var(--text-muted); flex-shrink: 0; transition: var(--transition); }
+    .faq-q.open::after { content: "−"; }
+    .faq-a {
+      font-size: 15px; color: var(--text-secondary); line-height: 1.6;
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .faq-a.open { max-height: 200px; padding-bottom: 20px; }
+
     /* LANGUAGE SWITCHER */
     .lang-switcher { display:flex; align-items:center; gap:4px; }
     .lang-btn {
@@ -538,6 +607,27 @@
   </style>
 </head>
 <body>
+
+  <!-- Accessibility: skip to main -->
+  <a href="#main-content" style="position:absolute;top:-60px;left:8px;padding:8px 16px;background:#000;color:#fff;border-radius:0 0 8px 8px;font-size:13px;z-index:9999;transition:top .2s;text-decoration:none" onfocus="this.style.top='0'" onblur="this.style.top='-60px'">Ir ao conteúdo</a>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ArxisVR",
+    "url": "https://www.arxisvr.avilaops.com",
+    "applicationCategory": "BusinessApplication",
+    "description": "Plataforma BIM com Copilot de IA e Realidade Estendida. Visualize IFC em 1:1, coordene disciplinas, simule 4D/5D e revise clashes no navegador, em VR ou AR.",
+    "operatingSystem": "Web",
+    "offers": [
+      {"@type":"Offer","name":"Free","price":"0","priceCurrency":"BRL"},
+      {"@type":"Offer","name":"Starter","price":"149","priceCurrency":"BRL"},
+      {"@type":"Offer","name":"Professional","price":"499","priceCurrency":"BRL"}
+    ]
+  }
+  </script>
 
   <header class="nav">
     <div class="container nav-inner">
@@ -559,10 +649,27 @@
           <button class="lang-btn" data-lang="es">ES</button>
         </div>
         <a class="btn btn-ghost" href="/login.html" data-i18n="nav.login">Entrar</a>
+        <a class="btn btn-primary" href="/register.html" style="display:none" id="nav-signup-btn">Criar conta grátis</a>
+        <button class="nav-hamburger" id="hamburger-btn" aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </header>
 
+  <!-- Mobile nav overlay -->
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Menu mobile">
+    <a href="#features">Recursos</a>
+    <a href="#how">Como funciona</a>
+    <a href="#cases">Casos de uso</a>
+    <a href="#pricing">Planos</a>
+    <div class="mobile-cta-row">
+      <a class="btn btn-outline" href="/login.html">Entrar</a>
+      <a class="btn btn-primary" href="/register.html">Criar conta grátis</a>
+    </div>
+  </nav>
+
+  <main id="main-content">
   <section class="hero">
     <div class="hero-grid"></div>
     <div class="container hero-inner">
@@ -577,6 +684,7 @@
         sem instalação.
       </p>
       <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis →</a>
         <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
       </div>
       <div class="hero-meta">
@@ -753,6 +861,21 @@
 
         </div><!-- /preview-body -->
       </div><!-- /hero-preview -->
+
+      <!-- Trust logos -->
+      <div class="trust-band reveal">
+        <div class="trust-label">Tecnologias AEC que impulsionam o ArxisVR</div>
+        <div class="trust-logos">
+          <span>IFC 4.3</span>
+          <span>Three.js</span>
+          <span>WebXR</span>
+          <span>Fastify</span>
+          <span>PostgreSQL</span>
+          <span>DeepSeek AI</span>
+          <span>WebSockets</span>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -764,33 +887,45 @@
         <p class="sub">Do upload do IFC até a apresentação em VR para o cliente. Sem trocar de ferramenta, sem perder o contexto.</p>
       </div>
       <div class="features">
-        <div class="feature">
-          <div class="feature-icon">📐</div>
+        <div class="feature reveal">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B8DEF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
+          </div>
           <h3>Viewer IFC em escala 1:1</h3>
           <p>Suporte a IFC 2x3, IFC4 e IFC4.3 com renderização Three.js de alta performance, LOD, culling e instancing para modelos grandes.</p>
         </div>
-        <div class="feature">
-          <div class="feature-icon">🤖</div>
+        <div class="feature reveal" style="transition-delay:.07s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M8 12h.01M16 12h.01"/></svg>
+          </div>
           <h3>Copilot de IA para cenários</h3>
           <p>Abra com <code class="mono">Ctrl+K</code> e peça coordenação BIM, simulação 4D, revisão 5D, clashes ou visita guiada. O Copilot monta o cenário e age no viewer.</p>
         </div>
-        <div class="feature">
-          <div class="feature-icon">⏱️</div>
+        <div class="feature reveal" style="transition-delay:.14s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <h3>BIM 4D — Cronograma</h3>
           <p>Vincule tarefas a elementos IFC, simule a construção com play/pause/seek, controle de velocidade e estados visuais por fase.</p>
         </div>
-        <div class="feature">
-          <div class="feature-icon">💰</div>
+        <div class="feature reveal" style="transition-delay:.21s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
           <h3>BIM 5D — Quantitativos &amp; custos</h3>
           <p>Extraia quantitativos do modelo, vincule custos por elemento e acompanhe orçado vs. realizado em tempo real.</p>
         </div>
-        <div class="feature">
-          <div class="feature-icon">🥽</div>
+        <div class="feature reveal" style="transition-delay:.28s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
           <h3>VR/AR no navegador</h3>
           <p>WebXR nativo: entre em VR com Quest, Vive ou outros headsets, ou abra em AR no celular — direto do navegador, sem app.</p>
         </div>
-        <div class="feature">
-          <div class="feature-icon">🔐</div>
+        <div class="feature reveal" style="transition-delay:.35s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
           <h3>Multi-empresa &amp; API</h3>
           <p>Isolamento por tenant, JWT com refresh automático, papéis e permissões, e uma API REST <code class="mono">/api/v1</code> documentada.</p>
         </div>
@@ -900,6 +1035,7 @@
             <li>Copilot básico</li>
             <li>1 usuário</li>
           </ul>
+          <a class="btn btn-outline" href="/register.html">Começar grátis</a>
         </div>
         <div class="plan">
           <h4>Starter</h4>
@@ -937,7 +1073,39 @@
             <li>API privada</li>
             <li>Implantação dedicada</li>
           </ul>
-          <a class="btn btn-outline" href="mailto:comercial@arxisvr.com">Falar com vendas</a>
+          <a class="btn btn-outline" href="mailto:comercial@avilaops.com">Falar com vendas</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section>
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="kicker">Perguntas frequentes</span>
+        <h2 class="h2">Dúvidas comuns</h2>
+      </div>
+      <div class="faq reveal">
+        <div class="faq-item">
+          <button class="faq-q">O que é um arquivo IFC e como faço para abrir?</button>
+          <div class="faq-a">IFC (Industry Foundation Classes) é o formato padrão aberto para modelos BIM, gerado por Revit, ArchiCAD, Tekla e outros. No ArxisVR, basta arrastar o arquivo na tela ou clicar em "Abrir IFC" — o modelo é processado diretamente no navegador.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Preciso instalar algo para usar VR/AR?</button>
+          <div class="faq-a">Não. O ArxisVR usa WebXR, a API nativa dos navegadores para realidade estendida. Em headsets Quest 2/3 basta abrir o link no navegador. Em celular Android/iOS você acessa AR pelo mesmo link.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Meus modelos IFC ficam armazenados na nuvem?</button>
+          <div class="faq-a">Sim. Os modelos enviados são armazenados de forma criptografada em servidores seguros, com isolamento total por empresa (multi-tenant). Você pode excluir qualquer modelo a qualquer momento.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Posso usar o ArxisVR com minha equipe ao mesmo tempo?</button>
+          <div class="faq-a">Sim. A plataforma suporta colaboração em tempo real: múltiplos usuários no mesmo modelo, cursores 3D sincronizados, chat e anotações compartilhadas. Disponível a partir do plano Starter.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Como funciona a API REST?</button>
+          <div class="faq-a">O ArxisVR oferece uma API REST documentada em <code class="mono">/api/v1</code> para integrar com seus sistemas (ERP, RDO, BIM 360 etc). Autenticação via JWT. Disponível para planos Starter e acima.</div>
         </div>
       </div>
     </div>
@@ -945,15 +1113,17 @@
 
   <section>
     <div class="container">
-      <div class="cta-band">
+      <div class="cta-band reveal">
         <h2>Pronto para ver seu projeto em outra dimensão?</h2>
-        <p>Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão.</p>
+        <p>Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão de crédito.</p>
         <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis →</a>
           <a class="btn btn-outline btn-lg" href="/app.html">Ver demonstração</a>
         </div>
       </div>
     </div>
   </section>
+  </main>
 
   <footer>
     <div class="container">
@@ -977,8 +1147,8 @@
         <div class="foot-col">
           <h5>Empresa</h5>
           <ul>
-            <li><a href="mailto:comercial@arxisvr.com">Vendas</a></li>
-            <li><a href="mailto:contato@arxisvr.com">Contato</a></li>
+            <li><a href="mailto:comercial@avilaops.com">Vendas</a></li>
+            <li><a href="mailto:contato@avilaops.com">Contato</a></li>
             <li><a href="https://github.com/avilaops" target="_blank" rel="noopener">GitHub</a></li>
           </ul>
         </div>
@@ -1002,6 +1172,60 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // ── Hamburger menu ──────────────────────────────────────────────────────────
+    (function() {
+      var btn = document.getElementById('hamburger-btn');
+      var nav = document.getElementById('mobile-nav');
+      if (!btn || !nav) return;
+      btn.addEventListener('click', function() {
+        var open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      // Close on link click
+      nav.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          nav.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+    })();
+
+    // ── Scroll reveal ───────────────────────────────────────────────────────────
+    (function() {
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+    })();
+
+    // ── FAQ accordion ───────────────────────────────────────────────────────────
+    (function() {
+      document.querySelectorAll('.faq-q').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var answer = btn.nextElementSibling;
+          var isOpen = answer.classList.contains('open');
+          // Close all
+          document.querySelectorAll('.faq-a.open').forEach(function(a) { a.classList.remove('open'); });
+          document.querySelectorAll('.faq-q.open').forEach(function(b) { b.classList.remove('open'); });
+          // Toggle clicked
+          if (!isOpen) { answer.classList.add('open'); btn.classList.add('open'); }
+        });
+      });
+    })();
+
+    // ── Nav signup button on scroll ─────────────────────────────────────────────
+    (function() {
+      var signupBtn = document.getElementById('nav-signup-btn');
+      if (!signupBtn) return;
+      window.addEventListener('scroll', function() {
+        signupBtn.style.display = window.scrollY > 200 ? '' : 'none';
+      }, { passive: true });
+    })();
+  </script>
 
   <!-- i18n via i18next CDN -->
   <script src="https://cdn.jsdelivr.net/npm/i18next@24/i18next.min.js"></script>
