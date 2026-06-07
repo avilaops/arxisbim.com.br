@@ -148,21 +148,22 @@ class AuthModal {
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.85);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10000;
       ">
         <div style="
-          background: var(--bg-primary);
+          background: #1e1e2e;
           border-radius: 12px;
           padding: 32px;
           width: 400px;
           max-width: 90%;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(255,255,255,0.08);
         ">
-          <h2 style="margin: 0 0 24px 0; font-size: 24px; color: var(--text-primary);">
+          <h2 style="margin: 0 0 24px 0; font-size: 24px; color: #F9FAFB;">
             ${this.mode === 'login' ? 'Entrar' : 'Criar Conta'}
           </h2>
     `;
@@ -184,7 +185,7 @@ class AuthModal {
 
     html += `
           <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #9CA3AF;">
               Tenant ID
             </label>
             <input
@@ -196,10 +197,10 @@ class AuthModal {
               style="
                 width: 100%;
                 padding: 12px;
-                border: 1px solid var(--border-color);
+                border: 1px solid rgba(255,255,255,0.12);
                 border-radius: 8px;
-                background: var(--bg-secondary);
-                color: var(--text-primary);
+                background: #2a2a3e;
+                color: #F9FAFB;
                 font-size: 14px;
                 box-sizing: border-box;
               "
@@ -207,7 +208,7 @@ class AuthModal {
           </div>
 
           <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #9CA3AF;">
               Email
             </label>
             <input
@@ -219,10 +220,10 @@ class AuthModal {
               style="
                 width: 100%;
                 padding: 12px;
-                border: 1px solid var(--border-color);
+                border: 1px solid rgba(255,255,255,0.12);
                 border-radius: 8px;
-                background: var(--bg-secondary);
-                color: var(--text-primary);
+                background: #2a2a3e;
+                color: #F9FAFB;
                 font-size: 14px;
                 box-sizing: border-box;
               "
@@ -233,7 +234,7 @@ class AuthModal {
     if (this.mode === 'register') {
       html += `
           <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #9CA3AF;">
               Nome
             </label>
             <input
@@ -245,10 +246,10 @@ class AuthModal {
               style="
                 width: 100%;
                 padding: 12px;
-                border: 1px solid var(--border-color);
+                border: 1px solid rgba(255,255,255,0.12);
                 border-radius: 8px;
-                background: var(--bg-secondary);
-                color: var(--text-primary);
+                background: #2a2a3e;
+                color: #F9FAFB;
                 font-size: 14px;
                 box-sizing: border-box;
               "
@@ -259,7 +260,7 @@ class AuthModal {
 
     html += `
           <div style="margin-bottom: 24px;">
-            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #9CA3AF;">
               Senha
             </label>
             <input
@@ -271,10 +272,10 @@ class AuthModal {
               style="
                 width: 100%;
                 padding: 12px;
-                border: 1px solid var(--border-color);
+                border: 1px solid rgba(255,255,255,0.12);
                 border-radius: 8px;
-                background: var(--bg-secondary);
-                color: var(--text-primary);
+                background: #2a2a3e;
+                color: #F9FAFB;
                 font-size: 14px;
                 box-sizing: border-box;
               "
@@ -300,7 +301,7 @@ class AuthModal {
             ${this.loading ? 'Carregando...' : (this.mode === 'login' ? 'Entrar' : 'Criar Conta')}
           </button>
 
-          <div style="margin-top: 16px; text-align: center; font-size: 14px; color: var(--text-secondary);">
+          <div style="margin-top: 16px; text-align: center; font-size: 14px; color: #9CA3AF;">
             ${this.mode === 'login'
               ? 'Não tem conta? <a href="#" id="auth-toggle-mode" style="color: var(--accent-blue);">Criar conta</a>'
               : 'Já tem conta? <a href="#" id="auth-toggle-mode" style="color: var(--accent-blue);">Entrar</a>'
@@ -315,7 +316,7 @@ class AuthModal {
               right: 16px;
               background: none;
               border: none;
-              color: var(--text-secondary);
+              color: #9CA3AF;
               font-size: 24px;
               cursor: pointer;
               padding: 0;
@@ -405,16 +406,16 @@ class AuthModal {
     if (isAuthenticated && user) {
       container.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 14px; color: var(--text-secondary);">
+          <span style="font-size: 14px; color: #9CA3AF;">
             ${user.name || user.email}
           </span>
           <button
             id="auth-logout"
             style="
               padding: 8px 16px;
-              background: var(--bg-secondary);
-              color: var(--text-primary);
-              border: 1px solid var(--border-color);
+              background: #2a2a3e;
+              color: #F9FAFB;
+              border: 1px solid rgba(255,255,255,0.12);
               border-radius: 6px;
               font-size: 14px;
               cursor: pointer;
