@@ -1,0 +1,5 @@
+# Cloudflare Pages SPA routing
+# API calls proxied to backend (avoids CORS on same domain - optional)
+# Static assets served as-is
+# All HTML routes served from their .html file
+/api/*  https://api.arxisvr.avilaops.com/api/:splat  200

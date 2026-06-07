@@ -20,9 +20,8 @@ services:
     healthCheckPath: /health/live
     # --include=dev é obrigatório: vite (frontend) e tsx vivem em
     # devDependencies; sem isso o build quebra quando NODE_ENV=production.
-    buildCommand: >-
-      cd backend && npm ci --include=dev && npm run build &&
-      cd ../frontend && npm ci --include=dev && npm run build
+    # Frontend agora é servido pelo Cloudflare Pages — build somente do backend
+    buildCommand: cd backend && npm ci --include=dev && npm run build
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
@@ -37,15 +36,10 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
-      # Variáveis VITE_* são embutidas no bundle do frontend NO BUILD.
-      # Precisam existir aqui, senão o frontend sai sem URL de API.
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_WS_URL
-        value: wss://arxisvr-signaling.onrender.com
+      # VITE_* removidas — frontend agora é buildado pelo Cloudflare Pages
       # URLs do próprio serviço — usadas para construir redirect URIs do OAuth
       - key: BACKEND_URL
-        value: https://www.arxisvr.avilaops.com
+        value: https://api.arxisvr.avilaops.com
       - key: FRONTEND_URL
         value: https://www.arxisvr.avilaops.com
       # OAuth Google — preencher no dashboard (sync:false = segredo)

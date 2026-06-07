@@ -6,7 +6,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
-import staticFiles from '@fastify/static';
+// @fastify/static removed — frontend now served by Cloudflare Pages
 import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
@@ -300,39 +300,9 @@ await server.register(fastifyRawBody, {
   runFirst: true,
 } as any);
 
-// Serve static files from frontend
-const frontendDistPath = path.join(__dirname, '../../frontend/dist');
-
-await server.register(staticFiles, {
-  root: frontendDistPath,
-  prefix: '/',
-  wildcard: false,  // Prevent catch-all /* from shadowing API GET routes
-});
-
-// favicon.ico redirect — browsers request this; we only have favicon.svg
-server.get('/favicon.ico', async (_request, reply) => {
-  return reply.redirect('/logo-icon.svg', 302);
-});
-
-// HTML page fallback — explicit whitelist only; everything else gets a real 404
-// Assets, WebSocket upgrades, /socket.io/, /metrics, etc. are NOT captured here
-// because @fastify/static serves exact file matches before this handler runs.
-const HTML_PAGES = new Set([
-  'app', 'join', 'login', 'register', 'verify-email',
-  'forgot-password', 'reset-password', 'admin', 'dashboard',
-  'privacy', 'terms', 'lgpd', 'cookies', 'ar-calibration', 'oauth-callback',
-]);
+// Frontend is now served by Cloudflare Pages — backend is API-only.
 server.setNotFoundHandler(async (request, reply) => {
-  const url = request.url.split('?')[0];
-  // Hard 404 for any non-GET or path outside known HTML pages
-  if (request.method !== 'GET') {
-    return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
-  }
-  const segment = url.replace(/^\//, '').replace(/\.html$/, '').split('/')[0];
-  if (!HTML_PAGES.has(segment)) {
-    return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
-  }
-  return reply.sendFile(`${segment}.html`, frontendDistPath);
+  return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
 });
 
 // =====================================

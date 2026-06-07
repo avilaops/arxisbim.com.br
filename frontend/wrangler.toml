@@ -1,0 +1,6 @@
+name = "arxisvr-frontend"
+pages_build_output_dir = "dist"
+
+[env.production]
+# Variáveis injetadas em build time pelo Cloudflare Pages
+# (configuradas também no dashboard do CF Pages como env vars)
