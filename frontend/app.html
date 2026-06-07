@@ -1272,21 +1272,25 @@
 
     /* ===== TABLET / NARROW DESKTOP (769px–1100px) ===== */
     @media (max-width: 1100px) and (min-width: 769px) {
-      /* Hide secondary icon buttons — profile + AI still visible */
+      /* Hide secondary icon buttons — auth container + AI still visible */
       #btn-notifications,
       #btn-settings,
+      #btn-billing,
+      #btn-collab,
+      #env-dropdown-container,
       .icon-button[title="Configurações"],
       .icon-button[title="Colaborar"],
-      .icon-button[title="Ajuda"] {
+      .icon-button[title="Ajuda"],
+      .icon-button[title="Colaboração em Tempo Real (Ctrl+Shift+O)"],
+      .icon-button[title="Billing"] {
         display: none !important;
       }
       /* Compress nav labels */
       .nav-button { padding: 5px 8px; font-size: 12px; gap: 4px; }
       /* Compress CTA buttons */
-      #header-cta-actions .nav-cta-btn { padding: 4px 8px; font-size: 12px; }
+      #header-cta-actions { gap: 4px; }
       /* Tighten header gap */
       .header__actions { gap: 4px; }
-      #header-cta-actions { gap: 4px; }
     }
 
     /* ===== MOBILE (≤768px) ===== */
