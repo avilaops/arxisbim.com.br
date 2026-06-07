@@ -112,6 +112,11 @@ export default defineConfig({
         arCalibration: resolve(__dirname, 'ar-calibration.html'),
         oauthCallback: resolve(__dirname, 'oauth-callback.html'),
         join: resolve(__dirname, 'join.html'),
+        privacy: resolve(__dirname, 'privacy.html'),
+        terms: resolve(__dirname, 'terms.html'),
+        lgpd: resolve(__dirname, 'lgpd.html'),
+        cookies: resolve(__dirname, 'cookies.html'),
+        admin: resolve(__dirname, 'admin.html'),
       },
       output: {
         manualChunks: (id) => {
