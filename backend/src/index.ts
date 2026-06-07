@@ -136,6 +136,21 @@ function getWorkerHealth() {
   };
 }
 
+async function checkWebSocketSignaling(): Promise<boolean> {
+  try {
+    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://arxisvr-signaling.onrender.com/health';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(signalingUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return false;
+    const data = await res.json() as { status?: string };
+    return data.status === 'ok';
+  } catch {
+    return false;
+  }
+}
+
 async function buildHealthPayload() {
   const dbHealthy = await checkDatabaseConnection();
   const { workerStatus, workerHealthy } = getWorkerHealth();
@@ -150,6 +165,27 @@ async function buildHealthPayload() {
       billingRetryWorker: workerHealthy ? 'up' : 'degraded',
     },
     worker: workerStatus,
+  };
+}
+
+async function buildReadinessPayload() {
+  const [dbHealthy, wsHealthy] = await Promise.all([
+    checkDatabaseConnection(),
+    checkWebSocketSignaling(),
+  ]);
+  const { workerHealthy } = getWorkerHealth();
+  const alive = true;
+  const ready = dbHealthy && wsHealthy;
+
+  return {
+    alive,
+    database: dbHealthy,
+    websocket: wsHealthy,
+    worker: workerHealthy,
+    redis: false,   // não usado ainda
+    storage: false, // não usado ainda
+    ready,
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -425,8 +461,8 @@ server.get('/health/worker', async (_request: FastifyRequest, reply: FastifyRepl
 });
 
 server.get('/health/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
-  const dbHealthy = await checkDatabaseConnection();
-  return reply.code(dbHealthy ? 200 : 503).send({ ready: dbHealthy });
+  const payload = await buildReadinessPayload();
+  return reply.code(payload.ready ? 200 : 503).send(payload);
 });
 
 server.get('/health/live', async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -450,8 +486,8 @@ server.get('/api/v1/health/worker', async (_request: FastifyRequest, reply: Fast
 });
 
 server.get('/api/v1/health/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
-  const dbHealthy = await checkDatabaseConnection();
-  return reply.code(dbHealthy ? 200 : 503).send({ ready: dbHealthy });
+  const payload = await buildReadinessPayload();
+  return reply.code(payload.ready ? 200 : 503).send(payload);
 });
 
 server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: FastifyReply) => {
