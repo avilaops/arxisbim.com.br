@@ -742,6 +742,28 @@ function setupNavigation() {
   });
 }
 
+async function loadSingleIfc(file: File) {
+  if (!viewerHost || !ifcLoader) return;
+  try {
+    if (hasAuthToken() && PROJECT_ID) {
+      const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
+      console.log('IFC uploaded to backend:', uploadedModel);
+      await ifcLoader.load(file);
+      loadedIfcModelId = uploadedModel.id;
+      await loadIfcModels();
+      (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
+    } else {
+      await ifcLoader.load(file);
+      console.log('IFC carregado localmente:', file.name);
+      loadedIfcModelId = file.name;
+    }
+    (window as any).ArxisWelcome?.hide?.();
+  } catch (err) {
+    console.error('Erro ao carregar IFC:', err);
+    alert(`Erro ao carregar ${file.name}: ${(err as Error).message || err}`);
+  }
+}
+
 function setupIfcUpload() {
   const uploadBtns = document.querySelectorAll('[data-action="upload-ifc"]');
   uploadBtns.forEach(btn => {
@@ -749,35 +771,17 @@ function setupIfcUpload() {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.ifc';
+      input.multiple = true; // suporte a múltiplos arquivos
+      input.id = 'arxis-ifc-file-input';
+      input.style.display = 'none';
+      document.body.appendChild(input);
       input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file && viewerHost && ifcLoader) {
-          try {
-            // Upload to backend if authenticated and project selected
-            if (hasAuthToken() && PROJECT_ID) {
-              const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
-              console.log('IFC uploaded to backend:', uploadedModel);
-              // Load the file locally for viewing
-              await ifcLoader.load(file);
-              loadedIfcModelId = uploadedModel.id;
-              // Hide welcome overlay when model loads
-              (window as any).ArxisWelcome?.hide?.();
-              // Update IFC list
-              await loadIfcModels();
-              // Update status bar with model info
-              (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
-            } else {
-              // Load locally without backend
-              await ifcLoader.load(file);
-              console.log('IFC carregado localmente:', file.name);
-              loadedIfcModelId = file.name;
-              // Hide welcome overlay when model loads
-              (window as any).ArxisWelcome?.hide?.();
-            }
-          } catch (err) {
-            console.error('Erro ao carregar IFC:', err);
-            alert('Erro ao carregar arquivo IFC');
-          }
+        const files = Array.from((e.target as HTMLInputElement).files || []);
+        document.body.removeChild(input);
+        if (!files.length) return;
+        // Carrega arquivos sequencialmente
+        for (const file of files) {
+          await loadSingleIfc(file);
         }
       };
       input.click();
@@ -803,30 +807,11 @@ function setupDragDropIfc() {
     e.preventDefault();
     canvasArea.classList.remove('dnd-overlay');
 
-    const file = (e as any).dataTransfer?.files[0];
-    if (file && file.name.endsWith('.ifc') && viewerHost && ifcLoader) {
-      try {
-        // Upload to backend if authenticated and project selected
-        if (hasAuthToken() && PROJECT_ID) {
-          const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
-          console.log('IFC uploaded to backend via drag-drop:', uploadedModel);
-          // Load the file locally for viewing
-          await ifcLoader.load(file);
-          loadedIfcModelId = uploadedModel.id;
-          (window as any).ArxisWelcome?.hide?.();
-          // Update IFC list
-          await loadIfcModels();
-        } else {
-          // Load locally without backend
-          await ifcLoader.load(file);
-          console.log('IFC carregado localmente via drag-drop:', file.name);
-          loadedIfcModelId = file.name;
-          (window as any).ArxisWelcome?.hide?.();
-        }
-      } catch (err) {
-        console.error('Erro ao carregar IFC:', err);
-        alert('Erro ao carregar arquivo IFC');
-      }
+    const files = Array.from((e as any).dataTransfer?.files || [])
+      .filter((f: any) => f.name.endsWith('.ifc')) as File[];
+    if (!files.length || !viewerHost || !ifcLoader) return;
+    for (const file of files) {
+      await loadSingleIfc(file);
     }
   });
 }
