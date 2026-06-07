@@ -1,4 +1,4 @@
-name: Deploy Frontend → GitHub Pages
+name: Deploy Frontend → Cloudflare Pages
 
 on:
   push:
@@ -6,9 +6,6 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
-
-permissions:
-  contents: write
 
 jobs:
   deploy:
@@ -32,9 +29,10 @@ jobs:
           VITE_WS_URL: wss://arxisvr-signaling.onrender.com
           VITE_WS_SERVER: wss://arxisvr-signaling.onrender.com
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: frontend/dist
-          cname: www.arxisvr.avilaops.com
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=arxisvr-frontend
+          workingDirectory: frontend
