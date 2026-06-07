@@ -216,8 +216,9 @@ export class AuthService {
       throw new Error('Credenciais inválidas');
     }
 
-    // Email deve estar verificado
-    if (!user.emailVerified) {
+    // Email deve estar verificado (bypass via env var para ambientes sem SMTP)
+    const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+    if (requireEmailVerification && !user.emailVerified) {
       const err: any = new Error('Verifique seu email antes de fazer login. Confira sua caixa de entrada.');
       err.code = 'EMAIL_NOT_VERIFIED';
       throw err;
@@ -337,9 +338,18 @@ export class AuthService {
       .where(eq(users.email, validated.email))
       .limit(1);
 
+    const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+
     // Email já existe — se não verificado, reenviar; se verificado, erro
     if (existingUser) {
       if (!existingUser.emailVerified) {
+        if (!requireEmailVerification) {
+          // Modo sem verificação: ativar a conta e fazer login direto
+          await this.db.update(users)
+            .set({ emailVerified: true, isActive: true, emailVerifiedAt: new Date() })
+            .where(eq(users.id, existingUser.id));
+          return this.login({ email: validated.email, password: data.password });
+        }
         await this.sendVerificationEmail(existingUser.id, existingUser.email, existingUser.tenantId);
         return {
           user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, tenantId: existingUser.tenantId, companyId: existingUser.companyId || undefined, role: existingUser.role, permissions: existingUser.permissions || [] },
@@ -353,7 +363,6 @@ export class AuthService {
     // Hash da senha
     const passwordHash = await bcrypt.hash(validated.password, BCRYPT_ROUNDS);
 
-    // Criar usuário inativo até verificar email
     const [newUser] = await this.db
       .insert(users)
       .values({
@@ -364,8 +373,8 @@ export class AuthService {
         companyId: validated.companyId || null,
         role: 'user',
         permissions: [],
-        emailVerified: false,
-        isActive: false,
+        emailVerified: !requireEmailVerification,
+        isActive: !requireEmailVerification,
       })
       .returning();
 
@@ -374,8 +383,13 @@ export class AuthService {
     observabilityService.logAudit({ tenantId: tenantSlug, userId: newUser.id, action: 'auth.register', resource: 'user', resourceId: newUser.id, metadata: { email: newUser.email } }).catch(() => {});
     observabilityService.incrementCounter(tenantSlug, 'auth.register.total', { success: 'true' }).catch(() => {});
 
-    // Enviar email de verificação
-    await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
+    // Enviar email de boas-vindas/verificação apenas se verificação ativa
+    if (requireEmailVerification) {
+      await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
+    } else {
+      // Modo sem verificação: enviar boas-vindas sem bloquear o login
+      emailService.sendWelcomeEmail(newUser.email, newUser.name, tenantSlug).catch(() => {});
+    }
 
     return {
       user: {
