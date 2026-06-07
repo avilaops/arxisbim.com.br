@@ -1270,6 +1270,25 @@
       .header__breadcrumb { display: none; }
     }
 
+    /* ===== TABLET / NARROW DESKTOP (769px–1100px) ===== */
+    @media (max-width: 1100px) and (min-width: 769px) {
+      /* Hide secondary icon buttons — profile + AI still visible */
+      #btn-notifications,
+      #btn-settings,
+      .icon-button[title="Configurações"],
+      .icon-button[title="Colaborar"],
+      .icon-button[title="Ajuda"] {
+        display: none !important;
+      }
+      /* Compress nav labels */
+      .nav-button { padding: 5px 8px; font-size: 12px; gap: 4px; }
+      /* Compress CTA buttons */
+      #header-cta-actions .nav-cta-btn { padding: 4px 8px; font-size: 12px; }
+      /* Tighten header gap */
+      .header__actions { gap: 4px; }
+      #header-cta-actions { gap: 4px; }
+    }
+
     /* ===== MOBILE (≤768px) ===== */
     @media (max-width: 768px) {
       :root {
