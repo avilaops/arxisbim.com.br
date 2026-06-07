@@ -204,6 +204,9 @@ async function init() {
     import('../../copilot/ArxisCopilot').then(({ ArxisCopilot }) => {
       const copilot = new ArxisCopilot(viewerHost!);
       window.__arxisCopilot = copilot;
+      // Hide copilot's own floating toggle — header "Arxis AI" btn is the single entry point
+      const selfToggle = document.querySelector('.arxis-copilot-toggle') as HTMLElement | null;
+      if (selfToggle) selfToggle.style.display = 'none';
       console.log('ArxisVR Copilot inicializado');
     }).catch(err => console.error('Failed to load ArxisCopilot:', err));
   }, 100);

@@ -17,6 +17,7 @@ import {
   Search,
   Settings,
   Scissors,
+  Users,
   createElement,
   type IconNode,
 } from 'lucide';
@@ -167,10 +168,16 @@ export class WorkspaceTopBar {
       uiStore.setActiveView('settings');
     });
 
+    const collaborateButton = this.createIconButton(Users, 'Colaboração em tempo real', () => {
+      uiStore.setActiveView('collaboration');
+    });
+    collaborateButton.classList.add('app-topbar__button--collaborate');
+
     const environmentButton = this.createEnvironmentDropdown();
 
     right.appendChild(fileContext);
     right.appendChild(searchButton);
+    right.appendChild(collaborateButton);
     right.appendChild(environmentButton);
     right.appendChild(openButton);
     right.appendChild(settingsButton);

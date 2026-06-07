@@ -109,6 +109,7 @@ export default defineConfig({
         dashboard: resolve(__dirname, 'dashboard.html'),
         arCalibration: resolve(__dirname, 'ar-calibration.html'),
         oauthCallback: resolve(__dirname, 'oauth-callback.html'),
+        join: resolve(__dirname, 'join.html'),
       },
       output: {
         manualChunks: (id) => {

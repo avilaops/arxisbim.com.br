@@ -3,7 +3,7 @@
  * Single source of truth para layout, modal, sidebar, etc.
  */
 
-export type ViewType = 'explorer' | 'search' | 'layers' | 'properties' | 'tools' | 'scenarios' | 'settings';
+export type ViewType = 'explorer' | 'search' | 'layers' | 'properties' | 'tools' | 'scenarios' | 'settings' | 'collaboration';
 
 export interface ModalState {
   key: 'loadFile' | 'export' | 'settings' | 'about' | 'share' | null;

@@ -40,3 +40,6 @@ export * from './email-queue.js';
 
 // Password history (prevent reuse of last N passwords)
 export * from './password-history.js';
+
+// Multiplayer Sessions (Session, Participant, Presence, SessionEvent, Recording, BillingUsage)
+export * from './sessions.js';

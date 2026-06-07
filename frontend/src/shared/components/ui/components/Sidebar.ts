@@ -11,6 +11,7 @@ import { PropertiesPanel } from '../panels/PropertiesPanel';
 import { ToolsPanel } from '../panels/ToolsPanel';
 import { ScenariosPanel } from '../panels/ScenariosPanel';
 import { SettingsPanel } from '../panels/SettingsPanel';
+import { CollaborationPanel } from '../../../../app/CollaborationPanel';
 
 type PanelConstructor = new (container: HTMLElement) => IPanel;
 
@@ -25,7 +26,8 @@ const PANELS: Record<ViewType, PanelConstructor> = {
   properties: PropertiesPanel,
   tools: ToolsPanel,
   scenarios: ScenariosPanel,
-  settings: SettingsPanel
+  settings: SettingsPanel,
+  collaboration: CollaborationPanel,
 };
 
 /**
@@ -131,7 +133,8 @@ export class Sidebar {
       properties: 'Inspector',
       tools: 'Ferramentas',
       scenarios: 'Cenas',
-      settings: 'Configurações'
+      settings: 'Configurações',
+      collaboration: 'Colaboração'
     };
     return titles[view];
   }

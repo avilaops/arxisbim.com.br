@@ -12,6 +12,7 @@ import {
   Search,
   Settings,
   UserRound,
+  Users,
   Wrench,
   createElement,
   type IconNode,
@@ -32,7 +33,8 @@ const ACTIVITY_ITEMS: ActivityBarItem[] = [
   { id: 'layers', icon: Layers, label: 'Camadas', shortcut: 'Ctrl+Shift+L' },
   { id: 'properties', icon: ClipboardList, label: 'Inspector', shortcut: 'Ctrl+Shift+P' },
   { id: 'tools', icon: Wrench, label: 'Ferramentas', shortcut: 'Ctrl+Shift+T' },
-  { id: 'scenarios', icon: Camera, label: 'Cenários', shortcut: 'Ctrl+Shift+C' }
+  { id: 'scenarios', icon: Camera, label: 'Cenários', shortcut: 'Ctrl+Shift+C' },
+  { id: 'collaboration', icon: Users, label: 'Colaboração', shortcut: 'Ctrl+Shift+O' }
 ];
 
 // Special action buttons (não são views, mas ações)

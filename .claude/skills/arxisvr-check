@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+# skill: arxisvr-check
+# desc: Verificações essenciais do ArxisVR antes de qualquer sessão de trabalho
+# uso: leia isso SEMPRE que começar uma sessão nova no ArxisVR
+
+# =============================================================
+# 📋 RESUMO DO QUE ESTE PROJETO É
+# =============================================================
+# ArxisVR = plataforma de visualização BIM (modelos 3D de construção)
+# com multiplayer em tempo real via WebSocket.
+#
+# Partes do sistema:
+#   1. arxisvr (backend Fastify + frontend Vite) → https://www.arxisvr.avilaops.com
+#   2. arxisvr-signaling (servidor WebSocket para multiplayer) → https://arxisvr-signaling.onrender.com
+#   3. Banco de dados PostgreSQL no Render
+#   4. Deploy automático via GitHub Actions → Render (auto-deploy on push to main)
+#
+# Repo correto: avilaops/arxisvr (NÃO avilainc/arxisvr)
+# =============================================================
+
+
+# =============================================================
+# 🔍 PASSO 1 — VERIFICAR SE OS SERVIÇOS ESTÃO VIVOS
+# (Faça isso PRIMEIRO, antes de qualquer coisa)
+# =============================================================
+
+echo "=== 1. HEALTH DOS SERVIÇOS ==="
+
+# Backend principal — deve responder {"alive":true}
+curl -s https://www.arxisvr.avilaops.com/health/live
+echo ""
+
+# Signaling server — deve responder {"status":"ok","rooms":N,"connections":N,"uptime":N}
+curl -s https://arxisvr-signaling.onrender.com/health
+echo ""
+
+
+# =============================================================
+# 🔍 PASSO 2 — VER QUAL CÓDIGO ESTÁ EM PRODUÇÃO
+# (Qual commit está rodando agora?)
+# =============================================================
+
+echo "=== 2. ÚLTIMO COMMIT NO REPO ==="
+git log --oneline -5
+
+echo "=== 2b. ÚLTIMO DEPLOY NO RENDER (via dashboard) ==="
+echo "Abrir: https://dashboard.render.com/web/srv-d8c2tegjo6nc73eg6arg/events"
+echo "Abrir: https://dashboard.render.com/web/srv-d8i6v6btqb8s73arlgcg/events"
+# IDs fixos:
+#   arxisvr (backend+frontend): srv-d8c2tegjo6nc73eg6arg
+#   arxisvr-signaling:          srv-d8i6v6btqb8s73arlgcg
+
+
+# =============================================================
+# 🔍 PASSO 3 — TESTAR O FLUXO DE AUTH (registro + login)
+# (Se isso funcionar, o banco e as migrations estão ok)
+# =============================================================
+
+echo "=== 3. TESTAR REGISTRO ==="
+curl -s -X POST https://www.arxisvr.avilaops.com/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"check@arxisvr.dev","password":"Check@12345","name":"Check"}' | head -c 300
+echo ""
+
+echo "=== 3b. TESTAR LOGIN ==="
+curl -s -X POST https://www.arxisvr.avilaops.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"check@arxisvr.dev","password":"Check@12345"}' | head -c 300
+echo ""
+
+# Esperado: {"token":"eyJ...","user":{...}}
+# Se retornar 500 com "column does not exist" → migrations não rodaram (ver PASSO 5)
+# Se retornar 401 → credenciais erradas (ok, signfica auth está funcionando)
+
+
+# =============================================================
+# 🔍 PASSO 4 — TESTAR O SIGNALING SERVER (multiplayer)
+# (WebSocket — verifica se a sala pode ser criada)
+# =============================================================
+
+echo "=== 4. TESTAR SIGNALING VIA HTTP ==="
+curl -s https://arxisvr-signaling.onrender.com/health
+echo ""
+# "rooms":0 = nenhuma sala ativa (normal em idle)
+# "uptime" muito baixo (< 30s) = acabou de reiniciar/redeploy
+
+
+# =============================================================
+# 🔍 PASSO 5 — SE DER ERRO 500, VERIFICAR MIGRATIONS
+# (Problema clássico: banco sem as colunas novas)
+# =============================================================
+
+echo "=== 5. DIAGNÓSTICO DE MIGRATIONS (só se der 500) ==="
+# Ver logs do Render para confirmar que migrations rodaram:
+echo "Abrir: https://dashboard.render.com/web/srv-d8c2tegjo6nc73eg6arg/logs"
+# Procurar por:
+#   ✅ Migration applied: 029_users_oauth_columns.sql
+#   ✅ Migration applied: 030_ensure_users_columns.sql
+#   ⚠️ Migrations dir not found → path errado no código (ver backend/src/index.ts linha 92)
+
+# ATENÇÃO: path correto das migrations no código é:
+#   path.join(__dirname, '../migrations')
+#   __dirname em produção = /opt/render/project/src/backend/dist
+#   '../migrations' resolve para /opt/render/project/src/backend/migrations ✅
+#   '../../migrations' resolve para /opt/render/project/src/migrations ❌ (ERRADO — dir não existe)
+
+
+# =============================================================
+# 🔍 PASSO 6 — VERIFICAR GITHUB ACTIONS
+# (CI passou? Deploy passou?)
+# =============================================================
+
+echo "=== 6. GITHUB ACTIONS ==="
+echo "CI:            https://github.com/avilaops/arxisvr/actions/workflows/ci.yml"
+echo "Deploy-prod:   https://github.com/avilaops/arxisvr/actions/workflows/deploy-prod.yml"
+
+# Via CLI (se token tiver acesso):
+gh run list --repo avilaops/arxisvr --limit 5 2>/dev/null || echo "token sem acesso ao repo via API (git push funciona mesmo assim)"
+
+
+# =============================================================
+# 🔍 PASSO 7 — VERIFICAR VARIÁVEIS DE AMBIENTE CRÍTICAS
+# (Sem essas, o sistema não funciona)
+# =============================================================
+
+echo "=== 7. ENV VARS CRÍTICAS ==="
+echo "Verificar no Render dashboard → Environment:"
+echo ""
+echo "arxisvr (backend+frontend):"
+echo "  JWT_SECRET          — obrigatório (gerado pelo Render)"
+echo "  JWT_REFRESH_SECRET  — obrigatório"
+echo "  DATABASE_URL        — obrigatório (PostgreSQL)"
+echo "  VITE_WS_URL         — wss://arxisvr-signaling.onrender.com (embutido no build do frontend)"
+echo "  BACKEND_URL         — https://www.arxisvr.avilaops.com"
+echo ""
+echo "arxisvr-signaling:"
+echo "  JWT_SECRET          — sincronizado via fromService:arxisvr"
+echo "  BACKEND_URL         — https://www.arxisvr.avilaops.com"
+echo "  INTERNAL_API_KEY    — chave para comunicação interna"
+
+
+# =============================================================
+# 📌 ARMADILHAS CONHECIDAS — não repita esses erros
+# =============================================================
+cat << 'TRAPS'
+
+ARMADILHAS CONHECIDAS:
+  1. REPO ERRADO: sempre usar avilaops/arxisvr, nunca avilainc/arxisvr
+     fix: git remote set-url origin https://github.com/avilaops/arxisvr.git
+
+  2. MIGRATIONS SEM RODAR: se path.join usa '../../migrations' em backend/src/index.ts,
+     as migrations nunca rodam em produção (dir não existe). Deve ser '../migrations'.
+
+  3. SMOKE TEST SEM JWT_REFRESH_SECRET: o backend crasha no startup sem essa var.
+     deploy-prod.yml deve ter JWT_REFRESH_SECRET no env do smoke test.
+
+  4. ENV VAR ERRADA NO SIGNALING: server.js lia BACKEND_INTERNAL_URL mas render.yaml
+     define BACKEND_URL. Fallback: BACKEND_URL || BACKEND_INTERNAL_URL || localhost.
+
+  5. VITE_WS_URL: é embutida no build do frontend (não lida em runtime).
+     Se mudar o valor, precisa forçar um novo build+deploy do frontend.
+
+  6. DOCKER BUILD DO SIGNALING: requer package-lock.json (npm ci).
+     Se faltar, build falha com "Exited with status 1".
+
+  7. TOKEN gh CLI: autenticado como avilaops mas gh api retorna 404 para o repo.
+     Git push/pull funciona. Para Actions, usar o dashboard do GitHub diretamente.
+
+  8. RENDER FREE TIER: serviços dormem após 15min de inatividade.
+     Signaling tem keepalive de 25s para evitar sleep.
+     Backend pode demorar 50s+ para responder após sleep.
+
+TRAPS
+
+
+# =============================================================
+# 🚀 COMANDOS RÁPIDOS PARA O DIA A DIA
+# =============================================================
+cat << 'QUICK'
+
+COMANDOS RÁPIDOS:
+  # Ver saúde de tudo de uma vez:
+  curl -s https://www.arxisvr.avilaops.com/health/live && curl -s https://arxisvr-signaling.onrender.com/health
+
+  # Fazer push e acompanhar:
+  git push origin main && start https://github.com/avilaops/arxisvr/actions
+
+  # Ver últimos commits:
+  git log --oneline -10
+
+  # Ver o que mudou antes de commitar:
+  git diff --stat
+
+  # Testar registro rápido:
+  curl -s -X POST https://www.arxisvr.avilaops.com/api/v1/auth/register -H "Content-Type: application/json" -d "{\"email\":\"test$(date +%s)@test.com\",\"password\":\"Test@12345\",\"name\":\"Test\"}"
+
+  # Render service IDs:
+  #   backend+frontend: srv-d8c2tegjo6nc73eg6arg
+  #   signaling:        srv-d8i6v6btqb8s73arlgcg
+
+QUICK

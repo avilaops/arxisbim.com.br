@@ -281,7 +281,17 @@
       cursor: pointer;
       border: 1px solid rgba(255,255,255,0.1);
       flex-shrink: 0;
+      user-select: none;
     }
+    .profile-menu-item {
+      display: block; width: 100%; padding: 9px 16px;
+      background: none; border: none; color: #cbd5e1;
+      font-size: 13px; text-align: left; cursor: pointer;
+      transition: background .15s;
+    }
+    .profile-menu-item:hover { background: rgba(255,255,255,0.06); color: #f1f5f9; }
+    .profile-menu-item--danger { color: #f87171; }
+    .profile-menu-item--danger:hover { background: rgba(248,113,113,0.1); }
 
     /* ========== COLLABORATION FLOATING PANEL ========== */
     .collab-floating-panel {
@@ -1472,17 +1482,31 @@
           <i class="lucide lucide-users"></i>
           <span id="collab-badge" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:#22c55e;border:1px solid #0d1117;"></span>
         </button>
-        <button class="icon-button" title="Notificações">
+        <button class="icon-button" id="btn-notifications" title="Notificações">
           <i class="lucide lucide-bell"></i>
         </button>
-        <button class="icon-button" title="Configurações">
+        <button class="icon-button" id="btn-settings-hdr" title="Configurações">
           <i class="lucide lucide-settings"></i>
         </button>
         <button class="btn-arxis-ai" id="btn-arxis-ai" title="Arxis AI">
           <div class="btn-arxis-ai__dot"></div>
           Arxis AI
         </button>
-        <div class="header__avatar" title="Perfil">A</div>
+        <!-- Profile avatar + dropdown -->
+        <div style="position:relative;">
+          <div class="header__avatar" id="btn-profile" title="Perfil">A</div>
+          <div id="profile-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.5);z-index:9999;padding:8px 0;overflow:hidden;">
+            <div id="profile-dropdown-user" style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07);">
+              <div style="font-size:13px;font-weight:600;color:#f1f5f9;" id="profile-name-label">Usuário</div>
+              <div style="font-size:11px;color:#64748b;" id="profile-email-label">—</div>
+            </div>
+            <button class="profile-menu-item" onclick="window.location.href='/app.html'">👤 Meu perfil</button>
+            <button class="profile-menu-item" id="profile-settings-btn">⚙️ Configurações</button>
+            <button class="profile-menu-item" id="profile-billing-btn">💳 Plano &amp; Billing</button>
+            <div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 0;"></div>
+            <button class="profile-menu-item profile-menu-item--danger" id="profile-logout-btn">🚪 Sair</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -1965,6 +1989,129 @@
     }
     _applyMobileLayout();
     window.addEventListener('resize', _applyMobileLayout);
+  </script>
+
+  <!-- Header interactive controls: profile dropdown, notifications, settings -->
+  <script>
+  (function() {
+    // ── Profile dropdown ───────────────────────────────────────────────────────
+    const profileBtn   = document.getElementById('btn-profile');
+    const profileDrop  = document.getElementById('profile-dropdown');
+    const profileName  = document.getElementById('profile-name-label');
+    const profileEmail = document.getElementById('profile-email-label');
+
+    function populateProfile() {
+      try {
+        const u = JSON.parse(localStorage.getItem('arxisvr_user') || 'null');
+        if (u) {
+          if (profileName)  profileName.textContent  = u.name  || u.email || 'Usuário';
+          if (profileEmail) profileEmail.textContent = u.email || '';
+          if (profileBtn)   profileBtn.textContent   = (u.name || 'U').charAt(0).toUpperCase();
+        }
+      } catch {}
+    }
+    populateProfile();
+
+    if (profileBtn && profileDrop) {
+      profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        populateProfile();
+        const isOpen = profileDrop.style.display !== 'none';
+        profileDrop.style.display = isOpen ? 'none' : 'block';
+      });
+      document.addEventListener('click', () => { profileDrop.style.display = 'none'; });
+      profileDrop.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    // Profile menu actions
+    document.getElementById('profile-logout-btn')?.addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '/login.html';
+    });
+    document.getElementById('profile-billing-btn')?.addEventListener('click', () => {
+      profileDrop.style.display = 'none';
+      document.getElementById('btn-billing')?.click();
+    });
+    document.getElementById('profile-settings-btn')?.addEventListener('click', () => {
+      profileDrop.style.display = 'none';
+      document.querySelector('[title="Configurações"]')?.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+    });
+
+    // ── Settings button in header → open admin panel ───────────────────────────
+    document.getElementById('btn-settings-hdr')?.addEventListener('click', () => {
+      document.querySelector('[title="Configurações"]')?.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+    });
+
+    // ── Notifications: show badge + simple toast of recent activity ────────────
+    const notifBtn = document.getElementById('btn-notifications');
+    let notifOpen = false;
+    if (notifBtn) {
+      notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (notifOpen) { closeNotifPanel(); return; }
+        openNotifPanel();
+      });
+    }
+
+    function openNotifPanel() {
+      notifOpen = true;
+      let panel = document.getElementById('notif-panel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'notif-panel';
+        panel.style.cssText = 'position:fixed;top:52px;right:60px;width:300px;background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.5);z-index:9998;padding:0;overflow:hidden;';
+        panel.innerHTML = `
+          <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:#f1f5f9;">Notificações</span>
+            <span style="font-size:11px;color:#64748b;cursor:pointer;" id="notif-mark-read">Marcar como lidas</span>
+          </div>
+          <div style="padding:32px 16px;text-align:center;color:#64748b;font-size:13px;">
+            <div style="font-size:28px;margin-bottom:8px;">🔔</div>
+            Sem notificações novas.<br>
+            <span style="font-size:11px;">Convites de sessão e alertas aparecerão aqui.</span>
+          </div>
+        `;
+        document.body.appendChild(panel);
+        document.addEventListener('click', closeNotifPanel, {once:true});
+        panel.addEventListener('click', (e) => e.stopPropagation());
+        document.getElementById('notif-mark-read')?.addEventListener('click', closeNotifPanel);
+      } else {
+        panel.style.display = 'block';
+        document.addEventListener('click', closeNotifPanel, {once:true});
+      }
+    }
+
+    function closeNotifPanel() {
+      notifOpen = false;
+      const p = document.getElementById('notif-panel');
+      if (p) p.style.display = 'none';
+    }
+
+    // ── Help button ────────────────────────────────────────────────────────────
+    document.querySelector('[title="Ajuda"]')?.addEventListener('click', openHelpPanel);
+    function openHelpPanel() {
+      let h = document.getElementById('help-panel');
+      if (h) { h.remove(); return; }
+      h = document.createElement('div');
+      h.id = 'help-panel';
+      h.style.cssText = 'position:fixed;top:52px;right:16px;width:280px;background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.5);z-index:9998;padding:0;overflow:hidden;';
+      h.innerHTML = `
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="font-size:13px;font-weight:600;color:#f1f5f9;">Central de Ajuda</span>
+        </div>
+        <div style="padding:8px 0;">
+          <a href="https://docs.arxisvr.com" target="_blank" style="display:block;padding:10px 16px;color:#cbd5e1;font-size:13px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">📘 Documentação</a>
+          <a href="#" style="display:block;padding:10px 16px;color:#cbd5e1;font-size:13px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">🚀 Primeiros passos</a>
+          <a href="#" style="display:block;padding:10px 16px;color:#cbd5e1;font-size:13px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">⌨️ Atalhos de teclado</a>
+          <a href="#" style="display:block;padding:10px 16px;color:#cbd5e1;font-size:13px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">🎬 Tutoriais BIM</a>
+          <a href="mailto:suporte@arxisvr.com" style="display:block;padding:10px 16px;color:#cbd5e1;font-size:13px;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background=''">✉️ Contato com suporte</a>
+        </div>
+      `;
+      document.body.appendChild(h);
+      document.addEventListener('click', () => h.remove(), {once:true});
+      h.addEventListener('click', (e) => e.stopPropagation());
+    }
+  })();
   </script>
 
   <!-- Welcome Overlay JS -->
