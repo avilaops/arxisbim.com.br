@@ -113,17 +113,22 @@ export class IFCSimpleLoader {
     console.log(`🔗 Blob URL: ${url}`);
     console.log(`⏳ Iniciando carregamento via loader.load()...`);
 
+    // Mostrar indicador de carregamento na UI
+    const loadingOverlay = this._showLoadingOverlay(file.name, file.size);
+
     return new Promise((resolve, reject) => {
-      // Timeout para detectar travamento
+      // Timeout generoso: IFC grandes + compilação WASM na 1ª carga podem levar minutos
+      const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutos
       const timeout = setTimeout(() => {
-        console.error('⏱️ TIMEOUT: Carregamento travou após 60s');
+        console.error('⏱️ TIMEOUT: Carregamento travou após 5min');
         console.error('💡 Possíveis causas:');
-        console.error('   - Arquivos WASM não carregados');
-        console.error('   - Arquivo IFC muito grande ou corrompido');
+        console.error('   - Arquivo IFC muito grande (tente dividir em partes)');
+        console.error('   - Arquivo IFC corrompido');
         console.error('   - Problema de CORS ou headers HTTP');
         URL.revokeObjectURL(url);
-        reject(new Error('Timeout: O carregamento está demorando muito. Verifique se os arquivos WASM estão disponíveis.'));
-      }, 60000);
+        this._hideLoadingOverlay(loadingOverlay);
+        reject(new Error(`Timeout: O arquivo "${file.name}" está demorando mais de 5 minutos. Tente um arquivo menor ou verifique se não está corrompido.`));
+      }, TIMEOUT_MS);
 
       console.log(`📡 Chamando this.loader.load()...`);
       
@@ -131,6 +136,7 @@ export class IFCSimpleLoader {
         url,
         (model) => {
           clearTimeout(timeout);
+          this._hideLoadingOverlay(loadingOverlay);
           console.log('✅ Modelo IFC carregado!');
           console.log('📦 Modelo:', model);
           console.log('📊 Children:', model.children.length);
@@ -223,11 +229,13 @@ export class IFCSimpleLoader {
           });
         },
         (progress) => {
-          const percent = (progress.loaded / progress.total) * 100;
+          const percent = progress.total > 0 ? (progress.loaded / progress.total) * 100 : 0;
           console.log(`📊 Progresso: ${percent.toFixed(1)}% (${progress.loaded}/${progress.total} bytes)`);
+          this._updateLoadingOverlay(loadingOverlay, percent);
         },
         (error) => {
           clearTimeout(timeout);
+          this._hideLoadingOverlay(loadingOverlay);
           console.error('❌ Erro ao carregar IFC:', error);
           console.error('💡 Dica: Verifique se os arquivos WASM estão em /wasm/');
           console.error('💡 Esperado: /wasm/web-ifc.wasm e /wasm/web-ifc-mt.wasm');
@@ -351,5 +359,50 @@ export class IFCSimpleLoader {
    */
   public getModel(): THREE.Group | null {
     return this.loadedModel;
+  }
+
+  // ─── Loading overlay helpers ────────────────────────────────────────────────
+
+  private _showLoadingOverlay(fileName: string, fileSize: number): HTMLElement | null {
+    if (typeof document === 'undefined') return null;
+    const existing = document.getElementById('arxis-ifc-loading-overlay');
+    if (existing) existing.remove();
+
+    const sizeMB = (fileSize / 1024 / 1024).toFixed(1);
+    const overlay = document.createElement('div');
+    overlay.id = 'arxis-ifc-loading-overlay';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:99999;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:rgba(13,17,23,0.88);backdrop-filter:blur(4px);
+    `;
+    overlay.innerHTML = `
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:32px 40px;max-width:420px;width:90%;text-align:center;">
+        <div style="font-size:36px;margin-bottom:12px;">🏗️</div>
+        <div style="font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:4px;">Carregando modelo IFC</div>
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:20px;word-break:break-all;">${fileName} (${sizeMB} MB)</div>
+        <div style="background:#0f172a;border-radius:8px;height:8px;overflow:hidden;margin-bottom:12px;">
+          <div id="arxis-ifc-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width 0.3s;border-radius:8px;"></div>
+        </div>
+        <div id="arxis-ifc-progress-text" style="font-size:12px;color:#64748b;">Inicializando WASM…</div>
+        <div style="font-size:11px;color:#475569;margin-top:8px;">Arquivos grandes podem levar alguns minutos na primeira carga</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  private _updateLoadingOverlay(overlay: HTMLElement | null, percent: number): void {
+    if (!overlay) return;
+    const bar = overlay.querySelector('#arxis-ifc-progress-bar') as HTMLElement | null;
+    const text = overlay.querySelector('#arxis-ifc-progress-text') as HTMLElement | null;
+    if (bar) bar.style.width = `${Math.min(percent, 100)}%`;
+    if (text) text.textContent = percent > 0 ? `${percent.toFixed(0)}%` : 'Processando…';
+  }
+
+  private _hideLoadingOverlay(overlay: HTMLElement | null): void {
+    if (overlay) overlay.remove();
+    const el = document.getElementById('arxis-ifc-loading-overlay');
+    if (el) el.remove();
   }
 }
