@@ -1,4 +1,4 @@
-name: Deploy Frontend → Cloudflare Pages
+name: Deploy Frontend → GitHub Pages
 
 on:
   push:
@@ -7,10 +7,12 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Build & Deploy
     steps:
       - uses: actions/checkout@v4
 
@@ -20,21 +22,19 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci --include=dev
-        working-directory: frontend
-
-      - name: Build
-        run: npm run build
+      - name: Install & Build
+        run: |
+          npm ci --include=dev
+          npm run build
         working-directory: frontend
         env:
           VITE_API_URL: https://api.arxisvr.avilaops.com
           VITE_WS_URL: wss://arxisvr-signaling.onrender.com
           VITE_WS_SERVER: wss://arxisvr-signaling.onrender.com
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy frontend/dist --project-name arxisvr-frontend --branch main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: frontend/dist
+          cname: www.arxisvr.avilaops.com
