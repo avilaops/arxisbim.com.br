@@ -7,7 +7,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  www.arxisvr.avilaops.com  (GitHub Pages)               │
+│  arxisvr.avilaops.com  (GitHub Pages)                   │
 │  Frontend: Vite MPA + Three.js/IFC + React (islands)    │
 │                                                          │
 │  Páginas: app.html · login.html · register.html         │
@@ -57,7 +57,7 @@
 ## 3. Deploy
 
 ### Frontend → GitHub Pages (automático)
-Push para `main` em `frontend/**` → `.github/workflows/deploy-frontend.yml` → build Vite → `peaceiris/actions-gh-pages@v4` → CNAME `www.arxisvr.avilaops.com`
+Push para `main` em `frontend/**` → `.github/workflows/deploy-frontend.yml` → build Vite → `peaceiris/actions-gh-pages@v4` → CNAME `arxisvr.avilaops.com`
 
 ### Backend → Render (manual ou auto-deploy)
 Push para `main` → Render detecta `backend/` → `npm run build && npm start`
