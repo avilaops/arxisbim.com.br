@@ -283,6 +283,17 @@
       flex-shrink: 0;
     }
 
+    /* ========== COLLABORATION FLOATING PANEL ========== */
+    .collab-floating-panel {
+      position: fixed !important;
+      top: calc(var(--topbar-height) + 12px) !important;
+      right: 16px !important;
+      width: 380px;
+      height: calc(100vh - var(--topbar-height) - var(--statusbar-height) - 28px);
+      z-index: 900;
+      overflow: hidden;
+    }
+
     /* ========== PANELS GENERAL ========== */
     .glass-panel {
       background: var(--bg-panel);
@@ -1455,6 +1466,10 @@
             <button class="env-item" data-cmd="env.fog.toggle" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;color:#111827;font-size:14px;cursor:pointer;text-align:left;"><span style="font-size:16px">🌫️</span><span>Alternar névoa</span></button>
           </div>
         </div>
+        <button class="icon-button" id="btn-collab-toggle" title="Colaboração em Tempo Real (Ctrl+Shift+O)" style="position:relative;">
+          <i class="lucide lucide-users"></i>
+          <span id="collab-badge" style="display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:#22c55e;border:1px solid #0d1117;"></span>
+        </button>
         <button class="icon-button" title="Notificações">
           <i class="lucide lucide-bell"></i>
         </button>
@@ -1643,6 +1658,8 @@
         </div>
       </aside>
 
+      <!-- Collaboration Panel moved to body level for correct z-index stacking -->
+
       <!-- Floating action to restore Right Panel when collapsed -->
       <div class="floating-toggle-bar right">
         <button class="floating-toggle-btn" id="btn-restore-right" title="Abrir Propriedades">
@@ -1792,9 +1809,9 @@
       <div class="mobile-nav-ico-wrap" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#4F46E5,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 22px rgba(124,58,237,0.55),0 0 0 3px rgba(17,24,39,1);border:2px solid rgba(139,92,246,0.4);">🤖</div>
       <span class="mobile-nav-lbl" style="color:var(--accent-purple-light);margin-top:4px;">IA</span>
     </div>
-    <div class="mobile-nav-item" data-mobile-view="clashes">
-      <span class="mobile-nav-ico">⚡</span>
-      <span class="mobile-nav-lbl">Clashes</span>
+    <div class="mobile-nav-item" data-mobile-view="meetings">
+      <span class="mobile-nav-ico">👥</span>
+      <span class="mobile-nav-lbl">Reuniões</span>
     </div>
     <div class="mobile-nav-item" data-mobile-view="settings">
       <span class="mobile-nav-ico">⚙️</span>
@@ -1919,8 +1936,19 @@
         document.querySelectorAll('[data-mobile-view]').forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         const view = item.dataset.mobileView;
-        if (view === 'tools' || view === 'clashes') {
+        if (view === 'tools') {
           if (bs) bs.classList.add('open');
+        } else if (view === 'meetings') {
+          // Open meetings panel — project may not be set yet; panel handles that gracefully
+          const mp = window.__meetingsPanel;
+          if (mp) {
+            const projectId = localStorage.getItem('arxisvr_project_id') || '';
+            if (projectId) {
+              mp.open(projectId);
+            } else {
+              mp.open('demo');
+            }
+          }
         }
       });
     });
@@ -2093,7 +2121,31 @@
   })();
   </script>
 
+  <!-- Collaboration Panel (body-level for correct z-index stacking above all panels) -->
+  <aside class="collab-floating-panel glass-panel" id="collab-floating-panel" style="display:none;">
+    <div id="collab-panel-mount" style="height:100%;"></div>
+  </aside>
+
   <!-- Entry Point -->
   <script type="module" src="/src/app/entrypoints/app-main.ts"></script>
+
+  <!-- Lucide Icons JS (replace <i class="lucide-*"> with SVG) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    function initLucideIcons() {
+      if (typeof lucide === 'undefined') return;
+      // Convert CSS class pattern to data-lucide attr (required by createIcons)
+      document.querySelectorAll('i[class*="lucide-"]').forEach(function(el) {
+        var cls = Array.from(el.classList).find(function(c) { return c.startsWith('lucide-') && c !== 'lucide'; });
+        if (cls) el.setAttribute('data-lucide', cls.replace('lucide-', ''));
+      });
+      lucide.createIcons();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLucideIcons);
+    } else {
+      initLucideIcons();
+    }
+  </script>
 </body>
 </html>

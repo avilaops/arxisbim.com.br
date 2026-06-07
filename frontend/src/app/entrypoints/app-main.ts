@@ -16,6 +16,8 @@ import { BillingModal } from '../../app/components/BillingModal';
 import { commandRegistry } from '../../commands';
 import { appController } from '../../app/AppController';
 import { initHelpSystem } from '../../app/help/HelpSystem';
+import { uiStore } from '../../app/state/uiStore';
+import { CollaborationPanel } from '../../app/CollaborationPanel';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -82,6 +84,8 @@ async function init() {
 
   // Initialize Meetings Panel
   const meetingsPanel = new MeetingsPanel();
+  // Expose globally so mobile nav can trigger it
+  (window as any).__meetingsPanel = meetingsPanel;
 
   // Connect settings button to admin panel
   const settingsBtn = document.querySelector('[title="Configurações"]');
@@ -385,7 +389,44 @@ async function init() {
   if (loadingEl) {
     loadingEl.style.display = 'none';
   }
-  
+
+  // Inicializar painel de colaboração flutuante
+  const collabMount = document.getElementById('collab-panel-mount');
+  if (collabMount) {
+    new CollaborationPanel(collabMount);
+  }
+
+  // Toggle button para abrir/fechar painel de colaboração
+  const btnCollabToggle = document.getElementById('btn-collab-toggle');
+  const collabFloating = document.getElementById('collab-floating-panel');
+  if (btnCollabToggle && collabFloating) {
+    btnCollabToggle.addEventListener('click', () => {
+      const isOpen = collabFloating.style.display !== 'none';
+      collabFloating.style.display = isOpen ? 'none' : 'block';
+    });
+  }
+
+  // Auto-abrir painel se ?session= presente (guest chegou via invite link)
+  const sessionParam = new URLSearchParams(window.location.search).get('session');
+  const hasGuestContext = localStorage.getItem('arxisvr_session_token') ||
+    localStorage.getItem('arxisvr_local_guest_id') ||
+    (sessionParam && localStorage.getItem('arxisvr_guest_name') && localStorage.getItem('arxisvr_session_id') === sessionParam);
+  if (sessionParam && (hasGuestContext || localStorage.getItem('arxisvr_host_session_id'))) {
+    setTimeout(() => {
+      if (collabFloating) collabFloating.style.display = 'block';
+    }, 400);
+  }
+
+  // Ctrl+Shift+O abre/fecha o painel de colaboração
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'O') {
+      e.preventDefault();
+      if (collabFloating) {
+        collabFloating.style.display = collabFloating.style.display !== 'none' ? 'none' : 'block';
+      }
+    }
+  });
+
   console.log('ArxisVR App pronto');
 }
 

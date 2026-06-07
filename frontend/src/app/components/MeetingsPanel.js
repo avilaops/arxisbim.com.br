@@ -326,6 +326,7 @@ class MeetingsPanel {
 
     const selectedMeeting = this.meetings.find(m => m.id === this.selectedMeeting);
 
+    const isMobile = window.innerWidth <= 768;
     let html = `
       <div style="
         position: fixed;
@@ -335,23 +336,24 @@ class MeetingsPanel {
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
         display: flex;
-        align-items: center;
+        align-items: ${isMobile ? 'flex-end' : 'center'};
         justify-content: center;
         z-index: 10000;
       ">
         <div style="
           background: var(--bg-primary);
-          border-radius: 12px;
-          padding: 32px;
+          border-radius: ${isMobile ? '18px 18px 0 0' : '12px'};
+          padding: ${isMobile ? '20px 16px 32px' : '32px'};
           width: 1000px;
-          max-width: 95%;
-          max-height: 90vh;
+          max-width: 100%;
+          max-height: ${isMobile ? '92vh' : '90vh'};
           overflow-y: auto;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          ${isMobile ? 'width: 100%;' : ''}
         ">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 style="margin: 0; font-size: 24px; color: var(--text-primary);">
-              Reuniões XR - Avatares
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isMobile ? '16px' : '24px'};">
+            <h2 style="margin: 0; font-size: ${isMobile ? '18px' : '24px'}; color: var(--text-primary);">
+              Reuniões XR
             </h2>
             <button id="meetings-close" style="
               background: none;
@@ -383,8 +385,8 @@ class MeetingsPanel {
 
     // Meetings list
     html += `
-      <div style="display: flex; gap: 16px; margin-bottom: 24px;">
-        <div style="flex: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <div style="flex: 1; min-width: min(280px, 100%); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="margin: 0; font-size: 16px; color: var(--text-primary);">Salas de Reunião</h3>
             <button id="meetings-create" style="
@@ -467,7 +469,7 @@ class MeetingsPanel {
     // Selected meeting details
     if (selectedMeeting) {
       html += `
-        <div style="flex: 2; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+        <div style="flex: 2; min-width: min(280px, 100%); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="margin: 0; font-size: 16px; color: var(--text-primary);">Detalhes da Sala</h3>
             <div style="display: flex; gap: 8px; align-items: center;">
@@ -680,7 +682,7 @@ class MeetingsPanel {
       `;
     } else {
       html += `
-        <div style="flex: 2; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: center;">
+        <div style="flex: 2; min-width: min(280px, 100%); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: center;">
           <p style="color: var(--text-secondary);">Selecione uma sala de reunião</p>
         </div>
       `;
