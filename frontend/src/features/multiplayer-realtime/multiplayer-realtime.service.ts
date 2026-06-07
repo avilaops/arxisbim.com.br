@@ -123,12 +123,11 @@ export class MultiplayerRealtimeService {
       throw new Error('Not connected to a room');
     }
 
+    // Formato compatível com signaling-server/server.js handleAvatarUpdate:
+    // recebe msg.avatarConfig e retransmite como { type, participantId, userId, avatarConfig }
     this.send({
       type: 'avatar_update',
-      data: {
-        participantId: this.roomState.currentUser.id,
-        state,
-      },
+      avatarConfig: state,
     });
   }
 
@@ -302,7 +301,11 @@ export class MultiplayerRealtimeService {
           break;
 
         case 'avatar_update':
-          this.handleAvatarUpdate({ participantId: message.userId, state: message.avatarConfig });
+          // signaling retransmite: { type, participantId, userId, avatarConfig, timestamp }
+          this.handleAvatarUpdate({
+            participantId: message.participantId ?? message.userId,
+            state: message.avatarConfig,
+          });
           break;
 
         // --- Extended protocol for chat/actions ---

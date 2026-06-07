@@ -291,7 +291,9 @@ function renderJoinForm(token: string, _content: HTMLElement): void {
 
     // ── Modo local: room_XXX ──────────────────────────────────────────────────
     if (token.startsWith('room_')) {
-      const guestId = user?.id ?? `guest_${Math.random().toString(36).slice(2, 8)}`;
+      // Sempre gera um novo ID para o participante — evita colisão com o host
+      // quando o mesmo usuário logado tenta entrar como convidado num 2º browser/aba
+      const guestId = `guest_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
       localStorage.setItem('arxisvr_guest_name', name);
       localStorage.setItem('arxisvr_session_id', token);
       localStorage.setItem('arxisvr_participant_id', guestId);
