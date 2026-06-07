@@ -61,6 +61,8 @@ export default defineConfig({
         ],
         // Não pré-cachear o web-ifc WASM no install (muito grande — lazy ok)
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB limite por arquivo
+        // MPA: desativa o NavigationRoute padrão (não servir index.html para todas as navegações)
+        navigateFallback: null,
         skipWaiting: true,
         clientsClaim: true,
       },
