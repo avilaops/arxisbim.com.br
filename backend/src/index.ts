@@ -309,6 +309,20 @@ await server.register(staticFiles, {
   wildcard: false,  // Prevent catch-all /* from shadowing API GET routes
 });
 
+// SPA / HTML fallback — serves known HTML pages; unknown non-API paths fall back to app.html
+server.setNotFoundHandler(async (request, reply) => {
+  const url = request.url.split('?')[0];
+  // Don't intercept API routes
+  if (url.startsWith('/api/') || url.startsWith('/health')) {
+    return reply.status(404).send({ message: `Route ${request.method}:${request.url} not found`, error: 'Not Found', statusCode: 404 });
+  }
+  // Serve the matching HTML file if it exists, else fallback to app.html
+  const knownPages = ['join', 'login', 'register', 'verify-email', 'forgot-password', 'reset-password', 'admin', 'dashboard', 'privacy', 'terms', 'lgpd', 'cookies'];
+  const pageName = url.replace(/^\//, '').replace(/\.html$/, '').split('/')[0];
+  const target = knownPages.includes(pageName) ? `${pageName}.html` : 'app.html';
+  return reply.sendFile(target, frontendDistPath);
+});
+
 // =====================================
 // OBSERVABILITY HOOKS
 // =====================================

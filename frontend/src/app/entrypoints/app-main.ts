@@ -130,12 +130,15 @@ async function init() {
     }
   }
 
-  // Add button to open scheduling panel in BIM 4D section
-  const bim4dSection = document.querySelector('[data-view="bim4d"]');
-  if (bim4dSection) {
+  // Inject secondary CTA buttons into dedicated header container (NOT inside header__nav)
+  const ctaContainer = document.getElementById('header-cta-actions');
+  if (ctaContainer) {
+    const CTA_STYLE = 'display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(37,99,235,0.15);color:var(--accent-blue-l);border:1px solid rgba(37,99,235,0.3);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;height:32px;white-space:nowrap;transition:all .15s;';
+
     const schedulingBtn = document.createElement('button');
-    schedulingBtn.innerHTML = 'Abrir Cronograma 4D';
-    schedulingBtn.style.cssText = 'padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;';
+    schedulingBtn.innerHTML = '<i class="lucide lucide-calendar-days" style="width:14px;height:14px;"></i> Cronograma 4D';
+    schedulingBtn.style.cssText = CTA_STYLE;
+    schedulingBtn.title = 'Abrir cronograma BIM 4D do projeto';
     schedulingBtn.addEventListener('click', () => {
       if (PROJECT_ID) {
         schedulingPanel.open(PROJECT_ID);
@@ -143,36 +146,18 @@ async function init() {
         alert('Selecione um projeto primeiro');
       }
     });
-    
-    // Add button to BIM 4D section (we'll need to find where to add it)
-    setTimeout(() => {
-      const bim4dContent = document.querySelector('[data-view="bim4d"]')?.parentElement;
-      if (bim4dContent) {
-        bim4dContent.appendChild(schedulingBtn);
-      }
-    }, 100);
-  }
 
-  // Add button to open meetings panel in XR section
-  const xrSection = document.querySelector('[data-view="ar"]');
-  if (xrSection) {
-    const meetingsBtn = document.createElement('button');
-    meetingsBtn.innerHTML = 'Reuniões XR';
-    meetingsBtn.style.cssText = 'padding: 8px 16px; background: var(--accent-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 8px;';
-    meetingsBtn.addEventListener('click', () => {
-      if (PROJECT_ID) {
-        meetingsPanel.open(PROJECT_ID);
-      } else {
-        alert('Selecione um projeto primeiro');
-      }
+    const meetingsBtn2 = document.createElement('button');
+    meetingsBtn2.innerHTML = '<i class="lucide lucide-users" style="width:14px;height:14px;"></i> Reuniões XR';
+    meetingsBtn2.style.cssText = CTA_STYLE;
+    meetingsBtn2.title = 'Abrir sala de reunião colaborativa';
+    meetingsBtn2.addEventListener('click', () => {
+      const pid = PROJECT_ID || localStorage.getItem('arxisvr_project_id') || 'demo';
+      meetingsPanel.open(pid);
     });
-    
-    setTimeout(() => {
-      const xrContent = document.querySelector('[data-view="ar"]')?.parentElement;
-      if (xrContent) {
-        xrContent.appendChild(meetingsBtn);
-      }
-    }, 100);
+
+    ctaContainer.appendChild(schedulingBtn);
+    ctaContainer.appendChild(meetingsBtn2);
   }
 
   // Initialize Tenant/Project Selector
@@ -638,6 +623,21 @@ function setupKeyboardShortcuts() {
   });
 }
 
+function showNavToast(msg: string): void {
+  let toast = document.getElementById('arxis-nav-toast') as HTMLDivElement;
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'arxis-nav-toast';
+    toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1e293b;color:#f1f5f9;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:480px;text-align:center;transition:opacity .3s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.display = 'block';
+  clearTimeout((toast as any)._tid);
+  (toast as any)._tid = setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => { toast.style.display = 'none'; }, 300); }, 4000);
+}
+
 function setupNavigation() {
   // Setup navigation buttons
   const navButtons = document.querySelectorAll('.nav-button');
@@ -660,25 +660,22 @@ function setupNavigation() {
           break;
 
         case 'bim4d':
-          // Load BIM 4D scheduling features
-          console.log('BIM 4D view activated');
+          // Open Scheduling panel directly
+          if (PROJECT_ID) {
+            schedulingPanel.open(PROJECT_ID);
+          } else {
+            showNavToast('📅 Planejamento 4D — selecione um projeto primeiro para acessar o cronograma.');
+          }
+          // Revert tab to active state (it's a modal, not a page switch)
+          navButtons.forEach(b => b.classList.remove('active'));
+          (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
           break;
 
         case 'ar':
-          // Load XR/AR immersive features
-          if (viewerHost) {
-            try {
-              // AvatarSystem já está carregado via ViewerHost
-              const avatarSystem = viewerHost.avatarSystem;
-              if (avatarSystem) {
-                console.log('XR Avatar System loaded');
-              } else {
-                console.warn('Avatar System não disponível');
-              }
-            } catch (err) {
-              console.error('Failed to load XR features:', err);
-            }
-          }
+          // Open Meetings panel (XR Imersivo → collaborative session)
+          showNavToast('🥽 XR Imersivo — modo AR/VR em desenvolvimento. Use Reuniões XR para colaboração em tempo real.');
+          navButtons.forEach(b => b.classList.remove('active'));
+          (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
           break;
 
         case 'viewer':

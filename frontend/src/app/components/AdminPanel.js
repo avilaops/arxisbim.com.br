@@ -213,21 +213,22 @@ class AdminPanel {
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.75);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10000;
       ">
         <div style="
-          background: var(--bg-primary);
+          background: #0f172a;
+          border: 1px solid rgba(255,255,255,0.08);
           border-radius: 12px;
           padding: 32px;
           width: 900px;
           max-width: 95%;
           max-height: 90vh;
           overflow-y: auto;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
         ">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <h2 style="margin: 0; font-size: 24px; color: var(--text-primary);">
