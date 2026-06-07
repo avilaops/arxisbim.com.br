@@ -309,6 +309,11 @@ await server.register(staticFiles, {
   wildcard: false,  // Prevent catch-all /* from shadowing API GET routes
 });
 
+// favicon.ico redirect — browsers request this; we only have favicon.svg
+server.get('/favicon.ico', async (_request, reply) => {
+  return reply.redirect('/logo-icon.svg', 302);
+});
+
 // HTML page fallback — explicit whitelist only; everything else gets a real 404
 // Assets, WebSocket upgrades, /socket.io/, /metrics, etc. are NOT captured here
 // because @fastify/static serves exact file matches before this handler runs.
