@@ -2,7 +2,7 @@
 -- reset-db.sql — RESET DESTRUTIVO do banco ArxisVR
 -- ============================================================
 -- Apaga TODOS os dados transacionais e TODOS os usuários,
--- deixando APENAS nicolas@avilaops.com como ADMIN MASTER.
+-- deixando APENAS nicolas@avila.inc como ADMIN MASTER.
 --
 -- ⚠️  IRREVERSÍVEL. Faça backup antes (pg_dump) se necessário.
 --
@@ -21,20 +21,20 @@ BEGIN;
 -- 0. Guarda de segurança: aborta se o admin não existir (evita zerar tudo sem dono).
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM users WHERE email = 'nicolas@avilaops.com') THEN
-    RAISE EXCEPTION 'ABORTADO: nicolas@avilaops.com não existe no banco. Nada foi alterado.';
+  IF NOT EXISTS (SELECT 1 FROM users WHERE email = 'nicolas@avila.inc') THEN
+    RAISE EXCEPTION 'ABORTADO: nicolas@avila.inc não existe no banco. Nada foi alterado.';
   END IF;
 END $$;
 
--- 1. Promove nicolas@avilaops.com a ADMIN MASTER (role + permissão + ativo + verificado).
+-- 1. Promove nicolas@avila.inc a ADMIN MASTER (role + permissão + ativo + verificado).
+--    tenant_id preservado (avila.inc é conta GitHub → tenant 'avila' derivado do OAuth).
 UPDATE users
 SET role              = 'admin',
     permissions       = '["admin"]',
     is_active         = true,
     email_verified    = true,
-    email_verified_at = COALESCE(email_verified_at, now()),
-    tenant_id         = 'avilaops'
-WHERE email = 'nicolas@avilaops.com';
+    email_verified_at = COALESCE(email_verified_at, now())
+WHERE email = 'nicolas@avila.inc';
 
 -- 2. Esvazia TODAS as tabelas de dados (mantém só users/tenants/companies/_migrations).
 --    TRUNCATE ... CASCADE limpa dependências; RESTART IDENTITY zera sequences.
@@ -52,11 +52,11 @@ BEGIN
 END $$;
 
 -- 3. Remove todos os usuários, exceto o admin master.
-DELETE FROM users WHERE email <> 'nicolas@avilaops.com';
+DELETE FROM users WHERE email <> 'nicolas@avila.inc';
 
 -- NOTA: tenants/companies são tabelas de referência (não criam usuários).
--- Mantidas intactas para preservar o tenant 'avilaops' do admin. Linhas órfãs
--- de referência são inofensivas; o objetivo do reset é o conjunto de USUÁRIOS.
+-- Mantidas intactas para preservar o tenant do admin. Linhas órfãs de
+-- referência são inofensivas; o objetivo do reset é o conjunto de USUÁRIOS.
 
 COMMIT;
 
