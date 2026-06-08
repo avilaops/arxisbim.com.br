@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and, gte, lt, desc } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
-import { tenantFromEmail } from '../tenancy/tenant-derivation.js';
+import { personalTenant } from '../tenancy/tenant-derivation.js';
 import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
 import { passwordHistory } from '../../shared/database/schema/password-history.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
@@ -326,11 +326,14 @@ export class AuthService {
     // Validar input
     const validated = registerSchema.parse(data);
 
-    // Tenant: prioridade tenantId explícito > slug do nome do workspace > domínio do email.
-    const tenantSlug = validated.tenantId
-      || (validated.companyName ? slugifyTenant(validated.companyName) : '')
-      || tenantFromEmail(validated.email);
-    const tenantDisplayName = validated.companyName?.trim() || tenantSlug;
+    // Isolamento: todo novo usuário nasce no SEU PRÓPRIO tenant, único.
+    // NÃO se aceita tenantId do cliente (impediria entrar em tenant alheio sem
+    // convite) e NÃO se agrupa por domínio nem por nome de empresa. companyName
+    // serve apenas para nomear o workspace pessoal. Entrar em outro tenant é só
+    // via convite aceito (fluxo separado).
+    const tenantSlug = personalTenant(validated.email);
+    const tenantDisplayName =
+      validated.companyName?.trim() || validated.name?.trim() || validated.email.split('@')[0];
 
     // Verificar se o tenant existe; se não, criar automaticamente (self-service signup)
     let [tenant] = await this.db
