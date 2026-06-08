@@ -117,13 +117,39 @@ class AuthModal {
     window.location.reload();
   }
 
-  getUser() {
-    const userStr = localStorage.getItem('arxisvr_user');
-    return userStr ? JSON.parse(userStr) : null;
+  // Decodifica o payload do JWT (sem validar assinatura — só exibição/expiração).
+  _decodeToken() {
+    const token = localStorage.getItem('arxisvr_token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+      const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(decodeURIComponent(
+        atob(b64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      ));
+    } catch (_) {
+      return null;
+    }
   }
 
+  getUser() {
+    const userStr = localStorage.getItem('arxisvr_user');
+    if (userStr) {
+      try { return JSON.parse(userStr); } catch (_) { /* deriva do token abaixo */ }
+    }
+    // Fallback: deriva dos claims do token (cobre fluxo OAuth)
+    const p = this._decodeToken();
+    if (!p) return null;
+    return { userId: p.userId || p.sub, email: p.email, name: p.name, role: p.role, tenantId: p.tenantId };
+  }
+
+  // Canônico: token presente E não expirado (não apenas presença).
   isAuthenticated() {
-    return Boolean(localStorage.getItem('arxisvr_token'));
+    const p = this._decodeToken();
+    if (!p) return false;
+    if (typeof p.exp === 'number' && p.exp * 1000 <= Date.now()) return false;
+    return true;
   }
 
   render() {

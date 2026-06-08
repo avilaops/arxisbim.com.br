@@ -2268,9 +2268,13 @@
           const token = localStorage.getItem('arxisvr_token');
           let firstName = '';
           if (token) {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const raw = payload.name || payload.email?.split('@')[0] || '';
-            firstName = raw.split(' ')[0].trim();
+            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+            // Só saúda por nome se o token NÃO estiver expirado — consistente com o header.
+            const notExpired = !(typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now());
+            if (notExpired) {
+              const raw = payload.name || payload.email?.split('@')[0] || '';
+              firstName = raw.split(' ')[0].trim();
+            }
           }
           titleEl.textContent = firstName ? `Olá, ${firstName} 👋` : 'Olá 👋';
         }

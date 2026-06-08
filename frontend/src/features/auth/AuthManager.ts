@@ -7,10 +7,13 @@ import { getAuthService, getBillingService } from '../../api/v1';
 import { eventBus } from '../../app/state/eventBus';
 import { notificationManager } from '../../ui/NotificationManager';
 import { licenseManager } from '../../systems/licensing/LicenseManager';
-
-const TOKEN_KEY = 'arxisvr_token';
-const REFRESH_TOKEN_KEY = 'arxisvr_refresh_token';
-const USER_KEY = 'arxisvr_user';
+import {
+  isAuthenticated as isSessionValid,
+  getUser as getSessionUser,
+  TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  USER_KEY,
+} from '../../core/auth/session';
 
 export interface User {
   id: string;
@@ -59,7 +62,9 @@ class AuthManager {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return this.currentUser !== null && !!this.getToken();
+    // Canônico: token presente E não expirado. Não depende de currentUser
+    // em memória (que não sobrevive a reload nem é setado pelo fluxo OAuth).
+    return isSessionValid();
   }
 
   /**
@@ -239,10 +244,18 @@ class AuthManager {
       try {
         this.currentUser = JSON.parse(userJson);
         this.startRefreshTimer();
+        return;
       } catch (error) {
         console.warn('⚠️ Failed to parse stored user:', error);
         localStorage.removeItem(USER_KEY);
       }
+    }
+    // Fallback: deriva o usuário dos claims do token (cobre o fluxo OAuth,
+    // que grava só o token). Mantém currentUser consistente com a sessão.
+    const derived = getSessionUser();
+    if (derived && isSessionValid()) {
+      this.currentUser = derived as unknown as User;
+      this.startRefreshTimer();
     }
   }
 
