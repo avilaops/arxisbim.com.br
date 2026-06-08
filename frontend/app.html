@@ -1594,9 +1594,9 @@
           <span style="margin-left:auto;font-size:11px;color:#6b7280;padding:3px 8px;background:rgba(255,255,255,0.05);border-radius:4px;border:1px solid rgba(255,255,255,0.07);">Ctrl+K</span>
         </div>
         <div class="welcome-ai__body">
-          <div class="ai-context-card">
-            <div class="ai-context-card__title">💡 Contexto detectado</div>
-            <div class="ai-context-card__text">Você tem modelos IFC disponíveis. Posso analisar conflitos, gerar relatórios ou criar cortes automáticos assim que abrir um.</div>
+          <div class="ai-context-card" id="ai-context-card">
+            <div class="ai-context-card__title">💡 Arxis AI</div>
+            <div class="ai-context-card__text" id="ai-context-text">Importe um modelo IFC e eu posso analisar conflitos, gerar relatórios e criar cortes automáticos.</div>
           </div>
 
           <div class="ai-suggestion-group">
@@ -2143,52 +2143,31 @@
   <!-- Welcome Overlay JS -->
   <script>
   (function() {
-    // Sample recent projects — in production these come from API/localStorage
-    const SAMPLE_PROJECTS = [
-      {
-        name: 'Hospital São Lucas',
-        type: 'IFC4',
-        icon: '🏥',
-        elements: 2847,
-        collaborators: [
-          { initial: 'N', color: '#2563EB' },
-          { initial: 'A', color: '#7C3AED' },
-          { initial: 'M', color: '#059669' },
-        ],
-        progress: 82,
-        lastEdit: 'Hoje, 15:41',
-        status: 'active',
-      },
-      {
-        name: 'Edifício Comercial Alpha',
-        type: 'IFC2x3',
-        icon: '🏢',
-        elements: 1203,
-        collaborators: [
-          { initial: 'N', color: '#2563EB' },
-          { initial: 'R', color: '#D97706' },
-        ],
-        progress: 45,
-        lastEdit: 'Ontem',
-        status: null,
-      },
-      {
-        name: 'Infraestrutura Hidráulica',
-        type: 'IFC4',
-        icon: '🔧',
-        elements: 634,
-        collaborators: [
-          { initial: 'N', color: '#2563EB' },
-        ],
-        progress: 18,
-        lastEdit: '3 dias atrás',
-        status: null,
-      },
-    ];
+    // SEM dados fake: tudo vem do backend. URL absoluta da API (página é servida
+    // pelo GitHub Pages, então path relativo /api/... daria 404).
+    function apiBase() {
+      var h = location.hostname;
+      if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001';
+      return 'https://api.arxisvr.avilaops.com';
+    }
 
     function renderProjectCards(projects) {
       const container = document.getElementById('welcome-project-cards');
       if (!container) return;
+
+      // Estado vazio: sem projetos reais (nada de cards fake).
+      if (!projects || !projects.length) {
+        container.innerHTML = `
+          <div style="grid-column:1/-1;padding:40px 24px;text-align:center;border:1px dashed rgba(255,255,255,.12);border-radius:14px;color:#9CA3AF;">
+            <div style="font-size:32px;margin-bottom:10px;">📂</div>
+            <div style="font-size:15px;color:#E5E7EB;font-weight:600;margin-bottom:6px;">Nenhum projeto ainda</div>
+            <div style="font-size:13px;line-height:1.5;">Importe um modelo IFC ou crie um projeto para começar.<br>Seus projetos aparecerão aqui.</div>
+          </div>`;
+        const el = document.getElementById('qa-last-name');
+        if (el) el.textContent = '—';
+        return;
+      }
+
       container.innerHTML = projects.map(p => {
         const avatars = p.collaborators.map(c =>
           `<div class="project-card__avatar" style="background:${c.color}">${c.initial}</div>`
@@ -2207,11 +2186,12 @@
               <div class="project-card__name">${p.name}</div>
               <div class="project-card__meta">
                 <span class="project-card__meta-item">📦 ${p.elements.toLocaleString()} elementos</span>
-                <span class="project-card__meta-item">👥 ${p.collaborators.length}</span>
+                ${p.collaborators.length ? `<span class="project-card__meta-item">👥 ${p.collaborators.length}</span>` : ''}
               </div>
+              ${typeof p.progress === 'number' ? `
               <div class="project-card__progress">
                 <div class="project-card__progress-bar" style="width:${p.progress}%"></div>
-              </div>
+              </div>` : ''}
               <div class="project-card__footer">
                 <span>${p.lastEdit}</span>
                 <div class="project-card__avatars">${avatars}</div>
@@ -2231,29 +2211,39 @@
     async function fetchRealProjects() {
       try {
         const token = localStorage.getItem('arxisvr_token');
-        if (!token) return null;
-        const res = await fetch('/api/v1/projects', { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return null;
+        if (!token) return [];
+        const res = await fetch(apiBase() + '/api/v1/projects', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return [];
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.projects || data.data || []);
-        if (!list.length) return null;
+        // Mapeia SOMENTE campos reais do backend (sem progresso/colaboradores fabricados).
         return list.map(p => ({
           id: p.id,
-          name: p.name || 'Projeto',
-          type: p.ifcVersion || 'IFC4',
+          name: p.name || 'Projeto sem nome',
+          type: p.ifcVersion || p.schema || 'IFC',
           icon: '🏗️',
-          elements: p.elementCount || 0,
-          collaborators: [{ initial: 'N', color: '#2563EB' }],
-          progress: 50,
+          elements: Number(p.elementCount || p.elements || 0),
+          collaborators: Array.isArray(p.collaborators)
+            ? p.collaborators.map(c => ({ initial: (c.name || c.email || '?')[0].toUpperCase(), color: '#2563EB' }))
+            : [],
+          progress: typeof p.progress === 'number' ? p.progress : null,
           lastEdit: p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('pt-BR') : '—',
           status: p.status === 'active' ? 'active' : null,
         }));
-      } catch { return null; }
+      } catch { return []; }
     }
 
     async function initWelcome() {
       const realProjects = await fetchRealProjects();
-      renderProjectCards(realProjects && realProjects.length ? realProjects : SAMPLE_PROJECTS);
+      renderProjectCards(realProjects);  // sem fallback fake — só dados reais
+
+      // Contexto AI honesto: reflete o estado real (com ou sem projetos).
+      const ctxText = document.getElementById('ai-context-text');
+      if (ctxText) {
+        ctxText.textContent = realProjects.length
+          ? `Você tem ${realProjects.length} projeto${realProjects.length > 1 ? 's' : ''}. Posso analisar conflitos, gerar relatórios ou criar cortes automáticos.`
+          : 'Importe um modelo IFC e eu posso analisar conflitos, gerar relatórios e criar cortes automáticos.';
+      }
 
       // Expor o primeiro projeto real para o app-main usar como PROJECT_ID
       if (realProjects && realProjects[0]?.id) {
