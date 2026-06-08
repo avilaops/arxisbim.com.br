@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convite — ArxisVR</title>
+  <link rel="icon" type="image/svg+xml" href="/logo-icon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: #0b0b14;
+      background-image:
+        radial-gradient(ellipse at 30% 20%, rgba(79,70,229,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(139,92,246,.12) 0%, transparent 55%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px; color: #F9FAFB;
+    }
+    .card { background: #15151f; border: 1px solid rgba(255,255,255,.08); border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5); padding: 40px 48px; max-width: 460px; width: 100%; text-align: center; }
+    .logo { width: 56px; height: 56px; background: linear-gradient(135deg,#2563EB,#7C3AED);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+    .logo img { width: 30px; }
+    .brand { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    p { color: #9CA3AF; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .icon { font-size: 44px; margin-bottom: 14px; }
+    .ws { font-weight: 700; color: #A78BFA; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,.12);
+      border-top-color: #7C3AED; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn { display: inline-block; padding: 13px 28px; background: linear-gradient(135deg,#2563EB,#7C3AED);
+      color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; }
+    .btn:hover { opacity: .9; }
+    .btn.secondary { background: transparent; border: 1px solid rgba(255,255,255,.14); margin-left: 8px; }
+    .hidden { display: none; }
+    .status.error { color: #F87171; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><img src="/logo-icon.svg" alt="ArxisVR"></div>
+    <div class="brand">ArxisVR</div>
+
+    <div id="state-loading">
+      <div class="spinner"></div>
+      <p>Processando seu convite…</p>
+    </div>
+
+    <div id="state-success" class="hidden">
+      <div class="icon">🎉</div>
+      <h1>Convite aceito!</h1>
+      <p>Você entrou no workspace <span class="ws" id="ws-name">—</span>.</p>
+      <button class="btn" id="enter-btn">Entrar no workspace →</button>
+    </div>
+
+    <div id="state-error" class="hidden">
+      <div class="icon">⚠️</div>
+      <h1>Não foi possível aceitar</h1>
+      <p class="status error" id="err-msg">Convite inválido ou expirado.</p>
+      <a class="btn" href="/app.html">Ir para o app</a>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    function apiBase() {
+      var h = location.hostname;
+      if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001';
+      return 'https://api.arxisvr.avilaops.com';
+    }
+    var API = apiBase();
+    var params = new URLSearchParams(location.search);
+    var token = params.get('token');
+    var authToken = localStorage.getItem('arxisvr_token');
+
+    function show(id) {
+      ['loading', 'success', 'error'].forEach(function (s) {
+        document.getElementById('state-' + s).classList.toggle('hidden', s !== id);
+      });
+    }
+    function fail(msg) {
+      document.getElementById('err-msg').textContent = msg || 'Convite inválido ou expirado.';
+      show('error');
+    }
+
+    if (!token) { fail('Link de convite inválido.'); return; }
+
+    // Precisa estar logado (a conta tem que bater com o email convidado).
+    if (!authToken) {
+      var next = encodeURIComponent('/accept-invite.html?token=' + token);
+      location.href = '/login.html?next=' + next;
+      return;
+    }
+
+    var tenantId = null;
+
+    // POST sem body NÃO leva Content-Type json (senão Fastify recusa).
+    fetch(API + '/api/v1/invites/' + token + '/accept', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + authToken },
+    }).then(function (res) {
+      return res.json().then(function (data) { return { res: res, data: data }; });
+    }).then(function (r) {
+      if (!r.res.ok) {
+        if (r.res.status === 403) return fail('Este convite é para outro email. Entre com a conta convidada.');
+        if (r.res.status === 410) return fail('Convite expirado.');
+        if (r.res.status === 409) return fail('Convite já utilizado.');
+        return fail(r.data && (r.data.error || r.data.message));
+      }
+      tenantId = r.data.tenantId;
+      // Busca o nome do workspace (melhor UX).
+      return fetch(API + '/api/v1/workspaces', { headers: { Authorization: 'Bearer ' + authToken } })
+        .then(function (wr) { return wr.json(); })
+        .then(function (list) {
+          var ws = (list || []).find(function (w) { return w.tenantId === tenantId; });
+          document.getElementById('ws-name').textContent = (ws && ws.name) || tenantId;
+          show('success');
+        });
+    }).catch(function () { fail('Erro de conexão. Tente novamente.'); });
+
+    // Entrar no workspace: troca o tenant ativo e vai para o app.
+    document.getElementById('enter-btn').addEventListener('click', function () {
+      if (!tenantId) { location.href = '/app.html'; return; }
+      fetch(API + '/api/v1/workspaces/' + tenantId + '/switch', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + authToken },
+      }).then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data && data.token) {
+            localStorage.setItem('arxisvr_token', data.token);
+            localStorage.setItem('arxisvr_tenant_id', tenantId);
+          }
+          location.href = '/app.html';
+        }).catch(function () { location.href = '/app.html'; });
+    });
+  })();
+  </script>
+</body>
+</html>

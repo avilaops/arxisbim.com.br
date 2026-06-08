@@ -8,6 +8,7 @@ import { tenantService } from '../../api/v1/services/tenant.service';
 import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
 import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import { AuthModal } from '../../app/components/AuthModal.js';
+import { WorkspacePanel } from '../../app/components/WorkspacePanel.js';
 import { AdminPanel } from '../../app/components/AdminPanel.js';
 import { FederatedModelsPanel } from '../../app/components/FederatedModelsPanel.js';
 import { SchedulingPanel } from '../../app/components/SchedulingPanel.js';
@@ -117,8 +118,18 @@ async function init() {
     settingsBtn.addEventListener('click', () => adminPanel.open());
   }
 
+  // Workspaces (multi-tenant): trocar/criar workspace, convidar, convites.
+  const workspacePanel = new WorkspacePanel();
+  (window as any).__workspacePanel = workspacePanel;
+
   const actionsContainer = document.querySelector('.header__actions');
   if (actionsContainer) {
+    const workspaceBtn = document.createElement('button');
+    workspaceBtn.className = 'icon-button';
+    workspaceBtn.setAttribute('title', 'Workspaces');
+    workspaceBtn.innerHTML = '<i class="lucide lucide-building-2"></i>';
+    workspaceBtn.addEventListener('click', () => workspacePanel.open());
+
     const billingBtn = document.createElement('button');
     billingBtn.className = 'icon-button';
     billingBtn.setAttribute('title', 'Billing');
@@ -127,8 +138,10 @@ async function init() {
 
     const notificationsBtn = actionsContainer.querySelector('[title="Notificações"]');
     if (notificationsBtn?.parentElement === actionsContainer) {
+      actionsContainer.insertBefore(workspaceBtn, notificationsBtn);
       actionsContainer.insertBefore(billingBtn, notificationsBtn);
     } else {
+      actionsContainer.appendChild(workspaceBtn);
       actionsContainer.appendChild(billingBtn);
     }
   }

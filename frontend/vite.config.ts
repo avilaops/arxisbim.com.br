@@ -106,6 +106,7 @@ export default defineConfig({
         login: resolve(__dirname, 'login.html'),
         register: resolve(__dirname, 'register.html'),
         verifyEmail: resolve(__dirname, 'verify-email.html'),
+        acceptInvite: resolve(__dirname, 'accept-invite.html'),
         forgotPassword: resolve(__dirname, 'forgot-password.html'),
         resetPassword: resolve(__dirname, 'reset-password.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
