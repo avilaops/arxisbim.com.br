@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and, gte, lt, desc } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { memberships } from '../../shared/database/schema/workspaces.js';
 import { personalTenant } from '../tenancy/tenant-derivation.js';
 import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
 import { passwordHistory } from '../../shared/database/schema/password-history.js';
@@ -397,6 +398,11 @@ export class AuthService {
         isActive: false,       // conta inativa até verificação
       })
       .returning();
+
+    // Membership: o criador é owner do seu próprio workspace.
+    await this.db.insert(memberships)
+      .values({ userId: newUser.id, tenantId: tenantSlug, role: 'owner', status: 'active' })
+      .onConflictDoNothing();
 
     await BillingService.initializeTenantFreeTier(tenantSlug);
 

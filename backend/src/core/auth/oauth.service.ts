@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { memberships } from '../../shared/database/schema/workspaces.js';
 import { personalTenant } from '../tenancy/tenant-derivation.js';
 import { userSessions } from '../../shared/database/schema/observability.js';
 import { observabilityService } from '../observability/service.js';
@@ -102,6 +103,11 @@ export class OAuthService {
             oauthId: profile.id,
           })
           .returning();
+
+        // Membership: novo usuário OAuth é owner do seu workspace.
+        await this.db.insert(memberships)
+          .values({ userId: user.id, tenantId: tenantSlug, role: 'owner', status: 'active' })
+          .onConflictDoNothing();
       }
     }
 
