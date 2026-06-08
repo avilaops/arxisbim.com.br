@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { ProjectsService } from './projects.service.js';
 import { createProjectSchema, updateProjectSchema } from './projects.schemas.js';
+import { assertCanCreateProject, PlanLimitError } from '../../core/billing/plan-limits.js';
 
 export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
@@ -21,6 +22,14 @@ export class ProjectsController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const { tenantId } = request.user as any;
     const body = createProjectSchema.parse(request.body);
+    try {
+      await assertCanCreateProject(tenantId);
+    } catch (err) {
+      if (err instanceof PlanLimitError) {
+        return reply.code(err.statusCode).send({ error: err.message, limitKey: err.limitKey, limit: err.limit });
+      }
+      throw err;
+    }
     const project = await this.projectsService.create(tenantId, body);
     return reply.code(201).send(project);
   }

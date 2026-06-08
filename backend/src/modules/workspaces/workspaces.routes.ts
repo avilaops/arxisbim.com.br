@@ -7,6 +7,7 @@ import { memberships, workspaceInvites } from '../../shared/database/schema/work
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { AuthService } from '../../core/auth/auth.service.js';
 import { emailService } from '../../core/email/email.service.js';
+import { assertCanAddMember, PlanLimitError } from '../../core/billing/plan-limits.js';
 
 const authService = new AuthService();
 
@@ -133,6 +134,16 @@ export async function workspaceRoutes(fastify: FastifyInstance) {
     }
     if (inv.email.toLowerCase() !== user.email.toLowerCase()) {
       return reply.code(403).send({ error: 'Este convite é para outro email' });
+    }
+
+    // Enforce limite de membros do plano do workspace.
+    try {
+      await assertCanAddMember(inv.tenantId);
+    } catch (err) {
+      if (err instanceof PlanLimitError) {
+        return reply.code(err.statusCode).send({ error: err.message, limitKey: err.limitKey, limit: err.limit });
+      }
+      throw err;
     }
 
     await db.insert(memberships)
