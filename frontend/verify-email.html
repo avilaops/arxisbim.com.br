@@ -115,8 +115,8 @@
     <div id="state-success" class="hidden">
       <div class="icon">✅</div>
       <div class="status success">Email verificado com sucesso!</div>
-      <p>Sua conta está ativa. Agora você pode fazer login e acessar o ArxisVR.</p>
-      <a class="btn" href="/login.html">Fazer login</a>
+      <p id="success-text">Sua conta está ativa. Agora você pode fazer login e acessar o ArxisVR.</p>
+      <a class="btn" id="success-btn" href="/login.html">Fazer login</a>
     </div>
 
     <!-- Estado: Erro -->
@@ -142,11 +142,24 @@
     var urlToken = params.get('token');
     var tenant   = params.get('tenant');
     var email    = params.get('email');
+    // Para onde ir após verificar (ex.: voltar para a sessão de reunião). Só aceita
+    // caminhos internos (começa com "/") — evita open-redirect.
+    var nextParam = params.get('next');
+    var nextUrl = (nextParam && nextParam.charAt(0) === '/' && nextParam.charAt(1) !== '/') ? nextParam : '/login.html';
 
     function show(id) {
       ['verifying','code-form','success','error'].forEach(function (s) {
         document.getElementById('state-' + s).classList.toggle('hidden', s !== id);
       });
+      if (id === 'success') {
+        var btn = document.getElementById('success-btn');
+        var txt = document.getElementById('success-text');
+        btn.setAttribute('href', nextUrl);
+        if (nextUrl !== '/login.html') {
+          btn.textContent = 'Continuar →';
+          txt.textContent = 'Sua conta está ativa. Você já pode continuar.';
+        }
+      }
     }
 
     async function verify(code) {

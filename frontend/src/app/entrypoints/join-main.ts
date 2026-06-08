@@ -163,7 +163,18 @@ function renderAuthWall(token: string, content: HTMLElement): void {
         registerBtn.disabled = false;
         return;
       }
-      localStorage.setItem('arxisvr_token', data.accessToken ?? data.token ?? '');
+      // Verificação de email é OBRIGATÓRIA — convidado também precisa verificar.
+      // Sem token aqui; manda para a tela de código e volta para esta sessão depois.
+      if (data.requiresEmailVerification || !(data.accessToken || data.token)) {
+        regStatus.className = 'status loading';
+        regStatus.textContent = '📧 Verifique seu email para ativar a conta...';
+        const next = encodeURIComponent(`/join.html?token=${token}`);
+        setTimeout(() => {
+          window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}&next=${next}`;
+        }, 800);
+        return;
+      }
+      localStorage.setItem('arxisvr_token', data.accessToken ?? data.token);
       localStorage.setItem('arxisvr_user', JSON.stringify({
         id: data.user?.id ?? data.id,
         name: data.user?.name ?? name,
