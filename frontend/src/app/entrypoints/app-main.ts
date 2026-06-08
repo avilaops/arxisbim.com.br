@@ -443,6 +443,20 @@ async function init() {
     loadingEl.style.display = 'none';
   }
 
+  // Detecta entrada em reunião ANTES de construir o painel — o CollaborationPanel
+  // consome (apaga) as chaves de guest do localStorage no auto-join, então a
+  // leitura precisa acontecer aqui. App é privado: quem tem ?session= é
+  // participante legítimo de uma reunião.
+  const sessionParam = new URLSearchParams(window.location.search).get('session');
+  const arrivedAsGuest = !!(
+    sessionParam &&
+    localStorage.getItem('arxisvr_guest_name') &&
+    (localStorage.getItem('arxisvr_session_id') === sessionParam ||
+      localStorage.getItem('arxisvr_local_guest_id') ||
+      localStorage.getItem('arxisvr_session_token'))
+  );
+  const inMeeting = !!sessionParam && (arrivedAsGuest || !!localStorage.getItem('arxisvr_host_session_id'));
+
   // Inicializar painel de colaboração flutuante
   const collabMount = document.getElementById('collab-panel-mount');
   if (collabMount) {
@@ -487,15 +501,31 @@ async function init() {
     });
   }
 
-  // Auto-abrir painel se ?session= presente (guest chegou via invite link)
-  const sessionParam = new URLSearchParams(window.location.search).get('session');
-  const hasGuestContext = localStorage.getItem('arxisvr_session_token') ||
-    localStorage.getItem('arxisvr_local_guest_id') ||
-    (sessionParam && localStorage.getItem('arxisvr_guest_name') && localStorage.getItem('arxisvr_session_id') === sessionParam);
-  if (sessionParam && (hasGuestContext || localStorage.getItem('arxisvr_host_session_id'))) {
+  // Entrou numa reunião → esconde o welcome/demo e abre o painel de colaboração.
+  // Sem isso, o convidado caía na tela de boas-vindas (demo) em vez da reunião.
+  if (inMeeting) {
+    const welcomeOverlay = document.getElementById('welcome-overlay');
+    if (welcomeOverlay) welcomeOverlay.classList.add('hidden');
+    (window as any).ArxisWelcome?.hide?.();
     setTimeout(() => {
-      if (collabFloating) collabFloating.style.display = 'block';
-    }, 400);
+      if (collabFloating) collabFloating.style.display = 'flex';
+    }, 300);
+
+    // Banner de reunião: enquanto não há modelo compartilhado, deixa claro que a
+    // reunião está conectada (em vez de uma viewport vazia parecendo demo/erro).
+    const hasModel = () => currentIfcModels.length > 0 || !!loadedIfcModelId;
+    if (!hasModel()) {
+      const banner = document.createElement('div');
+      banner.id = 'meeting-banner';
+      banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);border:1px solid rgba(96,165,250,.3);color:#e2e8f0;padding:10px 18px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4)';
+      banner.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;display:inline-block"></span> Reunião conectada · aguardando o modelo do anfitrião';
+      document.body.appendChild(banner);
+      // Some assim que um modelo for carregado/compartilhado.
+      const iv = setInterval(() => {
+        if (hasModel()) { banner.remove(); clearInterval(iv); }
+      }, 1000);
+      setTimeout(() => clearInterval(iv), 120000);
+    }
   }
 
   // Ctrl+Shift+O abre/fecha o painel de colaboração
