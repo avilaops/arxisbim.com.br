@@ -190,8 +190,10 @@ export class ArxisCopilot {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'arxis-copilot-toggle';
-    button.innerHTML = 'AI';
-    button.title = 'Abrir ArxisVR Copilot (Ctrl+K)';
+    // Ícone de assistente (bot) — sinaliza o assistente pessoal único.
+    button.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="4" r="1.4"/><path d="M9 13h.01M15 13h.01"/><path d="M9.5 16.5h5"/></svg>';
+    button.setAttribute('aria-label', 'Assistente ArxisVR');
+    button.title = 'Assistente ArxisVR (Ctrl+K)';
     return button;
   }
 

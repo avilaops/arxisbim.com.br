@@ -250,39 +250,11 @@ async function init() {
     import('../../copilot/ArxisCopilot').then(({ ArxisCopilot }) => {
       const copilot = new ArxisCopilot(viewerHost!);
       window.__arxisCopilot = copilot;
-      // Hide copilot's own floating toggle — header "Arxis AI" btn is the single entry point
+      // UM só assistente: mostra o ícone flutuante pequeno (canto inferior
+      // direito) como entrada única do Copilot. A barra lateral 'welcome-ai'
+      // foi removida (parecia um segundo AI).
       const selfToggle = document.querySelector('.arxis-copilot-toggle') as HTMLElement | null;
-      if (selfToggle) selfToggle.style.display = 'none';
-
-      // Wire welcome-ai panel as a LAUNCHER for the Copilot (not a separate AI)
-      // Chips send a pre-filled message; textarea submits on Enter/click
-      document.querySelectorAll('.welcome-ai .ai-chip').forEach(chip => {
-        (chip as HTMLElement).addEventListener('click', () => {
-          const msg = (chip as HTMLElement).innerText.trim();
-          copilot.open();
-          // Inject message after open animation settles
-          setTimeout(() => {
-            const inp = document.querySelector('.arxis-copilot-input, [data-copilot-input]') as HTMLInputElement | null;
-            if (inp) { inp.value = msg; inp.dispatchEvent(new Event('input')); }
-          }, 300);
-        });
-      });
-      const welcomeTextarea = document.querySelector('.welcome-ai__input') as HTMLTextAreaElement | null;
-      if (welcomeTextarea) {
-        welcomeTextarea.addEventListener('keydown', (e: KeyboardEvent) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            const msg = welcomeTextarea.value.trim();
-            if (!msg) return;
-            copilot.open();
-            setTimeout(() => {
-              const inp = document.querySelector('.arxis-copilot-input, [data-copilot-input]') as HTMLInputElement | null;
-              if (inp) { inp.value = msg; inp.dispatchEvent(new Event('input')); }
-              welcomeTextarea.value = '';
-            }, 300);
-          }
-        });
-      }
+      if (selfToggle) selfToggle.style.display = '';
       console.log('ArxisVR Copilot inicializado');
     }).catch(err => console.error('Failed to load ArxisCopilot:', err));
   }, 100);
