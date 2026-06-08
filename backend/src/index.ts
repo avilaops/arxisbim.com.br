@@ -607,6 +607,22 @@ try {
   const notificationsGateway = new NotificationsGateway(server.server);
   server.log.info('🔌 WebSocket Gateways initialized (Meetings + Notifications)');
   
+  // Keep-alive: Render free tier dorme após 15 min sem tráfego. O serviço se
+  // auto-pinga a cada 14 min na URL pública → sempre há tráfego → não dorme
+  // (sem depender de máquina do dev nem de pinger externo). Só em produção.
+  const selfUrl = process.env.RENDER_EXTERNAL_URL
+    || process.env.PUBLIC_URL
+    || (process.env.NODE_ENV === 'production' ? 'https://api.arxisvr.avilaops.com' : '');
+  if (selfUrl) {
+    const KEEPALIVE_MS = 14 * 60 * 1000;
+    setInterval(() => {
+      fetch(`${selfUrl.replace(/\/$/, '')}/health`)
+        .then((r) => server.log.info(`💓 keep-alive ping ${r.status}`))
+        .catch((e) => server.log.warn(`keep-alive falhou: ${e?.message || e}`));
+    }, KEEPALIVE_MS).unref?.();
+    server.log.info(`💓 Keep-alive ativo (ping /health a cada 14 min em ${selfUrl})`);
+  }
+
   server.log.info(`🚀 ArxisVR Backend API running at http://${HOST}:${PORT}`);
   server.log.info(`📊 Health check: http://${HOST}:${PORT}/health`);
   server.log.info(`🎮 Virtual Meetings WebSocket: ws://${HOST}:${PORT}/socket.io/`);
