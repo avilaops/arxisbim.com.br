@@ -134,17 +134,28 @@ class MeetingsPanel {
   }
 
   async loadMeetings() {
+    // Modo demo / deslogado: não chama o backend (evita 404/CORS no console).
+    // Reuniões exigem autenticação e um projeto real.
+    const token = localStorage.getItem('arxisvr_token');
+    const isDemoProject = !this.projectId || this.projectId === 'demo' ||
+      String(this.projectId).startsWith('sample');
+    if (!token || isDemoProject) {
+      this.meetings = [];
+      this.loading = false;
+      this.error = null;
+      this.render();
+      return;
+    }
+
     this.loading = true;
     this.error = null;
     this.render();
 
     try {
-      console.log('Loading meetings for project:', this.projectId);
       this.meetings = await tenantService.getProjectMeetingRooms(this.projectId);
-      console.log('Loaded meetings:', this.meetings);
     } catch (err) {
-      this.error = 'Failed to load meetings';
-      console.error('Failed to load meetings:', err);
+      this.error = 'Não foi possível carregar as reuniões.';
+      console.warn('loadMeetings:', err?.message || err);
     } finally {
       this.loading = false;
       this.render();
