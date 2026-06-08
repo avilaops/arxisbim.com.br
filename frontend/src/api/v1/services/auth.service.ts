@@ -34,6 +34,17 @@ export interface RefreshTokenResponse {
   accessToken: string;
 }
 
+// O backend retorna o access token no campo `token`; partes do frontend esperam
+// `accessToken`. Esta normalização aceita os dois nomes e evita gravar
+// "undefined" no localStorage (causa de "Bearer undefined" → 401 → loop de login).
+function normalizeAuth(data: any): AuthResponse {
+  return {
+    ...data,
+    accessToken: data?.accessToken ?? data?.token,
+    refreshToken: data?.refreshToken,
+  };
+}
+
 export class AuthService {
   private readonly endpoint = '/api/v1/auth';
 
@@ -42,8 +53,8 @@ export class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const client = getAPIClient();
-    const response = await client.post<AuthResponse>(`${this.endpoint}/login`, credentials);
-    return response.data;
+    const response = await client.post<any>(`${this.endpoint}/login`, credentials);
+    return normalizeAuth(response.data);
   }
 
   /**
@@ -55,8 +66,8 @@ export class AuthService {
     const payload = Object.fromEntries(
       Object.entries(data).filter(([_, value]) => value !== undefined)
     );
-    const response = await client.post<AuthResponse>(`${this.endpoint}/register`, payload);
-    return response.data;
+    const response = await client.post<any>(`${this.endpoint}/register`, payload);
+    return normalizeAuth(response.data);
   }
 
   /**
@@ -64,10 +75,10 @@ export class AuthService {
    */
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     const client = getAPIClient();
-    const response = await client.post<RefreshTokenResponse>(`${this.endpoint}/refresh`, {
+    const response = await client.post<any>(`${this.endpoint}/refresh`, {
       refreshToken,
     });
-    return response.data;
+    return { accessToken: response.data?.accessToken ?? response.data?.token };
   }
 
   /**

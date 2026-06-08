@@ -95,9 +95,14 @@ class AuthManager {
     const authService = getAuthService();
     const response = await authService.login(credentials);
 
+    // Guarda: nunca gravar token inválido (evita "Bearer undefined" → 401 → loop).
+    if (!response.accessToken || typeof response.accessToken !== 'string') {
+      throw new Error('Resposta de login sem token de acesso.');
+    }
+
     // Save tokens
     localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    if (response.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
 
     // Update state
