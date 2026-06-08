@@ -37,7 +37,13 @@ export default function LoginPage() {
         password,
         turnstileToken: turnstileToken.current,
       } as any);
-      window.location.href = '/app.html';
+      // Destino pós-login: respeita ?next interno (ex.: convite de reunião);
+      // só aceita caminhos internos para evitar open-redirect.
+      const nextParam = new URLSearchParams(window.location.search).get('next');
+      const next = nextParam && nextParam.charAt(0) === '/' && nextParam.charAt(1) !== '/'
+        ? nextParam
+        : '/app.html';
+      window.location.href = next;
     } catch (err: any) {
       setError(err?.message || 'Email ou senha incorretos.');
     } finally {

@@ -18,6 +18,7 @@ import { appController } from '../../app/AppController';
 import { initHelpSystem } from '../../app/help/HelpSystem';
 import { uiStore } from '../../app/state/uiStore';
 import { CollaborationPanel } from '../../app/CollaborationPanel';
+import { isAuthenticated } from '../../core/auth/session';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -59,11 +60,32 @@ let loadedIfcModelId: string | null = null;
 let currentIfcModels: any[] = [];
 const hasAuthToken = () => Boolean(localStorage.getItem('arxisvr_token'));
 
+/**
+ * Guarda de autenticação: o app é 100% privado. Sem demo, sem acesso anônimo.
+ * Quem não tem sessão válida volta para a landing page (ou login, se veio de
+ * um convite de reunião — preservando o destino via ?next).
+ * Retorna false quando redirecionou (e o init deve abortar).
+ */
+function enforceAuthOrRedirect(): boolean {
+  if (isAuthenticated()) return true;
+  const search = window.location.search;
+  const sessionParam = new URLSearchParams(search).get('session');
+  if (sessionParam) {
+    const next = encodeURIComponent('/app.html' + search);
+    window.location.replace('/login.html?next=' + next);
+  } else {
+    window.location.replace('/index.html');
+  }
+  return false;
+}
+
 // Inicializar aplicação
 async function init() {
   console.log('Inicializando ArxisVR App...');
 
-  // Permitir acesso anônimo para demonstração
+  // App privado: sem sessão válida, não renderiza nada — redireciona.
+  if (!enforceAuthOrRedirect()) return;
+
   const apiClient = initializeAPI({
     baseURL: API_BASE_URL,
   });
