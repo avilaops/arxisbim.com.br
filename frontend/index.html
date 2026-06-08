@@ -176,13 +176,13 @@
 
     /* COOKIE BANNER */
     #cookie-banner {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 9999; width: calc(100% - 40px); max-width: 680px;
-      background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
-      border: 1px solid rgba(0,0,0,0.08); border-radius: 18px;
-      padding: 20px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-      display: flex; gap: 16px; align-items: flex-start;
-      font-size: 13.5px; color: #1A1A1A;
+      position: fixed; bottom: 14px; left: 14px;
+      z-index: 9999; width: calc(100% - 28px); max-width: 560px;
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(18px);
+      border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+      padding: 12px 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+      display: flex; gap: 12px; align-items: center;
+      font-size: 12.5px; color: #1A1A1A;
     }
     #cookie-banner.hidden { display: none; }
     #cookie-banner p { line-height: 1.5; flex: 1; }
@@ -924,6 +924,13 @@
           <h3>Multi-empresa &amp; API</h3>
           <p>Isolamento por tenant, JWT com refresh automático, papéis e permissões, e uma API REST <code class="mono">/api/v1</code> documentada.</p>
         </div>
+        <div class="feature reveal" style="transition-delay:.42s">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Reuniões XR colaborativas</h3>
+          <p>Multiplayer em tempo real via WebSocket: avatares, presença, cursores 3D e cenários compartilhados. Toda a equipe dentro do mesmo modelo, ao vivo.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -935,17 +942,17 @@
         <h2 class="h2">Do IFC ao cliente em três passos.</h2>
       </div>
       <div class="how-grid">
-        <div class="step">
+        <div class="step reveal">
           <div class="step-num">1</div>
           <h3>Suba seu modelo IFC</h3>
           <p>Arraste o arquivo na plataforma. O ArxisVR parseia, indexa propriedades e prepara o modelo para uso colaborativo.</p>
         </div>
-        <div class="step">
+        <div class="step reveal" style="transition-delay:.1s">
           <div class="step-num">2</div>
           <h3>Coordene com o Copilot</h3>
           <p>Federe disciplinas, peça revisões ao Copilot, configure cronograma 4D e quantitativos 5D. A IA executa ações seguras no viewer.</p>
         </div>
-        <div class="step">
+        <div class="step reveal" style="transition-delay:.2s">
           <div class="step-num">3</div>
           <h3>Apresente em VR/AR</h3>
           <p>Salve cenários e compartilhe um link. O cliente entra direto no navegador, em desktop, celular ou headset VR.</p>
@@ -961,7 +968,7 @@
         <h2 class="h2">Feito para times AEC que entregam projetos complexos.</h2>
       </div>
       <div class="cases">
-        <div class="case">
+        <div class="case reveal">
           <h3>🏢 Construtoras &amp; Incorporadoras</h3>
           <p>Reduza retrabalho com coordenação BIM e simulação 4D antes da obra.</p>
           <ul>
@@ -970,7 +977,7 @@
             <li>Revisão de clashes priorizada</li>
           </ul>
         </div>
-        <div class="case">
+        <div class="case reveal" style="transition-delay:.08s">
           <h3>📐 Escritórios de Arquitetura</h3>
           <p>Apresente o projeto ao cliente em 1:1, dentro do espaço, antes da obra começar.</p>
           <ul>
@@ -979,7 +986,7 @@
             <li>Comentários e anotações no modelo</li>
           </ul>
         </div>
-        <div class="case">
+        <div class="case reveal" style="transition-delay:.16s">
           <h3>⚙️ Engenharia &amp; MEP</h3>
           <p>Valide interferências e roteamentos com colaboração em tempo real.</p>
           <ul>
@@ -988,7 +995,7 @@
             <li>Filtros avançados por tipo/disciplina</li>
           </ul>
         </div>
-        <div class="case">
+        <div class="case reveal" style="transition-delay:.24s">
           <h3>🏗️ Gerenciadoras de Obra</h3>
           <p>Acompanhe progresso físico-financeiro com 4D + 5D integrados.</p>
           <ul>
@@ -1003,7 +1010,7 @@
 
   <section style="padding-top: 0;">
     <div class="container">
-      <div class="stats">
+      <div class="stats reveal">
         <div class="stat"><div class="num"><span class="grad">1:1</span></div><div class="lbl">Escala real do modelo</div></div>
         <div class="stat"><div class="num"><span class="grad">3×</span></div><div class="lbl">Versões IFC suportadas</div></div>
         <div class="stat"><div class="num"><span class="grad">100%</span></div><div class="lbl">Web — sem instalação</div></div>
@@ -1239,7 +1246,9 @@
           defaultNS: 'translation',
           backend: { loadPath: '/locales/{{lng}}/{{ns}}.json' },
           detection: {
-            order: ['querystring', 'localStorage', 'navigator'],
+            // PT é o padrão. Só muda por ?lang= ou escolha salva — não pelo
+            // locale do navegador (evitava 'Sign in' misturado com PT).
+            order: ['querystring', 'localStorage'],
             lookupQuerystring: 'lang',
             lookupLocalStorage: 'arxisvr_lang',
             caches: ['localStorage'],
