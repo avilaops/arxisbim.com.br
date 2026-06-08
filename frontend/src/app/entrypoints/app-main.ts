@@ -19,6 +19,8 @@ import { initHelpSystem } from '../../app/help/HelpSystem';
 import { uiStore } from '../../app/state/uiStore';
 import { CollaborationPanel } from '../../app/CollaborationPanel';
 import { isAuthenticated } from '../../core/auth/session';
+import { modelSyncService } from '../../features/collaboration/ModelSyncService';
+import { eventBus } from '../../core';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
@@ -182,9 +184,18 @@ async function init() {
     ctaContainer.appendChild(meetingsBtn2);
   }
 
-  // Initialize Tenant/Project Selector
+  // Initialize Tenant/Project Selector — uma falha no fetch de tenants NÃO pode
+  // abortar a inicialização do app (ex.: convidado sem acesso a tenants ainda
+  // precisa entrar na reunião). Isolado em try/catch.
   const tenantSelector = new TenantProjectSelector();
-  await tenantSelector.init();
+  try {
+    await Promise.race([
+      tenantSelector.init(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('tenant init timeout')), 8000)),
+    ]);
+  } catch (err) {
+    console.warn('[ArxisVR] Seletor de tenant indisponível (seguindo sem ele):', err);
+  }
 
   // Listen for project changes
   window.addEventListener('project-changed', (e: any) => {
@@ -511,21 +522,14 @@ async function init() {
       if (collabFloating) collabFloating.style.display = 'flex';
     }, 300);
 
-    // Banner de reunião: enquanto não há modelo compartilhado, deixa claro que a
-    // reunião está conectada (em vez de uma viewport vazia parecendo demo/erro).
-    const hasModel = () => currentIfcModels.length > 0 || !!loadedIfcModelId;
-    if (!hasModel()) {
-      const banner = document.createElement('div');
-      banner.id = 'meeting-banner';
-      banner.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);border:1px solid rgba(96,165,250,.3);color:#e2e8f0;padding:10px 18px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4)';
-      banner.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;display:inline-block"></span> Reunião conectada · aguardando o modelo do anfitrião';
-      document.body.appendChild(banner);
-      // Some assim que um modelo for carregado/compartilhado.
-      const iv = setInterval(() => {
-        if (hasModel()) { banner.remove(); clearInterval(iv); }
-      }, 1000);
-      setTimeout(() => clearInterval(iv), 120000);
-    }
+    // Sincronização do modelo do anfitrião entre todos os participantes.
+    modelSyncService.start();
+    (window as any).__modelSync = modelSyncService;
+    (window as any).__eventBus = eventBus;
+
+    // Banner de reunião: comunica o estado da sincronização do modelo, em vez de
+    // deixar a viewport vazia parecendo demo/erro.
+    setupMeetingBanner();
   }
 
   // Ctrl+Shift+O abre/fecha o painel de colaboração
@@ -767,6 +771,64 @@ function setupKeyboardShortcuts() {
       }
     }
   });
+}
+
+/**
+ * Banner de estado da reunião — comunica a sincronização do modelo do anfitrião
+ * (aguardando / carregando / pronto / erro) sem deixar a viewport parecer demo.
+ */
+function setupMeetingBanner(): void {
+  if (document.getElementById('meeting-banner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'meeting-banner';
+  banner.style.cssText =
+    'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;background:rgba(15,23,42,.92);backdrop-filter:blur(8px);border:1px solid rgba(96,165,250,.3);color:#e2e8f0;padding:10px 18px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .3s';
+
+  const dot = (color: string) =>
+    `<span style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};display:inline-block;flex-shrink:0"></span>`;
+  const spinner =
+    '<span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:#60a5fa;border-radius:50%;display:inline-block;animation:spin .8s linear infinite"></span>';
+  if (!document.getElementById('meeting-banner-kf')) {
+    const kf = document.createElement('style');
+    kf.id = 'meeting-banner-kf';
+    kf.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(kf);
+  }
+
+  const setState = (html: string) => { banner.innerHTML = html; };
+  const remove = () => {
+    banner.style.opacity = '0';
+    setTimeout(() => banner.remove(), 320);
+  };
+
+  const hasModel = () => currentIfcModels.length > 0 || !!loadedIfcModelId;
+
+  if (hasModel()) return; // modelo já presente — sem banner
+
+  setState(`${dot('#34d399')} Reunião conectada · aguardando o modelo do anfitrião`);
+  document.body.appendChild(banner);
+
+  const onLoading = () => setState(`${spinner} Carregando modelo do anfitrião…`);
+  const onLoaded = () => { cleanup(); remove(); };
+  const onError = () => {
+    setState(`${dot('#f87171')} Não foi possível carregar o modelo do anfitrião`);
+    setTimeout(() => { cleanup(); remove(); }, 6000);
+  };
+  // Modelo carregado localmente (anfitrião abriu o IFC) também encerra o banner.
+  const onIfcLoaded = () => { cleanup(); remove(); };
+
+  function cleanup() {
+    eventBus.off('collab:model-loading', onLoading);
+    eventBus.off('collab:model-loaded', onLoaded);
+    eventBus.off('collab:model-error', onError);
+    eventBus.off('ifc:loaded', onIfcLoaded);
+  }
+
+  eventBus.on('collab:model-loading', onLoading);
+  eventBus.on('collab:model-loaded', onLoaded);
+  eventBus.on('collab:model-error', onError);
+  eventBus.on('ifc:loaded', onIfcLoaded);
 }
 
 function showNavToast(msg: string): void {

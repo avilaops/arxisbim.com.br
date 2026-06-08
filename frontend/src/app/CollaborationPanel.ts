@@ -8,6 +8,7 @@ import type { ChatMessage } from '../features/multiplayer-realtime/multiplayer-r
 import { resolveApiBaseUrl } from '../config/apiBaseUrl';
 import { CollaborationPresenceSystem } from '../features/collaboration/CollaborationPresenceSystem';
 import { CollaborationVoice } from '../features/collaboration/CollaborationVoice';
+import { modelSyncService } from '../features/collaboration/ModelSyncService';
 
 const API = resolveApiBaseUrl();
 
@@ -398,7 +399,9 @@ export class CollaborationPanel {
     }
     this.presenceSystem = new CollaborationPresenceSystem(vh.scene, vh.camera);
     this.presenceSystem.start();
-    console.log('[CollaborationPanel] Presence system iniciado ✅');
+    // Sincroniza o modelo do anfitrião com todos os participantes (idempotente).
+    modelSyncService.start();
+    console.log('[CollaborationPanel] Presence + model sync iniciados ✅');
   }
 
   private async handleLeave(): Promise<void> {
@@ -413,6 +416,7 @@ export class CollaborationPanel {
     this.presenceSystem = null;
     this.voiceSystem?.dispose();
     this.voiceSystem = null;
+    modelSyncService.stop();
     MultiplayerRealtimeService.leaveRoom();
     localStorage.removeItem('arxisvr_host_session_id');
     localStorage.removeItem('arxisvr_host_session_token');
