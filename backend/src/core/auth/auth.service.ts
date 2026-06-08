@@ -700,6 +700,14 @@ export class AuthService {
   }
 
   /**
+   * Emite um access token para um tenant específico (troca de workspace).
+   * Público: usado pelo módulo de workspaces após validar a membership.
+   */
+  issueAccessToken(payload: JWTPayload): string {
+    return this.generateAccessToken(payload);
+  }
+
+  /**
    * Gerar access token
    */
   private generateAccessToken(payload: JWTPayload): string {

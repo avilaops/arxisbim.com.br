@@ -43,3 +43,6 @@ export * from './password-history.js';
 
 // Multiplayer Sessions (Session, Participant, Presence, SessionEvent, Recording, BillingUsage)
 export * from './sessions.js';
+
+// Workspaces: memberships (N:N user↔tenant) e convites
+export * from './workspaces.js';
