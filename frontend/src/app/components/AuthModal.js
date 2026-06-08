@@ -1,7 +1,17 @@
-// Corrigido: Não usar import.meta em arquivos JS comuns
-const API_BASE_URL = (typeof window !== 'undefined' && window.env && window.env.VITE_API_URL)
-  ? window.env.VITE_API_URL
-  : 'http://localhost:3001';
+// Corrigido: Não usar import.meta em arquivos JS comuns.
+// Em produção o build NÃO injeta window.env, então derivamos do hostname
+// (antes caía em localhost:3001 → "Failed to fetch" em produção).
+const API_BASE_URL = (() => {
+  if (typeof window !== 'undefined' && window.env && window.env.VITE_API_URL) {
+    return window.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3001';
+    return 'https://api.arxisvr.avilaops.com';
+  }
+  return 'http://localhost:3001';
+})();
 
 class AuthModal {
   constructor() {
@@ -472,7 +482,11 @@ class AuthModal {
         </button>
       `;
 
-      document.getElementById('auth-login')?.addEventListener('click', () => this.open('login'));
+      // Vai para a página de auth canônica (login.html) — usa a API de produção
+      // correta e o fluxo OAuth. Evita o modal inline (que apontava p/ localhost).
+      document.getElementById('auth-login')?.addEventListener('click', () => {
+        window.location.href = '/login.html';
+      });
     }
   }
 }

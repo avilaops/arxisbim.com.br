@@ -2268,7 +2268,10 @@
           const token = localStorage.getItem('arxisvr_token');
           let firstName = '';
           if (token) {
-            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+            const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+            // decodeURIComponent + escape de bytes → UTF-8 correto (evita "NÃcolas")
+            const json = decodeURIComponent(atob(b64).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''));
+            const payload = JSON.parse(json);
             // Só saúda por nome se o token NÃO estiver expirado — consistente com o header.
             const notExpired = !(typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now());
             if (notExpired) {
