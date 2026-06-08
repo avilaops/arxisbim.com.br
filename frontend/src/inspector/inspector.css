@@ -18,6 +18,22 @@
   transform: translateX(340px);
 }
 
+/* Embutido no painel direito (#model-info): renderiza inline em vez de uma
+   segunda barra fixa flutuante. Evita as "duas barras de propriedades". */
+#model-info .inspector-panel {
+  position: static;
+  top: auto;
+  right: auto;
+  width: 100%;
+  height: auto;
+  background: transparent;
+  border-left: none;
+  z-index: auto;
+  transition: none;
+}
+#model-info .inspector-panel__header { display: none; }
+#model-info .inspector-panel__content { padding: 0; overflow: visible; }
+
 /* Header */
 .inspector-panel__header {
   display: flex;

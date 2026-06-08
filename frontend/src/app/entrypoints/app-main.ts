@@ -380,18 +380,31 @@ async function init() {
         import('../../inspector/BatchSelectionService')
       ]);
       
+      // Painel ÚNICO de propriedades: o inspector é montado DENTRO do painel
+      // direito (#model-info), não como uma segunda barra flutuante.
+      const modelInfoEl = document.getElementById('model-info');
       inspectorController.initialize(
         viewerHost!.scene,
         viewerHost!.camera,
         canvasEl,
-        document.body,
+        modelInfoEl || document.body,
         ifcLoader
       );
       selectionService.onSelectionChanged((payload) => {
         if (payload) {
+          // Remove placeholder/resumo antigo; mantém só o painel do inspector.
+          if (modelInfoEl) {
+            modelInfoEl
+              .querySelectorAll(':scope > :not(.inspector-panel)')
+              .forEach((n) => n.remove());
+          }
           inspectorController.showPanel(payload);
+          // Atualiza status bar / breadcrumb / botão IA (sem recriar o card).
+          updateSelectionMeta(payload);
+        } else {
+          inspectorController.hidePanel();
+          updateModelInfoFromSelection(null);
         }
-        updateModelInfoFromSelection(payload);
       });
       
       // Lazy load SelectionActionsPanel
@@ -496,6 +509,26 @@ async function init() {
   });
 
   console.log('ArxisVR App pronto');
+}
+
+/**
+ * Atualiza apenas os metadados de UI (status bar, breadcrumb, botão IA) a partir
+ * da seleção. NÃO renderiza o card de propriedades — isso agora é feito pelo
+ * Inspector embutido em #model-info (painel único de propriedades).
+ */
+function updateSelectionMeta(payload: any) {
+  if (!payload) {
+    _updateAIButton(null);
+    _updateStatusBar(null);
+    _updateBreadcrumb(null);
+    return;
+  }
+  const obj = payload.object3D;
+  const name = obj?.name || (payload.expressID !== undefined ? `IFC #${payload.expressID}` : obj?.type || 'Elemento');
+  const ifcType = (payload.type || obj?.type || 'IFC').toUpperCase();
+  _updateStatusBar({ name, coords: obj?.position });
+  _updateBreadcrumb({ element: name, ifcType });
+  _updateAIButton({ name, ifcType });
 }
 
 function updateModelInfoFromSelection(payload: any) {
