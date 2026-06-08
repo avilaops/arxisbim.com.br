@@ -321,10 +321,22 @@ server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply
   const user = request.user;
   const statusCode = reply.statusCode;
 
+  // Padrão de rota (ex: /api/v1/ifc/:id) — agrega hábitos sem fragmentar por ID/query.
+  // Cai para a URL concreta se a rota não tiver padrão registrado.
+  const routePattern = (request.routeOptions?.url as string | undefined) || request.url.split('?')[0];
+
+  // Ruído que não representa hábito do usuário: health checks e preflight CORS.
+  const isNoise =
+    request.method === 'OPTIONS' ||
+    routePattern.startsWith('/health') ||
+    routePattern === '/metrics' ||
+    routePattern === '/';
+
   // Log estruturado (sempre)
   logger.info('Request completed', {
     method: request.method,
     url: request.url,
+    route: routePattern,
     statusCode,
     duration,
     ip: request.ip,
@@ -333,18 +345,19 @@ server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply
     tenantId: tenantId || 'no-tenant',
   });
 
-  // Database logs (apenas se houver tenant)
-  if (tenantId) {
-    // Audit log (async, não bloqueia response)
+  // Auditoria no banco: todo request com tenant OU usuário autenticado, exceto ruído.
+  if (tenantId && !isNoise) {
+    // Audit log (async, não bloqueia response). action usa o PADRÃO de rota → agregação limpa.
     observabilityService.logAudit({
       tenantId,
       userId: user?.userId,
-      action: `${request.method}:${request.url}`,
+      action: `${request.method}:${routePattern}`,
       resource: 'api.request',
       metadata: {
         ip: request.ip,
         userAgent: request.headers['user-agent'],
         method: request.method,
+        route: routePattern,
         path: request.url,
         statusCode,
         duration,
