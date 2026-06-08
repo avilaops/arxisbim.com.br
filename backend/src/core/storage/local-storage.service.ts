@@ -10,7 +10,8 @@
  */
 
 import fs from 'node:fs/promises';
-import { createReadStream, createWriteStream } from 'node:fs';
+import { createReadStream, createWriteStream, constants as fsConstants } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
@@ -32,13 +33,33 @@ function isAbsolutePathish(key: string): boolean {
 
 export class LocalStorageService implements StorageService {
   readonly driver = 'local' as const;
-  private readonly root: string;
+  private root: string;
+  private rootChecked = false;
 
   constructor(root?: string) {
     const configured = root ?? process.env.UPLOAD_DIR ?? 'uploads';
     this.root = path.isAbsolute(configured)
       ? configured
       : path.resolve(process.cwd(), configured);
+  }
+
+  /**
+   * Garante que o root é gravável. Em hosts sem disco persistente (ex.: Render
+   * free com UPLOAD_DIR=/mnt/persistent-storage não montado), cai para um
+   * diretório temporário gravável em vez de estourar EACCES em todo upload.
+   */
+  private async ensureWritableRoot(): Promise<void> {
+    if (this.rootChecked) return;
+    try {
+      await fs.mkdir(this.root, { recursive: true });
+      await fs.access(this.root, fsConstants.W_OK);
+    } catch {
+      const fallback = path.join(os.tmpdir(), 'arxisvr-uploads');
+      await fs.mkdir(fallback, { recursive: true }).catch(() => {});
+      console.warn(`⚠️  Storage root "${this.root}" não gravável — usando ${fallback}`);
+      this.root = fallback;
+    }
+    this.rootChecked = true;
   }
 
   private resolve(key: StorageKey): string {
@@ -54,6 +75,7 @@ export class LocalStorageService implements StorageService {
   }
 
   async upload(key: StorageKey, body: StorageBody, _opts: UploadOptions = {}): Promise<StorageObject> {
+    await this.ensureWritableRoot();
     const target = this.resolve(key);
     await this.ensureDir(target);
 

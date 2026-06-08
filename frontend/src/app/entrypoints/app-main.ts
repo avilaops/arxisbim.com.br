@@ -933,27 +933,32 @@ function setupNavigation() {
 async function loadSingleIfc(file: File) {
   if (!viewerHost || !ifcLoader) return;
   try {
-    if (hasAuthToken() && PROJECT_ID) {
-      const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
-      console.log('IFC uploaded to backend:', uploadedModel);
-      await ifcLoader.load(file);
-      loadedIfcModelId = (uploadedModel as any).id;
-      await loadIfcModels();
-      (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
-      // Tem id no backend → emite ifc:loaded para o ModelSync compartilhar o
-      // modelo com os participantes da reunião (se houver uma ativa).
-      eventBus.emit('ifc:loaded', { model: uploadedModel });
-    } else {
-      await ifcLoader.load(file);
-      console.log('IFC carregado localmente:', file.name);
-      loadedIfcModelId = file.name;
-      // Numa reunião, um arquivo só local (sem projeto) não pode ser
-      // compartilhado — avisa o anfitrião de forma honesta.
-      if (modelSyncService.isActive()) {
-        showNavToast('Para compartilhar este modelo na reunião, abra-o a partir de um projeto (o arquivo local não é enviado aos participantes).');
-      }
-    }
+    // 1) Renderiza LOCAL primeiro — visualização não depende do upload/backend.
+    await ifcLoader.load(file);
+    loadedIfcModelId = file.name;
+    console.log('IFC renderizado localmente:', file.name);
     (window as any).ArxisWelcome?.hide?.();
+    document.getElementById('welcome-overlay')?.classList.add('hidden');
+    (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
+
+    // 2) Upload em BACKGROUND (persistência no projeto). Falha aqui NÃO impede
+    //    ver o modelo — apenas avisa. Antes, um erro de storage abortava tudo.
+    if (hasAuthToken() && PROJECT_ID) {
+      tenantService.uploadIFCModel(PROJECT_ID, file)
+        .then((uploadedModel) => {
+          console.log('IFC salvo no projeto:', uploadedModel);
+          loadedIfcModelId = (uploadedModel as any).id;
+          loadIfcModels();
+          // Tem id no backend → ModelSync compartilha com a reunião (se ativa).
+          eventBus.emit('ifc:loaded', { model: uploadedModel });
+        })
+        .catch((err) => {
+          console.warn('Falha ao salvar IFC no projeto (visualização local ok):', err);
+          showNavToast('Modelo aberto localmente. Não foi possível salvá-lo no projeto agora.');
+        });
+    } else if (modelSyncService.isActive()) {
+      showNavToast('Para compartilhar este modelo na reunião, abra-o a partir de um projeto.');
+    }
   } catch (err) {
     console.error('Erro ao carregar IFC:', err);
     alert(`Erro ao carregar ${file.name}: ${(err as Error).message || err}`);
