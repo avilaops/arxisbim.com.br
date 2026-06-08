@@ -1,158 +1,127 @@
-# ROADMAP - ArxisVR
+# ROADMAP — ArxisVR
 
-**Última Atualização:** 02/06/2026  
-**Status:** ✅ Fase Avançada Concluída - 5 Features BIM Implementadas
+**Última atualização:** 08/06/2026
+**Status:** ✅ Produção estável · 🔐 Multi-tenant seguro · 👥 Colaboração realtime · 🧱 Persistência durável e Billing são os próximos gargalos
 
----
-
-## 📊 STATUS GERAL DO PROJETO
-
-### ✅ CONCLUÍDO (Q2 2026)
-
-#### Sessão 1 - CI/CD Fixes & Critical TODOs (01/06/2026)
-- ✅ 22 TypeScript errors resolvidos → 0 errors
-- ✅ Backend multi-tenancy APIs implementadas (tenants/companies/projects)
-- ✅ IFC spatial structure parsing
-- ✅ Project serialization (7 geometry types + layers)
-- ✅ IFC streaming progressivo (chunked loading)
-- ✅ ArxisCopilot action routing (10/10 actions)
-- ✅ @types/bcrypt dependency instalada
-
-#### Sessão 2 - Backend Integration (01/06/2026)
-- ✅ Frontend Project Selector conectado ao backend
-- ✅ Federated Models backend corrigido e rotas registradas
-- ✅ tenant.service.ts atualizado para novos endpoints
-
-#### Sessão 3 - High Priority Features (01/06/2026)
-- ✅ LOD Automático → `LODSystem.createLOD()` implementado
-- ✅ Layer UI → Color picker + selection + isolate
-- ✅ E2E Testing → 22 novos testes Playwright
-  - Federated models CRUD (5 tests)
-  - Project selector UI (7 tests)
-  - Layer interactions (10 tests)
-- ✅ Documentation → Refs `services/` removidas, arquitetura atualizada
-
-#### Sessão 4 - Advanced BIM Features (02/06/2026)
-- ✅ BIM Query Language → SQL-like queries para BIM (backend + frontend + docs)
-- ✅ GLB Export → Exportação otimizada IFC→GLB com Draco compression
-- ✅ Quantitativos 5D → Cálculo de takeoff (volume, área, comprimento, custos)
-
-### 🎯 STATUS DE BUILD
-
-```bash
-✅ Backend:  tsc --noEmit → 0 errors, build → 180 files (305ms)
-✅ Frontend: build → 344 modules (5.58s)
-✅ CI/CD:    GitHub Actions ready, Render deploy ready
-```
+> Plataforma BIM (IFC) com viewer Three.js, colaboração multiplayer (WebXR),
+> Copilot de IA e multi-tenant. Frontend MPA (Vite) no GitHub Pages; backend
+> Fastify + Drizzle + Postgres no Render.
 
 ---
 
-## 📋 ETAPAS MACRO
+## 🏃 ANÁLISE DE SPRINTS
 
-Este roadmap organiza a evolução do frontend ArxisVR em etapas modulares e progressivas.
+O projeto evolui por **sprints = sessões de trabalho** focadas. Cada sprint
+fecha com deploy e verificação ao vivo.
 
+| Sprint | Data | Tema | Resultado |
+|---|---|---|---|
+| **S1–S4** | 01–02/06 | Core BIM | Multi-tenant API, IFC parsing/streaming/LOD, Copilot routing, 5 features BIM (BIM Query, GLB, 5D, Snapshots, Painel Props), 22 E2E Playwright |
+| **S5** | 08/06 | **Segurança & Colaboração** | Isolamento de tenant, API de modelos protegida, Workspaces/Convites (Fase 2), model-sync de reunião, AI unificado, fix import IFC, infra de deploy. **18 commits.** |
+| **S6** | _próximo_ | **Billing** | Planos, limites por plano, checkout, cobrança de minutos de reunião |
+| **S7** | _planejado_ | **Persistência durável** | Object storage R2/S3 (hoje /tmp efêmero) |
+| **S8** | _planejado_ | **Hardening** | Auditoria de isolamento em todos os controllers + autoDeploy |
 
-### Implementação Core (Status Atual)
-
-- ✅ 01- Diagnóstico e Planejamento.md → **CONCLUÍDO**
-- ✅ 02- Modularização da Estrutura.md → **CONCLUÍDO** (arquitetura modules/ implementada)
-- ✅ 03- Camadas e Serviços.md → **CONCLUÍDO** (backend services funcionais)
-- ✅ 04- UI e Componentização.md → **CONCLUÍDO** (TenantProjectSelector, LayerPanel, etc)
-- ⏳ 05- Estado e Navegação.md → **EM PROGRESSO** (básico funcional, otimizações pendentes)
-- ✅ 06- Performance e Arquitetura 3D.md → **CONCLUÍDO** (LOD system, streaming, chunked loading)
-- ✅ 07- Testes e Qualidade.md → **CONCLUÍDO** (22 E2E tests Playwright)
-- ⏳ 08- Evolução e Futuro.md → **PLANEJAMENTO** (features avançadas)
-
-## Detalhamento de módulos/domínios
-
-### Backend Services (✅ Implementados)
-- ✅ 13- API Integration.md → Backend multi-tenant APIs completas
-- ✅ 15- IFCService.md → Upload/download/parsing/streaming
-- ✅ 22- FederationService.md → Federated models CRUD
-- ✅ 25- AuthService.md → JWT authentication, multi-tenant
-
-### Frontend Core (✅ Implementados)
-- ✅ 09- Viewer 3D.md → ViewerHost, Three.js integration, IFC loading
-- ✅ 12- UI Components.md → Panels (Admin, Federated, Scenarios, Tenant Selector)
-- ✅ 26- SelectionService.md → Layer selection, color picker
-- ✅ 27- SceneSystem.md → LOD system, geometry serialization
-
-### Features Avançadas (⏳ Planejadas)
-- ⏳ 10- StorageService.md
-- ⏳ 11- Controllers.md
-- ⏳ 14- BudgetService.md
-- ⏳ 16- NavigationService.md
-- ⏳ 17- UserService.md
-- ⏳ 18- NotificationService.md
-- ⏳ 19- LoggingService.md
-- ⏳ 20- AnalyticsService.md
-- ⏳ 21- PluginService.md
-- ⏳ 23- AutomationService.md
-- ⏳ 24- IntegrationService.md
-- ✅ 28- Quantitativos5D.md → Backend + Frontend + Docs (02/06/2026)
-- ✅ 29- ExportacaoGLB.md → Backend + Frontend + Docs (02/06/2026)
-- ✅ 30- SnapshotsPNG.md → Frontend + Docs (02/06/2026)
-- ✅ 31- PainelPropriedades.md → Frontend Service + Types + Docs (02/06/2026)
-- ✅ 32- BIMQuery.md → Backend + Frontend + Docs (02/06/2026)
-- ⏳ 33- MultiplayerRealtime.md
+### Métrica de ritmo
+- S5 entregou ~18 commits num dia, todos deployados e verificados ao vivo.
+- Velocidade alta sustentada por: deploy manual (gh-pages + Render API),
+  verificação E2E via Chrome MCP, e queries diretas ao Postgres para evidência.
 
 ---
 
-## 🚀 PRÓXIMAS ETAPAS
+## ✅ CONCLUÍDO
 
-### Q3 2026 - Features Avançadas
-1. ✅ Quantitativos 5D completos (02/06/2026)
-2. ✅ Exportação GLB otimizada (02/06/2026)
-3. ✅ BIM Query language (02/06/2026)
-4. ✅ Snapshot PNG high-quality (02/06/2026)
-5. ✅ Painel de Propriedades IFC (02/06/2026)
+### Sprint 5 — Segurança & Colaboração (08/06/2026)
 
-### Q4 2026 - Limpeza & Otimização
-1. 📚 Converter TODOs restantes em GitHub Issues
-2. 📚 Performance profiling e otimizações
-3. 📚 Revisar documentação técnica
-4. 📚 Refatorar componentes legados
+**🔐 Segurança / Multi-tenant**
+- Isolamento real de tenant: email NUNCA define tenant. Cada usuário nasce no
+  próprio tenant único (`u-<local>-<hash>`). Corrigido vazamento onde todo
+  `@gmail.com` caía no mesmo tenant "gmail". (`core/tenancy/tenant-derivation.ts`)
+- Cadastro não aceita mais `tenantId` do cliente (evita auto-atribuição a tenant alheio).
+- API de modelos IFC com `authenticateRequest` + escopo por tenant/sessão em
+  TODAS as rotas (era aberta anonimamente). (`routes/v1/ifc-models.ts`)
 
----
+**👥 Workspaces & Convites (Fase 2)**
+- Membership N:N (user ↔ tenant) + tabela de convites. (`schema/workspaces.ts`)
+- Endpoints: criar workspace, convidar (email+role, email via Resend), aceitar,
+  recusar, listar, **trocar workspace ativo** (re-emite JWT). (`modules/workspaces`)
+- UI: `WorkspacePanel.js` (trocar/criar/convidar/aceitar) + `accept-invite.html`.
+- Cadastro cria membership owner (register + OAuth).
+- **E2E ao vivo: 10/10** (criar→convidar→isolamento→aceitar→trocar→403/409).
 
-## 📝 CRITÉRIOS DE QUALIDADE (ATINGIDOS)
+**🤝 Colaboração / Reunião**
+- Demo removido → app 100% autenticado (sem sessão → landing).
+- Painel de propriedades único (inspector embutido; eram 2 barras).
+- Convidado entra **na reunião** (não no demo).
+- **Model-sync**: modelo do anfitrião sincroniza para todos os participantes
+  (= o "Multiplayer Realtime" que estava planejado). (`features/collaboration/ModelSyncService.ts`)
 
-Cada módulo deve conter:
-- Objetivo do módulo
-- Responsabilidades
-- APIs/contratos
-- Fluxos principais
-- Exemplos de uso
-- Pontos de integração
-- Critérios de qualidade
+**🎨 Produto / UX**
+- Landing: idioma consistente (PT default), card Reuniões XR, cookie enxuto, scroll-reveal.
+- **1 assistente** (ArxisCopilot) com ícone flutuante único (eram 2 superfícies confusas).
+- Fix import IFC (não carregava): render local primeiro + storage gravável.
 
-**Status Atual:** ✅ Módulos core atingem todos os critérios acima.
+**🛠️ Infra**
+- Deploy destravado **sem GitHub Actions** (bloqueado por billing): frontend via
+  push manual no `gh-pages`; backend via Render API.
+- **Keep-alive** anti-sleep: backend se auto-pinga em /health a cada 14 min.
 
----
-
-## 📈 MÉTRICAS DE PROGRESSO
-
-| Categoria | Concluído | Total | % |
-|-----------|-----------|-------|---|
-| **Etapas Macro** | 6/8 | 8 | 75% |
-| **Módulos Backend** | 4/4 | 4 | 100% |
-| **Módulos Frontend** | 4/4 | 4 | 100% |
-| **Features Avançadas** | 5/17 | 17 | 29.4% |
-| **TOTAL** | 19/33 | 33 | 57.6% |
-
-### Análise
-- ✅ **Core Crítico:** 100% completo (build, CI/CD, multi-tenancy, IFC, LOD)
-- ✅ **Production Ready:** Sistema estável e deployável
-- ✅ **Features Avançadas BIM:** 5 features implementadas (Q3 2026)
-  - BIM Query Language (SQL-like queries para BIM)
-  - GLB Export (IFC → GLB com Draco compression)
-  - Quantitativos 5D (takeoff, volume, área, custos)
-  - Snapshots PNG (captura high-res, overlays, batch)
-  - Painel de Propriedades (exibição/edição de props IFC)
-- ⏳ **Próximas Prioridades:** Multiplayer Realtime, IntegrationService, AutomationService
+### Sprints 1–4 — Core BIM (01–02/06/2026)
+- Multi-tenant APIs (tenants/companies/projects), IFC parsing/streaming/LOD,
+  Copilot action routing, BIM Query Language, GLB Export, Quantitativos 5D,
+  Snapshots PNG, Painel de Propriedades IFC, 22 testes E2E Playwright.
 
 ---
 
-> **Recomendação:** Priorizar módulos centrais e deixar autenticação por último, garantindo integração fluida e arquitetura estável.
+## 🎯 BACKLOG PRIORIZADO
 
-> **Atualizado em:** 02/06/2026 após conclusão da Sessão 4 - 5 features BIM avançadas implementadas.
+### 🥇 Sprint 6 — Billing (próximo foco do dono)
+- [ ] Planos (Free/Starter/Pro/Enterprise) e limites por plano (projetos, modelos, storage, participantes de reunião).
+- [ ] Checkout e gestão de assinatura.
+- [ ] Cobrança de minutos de reunião (já há `session_billing_usage` no schema).
+- [ ] Enforcement dos limites nas rotas (entitlements — `requireEntitlement` já existe).
+- Base existente: `modules/billing`, `schema/billing.ts`, `tenant_entitlements`.
+
+### 🥈 Sprint 7 — Persistência durável de IFC
+- [ ] `R2StorageService` (Cloudflare R2, S3-compatible) substituindo o disco
+      local efêmero (/tmp no Render free → modelos somem em restart). Chip `task_33413c9c`.
+- [ ] Avaliar upload direto via presigned URL para arquivos grandes (IFCs reais 15–128MB; limite atual 100MB no multipart).
+
+### 🥉 Sprint 8 — Hardening de segurança
+- [ ] Auditar isolamento de tenant nos demais controllers (scheduling,
+      federated-models, model-elements, glb-export…). Chip `task_8c5d09b7`.
+- [ ] Corrigir autoDeploy do Render (webhook GitHub→Render não dispara — hoje deploy manual).
+
+### Contínuo / menor
+- [ ] `05- Estado e Navegação` — otimizações de estado/navegação (em progresso).
+- [ ] Migrar para storage durável também os snapshots/exports.
+- [ ] Reativar CI quando billing do GitHub for ajustado (ou self-hosted runner).
+
+---
+
+## ⚠️ CONSTRAINTS (regras duras do dono)
+- ❌ **Sem alterações manuais no banco de produção.** Schema/dados só via migração versionada.
+- ✅ **Contas de usuário são permanentes** — nunca apagar.
+- ✅ Register e Esqueci-senha **validados**.
+- Deploy é manual (Actions bloqueado por billing): gh-pages + Render API. Spending limit do GitHub deve ficar em $0.
+
+---
+
+## 📈 ESTADO POR ÁREA
+
+| Área | Estado |
+|---|---|
+| Core BIM (viewer, IFC, LOD, 5D, GLB, query) | ✅ |
+| Multi-tenant + isolamento | ✅ seguro e verificado |
+| Auth (JWT, OAuth, verificação email, reset) | ✅ |
+| Workspaces & convites | ✅ (Fase 2) |
+| Colaboração realtime + model-sync | ✅ |
+| Copilot de IA | ✅ (assistente único) |
+| Persistência de modelos | 🟠 efêmera (/tmp) → R2 pendente |
+| Billing / planos | 🔴 próximo sprint |
+| Hardening (auditoria tenant) | 🟠 pendente |
+| CI/CD automático | 🔴 bloqueado (billing GitHub) → deploy manual |
+
+> **Recomendação:** Sprint 6 = Billing (foco do dono) → Sprint 7 = R2 (destrava
+> persistência real e download de modelo em reunião pós-restart) → Sprint 8 =
+> Hardening. CI volta quando o billing do GitHub for resolvido.
