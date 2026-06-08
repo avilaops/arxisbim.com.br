@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and, gte, lt, desc } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { tenantFromEmail } from '../tenancy/tenant-derivation.js';
 import { authTokens, userSessions } from '../../shared/database/schema/observability.js';
 import { passwordHistory } from '../../shared/database/schema/password-history.js';
 import { BillingService } from '../../modules/billing/billing.service.js';
@@ -122,12 +123,9 @@ export function getLoginFailCount(email: string): number {
   return entry.count;
 }
 
-// Deriva slug de tenant a partir do domínio do email (ex: user@acme.com -> 'acme')
-function tenantFromEmail(email: string): string {
-  const domain = email.split('@')[1] || 'public';
-  const base = domain.split('.')[0] || 'public';
-  return base.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-}
+// Derivação de tenant: domínio público → tenant pessoal único; corporativo →
+// slug do domínio. Centralizado em core/tenancy para uso também no OAuth.
+// (import no topo do arquivo)
 
 // Converte o nome da empresa/workspace em um slug de tenant (ex: "Ávila Ops" -> 'avila-ops')
 function slugifyTenant(input: string): string {

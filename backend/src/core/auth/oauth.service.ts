@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq, and } from 'drizzle-orm';
 import { users, tenants } from '../../shared/database/schema/tenants.js';
+import { tenantFromEmail } from '../tenancy/tenant-derivation.js';
 import { userSessions } from '../../shared/database/schema/observability.js';
 import { observabilityService } from '../observability/service.js';
 import jwt from 'jsonwebtoken';
@@ -68,7 +69,9 @@ export class OAuthService {
       } else {
         // 3. Create new user
         isNewUser = true;
-        const tenantSlug = profile.email.split('@')[1]?.split('.')[0]?.toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'public';
+        // Isolamento multi-tenant: email público → tenant pessoal único;
+        // corporativo → slug do domínio (workspace da empresa).
+        const tenantSlug = tenantFromEmail(profile.email);
 
         // Ensure tenant exists
         const [existingTenant] = await this.db
