@@ -56,3 +56,4 @@ uploads/
 *.rvt
 docs/
 .skills/
+backend/scripts/_backup_*
