@@ -924,13 +924,21 @@ async function loadSingleIfc(file: File) {
       const uploadedModel = await tenantService.uploadIFCModel(PROJECT_ID, file);
       console.log('IFC uploaded to backend:', uploadedModel);
       await ifcLoader.load(file);
-      loadedIfcModelId = uploadedModel.id;
+      loadedIfcModelId = (uploadedModel as any).id;
       await loadIfcModels();
       (window as any).ArxisStatusBar?.setModelInfo?.('IFC', '—');
+      // Tem id no backend → emite ifc:loaded para o ModelSync compartilhar o
+      // modelo com os participantes da reunião (se houver uma ativa).
+      eventBus.emit('ifc:loaded', { model: uploadedModel });
     } else {
       await ifcLoader.load(file);
       console.log('IFC carregado localmente:', file.name);
       loadedIfcModelId = file.name;
+      // Numa reunião, um arquivo só local (sem projeto) não pode ser
+      // compartilhado — avisa o anfitrião de forma honesta.
+      if (modelSyncService.isActive()) {
+        showNavToast('Para compartilhar este modelo na reunião, abra-o a partir de um projeto (o arquivo local não é enviado aos participantes).');
+      }
     }
     (window as any).ArxisWelcome?.hide?.();
   } catch (err) {

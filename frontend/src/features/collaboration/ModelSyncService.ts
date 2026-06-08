@@ -21,6 +21,7 @@
 import { eventBus } from '../../core';
 import { MultiplayerRealtimeService } from '../multiplayer-realtime/multiplayer-realtime.service';
 import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
+import { CollaborationToast } from './CollaborationToast';
 
 export interface SharedModelDescriptor {
   id: string;
@@ -114,6 +115,11 @@ export class ModelSyncService {
     return this.current;
   }
 
+  /** Há uma reunião ativa com sincronização de modelo? */
+  isActive(): boolean {
+    return this.started;
+  }
+
   // ── Internos ────────────────────────────────────────────────────────────
 
   private handleLocalModelLoaded(payload: any): void {
@@ -173,6 +179,7 @@ export class ModelSyncService {
 
     this.loadingRemoteId = model.id;
     eventBus.emit('collab:model-loading', { model });
+    try { CollaborationToast.show(`📦 Carregando modelo do anfitrião: ${model.name}`, 'info'); } catch { /* noop */ }
     try {
       const mgr = IFCUploadManager.getInstance();
       await mgr.loadModelIntoScene({
@@ -184,9 +191,11 @@ export class ModelSyncService {
       this.loadedRemoteId = model.id;
       this.current = model;
       eventBus.emit('collab:model-loaded', { model });
+      try { CollaborationToast.show(`✅ Modelo do anfitrião carregado`, 'join'); } catch { /* noop */ }
     } catch (err) {
       console.error('[ModelSync] Falha ao carregar modelo do anfitrião:', err);
       eventBus.emit('collab:model-error', { model, error: err });
+      try { CollaborationToast.show(`⚠️ Não foi possível carregar o modelo do anfitrião`, 'leave'); } catch { /* noop */ }
     } finally {
       this.loadingRemoteId = null;
     }
