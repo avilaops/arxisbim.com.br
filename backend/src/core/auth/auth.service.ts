@@ -363,18 +363,12 @@ export class AuthService {
       .where(eq(users.email, validated.email))
       .limit(1);
 
-    const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+    // Verificação de email é OBRIGATÓRIA no cadastro por senha — uma conta sem
+    // verificação não pode existir ativa. Não há bypass via env.
 
-    // Email já existe — se não verificado, reenviar; se verificado, erro
+    // Email já existe — se não verificado, reenviar código; se verificado, erro
     if (existingUser) {
       if (!existingUser.emailVerified) {
-        if (!requireEmailVerification) {
-          // Modo sem verificação: ativar a conta e fazer login direto
-          await this.db.update(users)
-            .set({ emailVerified: true, isActive: true, emailVerifiedAt: new Date() })
-            .where(eq(users.id, existingUser.id));
-          return this.login({ email: validated.email, password: data.password });
-        }
         await this.sendVerificationEmail(existingUser.id, existingUser.email, existingUser.tenantId);
         return {
           user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, tenantId: existingUser.tenantId, companyId: existingUser.companyId || undefined, role: existingUser.role, permissions: existingUser.permissions || [] },
@@ -398,8 +392,8 @@ export class AuthService {
         companyId: validated.companyId || null,
         role: 'user',
         permissions: [],
-        emailVerified: !requireEmailVerification,
-        isActive: !requireEmailVerification,
+        emailVerified: false,  // sempre falso até confirmar o código
+        isActive: false,       // conta inativa até verificação
       })
       .returning();
 
@@ -408,13 +402,8 @@ export class AuthService {
     observabilityService.logAudit({ tenantId: tenantSlug, userId: newUser.id, action: 'auth.register', resource: 'user', resourceId: newUser.id, metadata: { email: newUser.email } }).catch(() => {});
     observabilityService.incrementCounter(tenantSlug, 'auth.register.total', { success: 'true' }).catch(() => {});
 
-    // Enviar email de boas-vindas/verificação apenas se verificação ativa
-    if (requireEmailVerification) {
-      await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
-    } else {
-      // Modo sem verificação: enviar boas-vindas sem bloquear o login
-      emailService.sendWelcomeEmail(newUser.email, newUser.name, tenantSlug).catch(() => {});
-    }
+    // Verificação obrigatória: sempre envia o código. Boas-vindas só após verificar.
+    await this.sendVerificationEmail(newUser.id, newUser.email, newUser.tenantId);
 
     return {
       user: {
