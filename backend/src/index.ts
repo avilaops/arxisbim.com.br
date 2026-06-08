@@ -262,6 +262,10 @@ const authCleanupWorker = createAuthCleanupWorker({
 await server.register(cors, {
   origin: process.env.CORS_ORIGIN?.split(',') || '*',
   credentials: true,
+  // Declarar métodos/headers explicitamente — preflight de DELETE/PATCH estava
+  // sendo bloqueado quando origin é específico + credentials.
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-requested-with'],
 } as any);
 
 // Security headers

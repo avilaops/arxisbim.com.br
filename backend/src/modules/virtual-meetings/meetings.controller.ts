@@ -11,14 +11,22 @@ export class MeetingsController {
   async createRoom(request: FastifyRequest, reply: FastifyReply) {
     const { tenantId, userId } = request.user as any;
     const body = createMeetingSchema.parse(request.body);
-    
-    // Sobrescrever hostUserId com o usuário autenticado
-    const room = await this.meetingsService.createRoom(tenantId, {
-      ...body,
-      hostUserId: userId
-    });
-    
-    return reply.code(201).send(room);
+
+    try {
+      // Sobrescrever hostUserId com o usuário autenticado
+      const room = await this.meetingsService.createRoom(tenantId, {
+        ...body,
+        hostUserId: userId
+      });
+      return reply.code(201).send(room);
+    } catch (err: any) {
+      // FK inválido (ex.: projeto inexistente / projeto de demonstração) → 400 limpo, não 500.
+      const msg = String(err?.message || '');
+      if (err?.code === '23503' || /foreign key|violates|not present/i.test(msg)) {
+        return reply.code(400).send({ error: 'Projeto inválido para criar uma reunião. Selecione um projeto real.' });
+      }
+      throw err;
+    }
   }
 
   async getRoom(request: FastifyRequest, reply: FastifyReply) {
