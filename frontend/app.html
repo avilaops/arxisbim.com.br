@@ -2064,9 +2064,9 @@
     });
 
     // ── Settings button in header → open admin panel ───────────────────────────
-    document.getElementById('btn-settings-hdr')?.addEventListener('click', () => {
-      document.querySelector('[title="Configurações"]')?.dispatchEvent(new MouseEvent('click', {bubbles:true}));
-    });
+    // NOTA: #btn-settings-hdr É o elemento [title="Configurações"], e o app-main
+    // já liga o clique dele ao adminPanel.open(). Re-disparar um clique aqui criava
+    // recursão infinita (Maximum call stack). Handler removido.
 
     // ── Notifications: show badge + simple toast of recent activity ────────────
     const notifBtn = document.getElementById('btn-notifications');

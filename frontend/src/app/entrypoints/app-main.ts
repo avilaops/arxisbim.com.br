@@ -678,7 +678,7 @@ function setupKeyboardShortcuts() {
 
     if (e.key === 'v' || e.key === 'V') {
       if (viewerHost) {
-        viewerHost.controls.toggleOrbit();
+        viewerHost.toggleControlMode();
       }
     }
   });
