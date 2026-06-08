@@ -55,6 +55,7 @@ const registerSchema = z.object({
   password: strongPassword,
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
   tenantId: z.string().optional(),
+  companyName: z.string().trim().min(2, 'Workspace deve ter no mínimo 2 caracteres').optional(),
   companyId: z.string().optional(),
   turnstileToken: z.string().optional(),
 });
@@ -126,6 +127,27 @@ function tenantFromEmail(email: string): string {
   const domain = email.split('@')[1] || 'public';
   const base = domain.split('.')[0] || 'public';
   return base.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+}
+
+// Converte o nome da empresa/workspace em um slug de tenant (ex: "Ávila Ops" -> 'avila-ops')
+function slugifyTenant(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')    // remove acentos
+    .replace(/[^a-z0-9]+/g, '-')        // não-alfanumérico -> hífen
+    .replace(/^-+|-+$/g, '')            // tira hífens nas pontas
+    .slice(0, 40) || 'workspace';
+}
+
+// Código de verificação de email: 6 caracteres, sem ambíguos (0/O/1/I).
+function generateVerificationCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = randomBytes(6);
+  let code = '';
+  for (let i = 0; i < 6; i++) code += alphabet[bytes[i] % alphabet.length];
+  return code;
 }
 
 const BCRYPT_ROUNDS = Math.max(10, parseInt(process.env.BCRYPT_ROUNDS || '12', 10));
@@ -302,12 +324,15 @@ export class AuthService {
   /**
    * Registrar novo usuário
    */
-  async register(data: { email: string; password: string; name: string; tenantId?: string; companyId?: string }): Promise<AuthResponse> {
+  async register(data: { email: string; password: string; name: string; tenantId?: string; companyName?: string; companyId?: string }): Promise<AuthResponse> {
     // Validar input
     const validated = registerSchema.parse(data);
 
-    // tenantId opcional — deriva do domínio do email se omitido (ex: user@acme.com -> 'acme')
-    const tenantSlug = validated.tenantId || tenantFromEmail(validated.email);
+    // Tenant: prioridade tenantId explícito > slug do nome do workspace > domínio do email.
+    const tenantSlug = validated.tenantId
+      || (validated.companyName ? slugifyTenant(validated.companyName) : '')
+      || tenantFromEmail(validated.email);
+    const tenantDisplayName = validated.companyName?.trim() || tenantSlug;
 
     // Verificar se o tenant existe; se não, criar automaticamente (self-service signup)
     let [tenant] = await this.db
@@ -321,7 +346,7 @@ export class AuthService {
         .insert(tenants)
         .values({
           tenantId: tenantSlug,
-          name: tenantSlug,
+          name: tenantDisplayName,
           isActive: true,
         })
         .returning();
@@ -410,7 +435,8 @@ export class AuthService {
    * Gerar e enviar token de verificação de email
    */
   private async sendVerificationEmail(userId: string, email: string, tenantId: string): Promise<void> {
-    const verificationToken = randomBytes(32).toString('hex');
+    // Código de 6 dígitos é o próprio token (verify-email compara igualdade).
+    const verificationToken = generateVerificationCode();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // Invalidar tokens anteriores do mesmo tipo

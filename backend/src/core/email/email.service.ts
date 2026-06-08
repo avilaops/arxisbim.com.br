@@ -230,7 +230,7 @@ export class EmailService {
         Sua conta está ativa. Acesse a plataforma BIM imersiva e comece a explorar seus projetos.
       </p>
       <div style="text-align:center;margin:24px 0">
-        <a href="${this.frontendUrl}/app.html"
+        <a href="${this.frontendUrl}/login.html"
            style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
           Acessar ArxisVR
         </a>

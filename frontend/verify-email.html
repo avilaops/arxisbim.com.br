@@ -12,75 +12,79 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'DM Sans', sans-serif;
-      background: #f5f7fa;
+      background: #0b0b14;
       background-image:
-        radial-gradient(ellipse at 30% 20%, rgba(79,70,229,.1) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 80%, rgba(139,92,246,.07) 0%, transparent 50%);
+        radial-gradient(ellipse at 30% 20%, rgba(79,70,229,.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(139,92,246,.12) 0%, transparent 55%);
       min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
-      padding: 24px;
+      padding: 24px; color: #F9FAFB;
     }
     .card {
-      background: #fff;
+      background: #15151f;
+      border: 1px solid rgba(255,255,255,.08);
       border-radius: 20px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
       padding: 40px 48px;
-      max-width: 480px; width: 100%;
+      max-width: 460px; width: 100%;
       text-align: center;
     }
     .logo {
-      width: 52px; height: 52px;
+      width: 56px; height: 56px;
       background: linear-gradient(135deg,#2563EB,#7C3AED);
-      border-radius: 14px;
+      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
+      margin: 0 auto 18px;
     }
-    .logo img { width: 28px; }
-    h1 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 8px; }
-    p { color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
-    .icon { font-size: 48px; margin-bottom: 16px; }
+    .logo img { width: 30px; }
+    .brand { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    p { color: #9CA3AF; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .icon { font-size: 44px; margin-bottom: 14px; }
     .status { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-    .status.success { color: #059669; }
-    .status.error   { color: #dc2626; }
-    .status.loading { color: #6b7280; }
+    .status.success { color: #34D399; }
+    .status.error   { color: #F87171; }
+    .status.loading { color: #9CA3AF; }
     .spinner {
-      width: 40px; height: 40px; border: 3px solid #e5e7eb;
+      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,.12);
       border-top-color: #7C3AED; border-radius: 50%;
       animation: spin .8s linear infinite; margin: 0 auto 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .btn {
-      display: inline-block; padding: 12px 28px;
+      display: inline-block; padding: 13px 28px;
       background: linear-gradient(135deg,#2563EB,#7C3AED);
       color: #fff; border-radius: 10px; font-weight: 600;
       font-size: 14px; text-decoration: none; margin-top: 8px;
-      transition: opacity .2s;
     }
-    .btn:hover { opacity: .88; }
-    .code-input {
-      display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;
-    }
+    .btn:hover { opacity: .9; }
+    .code-input { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
     .code-digit {
-      width: 48px; height: 56px; border: 2px solid #e5e7eb; border-radius: 10px;
-      font-size: 22px; font-weight: 700; text-align: center; color: #111;
+      width: 46px; height: 56px;
+      border: 2px solid rgba(255,255,255,.14); border-radius: 10px;
+      background: #1e1e2e; color: #fff;
+      font-size: 22px; font-weight: 700; text-align: center;
       outline: none; font-family: monospace; transition: border-color .2s;
+      text-transform: uppercase;
     }
     .code-digit:focus { border-color: #7C3AED; }
     .btn-verify {
       width: 100%; padding: 14px; background: linear-gradient(135deg,#2563EB,#7C3AED);
       color: #fff; border: none; border-radius: 10px; font-weight: 600;
-      font-size: 15px; cursor: pointer; transition: opacity .2s;
+      font-size: 15px; cursor: pointer;
     }
-    .btn-verify:hover { opacity: .88; }
+    .btn-verify:hover { opacity: .9; }
     .btn-verify:disabled { opacity: .5; cursor: not-allowed; }
-    .resend { font-size: 13px; color: #9ca3af; margin-top: 12px; }
-    .resend a { color: #7C3AED; text-decoration: none; font-weight: 500; }
+    .field-error { color: #F87171; font-size: 13px; min-height: 18px; margin-bottom: 8px; }
+    .resend { font-size: 13px; color: #6B7280; margin-top: 14px; }
+    .resend a { color: #A78BFA; text-decoration: none; font-weight: 500; }
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo"><img src="/logo-icon.svg" alt="ArxisVR"></div>
+    <div class="brand">ArxisVR</div>
 
     <!-- Estado: Verificando via link -->
     <div id="state-verifying">
@@ -95,13 +99,14 @@
       <h1>Verifique seu email</h1>
       <p>Enviamos um código de 6 caracteres para o seu email. Insira abaixo para ativar sua conta.</p>
       <div class="code-input">
-        <input class="code-digit" maxlength="1" data-idx="0">
+        <input class="code-digit" maxlength="1" data-idx="0" autocomplete="one-time-code" inputmode="latin">
         <input class="code-digit" maxlength="1" data-idx="1">
         <input class="code-digit" maxlength="1" data-idx="2">
         <input class="code-digit" maxlength="1" data-idx="3">
         <input class="code-digit" maxlength="1" data-idx="4">
         <input class="code-digit" maxlength="1" data-idx="5">
       </div>
+      <div class="field-error" id="code-error"></div>
       <button class="btn-verify" id="btn-verify">Verificar conta</button>
       <p class="resend">Não recebeu? <a href="#" id="link-resend">Reenviar email</a></p>
     </div>
@@ -117,85 +122,105 @@
     <!-- Estado: Erro -->
     <div id="state-error" class="hidden">
       <div class="icon">❌</div>
-      <div class="status error" id="error-message">Link inválido ou expirado.</div>
-      <p>Verifique se o link está correto ou solicite um novo email de verificação.</p>
-      <a class="btn" href="/register.html">Criar nova conta</a>
+      <div class="status error" id="error-message">Código inválido ou expirado.</div>
+      <p>Confira o código no email ou solicite um novo.</p>
+      <a class="btn" href="#" id="error-back">Voltar</a>
     </div>
   </div>
 
   <script>
-  (async () => {
-    const params = new URLSearchParams(location.search);
-    const token  = params.get('token');
-    const tenant = params.get('tenant');
+  (function () {
+    // API base: produção usa o subdomínio api.*; dev usa localhost.
+    function apiBase() {
+      var h = location.hostname;
+      if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001';
+      return 'https://api.arxisvr.avilaops.com';
+    }
+    var API = apiBase();
+
+    var params = new URLSearchParams(location.search);
+    var urlToken = params.get('token');
+    var tenant   = params.get('tenant');
+    var email    = params.get('email');
 
     function show(id) {
-      ['verifying','code-form','success','error'].forEach(s =>
-        document.getElementById('state-' + s).classList.toggle('hidden', s !== id)
-      );
+      ['verifying','code-form','success','error'].forEach(function (s) {
+        document.getElementById('state-' + s).classList.toggle('hidden', s !== id);
+      });
     }
 
-    // — Verificação via link direto —
-    if (token) {
+    async function verify(code) {
+      var body = { verificationToken: code };
+      if (tenant) body.tenantId = tenant;
+      var res = await fetch(API + '/api/v1/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      var data = await res.json().catch(function () { return {}; });
+      return { ok: res.ok && (data.userId || data.success), data: data };
+    }
+
+    // — Verificação automática via link (token na URL) —
+    if (urlToken) {
       show('verifying');
-      try {
-        const body = { verificationToken: token };
-        if (tenant) body.tenantId = tenant;
-
-        const res = await fetch('/api/v1/auth/verify-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-
-        if (res.ok && data.userId) {
-          show('success');
-        } else {
-          document.getElementById('error-message').textContent =
-            data.message || 'Token inválido ou expirado.';
+      verify(urlToken.toUpperCase()).then(function (r) {
+        if (r.ok) { show('success'); }
+        else {
+          document.getElementById('error-message').textContent = r.data.message || 'Código inválido ou expirado.';
+          document.getElementById('error-back').setAttribute('href', '/verify-email.html' + (email ? ('?email=' + encodeURIComponent(email)) : ''));
           show('error');
         }
-      } catch (e) {
+      }).catch(function () {
         document.getElementById('error-message').textContent = 'Erro de conexão.';
+        document.getElementById('error-back').setAttribute('href', '/login.html');
         show('error');
-      }
+      });
       return;
     }
 
-    // — Formulário de código manual —
+    // — Entrada manual do código de 6 dígitos —
     show('code-form');
-    const digits = [...document.querySelectorAll('.code-digit')];
+    var digits = [].slice.call(document.querySelectorAll('.code-digit'));
+    var errEl = document.getElementById('code-error');
 
-    digits.forEach((d, i) => {
-      d.addEventListener('input', () => {
+    digits.forEach(function (d, i) {
+      d.addEventListener('input', function () {
         d.value = d.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (d.value && i < digits.length - 1) digits[i + 1].focus();
       });
-      d.addEventListener('keydown', e => {
+      d.addEventListener('keydown', function (e) {
         if (e.key === 'Backspace' && !d.value && i > 0) digits[i - 1].focus();
+      });
+      d.addEventListener('paste', function (e) {
+        e.preventDefault();
+        var txt = (e.clipboardData.getData('text') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+        for (var j = 0; j < txt.length && j < digits.length; j++) digits[j].value = txt[j];
+        (digits[Math.min(txt.length, 5)] || digits[5]).focus();
       });
     });
 
-    document.getElementById('btn-verify').addEventListener('click', async () => {
-      const code = digits.map(d => d.value).join('');
-      if (code.length < 6) { alert('Insira todos os 6 caracteres.'); return; }
-
-      document.getElementById('btn-verify').disabled = true;
+    var btn = document.getElementById('btn-verify');
+    btn.addEventListener('click', async function () {
+      errEl.textContent = '';
+      var code = digits.map(function (d) { return d.value; }).join('');
+      if (code.length < 6) { errEl.textContent = 'Insira os 6 caracteres.'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
       try {
-        // Código = primeiros 6 chars do token em maiúsculas
-        // Precisamos do token completo — não temos. Informar ao usuário para usar o link.
-        document.getElementById('error-message').textContent =
-          'Para confirmar pelo código, use o link completo no email. O código é apenas um preview.';
-        show('error');
-      } catch(e) {
-        document.getElementById('btn-verify').disabled = false;
+        var r = await verify(code);
+        if (r.ok) { show('success'); }
+        else { errEl.textContent = r.data.message || 'Código inválido ou expirado.'; }
+      } catch (e) {
+        errEl.textContent = 'Erro de conexão. Tente novamente.';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Verificar conta';
       }
     });
 
-    document.getElementById('link-resend')?.addEventListener('click', e => {
+    document.getElementById('link-resend').addEventListener('click', function (e) {
       e.preventDefault();
-      alert('Para reenviar a verificação, acesse as configurações da sua conta ou entre em contato com o suporte.');
+      // Não há endpoint de reenvio isolado: refazer o cadastro reenvia o código.
+      location.href = '/register.html' + (email ? ('?email=' + encodeURIComponent(email)) : '');
     });
   })();
   </script>
