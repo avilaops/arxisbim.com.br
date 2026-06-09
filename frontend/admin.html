@@ -246,6 +246,9 @@
       <button class="nav-item" data-panel="emails">
         <span class="icon">✉️</span> Email Marketing
       </button>
+      <button class="nav-item" data-panel="tracking">
+        <span class="icon">🛰️</span> Rastreamento
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-signout" id="btn-signout">Sair →</button>
@@ -365,6 +368,32 @@
             </div>
             <div id="send-result" class="send-result"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- TRACKING PANEL -->
+      <div id="panel-tracking" class="panel">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:#888;">Janela:</span>
+          <select id="track-range" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;">
+            <option value="1h">Última 1h</option>
+            <option value="24h">Últimas 24h</option>
+            <option value="7d" selected>Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+          </select>
+          <span style="font-size:12px;color:#aaa;">Rastreamento first-party — dados 100% nossos.</span>
+        </div>
+        <div class="stats-row" id="track-stats"><div class="loader">Carregando...</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div class="card"><div class="card-header"><h3>Top páginas</h3></div><div id="track-pages" style="padding:8px 0;"></div></div>
+          <div class="card"><div class="card-header"><h3>Top eventos</h3></div><div id="track-events-top" style="padding:8px 0;"></div></div>
+          <div class="card"><div class="card-header"><h3>Origens (referrer)</h3></div><div id="track-referrers" style="padding:8px 0;"></div></div>
+          <div class="card"><div class="card-header"><h3>UTM source</h3></div><div id="track-utm" style="padding:8px 0;"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header"><h3>Eventos recentes (ao vivo)</h3></div>
+          <div id="track-feed"><div class="loader">Carregando...</div></div>
         </div>
       </div>
 
@@ -533,8 +562,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ── NAV ──────────────────────────────────
-const panels = { dashboard: loadDashboard, users: loadUsers, tenants: loadTenants, billing: loadBilling, emails: loadEmails };
-const titles = { dashboard: 'Dashboard', users: 'Usuários', tenants: 'Tenants', billing: 'Billing / Faturas', emails: 'Email Marketing' };
+const panels = { dashboard: loadDashboard, users: loadUsers, tenants: loadTenants, billing: loadBilling, emails: loadEmails, tracking: loadTracking };
+const titles = { dashboard: 'Dashboard', users: 'Usuários', tenants: 'Tenants', billing: 'Billing / Faturas', emails: 'Email Marketing', tracking: 'Rastreamento' };
 
 document.querySelectorAll('.nav-item[data-panel]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -801,6 +830,70 @@ async function sendEmail(testMode) {
 
 document.getElementById('btn-test-email').addEventListener('click', () => sendEmail(true));
 document.getElementById('btn-send-email').addEventListener('click', () => sendEmail(false));
+
+// ── RASTREAMENTO ──────────────────────────────────
+function trackRange() { return document.getElementById('track-range')?.value || '7d'; }
+
+function barList(items, labelKey, valueKey) {
+  if (!items || !items.length) return '<div class="empty" style="padding:14px;">Sem dados ainda.</div>';
+  const max = Math.max(...items.map(i => Number(i[valueKey]) || 0), 1);
+  return items.map(i => {
+    const label = (i[labelKey] ?? '—') || '(vazio)';
+    const val = Number(i[valueKey]) || 0;
+    const pct = Math.round((val / max) * 100);
+    return `<div style="padding:6px 14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:75%;" title="${String(label).replace(/"/g,'&quot;')}">${label}</span>
+        <strong>${fmt(val)}</strong>
+      </div>
+      <div style="height:6px;background:#eef;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--blue);"></div></div>
+    </div>`;
+  }).join('');
+}
+
+async function loadTracking() {
+  const range = trackRange();
+  document.getElementById('track-stats').innerHTML = '<div class="loader">Carregando...</div>';
+  const [ov, pages, evs, src, feed] = await Promise.all([
+    api('/api/v1/admin/analytics/overview?range=' + range),
+    api('/api/v1/admin/analytics/top-pages?range=' + range),
+    api('/api/v1/admin/analytics/top-events?range=' + range),
+    api('/api/v1/admin/analytics/sources?range=' + range),
+    api('/api/v1/admin/analytics/events?range=' + range + '&limit=80'),
+  ]);
+
+  if (ov.error) {
+    document.getElementById('track-stats').innerHTML = `<div class="empty">${ov.error}</div>`;
+    return;
+  }
+
+  document.getElementById('track-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Eventos</div><div class="value">${fmt(ov.totalEvents)}</div></div>
+    <div class="stat-card"><div class="label">Visitantes únicos</div><div class="value">${fmt(ov.uniqueVisitors)}</div></div>
+    <div class="stat-card"><div class="label">Page views</div><div class="value">${fmt(ov.pageViews)}</div></div>
+    <div class="stat-card"><div class="label">Cadastros</div><div class="value">${fmt(ov.signups)}</div></div>
+    <div class="stat-card"><div class="label">Eventos logados</div><div class="value">${fmt(ov.authenticatedEvents)}</div></div>`;
+
+  document.getElementById('track-pages').innerHTML = barList(pages.pages, 'path', 'views');
+  document.getElementById('track-events-top').innerHTML = barList(evs.events, 'name', 'total');
+  document.getElementById('track-referrers').innerHTML = barList(src.referrers, 'referrer', 'total');
+  document.getElementById('track-utm').innerHTML = barList(src.utmSources, 'source', 'total');
+
+  const rows = (feed.events || []).map(e => `
+    <tr>
+      <td style="white-space:nowrap;color:#888;font-size:12px;">${new Date(e.timestamp).toLocaleString('pt-BR')}</td>
+      <td><span class="badge badge-blue">${e.name}</span></td>
+      <td style="font-size:12px;">${e.category || '—'}</td>
+      <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(e.path||'').replace(/"/g,'&quot;')}">${e.path || '—'}</td>
+      <td style="font-size:11px;color:#aaa;">${e.userId ? '👤 ' + String(e.userId).slice(0,8) : (e.anonId ? '👁 ' + String(e.anonId).slice(0,8) : '—')}</td>
+      <td style="font-size:11px;color:#bbb;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.props ? JSON.stringify(e.props) : ''}</td>
+    </tr>`).join('');
+  document.getElementById('track-feed').innerHTML = rows
+    ? `<table><thead><tr><th>Quando</th><th>Evento</th><th>Cat.</th><th>Página</th><th>Quem</th><th>Props</th></tr></thead><tbody>${rows}</tbody></table>`
+    : '<div class="empty" style="padding:16px;">Nenhum evento ainda.</div>';
+}
+
+document.getElementById('track-range')?.addEventListener('change', loadTracking);
 </script>
 </body>
 </html>
