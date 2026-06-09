@@ -686,6 +686,27 @@
     .uc-tag { display:inline-block; margin-top:12px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#5B8DEF; background:rgba(91,141,239,.08); padding:3px 9px; border-radius:6px; }
     .uc h3 { font-size:17px; margin:10px 0 7px; }
     .uc p { font-size:13.5px; color:var(--text-secondary); line-height:1.55; }
+
+    /* ====== PRICING TURBINADO ====== */
+    .bill-toggle { display:flex; width:max-content; gap:4px; padding:5px; background:#f1f5f9; border:1px solid var(--border-color); border-radius:999px; margin:0 auto 36px; }
+    .bill-opt { display:inline-flex; align-items:center; gap:8px; padding:9px 20px; border:none; background:transparent; border-radius:999px; font-family:inherit; font-size:14px; font-weight:700; color:var(--text-secondary); cursor:pointer; transition:var(--transition); }
+    .bill-opt.active { background:#fff; color:#0f172a; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    .bill-save { font-size:11px; font-weight:700; color:#047857; background:rgba(16,185,129,.12); padding:3px 8px; border-radius:999px; }
+    .plan { position:relative; }
+    .plan.featured { border-color:transparent; background:linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg,#5B8DEF,#8B5CF6) border-box; border:1.5px solid transparent; box-shadow:0 24px 60px rgba(91,141,239,.16); }
+    .plan.featured::before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(420px 180px at 50% -10%, rgba(139,92,246,.10), transparent); pointer-events:none; }
+    .plan-badge { position:absolute; top:-13px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11.5px; font-weight:800; letter-spacing:.03em; color:#fff; background:linear-gradient(135deg,#5B8DEF,#8B5CF6); padding:6px 14px; border-radius:999px; box-shadow:0 6px 16px rgba(124,58,237,.3); }
+    .price { display:flex; align-items:baseline; gap:3px; margin:8px 0 2px; }
+    .price .cur { font-size:18px; font-weight:700; color:#0f172a; align-self:flex-start; margin-top:6px; }
+    .price .amt { font-size:44px; font-weight:800; letter-spacing:-.03em; color:#0f172a; line-height:1; }
+    .price .per { font-size:14px; color:var(--text-muted); font-weight:600; margin-left:2px; }
+    .price-note { font-size:12px; color:var(--text-muted); min-height:16px; margin-bottom:10px; }
+    ul.feat { list-style:none; padding:0; margin:0 0 22px; display:flex; flex-direction:column; gap:11px; }
+    ul.feat li { position:relative; padding-left:26px; font-size:13.5px; color:var(--text-secondary); line-height:1.4; }
+    ul.feat li b { color:#0f172a; }
+    ul.feat li::before { content:""; position:absolute; left:0; top:1px; width:17px; height:17px; border-radius:50%; background:rgba(16,185,129,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat; }
+    .plan.featured ul.feat li::before { background:rgba(91,141,239,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat; }
+    .pricing-foot { text-align:center; font-size:13px; color:var(--text-muted); margin-top:26px; }
   </style>
   <!-- Rastreamento first-party (próprio) -->
   <script src="/track.js" defer></script>
@@ -707,8 +728,9 @@
     "operatingSystem": "Web",
     "offers": [
       {"@type":"Offer","name":"Free","price":"0","priceCurrency":"BRL"},
-      {"@type":"Offer","name":"Starter","price":"149","priceCurrency":"BRL"},
-      {"@type":"Offer","name":"Professional","price":"499","priceCurrency":"BRL"}
+      {"@type":"Offer","name":"Starter","price":"29","priceCurrency":"BRL"},
+      {"@type":"Offer","name":"Professional","price":"79","priceCurrency":"BRL"},
+      {"@type":"Offer","name":"Enterprise","price":"199","priceCurrency":"BRL"}
     ]
   }
   </script>
@@ -1223,58 +1245,71 @@
         <h2 class="h2">Comece grátis. Escale quando precisar.</h2>
         <p class="sub">Sem cartão de crédito para começar. Mude de plano a qualquer momento.</p>
       </div>
-      <div class="pricing">
-        <div class="plan">
+
+      <div class="bill-toggle reveal" role="tablist" aria-label="Ciclo de cobrança">
+        <button class="bill-opt active" data-cycle="monthly" role="tab" aria-selected="true">Mensal</button>
+        <button class="bill-opt" data-cycle="yearly" role="tab" aria-selected="false">Anual <span class="bill-save">2 meses grátis</span></button>
+      </div>
+
+      <div class="pricing" data-cycle="monthly">
+        <div class="plan reveal">
           <h4>Free</h4>
-          <div class="price">R$ 0 <small>/mês</small></div>
-          <p class="desc">Para conhecer a plataforma e projetos pessoais.</p>
-          <ul>
-            <li>1 projeto ativo</li>
-            <li>Viewer IFC completo</li>
-            <li>Copilot básico</li>
-            <li>1 usuário</li>
+          <div class="price"><span class="cur">R$</span><span class="amt" data-m="0" data-y="0">0</span><small class="per">/mês</small></div>
+          <div class="price-note">&nbsp;</div>
+          <p class="desc">Para conhecer a plataforma e validar modelos.</p>
+          <ul class="feat">
+            <li>3 projetos · 2 usuários</li>
+            <li>Viewer IFC 1:1 completo</li>
+            <li>Copilot de IA básico</li>
+            <li>5 GB · arquivos até 50 MB</li>
           </ul>
           <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="free">Começar grátis</a>
         </div>
-        <div class="plan">
+
+        <div class="plan reveal" style="transition-delay:.06s">
           <h4>Starter</h4>
-          <div class="price">R$ 149 <small>/mês</small></div>
-          <p class="desc">Para profissionais autônomos e pequenos times.</p>
-          <ul>
-            <li>5 projetos ativos</li>
-            <li>BIM 4D completo</li>
-            <li>Cenários ilimitados</li>
-            <li>Até 3 usuários</li>
+          <div class="price"><span class="cur">R$</span><span class="amt" data-m="29" data-y="24" data-yt="290">29</span><small class="per">/mês</small></div>
+          <div class="price-note">cobrado mensalmente</div>
+          <p class="desc">Para autônomos e pequenas equipes na colaboração BIM.</p>
+          <ul class="feat">
+            <li>10 projetos · 5 usuários</li>
+            <li>BIM 4D + cenários ilimitados</li>
+            <li>Reuniões XR (até 5 na sala)</li>
+            <li>50 GB · arquivos até 200 MB</li>
           </ul>
-          <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="starter">Assinar</a>
+          <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="starter">Assinar Starter</a>
         </div>
-        <div class="plan featured">
+
+        <div class="plan featured reveal" style="transition-delay:.12s">
+          <span class="plan-badge">★ Mais popular</span>
           <h4>Professional</h4>
-          <div class="price">R$ 499 <small>/mês</small></div>
-          <p class="desc">Para escritórios e construtoras com equipe BIM.</p>
-          <ul>
-            <li>Projetos ilimitados</li>
-            <li>BIM 4D + 5D</li>
-            <li>VR/AR completo</li>
-            <li>Até 15 usuários</li>
-            <li>Federação multidisciplinar</li>
+          <div class="price"><span class="cur">R$</span><span class="amt" data-m="79" data-y="66" data-yt="790">79</span><small class="per">/mês</small></div>
+          <div class="price-note">cobrado mensalmente</div>
+          <p class="desc">Para escritórios e construtoras com equipe BIM completa.</p>
+          <ul class="feat">
+            <li><b>Projetos e usuários ilimitados</b></li>
+            <li>BIM 4D + 5D, VR e AR completos</li>
+            <li>Federação · API · Webhooks · Analytics</li>
+            <li>Reuniões XR (até 20) · 500 GB</li>
           </ul>
           <a class="btn btn-primary" href="/register.html" data-track="cta_plan" data-track-plan="professional">Assinar Professional</a>
         </div>
-        <div class="plan">
+
+        <div class="plan reveal" style="transition-delay:.18s">
           <h4>Enterprise</h4>
-          <div class="price">Sob consulta</div>
-          <p class="desc">Para grandes operações com SSO, SLA e on-premise.</p>
-          <ul>
-            <li>Tudo do Professional</li>
-            <li>SSO/SAML</li>
-            <li>SLA dedicado</li>
-            <li>API privada</li>
-            <li>Implantação dedicada</li>
+          <div class="price"><span class="cur">R$</span><span class="amt" data-m="199" data-y="166" data-yt="1990">199</span><small class="per">/mês</small></div>
+          <div class="price-note">ou sob medida para grandes operações</div>
+          <p class="desc">Para grandes operações com governança e suporte dedicado.</p>
+          <ul class="feat">
+            <li>Tudo do Professional, sem limites</li>
+            <li>SSO/SAML · branding próprio</li>
+            <li>Suporte e SLA dedicados</li>
+            <li>Implantação e API privadas</li>
           </ul>
-          <a class="btn btn-outline" href="mailto:nicolas@avilaops.com">Falar com vendas</a>
+          <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="enterprise">Assinar Enterprise</a>
         </div>
       </div>
+      <p class="pricing-foot reveal">Preços em BRL. No plano anual você paga 10 meses e leva 12 — <strong>2 meses grátis</strong>. Cancele quando quiser.</p>
     </div>
   </section>
 
@@ -1399,6 +1434,40 @@
         });
       }, { threshold: 0.12 });
       document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+    })();
+
+    // ── Toggle de cobrança mensal/anual ─────────────────────────────────────────
+    (function() {
+      var opts = document.querySelectorAll('.bill-opt');
+      if (!opts.length) return;
+      function fmt(n) { return Number(n).toLocaleString('pt-BR'); }
+      function apply(cycle) {
+        document.querySelectorAll('.pricing .plan').forEach(function(plan) {
+          var amt = plan.querySelector('.amt');
+          var note = plan.querySelector('.price-note');
+          if (!amt) return;
+          var m = amt.getAttribute('data-m'), y = amt.getAttribute('data-y'), yt = amt.getAttribute('data-yt');
+          if (cycle === 'yearly' && y) {
+            amt.textContent = fmt(y);
+            if (note && yt) note.textContent = 'cobrado anualmente · R$ ' + fmt(yt) + '/ano';
+            else if (note && m === '0') note.innerHTML = '&nbsp;';
+          } else {
+            amt.textContent = fmt(m);
+            if (note) {
+              if (m === '0') note.innerHTML = '&nbsp;';
+              else if (amt.getAttribute('data-yt')) note.textContent = 'cobrado mensalmente';
+              else note.textContent = 'ou sob medida para grandes operações';
+            }
+          }
+        });
+      }
+      opts.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          opts.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+          btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+          apply(btn.getAttribute('data-cycle'));
+        });
+      });
     })();
 
     // ── FAQ accordion ───────────────────────────────────────────────────────────
