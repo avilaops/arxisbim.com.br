@@ -616,16 +616,18 @@
     }
 
     /* ====== FAIXA DE MARCAS-ALVO (marquee) ====== */
-    .brands { padding: 46px 0 30px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(91,141,239,0.03), transparent); overflow: hidden; }
-    .brands-label { text-align:center; font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
-    .brands-sub { text-align:center; font-size:13px; color:var(--text-secondary); margin-bottom:24px; }
-    .brand-marquee { position:relative; width:100%; overflow:hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
-    .brand-track { display:flex; gap:18px; width:max-content; animation: marquee 38s linear infinite; }
+    .brands { padding: 54px 0 34px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); background: linear-gradient(180deg, rgba(91,141,239,0.04), transparent); overflow: hidden; }
+    .brands-label { text-align:center; font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#64748b; margin-bottom:8px; }
+    .brands-sub { text-align:center; font-size:14px; color:var(--text-secondary); margin-bottom:30px; max-width:620px; margin-left:auto; margin-right:auto; padding:0 16px; }
+    .brand-marquee { position:relative; width:100%; overflow:hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); }
+    .brand-track { display:flex; gap:16px; width:max-content; animation: marquee 45s linear infinite; }
     .brand-marquee:hover .brand-track { animation-play-state: paused; }
-    .brand-chip { display:flex; align-items:center; gap:9px; padding:12px 22px; border:1px solid var(--border-color); border-radius:12px; background:#fff; font-weight:700; font-size:15px; color:#1d1d1f; white-space:nowrap; transition:var(--transition); }
-    .brand-chip:hover { border-color:#5B8DEF; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.06); }
-    .brand-chip .bdot { width:9px; height:9px; border-radius:3px; flex-shrink:0; }
-    .brands-note { text-align:center; font-size:11.5px; color:var(--text-muted); margin-top:22px; }
+    .brand-chip { display:flex; align-items:center; gap:12px; padding:11px 20px 11px 12px; border:1px solid var(--border-color); border-radius:14px; background:#fff; white-space:nowrap; transition:var(--transition); box-shadow:0 1px 2px rgba(0,0,0,.03); }
+    .brand-chip:hover { transform:translateY(-3px); box-shadow:0 12px 28px rgba(0,0,0,.08); }
+    .brand-logo { width:36px; height:36px; border-radius:9px; flex-shrink:0; display:grid; place-items:center; color:#fff; font-weight:800; font-size:13px; letter-spacing:.02em; box-shadow:inset 0 1px 0 rgba(255,255,255,.25); }
+    .brand-name { font-weight:700; font-size:15.5px; color:#1d1d1f; line-height:1; }
+    .brand-name small { display:block; font-size:10.5px; font-weight:600; color:#94a3b8; letter-spacing:.04em; margin-top:3px; }
+    .brands-note { text-align:center; font-size:11.5px; color:var(--text-muted); margin-top:26px; }
 
     /* ====== SELO DE QUALIDADE (comprador) ====== */
     .seal-sec { background: radial-gradient(1200px 500px at 80% -10%, rgba(139,92,246,0.10), transparent), radial-gradient(900px 400px at 0% 110%, rgba(91,141,239,0.10), transparent); }
@@ -964,31 +966,31 @@
     <div class="brands-sub">Incorporadoras, construtoras e escritórios que vendem na planta — e querem que o cliente <strong>sinta</strong> o imóvel antes da obra.</div>
     <div class="brand-marquee">
       <div class="brand-track">
-        <span class="brand-chip"><span class="bdot" style="background:#e11d48"></span>MRV</span>
-        <span class="brand-chip"><span class="bdot" style="background:#0ea5e9"></span>Cyrela</span>
-        <span class="brand-chip"><span class="bdot" style="background:#f59e0b"></span>EZTec</span>
-        <span class="brand-chip"><span class="bdot" style="background:#8b5cf6"></span>Tecnisa</span>
-        <span class="brand-chip"><span class="bdot" style="background:#10b981"></span>Even</span>
-        <span class="brand-chip"><span class="bdot" style="background:#ef4444"></span>Gafisa</span>
-        <span class="brand-chip"><span class="bdot" style="background:#3b82f6"></span>Trisul</span>
-        <span class="brand-chip"><span class="bdot" style="background:#ec4899"></span>Direcional</span>
-        <span class="brand-chip"><span class="bdot" style="background:#14b8a6"></span>Lavvi</span>
-        <span class="brand-chip"><span class="bdot" style="background:#6366f1"></span>Mitre</span>
-        <span class="brand-chip"><span class="bdot" style="background:#f97316"></span>Helbor</span>
-        <span class="brand-chip"><span class="bdot" style="background:#84cc16"></span>Moura Dubeux</span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#f43f5e,#9f1239)">MRV</span><span class="brand-name">MRV<small>Construtora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#38bdf8,#0369a1)">C</span><span class="brand-name">Cyrela<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#fbbf24,#b45309)">EZ</span><span class="brand-name">EZTec<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)">T</span><span class="brand-name">Tecnisa<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#34d399,#047857)">E</span><span class="brand-name">Even<small>Construtora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#f87171,#b91c1c)">G</span><span class="brand-name">Gafisa<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#60a5fa,#1d4ed8)">T</span><span class="brand-name">Trisul<small>Construtora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#f472b6,#be185d)">D</span><span class="brand-name">Direcional<small>Construtora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#2dd4bf,#0f766e)">L</span><span class="brand-name">Lavvi<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#818cf8,#4338ca)">M</span><span class="brand-name">Mitre<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#fb923c,#c2410c)">H</span><span class="brand-name">Helbor<small>Incorporadora</small></span></span>
+        <span class="brand-chip"><span class="brand-logo" style="background:linear-gradient(135deg,#a3e635,#4d7c0f)">MD</span><span class="brand-name">Moura Dubeux<small>Construtora</small></span></span>
         <!-- duplicado para loop contínuo -->
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#e11d48"></span>MRV</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#0ea5e9"></span>Cyrela</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#f59e0b"></span>EZTec</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#8b5cf6"></span>Tecnisa</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#10b981"></span>Even</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#ef4444"></span>Gafisa</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#3b82f6"></span>Trisul</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#ec4899"></span>Direcional</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#14b8a6"></span>Lavvi</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#6366f1"></span>Mitre</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#f97316"></span>Helbor</span>
-        <span class="brand-chip" aria-hidden="true"><span class="bdot" style="background:#84cc16"></span>Moura Dubeux</span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#f43f5e,#9f1239)">MRV</span><span class="brand-name">MRV<small>Construtora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#38bdf8,#0369a1)">C</span><span class="brand-name">Cyrela<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#fbbf24,#b45309)">EZ</span><span class="brand-name">EZTec<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)">T</span><span class="brand-name">Tecnisa<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#34d399,#047857)">E</span><span class="brand-name">Even<small>Construtora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#f87171,#b91c1c)">G</span><span class="brand-name">Gafisa<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#60a5fa,#1d4ed8)">T</span><span class="brand-name">Trisul<small>Construtora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#f472b6,#be185d)">D</span><span class="brand-name">Direcional<small>Construtora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#2dd4bf,#0f766e)">L</span><span class="brand-name">Lavvi<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#818cf8,#4338ca)">M</span><span class="brand-name">Mitre<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#fb923c,#c2410c)">H</span><span class="brand-name">Helbor<small>Incorporadora</small></span></span>
+        <span class="brand-chip" aria-hidden="true"><span class="brand-logo" style="background:linear-gradient(135deg,#a3e635,#4d7c0f)">MD</span><span class="brand-name">Moura Dubeux<small>Construtora</small></span></span>
       </div>
     </div>
     <div class="brands-note">Marcas ilustrativas do mercado-alvo — referências do setor, ainda não clientes.</div>
