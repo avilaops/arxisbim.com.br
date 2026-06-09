@@ -59,8 +59,8 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
     tier: 'starter',
     name: 'Starter',
     description: 'Para pequenas equipes iniciando colaboração BIM imersiva.',
-    monthlyAmountCents: 2900,
-    yearlyAmountCents: 29000,
+    monthlyAmountCents: 8700,
+    yearlyAmountCents: 87000,
     currency: 'BRL',
     features: ['ifc_viewer', 'cloud_storage', 'measurement_tools', 'annotations', 'vr_mode', 'collaboration'],
     limits: {
@@ -76,8 +76,8 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
     tier: 'professional',
     name: 'Professional',
     description: 'Para empresas com AR, federação, API e analytics avançados.',
-    monthlyAmountCents: 7900,
-    yearlyAmountCents: 79000,
+    monthlyAmountCents: 23700,
+    yearlyAmountCents: 237000,
     currency: 'BRL',
     features: [
       'ifc_viewer',
@@ -105,8 +105,8 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
     tier: 'enterprise',
     name: 'Enterprise',
     description: 'Plano corporativo com SSO, branding e suporte dedicado.',
-    monthlyAmountCents: 19900,
-    yearlyAmountCents: 199000,
+    monthlyAmountCents: 59700,
+    yearlyAmountCents: 597000,
     currency: 'BRL',
     features: [
       'ifc_viewer',
