@@ -605,6 +605,8 @@
     .lang-btn:hover { background:rgba(0,0,0,.04); color:#000; }
     .lang-btn.active { background:#000; color:#fff; border-color:#000; }
   </style>
+  <!-- Rastreamento first-party (próprio) -->
+  <script src="/track.js" defer></script>
 </head>
 <body>
 
@@ -679,8 +681,8 @@
         sem instalação.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis →</a>
-        <a class="btn btn-outline btn-lg" href="/login.html">Entrar</a>
+        <a class="btn btn-primary btn-lg" href="/register.html" data-track="cta_signup" data-track-loc="hero">Criar conta grátis →</a>
+        <a class="btn btn-outline btn-lg" href="/login.html" data-track="cta_login" data-track-loc="hero">Entrar</a>
       </div>
       <div class="hero-meta">
         <span><span class="check">✓</span> IFC 2x3, IFC4, IFC4.3</span>
@@ -1037,7 +1039,7 @@
             <li>Copilot básico</li>
             <li>1 usuário</li>
           </ul>
-          <a class="btn btn-outline" href="/register.html">Começar grátis</a>
+          <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="free">Começar grátis</a>
         </div>
         <div class="plan">
           <h4>Starter</h4>
@@ -1049,7 +1051,7 @@
             <li>Cenários ilimitados</li>
             <li>Até 3 usuários</li>
           </ul>
-          <a class="btn btn-outline" href="/register.html">Assinar</a>
+          <a class="btn btn-outline" href="/register.html" data-track="cta_plan" data-track-plan="starter">Assinar</a>
         </div>
         <div class="plan featured">
           <h4>Professional</h4>
@@ -1062,7 +1064,7 @@
             <li>Até 15 usuários</li>
             <li>Federação multidisciplinar</li>
           </ul>
-          <a class="btn btn-primary" href="/register.html">Assinar Professional</a>
+          <a class="btn btn-primary" href="/register.html" data-track="cta_plan" data-track-plan="professional">Assinar Professional</a>
         </div>
         <div class="plan">
           <h4>Enterprise</h4>

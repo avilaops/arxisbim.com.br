@@ -46,3 +46,6 @@ export * from './sessions.js';
 
 // Workspaces: memberships (N:N user↔tenant) e convites
 export * from './workspaces.js';
+
+// Analytics first-party (rastreamento próprio — landing + app)
+export * from './analytics.js';

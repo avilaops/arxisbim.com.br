@@ -18,6 +18,7 @@ import { tenantRoutes } from './routes/v1/tenants.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
 import { workspaceRoutes } from './modules/workspaces/workspaces.routes.js';
+import { trackRoutes, adminAnalyticsRoutes } from './modules/analytics/analytics.routes.js';
 import { schedulingRoutes } from './routes/v1/scheduling.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
 import scheduleTasksRoutes from './routes/v1/schedule-tasks.js';
@@ -290,10 +291,12 @@ await server.register(rateLimit, {
   }),
 } as any);
 
-// Multipart for file uploads
+// Multipart for file uploads. IFC models reais chegam a 128MB — o limite
+// padrão de 100MB cortava esses arquivos. Configurável por env (MAX_UPLOAD_MB).
+const MAX_UPLOAD_MB = Math.max(1, Number(process.env.MAX_UPLOAD_MB || 150));
 await server.register(multipart, {
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB max file size
+    fileSize: MAX_UPLOAD_MB * 1024 * 1024,
     files: 1, // 1 file per request
   },
 } as any);
@@ -521,6 +524,8 @@ await server.register(tenantRoutes, { prefix: '/api/v1' });
 await server.register(companyRoutes, { prefix: '/api/v1' });
 await server.register(ifcModelRoutes, { prefix: '/api/v1' });
 await server.register(workspaceRoutes, { prefix: '/api/v1' });
+await server.register(trackRoutes, { prefix: '/api/v1' });
+await server.register(adminAnalyticsRoutes, { prefix: '/api/v1/admin/analytics' });
 await server.register(schedulingRoutes, { prefix: '/api/v1' });
 await server.register(projectsRoutes, { prefix: '/api/v1/projects' });
 await server.register(scheduleTasksRoutes, { prefix: '/api/v1' });

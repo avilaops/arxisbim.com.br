@@ -9,13 +9,23 @@ import {
   projects,
   ifcModels,
 } from '../../shared/database/schema/index.js';
-import { authenticateRequest, requireRole } from '../auth/middleware.js';
+import { authenticateRequest } from '../auth/middleware.js';
+import { isSuperAdmin } from './super-admin.middleware.js';
 import { EmailService } from './email.service.js';
 
 const emailService = new EmailService();
 
 export async function adminRoutes(fastify: FastifyInstance) {
-  const preHandler = [authenticateRequest, requireRole('admin', 'owner')];
+  // Gate do admin: role 'admin' OU super-admin (nicolas@avila.inc).
+  // NÃO basta ser 'owner' — todo usuário é owner do próprio tenant pessoal,
+  // o que abriria o admin pra qualquer um. (Furo corrigido.)
+  const adminGate = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = (request as any).user as { role?: string; email?: string; permissions?: string[] } | undefined;
+    if (!user) return reply.code(401).send({ error: 'Não autenticado.' });
+    const ok = user.role === 'admin' || user.permissions?.includes('admin') || isSuperAdmin(user.email);
+    if (!ok) return reply.code(403).send({ error: 'Acesso restrito a administradores.' });
+  };
+  const preHandler = [authenticateRequest, adminGate];
 
   // ─────────────────────────────────────────
   // USERS
