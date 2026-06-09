@@ -27,6 +27,7 @@ import {
 import type { BillingWebhookInput, ChangePlanInput, CreateCheckoutInput, CreatePortalInput } from './billing.schemas.js';
 import { STRIPE_WEBHOOK_EVENTS } from './billing.domain.js';
 import { StripeBillingProvider } from './providers/stripe-billing.provider.js';
+import { FiscalService } from './fiscal.service.js';
 
 const DEFAULT_CURRENCY = 'BRL';
 const DEFAULT_TRIAL_DAYS = 14;
@@ -903,6 +904,28 @@ export class BillingService {
             updatedAt: new Date(),
           } as any)
           .where(eq(billingSubscriptions.id, subscription.id));
+      }
+
+      // Emissão de NFS-e (gancho fiscal). DESLIGADO por padrão (sem CNPJ):
+      // não faz chamada externa nem custa nada; só emite quando FISCAL_PROVIDER
+      // + FISCAL_API_KEY estiverem configurados. Nunca quebra o pagamento.
+      if (eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid) {
+        const fiscal = await FiscalService.emitForInvoice({
+          tenantId,
+          invoiceId: invoice.id,
+          providerInvoiceId: data.id,
+          amountCents: Math.round((data.amount_paid || data.amount_due || 0) as number),
+          currency: (data.currency || DEFAULT_CURRENCY).toUpperCase(),
+          customerEmail: (data.customer_email as string) || null,
+          customerName: (data.customer_name as string) || null,
+          description: 'Assinatura ArxisVR',
+        });
+        if (fiscal.emitted) {
+          await db
+            .update(billingInvoices)
+            .set({ metadata: { ...(invoice.metadata as any), nfse: fiscal } } as any)
+            .where(eq(billingInvoices.id, invoice.id));
+        }
       }
 
       return { handled: true, eventType };
