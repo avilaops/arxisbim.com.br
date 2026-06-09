@@ -15,22 +15,28 @@
 
 import { LocalStorageService } from './local-storage.service.js';
 import { S3StorageService, loadS3ConfigFromEnv } from './s3-storage.service.js';
+import { R2StorageService, loadR2ConfigFromEnv } from './r2-storage.service.js';
 import type { StorageKey, StorageService } from './storage.types.js';
 
 export * from './storage.types.js';
 export { LocalStorageService } from './local-storage.service.js';
 export { S3StorageService, loadS3ConfigFromEnv } from './s3-storage.service.js';
+export { R2StorageService, loadR2ConfigFromEnv } from './r2-storage.service.js';
 
-export type StorageDriver = 'local' | 's3';
+export type StorageDriver = 'local' | 's3' | 'r2';
 
 export function resolveDriver(): StorageDriver {
   const raw = (process.env.STORAGE_DRIVER ?? 'local').trim().toLowerCase();
+  if (raw === 'r2' || raw === 'cloudflare') return 'r2';
   if (raw === 's3' || raw === 'minio') return 's3';
   return 'local';
 }
 
 export function createStorage(): StorageService {
   const driver = resolveDriver();
+  if (driver === 'r2') {
+    return new R2StorageService(loadR2ConfigFromEnv());
+  }
   if (driver === 's3') {
     return new S3StorageService(loadS3ConfigFromEnv());
   }

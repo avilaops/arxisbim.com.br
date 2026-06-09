@@ -27,6 +27,7 @@ import {
   DeleteObjectCommand,
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import {
@@ -164,32 +165,59 @@ export class S3StorageService implements StorageService {
   }
 
   async upload(key: StorageKey, body: StorageBody, opts: UploadOptions = {}): Promise<StorageObject> {
-    const Body =
-      body instanceof Readable
+    const buf =
+      Buffer.isBuffer(body)
         ? body
-        : Buffer.isBuffer(body)
-          ? body
-          : Buffer.from(body, 'utf-8');
+        : typeof body === 'string'
+          ? Buffer.from(body, 'utf-8')
+          : null;
 
     try {
+      // Streams (e.g. multipart file uploads of 15–128MB IFCs) go through
+      // lib-storage's managed multipart Upload: it streams in parts without
+      // buffering the whole file in memory and never needs ContentLength.
+      // Buffers/strings use a plain PutObject (length is already known).
+      if (buf === null) {
+        let size = opts.contentLength ?? 0;
+        const stream = body as Readable;
+        stream.on('data', (chunk: Buffer | string) => {
+          size += typeof chunk === 'string' ? Buffer.byteLength(chunk) : chunk.length;
+        });
+
+        const uploader = new Upload({
+          client: this.client,
+          params: {
+            Bucket: this.cfg.bucket,
+            Key: key,
+            Body: stream,
+            ContentType: opts.contentType,
+            Metadata: opts.metadata,
+          },
+        });
+        const res = await uploader.done();
+
+        return {
+          key,
+          size: opts.contentLength ?? size,
+          etag: (res as any)?.ETag?.replace(/"/g, ''),
+          contentType: opts.contentType,
+        };
+      }
+
       const res = await this.client.send(
         new PutObjectCommand({
           Bucket: this.cfg.bucket,
           Key: key,
-          Body: Body as any,
+          Body: buf,
           ContentType: opts.contentType,
-          ContentLength: opts.contentLength,
+          ContentLength: buf.length,
           Metadata: opts.metadata,
         })
       );
 
-      let size = 0;
-      if (Buffer.isBuffer(Body)) size = Body.length;
-      else if (opts.contentLength) size = opts.contentLength;
-
       return {
         key,
-        size,
+        size: buf.length,
         etag: res.ETag?.replace(/"/g, ''),
         contentType: opts.contentType,
       };

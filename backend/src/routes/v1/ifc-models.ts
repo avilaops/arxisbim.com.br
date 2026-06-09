@@ -3,10 +3,8 @@ import { ifcModels, projects } from '../../shared/database/schema/projects.js';
 import { sessions, participants } from '../../shared/database/schema/sessions.js';
 import { db } from '../../shared/database/db.js';
 import { eq, desc, and, or } from 'drizzle-orm';
-import { LocalStorageService } from '../../core/storage/local-storage.service.js';
+import { storage as storageService } from '../../core/storage/index.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
-
-const storageService = new LocalStorageService();
 
 type AuthedUser = {
   userId: string;
