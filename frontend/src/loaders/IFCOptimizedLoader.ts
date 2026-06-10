@@ -103,16 +103,13 @@ export class IFCOptimizedLoader {
    */
   private initializeWorker(): void {
     try {
-      // TODO: Ajustar caminho do worker quando necessário
-      // this.worker = new Worker(
-      //   new URL('./workers/ifc-parser-worker.ts', import.meta.url),
-      //   { type: 'module' }
-      // );
-      
-      // this.worker.onmessage = (event) => this.handleWorkerMessage(event.data);
-      // this.worker.onerror = (error) => console.error('❌ Worker error:', error);
-      
-      console.log('🔧 Worker pronto (modo placeholder)');
+      this.worker = new Worker(
+        new URL('../engine/streaming/workers/ifc-worker.ts', import.meta.url),
+        { type: 'module' }
+      );
+      this.worker.onmessage = (event) => this.handleWorkerMessage(event.data);
+      this.worker.onerror = (error) => console.error('❌ Worker error:', error);
+      console.log('✅ IFC Worker inicializado');
     } catch (error) {
       console.warn('⚠️ Worker não disponível, usando modo síncrono:', error);
     }
@@ -312,41 +309,56 @@ export class IFCOptimizedLoader {
    */
   private async processChunk(elementIDs: number[]): Promise<void> {
     if (!this.loadedModelID) return;
+    const ifcAPI = (this.loader.ifcManager as any).ifcAPI ?? (this.loader.ifcManager as any).state?.api;
 
     for (const id of elementIDs) {
       try {
-        // Obter geometria do elemento
-        const geometry = await this.loader.ifcManager.getGeometry(this.loadedModelID, id);
-        
-        if (!geometry) continue;
+        // GetFlatMesh returns placed geometry with real 4×4 transforms
+        const flatMesh = ifcAPI?.GetFlatMesh(this.loadedModelID, id);
+        if (!flatMesh) continue;
 
-        // Criar BufferGeometry
-        const bufferGeometry = this.createBufferGeometry(geometry);
-        
-        // Obter properties
         const properties = await this.loader.ifcManager.getItemProperties(this.loadedModelID, id);
-        
-        // Criar material baseado em tipo
         const material = this.getMaterialForType(properties.type);
 
-        // Transform matrix
-        const transform = new THREE.Matrix4(); // TODO: Obter transform real
+        const geomCount = flatMesh.geometries.size();
+        for (let g = 0; g < geomCount; g++) {
+          const placed = flatMesh.geometries.get(g);
+          const geomData = ifcAPI.GetGeometry(this.loadedModelID, placed.geometryExpressID);
+          if (!geomData) continue;
 
-        // Adicionar ao instance manager
-        if (this.config.enableInstancing) {
-          this.instanceManager.addElement(
-            `element_${id}`,
-            bufferGeometry,
-            material,
-            transform,
-            { ifcType: properties.type, expressID: id }
-          );
-        } else {
-          // Renderização tradicional
-          const mesh = new THREE.Mesh(bufferGeometry, material);
-          mesh.applyMatrix4(transform);
-          mesh.userData = { ifcType: properties.type, expressID: id };
-          this.scene.add(mesh);
+          // IfcGeometry uses WASM pointers — must use GetVertexArray/GetIndexArray.
+          // web-ifc vertex stride is x,y,z,nx,ny,nz (6 floats); extract positions only.
+          const verts = ifcAPI.GetVertexArray(geomData.GetVertexData(), geomData.GetVertexDataSize());
+          const indices = ifcAPI.GetIndexArray(geomData.GetIndexData(), geomData.GetIndexDataSize());
+          const vertCount = verts.length / 6;
+          const posOnly = new Float32Array(vertCount * 3);
+          for (let v = 0; v < vertCount; v++) {
+            posOnly[v * 3]     = verts[v * 6];
+            posOnly[v * 3 + 1] = verts[v * 6 + 1];
+            posOnly[v * 3 + 2] = verts[v * 6 + 2];
+          }
+          const bufferGeometry = new THREE.BufferGeometry();
+          bufferGeometry.setAttribute('position', new THREE.BufferAttribute(posOnly, 3));
+          bufferGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
+          bufferGeometry.computeVertexNormals();
+
+          // flatTransformation is column-major 4×4 (same layout as THREE.Matrix4)
+          const transform = new THREE.Matrix4().fromArray(placed.flatTransformation);
+
+          if (this.config.enableInstancing) {
+            this.instanceManager.addElement(
+              `element_${id}_${g}`,
+              bufferGeometry,
+              material,
+              transform,
+              { ifcType: properties.type, expressID: id }
+            );
+          } else {
+            const mesh = new THREE.Mesh(bufferGeometry, material);
+            mesh.applyMatrix4(transform);
+            mesh.userData = { ifcType: properties.type, expressID: id };
+            this.scene.add(mesh);
+          }
         }
 
         this.loadingState.loadedElements++;
@@ -622,12 +634,19 @@ export class IFCOptimizedLoader {
   private getColorForType(type: number): number {
     // Mapeamento básico de cores
     const colorMap: { [key: number]: number } = {
-      // TODO: Adicionar tipos IFC reais
-      // IFCWALL: 0xcccccc,
-      // IFCSLAB: 0x888888,
-      // IFCCOLUMN: 0x666666,
-      // IFCWINDOW: 0x88ccff,
-      // IFCDOOR: 0x8b4513,
+      2391406946: 0xcccccc, // IFCWALL
+      3512223829: 0xcccccc, // IFCWALLSTANDARDCASE
+      4156078855: 0xcccccc, // IFCWALLELEMENTEDCASE
+      1529196076: 0x888888, // IFCSLAB
+      843113511:  0x666666, // IFCCOLUMN
+      753842376:  0x999966, // IFCBEAM
+      3304561284: 0x88ccff, // IFCWINDOW
+      395920057:  0x8b4513, // IFCDOOR
+      331165859:  0xb8860b, // IFCSTAIR
+      2016517767: 0x996633, // IFCROOF
+      3171933400: 0xaaaaaa, // IFCPLATE
+      3856911033: 0xddeeff, // IFCSPACE
+      263784265:  0xc8a46e, // IFCFURNISHINGELEMENT
     };
 
     return colorMap[type] || 0x999999;
@@ -684,6 +703,12 @@ export class IFCOptimizedLoader {
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
+    }
+  }
+
+  private handleWorkerMessage(data: { type: string; error?: string }): void {
+    if (data.type === 'error') {
+      console.warn('⚠️ IFC Worker error:', data.error);
     }
   }
 

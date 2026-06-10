@@ -66,7 +66,7 @@ export interface PresignOptions {
 
 export interface StorageService {
   /** Human-readable driver name (e.g. "local", "s3"). */
-  readonly driver: 'local' | 's3';
+  readonly driver: 'local' | 's3' | 'r2';
 
   /** Upload an object. Returns metadata of the stored object. */
   upload(key: StorageKey, body: StorageBody, opts?: UploadOptions): Promise<StorageObject>;

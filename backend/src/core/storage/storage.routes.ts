@@ -146,7 +146,7 @@ export async function storageRoutes(fastify: FastifyInstance) {
     handler: async (_request: FastifyRequest, reply: FastifyReply) => {
       return reply.send({
         driver: storage.driver,
-        supportsPresignedPut: storage.driver === 's3',
+        supportsPresignedPut: storage.driver === 's3' || storage.driver === 'r2',
       });
     },
   });

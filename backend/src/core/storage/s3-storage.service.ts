@@ -130,7 +130,7 @@ async function streamToBuffer(body: unknown): Promise<Buffer> {
 }
 
 export class S3StorageService implements StorageService {
-  readonly driver = 's3' as const;
+  readonly driver: 's3' | 'r2' = 's3';
   private readonly client: S3Client;
   private readonly presignClient: S3Client;
   private readonly cfg: S3StorageConfig;

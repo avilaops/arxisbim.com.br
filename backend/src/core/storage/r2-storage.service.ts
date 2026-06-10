@@ -63,4 +63,6 @@ export function loadR2ConfigFromEnv(): S3StorageConfig {
  * Thin alias so consumers/logging can distinguish R2 from generic S3 at the
  * call site. Behaviourally identical to S3StorageService.
  */
-export class R2StorageService extends S3StorageService {}
+export class R2StorageService extends S3StorageService {
+  override readonly driver = 'r2' as const;
+}

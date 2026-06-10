@@ -42,6 +42,21 @@ services:
         value: https://api.arxisvr.avilaops.com
       - key: FRONTEND_URL
         value: https://www.arxisvr.avilaops.com
+      # Storage durável: Render free NÃO tem disco persistente, o driver local
+      # cai em /tmp (efêmero) e os IFCs somem a cada restart/deploy. Cloudflare
+      # R2 (S3-compatível) resolve. Segredos = sync:false (preencher no dashboard).
+      - key: STORAGE_DRIVER
+        value: r2
+      - key: MAX_UPLOAD_MB
+        value: "150"
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
       # OAuth Google — preencher no dashboard (sync:false = segredo)
       - key: GOOGLE_CLIENT_ID
         sync: false
