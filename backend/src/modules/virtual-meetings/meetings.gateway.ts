@@ -4,6 +4,10 @@ import { MeetingsService } from './meetings.service.js';
 import { ClientEvents, ServerEvents } from './events.js';
 import type { JoinRoomRequest, UpdateAvatarRequest } from './types.js';
 import jwt from 'jsonwebtoken';
+import { getTenantPlanLimits } from '../../core/billing/plan-limits.js';
+import { db } from '../../shared/database/db.js';
+import { projects } from '../../shared/database/schema/projects.js';
+import { eq } from 'drizzle-orm';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET must be defined in .env');
@@ -89,6 +93,31 @@ export class MeetingsGateway {
           if (!room || !room.isActive) {
             socket.emit(ServerEvents.ERROR, { message: 'Room not found or inactive' });
             return;
+          }
+
+          // Verificar limite de participantes do plano do tenant
+          const [project] = await db
+            .select({ tenantId: projects.tenantId })
+            .from(projects)
+            .where(eq(projects.id, room.projectId))
+            .limit(1);
+
+          if (!project) {
+            socket.emit(ServerEvents.ERROR, { message: 'Project not found' });
+            return;
+          }
+
+          const { limits } = await getTenantPlanLimits(project.tenantId);
+          if (limits.collaboratorsPerSession !== -1) {
+            const activeParticipants = await this.meetingsService.getParticipants(roomId);
+            const isAlreadyInRoom = activeParticipants.some(p => p.userId === socket.userId);
+            if (!isAlreadyInRoom && activeParticipants.length >= limits.collaboratorsPerSession) {
+              socket.emit(ServerEvents.ERROR, {
+                message: `Limite de participantes do plano atingido (${limits.collaboratorsPerSession} colaboradores por sessão). Faça upgrade para permitir mais participantes.`,
+                code: 'PLAN_LIMIT_EXCEEDED'
+              });
+              return;
+            }
           }
 
           // Adicionar participante ao banco

@@ -187,16 +187,21 @@ export class LODSystem {
     this.updateECSLOD();
   }
 
-  /**
-   * Atualiza LOD de um modelo específico
-   */
   private updateModelLOD(lodModel: LODModel): void {
     // Verifica se o modelo está no frustum
     if (!this.frustum.intersectsBox(lodModel.boundingBox)) {
       // Modelo fora do frustum - oculta tudo
-      lodModel.meshes.forEach(mesh => {
-        mesh.visible = false;
-      });
+      const baseObject = lodModel.object;
+      const lodLevels = baseObject.userData.lodLevels as LODLevelData[] | undefined;
+      if (lodLevels) {
+        lodLevels.forEach(level => {
+          level.object.visible = false;
+        });
+      } else {
+        lodModel.meshes.forEach(mesh => {
+          mesh.visible = false;
+        });
+      }
       this.stats.culledObjects += lodModel.meshes.length;
       return;
     }
@@ -268,6 +273,30 @@ export class LODSystem {
    * Aplica LOD a um modelo
    */
   private applyLOD(lodModel: LODModel, targetLOD: LODLevel): void {
+    const baseObject = lodModel.object;
+    const lodLevels = baseObject.userData.lodLevels as LODLevelData[] | undefined;
+
+    if (lodLevels && lodLevels.length > 0) {
+      let targetIndex = 0; // HIGH
+      if (targetLOD === 'MEDIUM') targetIndex = Math.min(1, lodLevels.length - 1);
+      else if (targetLOD === 'LOW') targetIndex = Math.min(2, lodLevels.length - 1);
+      else if (targetLOD === 'CULLED') targetIndex = Math.min(3, lodLevels.length - 1);
+
+      lodLevels.forEach((level, idx) => {
+        const isVisible = (idx === targetIndex && targetLOD !== 'CULLED');
+        if (isVisible && level.object !== baseObject && !level.object.parent && baseObject.parent) {
+          baseObject.parent.add(level.object);
+          level.object.position.copy(baseObject.position);
+          level.object.rotation.copy(baseObject.rotation);
+          level.object.scale.copy(baseObject.scale);
+        }
+        level.object.visible = isVisible;
+        level.visible = isVisible;
+      });
+      baseObject.userData.currentLevelIndex = targetIndex;
+      return;
+    }
+
     lodModel.meshes.forEach(mesh => {
       switch (targetLOD) {
         case 'HIGH':

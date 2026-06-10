@@ -1,5 +1,10 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { IfcController } from './ifc.controller.js';
+import { IfcAnalysisController } from './ifc-analysis.controller.js';
+import { IfcMepController } from './ifc-mep.controller.js';
+import { IfcJobsController } from './ifc-jobs.controller.js';
+import { IfcDomainsController } from './ifc-domains.controller.js';
+import { IfcComparisonController } from './ifc-comparison.controller.js';
 import { IfcService } from './ifc.service.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 
@@ -8,6 +13,11 @@ export async function ifcRoutes(fastify: FastifyInstance) {
   await ifcService.initialize(); // Create upload directory
   
   const ifcController = new IfcController(ifcService);
+  const ifcAnalysisController = new IfcAnalysisController(ifcService);
+  const ifcMepController = new IfcMepController(ifcService);
+  const ifcJobsController = new IfcJobsController(ifcService);
+  const ifcDomainsController = new IfcDomainsController(ifcService);
+  const ifcComparisonController = new IfcComparisonController(ifcService);
 
   /**
    * Upload IFC file
@@ -158,10 +168,6 @@ export async function ifcRoutes(fastify: FastifyInstance) {
   /**
    * Upload thumbnail
    * POST /:id/thumbnail
-   *
-   * Accepts either:
-   *   - multipart/form-data (image file uploaded to MinIO/local storage)
-   *   - application/json { thumbnailUrl } (externally hosted URL)
    */
   fastify.post('/:id/thumbnail', {
     schema: {
@@ -177,9 +183,6 @@ export async function ifcRoutes(fastify: FastifyInstance) {
           id: { type: 'string', format: 'uuid' },
         },
       },
-      // Body validation is intentionally omitted because the controller
-      // dispatches on Content-Type. Validating a JSON-only body would
-      // reject valid multipart requests.
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
@@ -338,7 +341,7 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.validate(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.validate(request, reply),
   });
 
   /**
@@ -359,7 +362,7 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getQualityReport(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getQualityReport(request, reply),
   });
 
   /**
@@ -390,12 +393,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.exportMetadata(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.exportMetadata(request, reply),
   });
 
   /**
    * Queue processing job
-   * POST /api/v1/ifc/:id/queue/:jobType
+   * POST /:id/queue/:jobType
    */
   fastify.post('/:id/queue/:jobType', {
     schema: {
@@ -418,12 +421,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.queueJob(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcJobsController.queueJob(request, reply),
   });
 
   /**
    * Get job status
-   * GET /api/v1/ifc/jobs/:jobId
+   * GET /jobs/:jobId
    */
   fastify.get('/jobs/:jobId', {
     schema: {
@@ -439,12 +442,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getJobStatus(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcJobsController.getJobStatus(request, reply),
   });
 
   /**
    * Get queue statistics
-   * GET /api/v1/ifc/queue/stats
+   * GET /queue/stats
    */
   fastify.get('/queue/stats', {
     schema: {
@@ -453,12 +456,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getQueueStats(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcJobsController.getQueueStats(request, reply),
   });
 
   /**
    * Get IFC elements analysis
-   * GET /api/v1/ifc/:id/elements
+   * GET /:id/elements
    */
   fastify.get('/:id/elements', {
     schema: {
@@ -474,12 +477,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getElements(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getElements(request, reply),
   });
 
   /**
    * Get elements by type
-   * GET /api/v1/ifc/:id/elements/:type
+   * GET /:id/elements/:type
    */
   fastify.get('/:id/elements/:type', {
     schema: {
@@ -496,12 +499,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getElementsByType(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getElementsByType(request, reply),
   });
 
   /**
    * Get building hierarchy
-   * GET /api/v1/ifc/:id/hierarchy
+   * GET /:id/hierarchy
    */
   fastify.get('/:id/hierarchy', {
     schema: {
@@ -517,12 +520,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getHierarchy(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getHierarchy(request, reply),
   });
 
   /**
    * Analyze IFC complexity
-   * GET /api/v1/ifc/:id/complexity
+   * GET /:id/complexity
    */
   fastify.get('/:id/complexity', {
     schema: {
@@ -538,12 +541,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.analyzeComplexity(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.analyzeComplexity(request, reply),
   });
 
   /**
    * Get statistics by category
-   * GET /api/v1/ifc/:id/categories
+   * GET /:id/categories
    */
   fastify.get('/:id/categories', {
     schema: {
@@ -559,12 +562,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getStatsByCategory(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getStatsByCategory(request, reply),
   });
 
   /**
    * Get materials analysis
-   * GET /api/v1/ifc/:id/materials
+   * GET /:id/materials
    */
   fastify.get('/:id/materials', {
     schema: {
@@ -580,12 +583,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getMaterials(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getMaterials(request, reply),
   });
 
   /**
    * Get quantities takeoff
-   * GET /api/v1/ifc/:id/quantities
+   * GET /:id/quantities
    */
   fastify.get('/:id/quantities', {
     schema: {
@@ -601,12 +604,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getQuantities(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcAnalysisController.getQuantities(request, reply),
   });
 
   /**
    * Get MEP systems analysis
-   * GET /api/v1/ifc/:id/mep
+   * GET /:id/mep
    */
   fastify.get('/:id/mep', {
     schema: {
@@ -622,12 +625,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getMepAnalysis(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcMepController.getMepAnalysis(request, reply),
   });
 
   /**
    * Get ductwork details
-   * GET /api/v1/ifc/:id/mep/ductwork
+   * GET /:id/mep/ductwork
    */
   fastify.get('/:id/mep/ductwork', {
     schema: {
@@ -643,12 +646,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getMepDuctwork(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcMepController.getMepDuctwork(request, reply),
   });
 
   /**
    * Get piping details
-   * GET /api/v1/ifc/:id/mep/piping
+   * GET /:id/mep/piping
    */
   fastify.get('/:id/mep/piping', {
     schema: {
@@ -664,12 +667,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getMepPiping(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcMepController.getMepPiping(request, reply),
   });
 
   /**
    * Get electrical details
-   * GET /api/v1/ifc/:id/mep/electrical
+   * GET /:id/mep/electrical
    */
   fastify.get('/:id/mep/electrical', {
     schema: {
@@ -685,12 +688,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getMepElectrical(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcMepController.getMepElectrical(request, reply),
   });
 
   /**
    * Get property sets
-   * GET /api/v1/ifc/:id/properties
+   * GET /:id/properties
    */
   fastify.get('/:id/properties', {
     schema: {
@@ -706,12 +709,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getProperties(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getProperties(request, reply),
   });
 
   /**
    * Get classifications
-   * GET /api/v1/ifc/:id/classifications
+   * GET /:id/classifications
    */
   fastify.get('/:id/classifications', {
     schema: {
@@ -727,12 +730,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getClassifications(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getClassifications(request, reply),
   });
 
   /**
    * Get type objects
-   * GET /api/v1/ifc/:id/types
+   * GET /:id/types
    */
   fastify.get('/:id/types', {
     schema: {
@@ -748,12 +751,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getTypes(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getTypes(request, reply),
   });
 
   /**
    * Get geometry analysis
-   * GET /api/v1/ifc/:id/geometry
+   * GET /:id/geometry
    */
   fastify.get('/:id/geometry', {
     schema: {
@@ -769,12 +772,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getGeometry(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getGeometry(request, reply),
   });
 
   /**
    * Get relationships analysis
-   * GET /api/v1/ifc/:id/relationships
+   * GET /:id/relationships
    */
   fastify.get('/:id/relationships', {
     schema: {
@@ -790,12 +793,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getRelationships(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getRelationships(request, reply),
   });
 
   /**
    * Get spaces analysis
-   * GET /api/v1/ifc/:id/spaces
+   * GET /:id/spaces
    */
   fastify.get('/:id/spaces', {
     schema: {
@@ -811,12 +814,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getSpaces(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getSpaces(request, reply),
   });
 
   /**
    * Get structural analysis
-   * GET /api/v1/ifc/:id/structural
+   * GET /:id/structural
    */
   fastify.get('/:id/structural', {
     schema: {
@@ -832,12 +835,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getStructural(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getStructural(request, reply),
   });
 
   /**
    * Get openings analysis
-   * GET /api/v1/ifc/:id/openings
+   * GET /:id/openings
    */
   fastify.get('/:id/openings', {
     schema: {
@@ -853,12 +856,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getOpenings(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getOpenings(request, reply),
   });
 
   /**
    * Get project schedule (4D)
-   * GET /api/v1/ifc/:id/schedule
+   * GET /:id/schedule
    */
   fastify.get('/:id/schedule', {
     schema: {
@@ -874,12 +877,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getSchedule(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getSchedule(request, reply),
   });
 
   /**
    * Get cost analysis (5D)
-   * GET /api/v1/ifc/:id/costs
+   * GET /:id/costs
    */
   fastify.get('/:id/costs', {
     schema: {
@@ -895,12 +898,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getCosts(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getCosts(request, reply),
   });
 
   /**
    * Get energy analysis
-   * GET /api/v1/ifc/:id/energy
+   * GET /:id/energy
    */
   fastify.get('/:id/energy', {
     schema: {
@@ -916,12 +919,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getEnergy(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getEnergy(request, reply),
   });
 
   /**
    * Get coordination analysis (clash detection)
-   * GET /api/v1/ifc/:id/coordination
+   * GET /:id/coordination
    */
   fastify.get('/:id/coordination', {
     schema: {
@@ -937,12 +940,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getCoordination(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getCoordination(request, reply),
   });
 
   /**
    * Get site & civil works analysis
-   * GET /api/v1/ifc/:id/site
+   * GET /:id/site
    */
   fastify.get('/:id/site', {
     schema: {
@@ -958,12 +961,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getSite(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getSite(request, reply),
   });
 
   /**
    * Get equipment & furniture analysis
-   * GET /api/v1/ifc/:id/equipment
+   * GET /:id/equipment
    */
   fastify.get('/:id/equipment', {
     schema: {
@@ -979,12 +982,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getEquipment(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getEquipment(request, reply),
   });
 
   /**
    * Get transport elements analysis
-   * GET /api/v1/ifc/:id/transport
+   * GET /:id/transport
    */
   fastify.get('/:id/transport', {
     schema: {
@@ -1000,12 +1003,12 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getTransport(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getTransport(request, reply),
   });
 
   /**
    * Get performance analysis
-   * GET /api/v1/ifc/:id/performance
+   * GET /:id/performance
    */
   fastify.get('/:id/performance', {
     schema: {
@@ -1021,6 +1024,83 @@ export async function ifcRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
     preHandler: authenticateRequest,
-    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.getPerformance(request, reply),
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcDomainsController.getPerformance(request, reply),
+  });
+
+  /**
+   * Compare IFC models
+   * POST /compare
+   */
+  fastify.post('/compare', {
+    schema: {
+      description: 'Compare two IFC models',
+      tags: ['ifc', 'comparison'],
+      body: {
+        type: 'object',
+        required: ['model1Id', 'model2Id'],
+        properties: {
+          model1Id: { type: 'string', format: 'uuid' },
+          model2Id: { type: 'string', format: 'uuid' },
+          options: { type: 'object' },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+    preHandler: authenticateRequest,
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcComparisonController.compareModels(request, reply),
+  });
+
+  /**
+   * Track changes across multiple versions
+   * POST /:id/track-changes
+   */
+  fastify.post('/:id/track-changes', {
+    schema: {
+      description: 'Track changes across multiple model versions',
+      tags: ['ifc', 'comparison'],
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['versionIds'],
+        properties: {
+          versionIds: {
+            type: 'array',
+            items: { type: 'string', format: 'uuid' },
+            minItems: 1,
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+    preHandler: authenticateRequest,
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcComparisonController.trackChanges(request, reply),
+  });
+
+  /**
+   * Detect change conflicts
+   * GET /compare/:model1Id/:model2Id/conflicts
+   */
+  fastify.get('/compare/:model1Id/:model2Id/conflicts', {
+    schema: {
+      description: 'Detect conflicts between two models',
+      tags: ['ifc', 'comparison'],
+      params: {
+        type: 'object',
+        required: ['model1Id', 'model2Id'],
+        properties: {
+          model1Id: { type: 'string', format: 'uuid' },
+          model2Id: { type: 'string', format: 'uuid' },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+    preHandler: authenticateRequest,
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcComparisonController.detectChangeConflicts(request, reply),
   });
 }

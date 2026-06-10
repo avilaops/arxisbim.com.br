@@ -5,10 +5,10 @@
  * billing_subscriptions (default 'free' quando não há assinatura). Limite -1 =
  * ilimitado. Erros são 402 Payment Required.
  */
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 import { db } from '../../shared/database/db.js';
 import { billingSubscriptions } from '../../shared/database/schema/billing.js';
-import { projects } from '../../shared/database/schema/projects.js';
+import { projects, ifcModels } from '../../shared/database/schema/projects.js';
 import { memberships } from '../../shared/database/schema/workspaces.js';
 import { BILLING_PLANS, normalizePlan } from '../../modules/billing/billing.plans.js';
 import type { BillingPlanLimits } from '../../modules/billing/billing.plans.js';
@@ -72,6 +72,25 @@ export async function assertFileWithinPlan(tenantId: string, fileSizeBytes: numb
       'max_file_size',
       limits.maxFileSizeMB,
       `Arquivo de ${mb.toFixed(0)}MB excede o limite do plano (${limits.maxFileSizeMB}MB). Faça upgrade.`,
+    );
+  }
+}
+
+/** Garante que o tenant possui espaço em disco disponível no plano (maxStorageGB). */
+export async function assertStorageWithinPlan(tenantId: string, newFileSizeBytes: number): Promise<void> {
+  const { limits } = await getTenantPlanLimits(tenantId);
+  if (limits.maxStorageGB === -1) return;
+  const [{ sum }] = await db
+    .select({ sum: sql<number>`coalesce(sum(${ifcModels.fileSizeBytes}), 0)` })
+    .from(ifcModels)
+    .where(eq(ifcModels.tenantId, tenantId));
+  const maxBytes = limits.maxStorageGB * 1024 * 1024 * 1024;
+  const currentBytes = Number(sum);
+  if (currentBytes + newFileSizeBytes > maxBytes) {
+    throw new PlanLimitError(
+      'max_storage',
+      limits.maxStorageGB,
+      `Limite de armazenamento atingido: ${(currentBytes / (1024 * 1024 * 1024)).toFixed(2)}GB de ${limits.maxStorageGB}GB utilizados. Faça upgrade para expandir o espaço.`,
     );
   }
 }

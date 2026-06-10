@@ -371,6 +371,11 @@ export class IFCOptimizedLoader {
     // Criar índice espacial
     this.createSpatialIndex();
 
+    // Aplicar LOD
+    if (this.config.enableLOD) {
+      await this.applyLOD();
+    }
+
     this.updateProgress(100);
     
     console.log('✅ Modelo finalizado e visível na cena!');
@@ -380,11 +385,11 @@ export class IFCOptimizedLoader {
    * Aplica sistema de LOD aos elementos
    */
   private async applyLOD(): Promise<void> {
-    console.log('🎚️ LOD desabilitado temporariamente (API em desenvolvimento)');
-    // TODO: Implementar quando LODSystem.createLOD estiver pronto
-    /*
+    if (!this.lodSystem) return;
+    console.log('🎚️ Aplicando sistema de LOD aos elementos...');
+
     this.scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh || obj instanceof THREE.InstancedMesh) {
+      if ((obj instanceof THREE.Mesh || obj instanceof THREE.InstancedMesh) && obj.userData?.expressID) {
         // Criar versões simplificadas
         const lodLevels = [
           { distance: this.config.lodDistances[0], object: obj }, // Original
@@ -396,22 +401,112 @@ export class IFCOptimizedLoader {
         this.lodSystem.createLOD(`lod_${obj.id}`, lodLevels);
       }
     });
-    */
   }
 
   /**
    * Cria versão simplificada do objeto
    */
   private createSimplified(original: THREE.Mesh | THREE.InstancedMesh, factor: number): THREE.Object3D {
-    // Clone e simplifica
     const simplified = original.clone();
     
     if (simplified instanceof THREE.Mesh) {
-      // Simplificar geometria (placeholder - implementar algoritmo real)
-      simplified.geometry = simplified.geometry.clone();
+      simplified.geometry = this.simplifyGeometry(original.geometry, factor);
+    } else if (simplified instanceof THREE.InstancedMesh) {
+      simplified.geometry = this.simplifyGeometry(original.geometry, factor);
     }
 
     return simplified;
+  }
+
+  /**
+   * Simplifica uma BufferGeometry usando clusterização de vértices
+   */
+  private simplifyGeometry(geometry: THREE.BufferGeometry, factor: number): THREE.BufferGeometry {
+    if (factor >= 1.0) return geometry.clone();
+
+    const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute;
+    if (!positionAttribute) return geometry.clone();
+
+    const indexAttribute = geometry.getIndex();
+    if (!indexAttribute) {
+      return geometry.clone();
+    }
+
+    const positions = positionAttribute.array;
+    const indices = indexAttribute.array;
+    const vertexCount = positionAttribute.count;
+    const indexCount = indexAttribute.count;
+
+    geometry.computeBoundingBox();
+    const bbox = geometry.boundingBox!;
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    const cellSize = (maxDim / 50) * (1.0 - factor + 0.01);
+
+    if (cellSize <= 0) return geometry.clone();
+
+    const cellToVertex = new Map<string, number>();
+    const oldToNewMap = new Int32Array(vertexCount);
+
+    const newPositions: number[] = [];
+    const cellPositions = new Map<string, { sumX: number, sumY: number, sumZ: number, count: number }>();
+
+    for (let i = 0; i < vertexCount; i++) {
+      const vx = positions[i * 3];
+      const vy = positions[i * 3 + 1];
+      const vz = positions[i * 3 + 2];
+
+      const cx = Math.floor(vx / cellSize);
+      const cy = Math.floor(vy / cellSize);
+      const cz = Math.floor(vz / cellSize);
+      const key = `${cx}_${cy}_${cz}`;
+
+      if (!cellToVertex.has(key)) {
+        const newIdx = newPositions.length / 3;
+        cellToVertex.set(key, newIdx);
+        newPositions.push(vx, vy, vz);
+        cellPositions.set(key, { sumX: vx, sumY: vy, sumZ: vz, count: 1 });
+        oldToNewMap[i] = newIdx;
+      } else {
+        const existingIdx = cellToVertex.get(key)!;
+        oldToNewMap[i] = existingIdx;
+        const cp = cellPositions.get(key)!;
+        cp.sumX += vx;
+        cp.sumY += vy;
+        cp.sumZ += vz;
+        cp.count++;
+      }
+    }
+
+    for (const [key, idx] of cellToVertex.entries()) {
+      const cp = cellPositions.get(key)!;
+      newPositions[idx * 3] = cp.sumX / cp.count;
+      newPositions[idx * 3 + 1] = cp.sumY / cp.count;
+      newPositions[idx * 3 + 2] = cp.sumZ / cp.count;
+    }
+
+    const newIndices: number[] = [];
+    for (let i = 0; i < indexCount; i += 3) {
+      const idx0 = oldToNewMap[indices[i]];
+      const idx1 = oldToNewMap[indices[i + 1]];
+      const idx2 = oldToNewMap[indices[i + 2]];
+
+      if (idx0 !== idx1 && idx1 !== idx2 && idx2 !== idx0) {
+        newIndices.push(idx0, idx1, idx2);
+      }
+    }
+
+    if (newIndices.length === 0) {
+      return geometry.clone();
+    }
+
+    const simplifiedGeometry = new THREE.BufferGeometry();
+    simplifiedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+    simplifiedGeometry.setIndex(newIndices);
+    simplifiedGeometry.computeVertexNormals();
+
+    return simplifiedGeometry;
   }
 
   /**
