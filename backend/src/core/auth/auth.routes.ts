@@ -58,8 +58,6 @@ const verifyEmailLimit      = createRateLimit(10, 60_000);
 const refreshLimit          = createRateLimit(20, 60_000);
 const changePasswordLimit   = createRateLimit(5,  60_000);
 
-const authService = new AuthService();
-
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -81,6 +79,7 @@ const refreshTokenSchema = z.object({
 });
 
 export async function authRoutes(fastify: FastifyInstance) {
+  const authService = new AuthService();
   /**
    * Hook: remover Content-Type de DELETE sem body (evita erro de JSON vazio)
    */
@@ -98,7 +97,20 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Login com email e senha
    */
   fastify.post('/login', {
-    preHandler: [loginRateLimit],
+    preHandler: [async (request: FastifyRequest, reply: FastifyReply) => {
+      const ip = (request.headers['cf-connecting-ip'] as string | undefined) ?? request.ip;
+      // IP block takes priority over rate limit — must be checked first.
+      if (isIpBlocked(ip)) {
+        return reply.status(429).send({ error: 'IP_BLOCKED', message: 'Too many failed attempts from this IP' });
+      }
+      // Per-endpoint rate limit; also records an IP failure so volume attacks
+      // accumulate toward the IP block threshold.
+      const rlResult = await loginRateLimit(request, reply);
+      if (reply.sent) {
+        recordIpFailure(ip);
+      }
+      return rlResult;
+    }],
     schema: {
       description: 'Login com email e senha',
       tags: ['auth'],
@@ -270,9 +282,11 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Logout — revoga refresh token da sessão atual
    */
   fastify.post('/logout', {
+    preHandler: [fastify.authenticate],
     schema: {
       description: 'Logout — revoga sessão atual',
       tags: ['auth'],
+      security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
         required: ['refreshToken'],
@@ -372,6 +386,34 @@ export async function authRoutes(fastify: FastifyInstance) {
    * POST /auth/verify-email
    * Verificar email com token
    */
+  // GET /auth/verify-email?token=... — link-based verification from email
+  fastify.get('/verify-email', {
+    preHandler: [verifyEmailLimit],
+    schema: {
+      description: 'Verificar email via link (GET com query param)',
+      tags: ['auth'],
+      querystring: {
+        type: 'object',
+        required: ['token'],
+        properties: { token: { type: 'string' } },
+      },
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      const { token } = request.query as { token: string };
+      if (!token) return reply.status(400).send({ error: 'Token ausente' });
+      try {
+        const result = await authService.verifyEmail(token);
+        if (!result.success) {
+          return reply.status(400).send({ error: 'Token inválido ou expirado' });
+        }
+        return reply.send({ success: true, userId: result.userId, message: 'Email verificado com sucesso!' });
+      } catch (error: any) {
+        fastify.log.error(error);
+        return reply.status(400).send({ error: safeAuthError(error) });
+      }
+    },
+  });
+
   fastify.post('/verify-email', {
     preHandler: [verifyEmailLimit],
     schema: {

@@ -5,7 +5,11 @@ import { and, eq, gt, or } from 'drizzle-orm';
 import { db } from '../../shared/database/index.js';
 import { tenantEntitlements } from '../../shared/database/schema/index.js';
 
-const authService = new AuthService();
+let _authService: AuthService | undefined;
+function getAuthService(): AuthService {
+  if (!_authService) _authService = new AuthService();
+  return _authService;
+}
 
 // =====================================
 // AUTHENTICATION MIDDLEWARE
@@ -24,7 +28,7 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
   const token = authHeader.substring(7);
 
   try {
-    const decoded = authService.verifyToken(token);
+    const decoded = getAuthService().verifyToken(token);
 
     const validRoles: Array<UserContext['role']> = ['owner', 'admin', 'user', 'viewer'];
     const role: UserContext['role'] = validRoles.includes(decoded.role as UserContext['role'])

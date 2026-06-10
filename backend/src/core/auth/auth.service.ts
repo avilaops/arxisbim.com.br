@@ -167,15 +167,22 @@ export class AuthService {
     const connectionString = process.env.DATABASE_URL!;
     const client = postgres(connectionString);
     this.db = drizzle(client, { schema: { users, tenants } });
-    
-    if (!process.env.JWT_SECRET) {
-      throw new Error('CRITICAL: JWT_SECRET environment variable is not set. Refusing to start.');
-    }
-    if (!process.env.JWT_REFRESH_SECRET) {
-      throw new Error('CRITICAL: JWT_REFRESH_SECRET environment variable is not set. Refusing to start.');
-    }
-    this.jwtSecret = process.env.JWT_SECRET;
-    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+    // JWT secrets are resolved lazily (getJwtSecret/getJwtRefreshSecret) so that
+    // the constructor can be called before process.env is fully populated (e.g. tests).
+    this.jwtSecret = '';
+    this.jwtRefreshSecret = '';
+  }
+
+  private getJwtSecret(): string {
+    const s = this.jwtSecret || process.env.JWT_SECRET;
+    if (!s) throw new Error('CRITICAL: JWT_SECRET environment variable is not set.');
+    return (this.jwtSecret = s);
+  }
+
+  private getJwtRefreshSecret(): string {
+    const s = this.jwtRefreshSecret || process.env.JWT_REFRESH_SECRET;
+    if (!s) throw new Error('CRITICAL: JWT_REFRESH_SECRET environment variable is not set.');
+    return (this.jwtRefreshSecret = s);
   }
 
   /**
@@ -499,7 +506,7 @@ export class AuthService {
   async refreshToken(refreshToken: string, ip?: string, userAgent?: string): Promise<{ token: string; refreshToken: string }> {
     try {
       // Verificar assinatura JWT
-      const payload = jwt.verify(refreshToken, this.jwtRefreshSecret) as JWTPayload;
+      const payload = jwt.verify(refreshToken, this.getJwtRefreshSecret()) as JWTPayload;
 
       // A5 — Refresh Token Rotation: validar token contra user_sessions
       const now = new Date();
@@ -699,7 +706,7 @@ export class AuthService {
    */
   verifyToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, this.jwtSecret) as JWTPayload;
+      return jwt.verify(token, this.getJwtSecret()) as JWTPayload;
     } catch (error) {
       throw new Error('Token inválido');
     }
@@ -717,7 +724,7 @@ export class AuthService {
    * Gerar access token
    */
   private generateAccessToken(payload: JWTPayload): string {
-    return jwt.sign(payload, this.jwtSecret as string, { expiresIn: this.accessTokenExpiry } as jwt.SignOptions);
+    return jwt.sign(payload, this.getJwtSecret(), { expiresIn: this.accessTokenExpiry } as jwt.SignOptions);
   }
 
   /**
@@ -726,7 +733,7 @@ export class AuthService {
   private generateRefreshToken(payload: Pick<JWTPayload, 'userId' | 'email' | 'tenantId'>): string {
     return jwt.sign(
       { ...payload, jti: randomBytes(16).toString('hex') },
-      this.jwtRefreshSecret as string,
+      this.getJwtRefreshSecret(),
       { expiresIn: this.refreshTokenExpiry } as jwt.SignOptions,
     );
   }
