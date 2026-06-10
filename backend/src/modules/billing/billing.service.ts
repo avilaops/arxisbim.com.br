@@ -11,6 +11,7 @@ import {
   tenantEntitlements,
   tenants,
   users,
+  analyticsEvents,
   type BillingCycle,
   type BillingPlanTier,
   type BillingStatus,
@@ -910,6 +911,24 @@ export class BillingService {
       // não faz chamada externa nem custa nada; só emite quando FISCAL_PROVIDER
       // + FISCAL_API_KEY estiverem configurados. Nunca quebra o pagamento.
       if (eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid) {
+        // Telemetry: track subscription_paid server-side
+        try {
+          await db.insert(analyticsEvents).values({
+            tenantId,
+            name: 'subscription_paid',
+            category: 'billing',
+            props: {
+              invoiceId: invoice.id,
+              totalCents: invoice.totalCents,
+              plan: subscription?.plan || 'unknown',
+              cycle: subscription?.billingCycle || 'monthly',
+            },
+            timestamp: new Date(),
+          } as any);
+        } catch (e) {
+          // Do not fail webhook on telemetry error
+        }
+
         const fiscal = await FiscalService.emitForInvoice({
           tenantId,
           invoiceId: invoice.id,

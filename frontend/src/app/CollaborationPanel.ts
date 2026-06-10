@@ -170,6 +170,14 @@ export class CollaborationPanel {
       localStorage.setItem('arxisvr_host_session_token', data.accessToken);
       localStorage.setItem('arxisvr_host_invite_link', data.inviteLink);
 
+      try {
+        (window as any).arxis?.track('meeting_created', {
+          roomId: data.session.id,
+          projectId: projectId,
+        });
+        (window as any).arxis?.flush();
+      } catch (e) {}
+
       this.showInviteLink(data.inviteLink);
       await this.connectWS(data.session.id, authToken, this.accessToken!);
     } catch {
@@ -211,6 +219,13 @@ export class CollaborationPanel {
       this.joinBtn.style.display = 'none';
       this.leaveBtn.style.display = '';
       this.setStatus('connected', `🟢 Sessão ativa`);
+      try {
+        (window as any).arxis?.track('meeting_joined', {
+          roomId: sessionId,
+          role: 'host',
+        });
+        (window as any).arxis?.flush();
+      } catch (e) {}
       this.updateCallButton();
       this.startPresence();
     } catch {
@@ -309,6 +324,12 @@ export class CollaborationPanel {
         setTimeout(() => { copyBtn.textContent = 'Copiar'; }, 2000);
       });
       input.select();
+      try {
+        (window as any).arxis?.track('invite_sent', {
+          roomId: this.sessionId || '',
+        });
+        (window as any).arxis?.flush();
+      } catch (e) {}
     });
   }
 
@@ -346,6 +367,13 @@ export class CollaborationPanel {
         this.joinBtn.style.display = 'none';
         this.leaveBtn.style.display = '';
         this.setStatus('connected', `🟢 ${guestName ?? 'Convidado'}`);
+        try {
+          (window as any).arxis?.track('meeting_joined', {
+            roomId: guestSessionId,
+            role: 'guest',
+          });
+          (window as any).arxis?.flush();
+        } catch (e) {}
         this.updateCallButton();
         this.startPresence();
       } catch {

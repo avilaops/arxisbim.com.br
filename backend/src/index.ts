@@ -46,6 +46,7 @@ import { MeetingsGateway } from './modules/virtual-meetings/meetings.gateway.js'
 import { NotificationsGateway } from './modules/notifications/notifications.gateway.js';
 import { authenticateRequest } from './core/auth/middleware.js';
 import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
+import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
 import { observabilityService, logger } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
@@ -254,6 +255,12 @@ const authCleanupWorker = createAuthCleanupWorker({
   logger: server.log,
   expiredTokenRetentionDays: 30,
   zombieAccountAgeDays: 2,
+});
+
+const analyticsCleanupWorker = createAnalyticsCleanupWorker({
+  intervalMs: 12 * 60 * 60 * 1000, // 12h
+  logger: server.log,
+  retentionDays: 90,
 });
 
 // =====================================
@@ -599,6 +606,9 @@ try {
 
   // Initialize auth cleanup worker (runs every 6h)
   authCleanupWorker.start();
+
+  // Initialize analytics cleanup worker (runs every 12h)
+  analyticsCleanupWorker.start();
 
   // Initialize email queue retry worker (runs every 5 min)
   emailQueueWorker.start();

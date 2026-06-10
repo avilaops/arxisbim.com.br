@@ -165,6 +165,9 @@
       .nav-cta .btn { display: none; }
       .lang-switcher { display: none; }
     }
+    /* nav-signup-btn: oculto até scroll via classe */
+    .nav-btn-hidden { opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .nav-btn-hidden.nav-btn-visible { opacity: 1; pointer-events: auto; }
 
     /* GRADIENT TEXT */
     .grad {
@@ -591,9 +594,9 @@
     .faq-q.open::after { content: "−"; }
     .faq-a {
       font-size: 15px; color: var(--text-secondary); line-height: 1.6;
-      max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease;
+      max-height: 0; overflow: hidden; transition: max-height 0.45s ease, padding 0.3s ease;
     }
-    .faq-a.open { max-height: 200px; padding-bottom: 20px; }
+    .faq-a.open { max-height: 600px; padding-bottom: 20px; }
 
     /* LANGUAGE SWITCHER */
     .lang-switcher { display:flex; align-items:center; gap:4px; }
@@ -749,9 +752,8 @@
         <a href="#pricing">Planos</a>
       </nav>
       <div class="nav-cta">
-
         <a class="btn btn-ghost" href="/login.html" data-i18n="nav.login">Entrar</a>
-        <a class="btn btn-primary" href="/register.html" style="display:none" id="nav-signup-btn">Criar conta grátis</a>
+        <a class="btn btn-primary nav-btn-hidden" href="/register.html" data-track="cta_signup" data-track-loc="nav" id="nav-signup-btn">Criar conta grátis</a>
         <button class="nav-hamburger" id="hamburger-btn" aria-label="Abrir menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -773,7 +775,7 @@
   </nav>
 
   <main id="main-content">
-  <section class="hero">
+  <section class="hero" data-track-section="hero">
     <div class="hero-grid"></div>
     <div class="container hero-inner">
       <div class="eyebrow"><span class="dot"></span> BIM · 4D/5D · Realidade Estendida · IA</div>
@@ -983,7 +985,7 @@
   </section>
 
   <!-- FAIXA DE MARCAS-ALVO (marquee) -->
-  <section class="brands" aria-label="Mercado-alvo">
+  <section class="brands" aria-label="Mercado-alvo" data-track-section="brands">
     <div class="brands-label">Pensado para o padrão das grandes do mercado imobiliário</div>
     <div class="brands-sub">Incorporadoras, construtoras e escritórios que vendem na planta — e querem que o cliente <strong>sinta</strong> o imóvel antes da obra.</div>
     <div class="brand-marquee">
@@ -1018,7 +1020,7 @@
     <div class="brands-note">Marcas ilustrativas do mercado-alvo — referências do setor, ainda não clientes.</div>
   </section>
 
-  <section id="features">
+  <section id="features" data-track-section="features">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Recursos</span>
@@ -1079,7 +1081,7 @@
     </div>
   </section>
 
-  <section id="how" style="background: linear-gradient(180deg, transparent, rgba(91,141,239,0.04), transparent);">
+  <section id="how" data-track-section="how" style="background: linear-gradient(180deg, transparent, rgba(91,141,239,0.04), transparent);">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Como funciona</span>
@@ -1209,7 +1211,7 @@
   </section>
 
   <!-- EXEMPLOS DE USO POPULARES -->
-  <section id="usecases">
+  <section id="usecases" data-track-section="usecases">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Exemplos de uso</span>
@@ -1238,7 +1240,7 @@
     </div>
   </section>
 
-  <section id="pricing">
+  <section id="pricing" data-track-section="pricing">
     <div class="container">
       <div class="section-head">
         <span class="kicker">Planos</span>
@@ -1345,14 +1347,14 @@
     </div>
   </section>
 
-  <section>
+  <section data-track-section="bottom_cta">
     <div class="container">
       <div class="cta-band reveal">
         <h2>Pronto para ver seu projeto em outra dimensão?</h2>
         <p>Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão de crédito.</p>
         <div class="cta-row">
-          <a class="btn btn-primary btn-lg" href="/register.html">Criar conta grátis →</a>
-          <a class="btn btn-outline btn-lg" href="/login.html">Entrar</a>
+          <a class="btn btn-primary btn-lg" href="/register.html" data-track="cta_signup" data-track-loc="bottom_cta">Criar conta grátis →</a>
+          <a class="btn btn-outline btn-lg" href="/login.html" data-track="cta_login" data-track-loc="bottom_cta">Entrar</a>
         </div>
       </div>
     </div>
@@ -1465,7 +1467,9 @@
         btn.addEventListener('click', function() {
           opts.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
           btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
-          apply(btn.getAttribute('data-cycle'));
+          var cycle = btn.getAttribute('data-cycle');
+          apply(cycle);
+          if (window.arxis) window.arxis.track('billing_cycle_toggle', { cycle: cycle }, 'pricing');
         });
       });
     })();
@@ -1485,12 +1489,12 @@
       });
     })();
 
-    // ── Nav signup button on scroll ─────────────────────────────────────────────
+    // ── Nav signup button on scroll (usa classe CSS, não inline style) ────────
     (function() {
       var signupBtn = document.getElementById('nav-signup-btn');
       if (!signupBtn) return;
       window.addEventListener('scroll', function() {
-        signupBtn.style.display = window.scrollY > 200 ? '' : 'none';
+        signupBtn.classList.toggle('nav-btn-visible', window.scrollY > 200);
       }, { passive: true });
     })();
   </script>
@@ -1542,16 +1546,19 @@
         });
       }
 
-      document.getElementById('lang-switcher').addEventListener('click', function(e) {
-        var btn = e.target.closest('.lang-btn');
-        if (!btn) return;
-        var lang = btn.dataset.lang;
-        i18next.changeLanguage(lang, function(err, t) {
-          localStorage.setItem('arxisvr_lang', lang);
-          applyTranslations(t);
-          updateLangButtons();
+      var langSwEl = document.getElementById('lang-switcher');
+      if (langSwEl) {
+        langSwEl.addEventListener('click', function(e) {
+          var btn = e.target.closest('.lang-btn');
+          if (!btn) return;
+          var lang = btn.dataset.lang;
+          i18next.changeLanguage(lang, function(err, t) {
+            localStorage.setItem('arxisvr_lang', lang);
+            applyTranslations(t);
+            updateLangButtons();
+          });
         });
-      });
+      }
     })();
   </script>
 

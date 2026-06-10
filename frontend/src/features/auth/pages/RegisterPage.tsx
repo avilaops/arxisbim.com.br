@@ -1,4 +1,4 @@
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { authManager } from '../AuthManager';
 
@@ -12,6 +12,12 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const turnstileToken = useRef<string>('');
+
+  useEffect(() => {
+    try {
+      (window as any).arxis?.track('register_started');
+    } catch (e) {}
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +42,11 @@ export default function RegisterPage() {
         companyName: companyName.trim(),
         turnstileToken: turnstileToken.current,
       } as any);
+
+      try {
+        (window as any).arxis?.track('register_completed');
+        (window as any).arxis?.flush();
+      } catch (e) {}
 
       // Se o servidor retornou requiresEmailVerification, mostrar mensagem
       if (result?.requiresEmailVerification) {

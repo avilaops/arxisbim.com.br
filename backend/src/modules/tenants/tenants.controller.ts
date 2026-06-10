@@ -9,17 +9,17 @@ import { z } from 'zod';
 const createTenantSchema = z.object({
   tenantId: z.string().min(3).max(64).regex(/^[a-z0-9-]+$/, 'Apenas letras minúsculas, números e hífens'),
   name: z.string().min(1).max(255),
-  branding: z.record(z.any()).optional(),
-  subscription: z.record(z.any()).optional(),
-  settings: z.record(z.any()).optional(),
+  branding: z.record(z.string(), z.any()).optional(),
+  subscription: z.record(z.string(), z.any()).optional(),
+  settings: z.record(z.string(), z.any()).optional(),
   isActive: z.boolean().optional(),
 });
 
 const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  branding: z.record(z.any()).optional(),
-  subscription: z.record(z.any()).optional(),
-  settings: z.record(z.any()).optional(),
+  branding: z.record(z.string(), z.any()).optional(),
+  subscription: z.record(z.string(), z.any()).optional(),
+  settings: z.record(z.string(), z.any()).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -74,9 +74,9 @@ export async function createTenantHandler(request: FastifyRequest, reply: Fastif
     const [created] = await db.insert(tenants).values({
       tenantId: body.tenantId,
       name: body.name,
-      branding: body.branding ?? {},
-      subscription: body.subscription ?? { plan: 'free' },
-      settings: body.settings ?? {},
+      branding: (body.branding ?? {}) as any,
+      subscription: (body.subscription ?? { plan: 'free' }) as any,
+      settings: (body.settings ?? {}) as any,
       isActive: body.isActive ?? true,
     }).returning();
 

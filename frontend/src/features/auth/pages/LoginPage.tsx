@@ -43,6 +43,10 @@ export default function LoginPage() {
       const next = nextParam && nextParam.charAt(0) === '/' && nextParam.charAt(1) !== '/'
         ? nextParam
         : '/app.html';
+      try {
+        (window as any).arxis?.track('login_success');
+        (window as any).arxis?.flush();
+      } catch (e) {}
       window.location.href = next;
     } catch (err: any) {
       setError(err?.message || 'Email ou senha incorretos.');

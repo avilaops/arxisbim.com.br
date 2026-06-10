@@ -126,6 +126,13 @@ export class BillingModal {
       });
 
       if (checkout.checkoutUrl) {
+        try {
+          (window as any).arxis?.track('subscription_started', {
+            plan: plan,
+            cycle: this.state.cycle,
+          });
+          (window as any).arxis?.flush();
+        } catch (e) {}
         window.location.href = checkout.checkoutUrl;
         return;
       }

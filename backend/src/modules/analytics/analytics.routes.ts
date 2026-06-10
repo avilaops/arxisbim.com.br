@@ -32,7 +32,21 @@ function clientIp(req: FastifyRequest): string {
 // PUBLIC INGEST  →  POST /api/v1/track   (sem auth; anônimo permitido)
 // ══════════════════════════════════════════════════════════════════
 export async function trackRoutes(fastify: FastifyInstance) {
-  fastify.post('/track', { preHandler: optionalAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/track', {
+    preHandler: optionalAuth,
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: '1 minute',
+        keyGenerator: (request: FastifyRequest) => {
+          const body = request.body as any;
+          const events = Array.isArray(body?.events) ? body.events : (body ? [body] : []);
+          const firstEvent = events[0];
+          return firstEvent?.anonId || firstEvent?.sessionId || clientIp(request);
+        }
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     const user = (request as any).user as { userId?: string; tenantId?: string } | undefined;
     const ip = clientIp(request);
     const ua = clamp(request.headers['user-agent'], 1000);

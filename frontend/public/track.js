@@ -18,6 +18,7 @@
   var SS_SESSION = 'arxis_session_id';
   var LS_UTM = 'arxis_utm';
   var TOKEN_KEY = 'arxisvr_token';
+  var LS_RETRY = 'arxis_retry_queue';
 
   function uid() {
     try { return crypto.randomUUID().replace(/-/g, '').slice(0, 32); }
@@ -50,30 +51,89 @@
   var utm = captureUtm();
   var queue = [];
   var flushTimer = null;
+  var isFlushingRetry = false;
 
   function token() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+
+  function requeue(events) {
+    try {
+      var q = JSON.parse(localStorage.getItem(LS_RETRY) || '[]');
+      q = q.concat(events);
+      if (q.length > 100) q = q.slice(q.length - 100);
+      localStorage.setItem(LS_RETRY, JSON.stringify(q));
+    } catch (e) {}
+  }
+
+  function tryFlushRetryQueue() {
+    if (isFlushingRetry) return;
+    try {
+      var q = JSON.parse(localStorage.getItem(LS_RETRY) || '[]');
+      if (!q.length) return;
+      isFlushingRetry = true;
+      var batch = q.slice(0, 20);
+      var payload = JSON.stringify({ events: batch });
+      var headers = { 'Content-Type': 'application/json' };
+      var t = token();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+
+      fetch(ENDPOINT, {
+        method: 'POST',
+        headers: headers,
+        body: payload,
+        keepalive: true,
+        credentials: 'omit',
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error();
+          var currentQ = JSON.parse(localStorage.getItem(LS_RETRY) || '[]');
+          currentQ.splice(0, batch.length);
+          localStorage.setItem(LS_RETRY, JSON.stringify(currentQ));
+          isFlushingRetry = false;
+          if (currentQ.length) setTimeout(tryFlushRetryQueue, 1000);
+        })
+        .catch(function () {
+          isFlushingRetry = false;
+        });
+    } catch (e) {
+      isFlushingRetry = false;
+    }
+  }
 
   function send(events, useBeacon) {
     var payload = JSON.stringify({ events: events });
     var t = token();
-    // Logado → fetch com Authorization (vincula userId no servidor).
-    if (t) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (t) headers['Authorization'] = 'Bearer ' + t;
+
+    if (useBeacon && !t && navigator.sendBeacon) {
       try {
-        fetch(ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
-          body: payload, keepalive: true, credentials: 'omit',
-        });
+        var ok = navigator.sendBeacon(ENDPOINT, new Blob([payload], { type: 'application/json' }));
+        if (!ok) requeue(events);
         return;
-      } catch (e) {}
+      } catch (e) {
+        requeue(events);
+        return;
+      }
     }
-    // Anônimo → sendBeacon (sobrevive ao unload).
-    if (useBeacon && navigator.sendBeacon) {
-      try { navigator.sendBeacon(ENDPOINT, new Blob([payload], { type: 'application/json' })); return; } catch (e) {}
-    }
+
     try {
-      fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true, credentials: 'omit' });
-    } catch (e) {}
+      fetch(ENDPOINT, {
+        method: 'POST',
+        headers: headers,
+        body: payload,
+        keepalive: true,
+        credentials: 'omit',
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error();
+          tryFlushRetryQueue();
+        })
+        .catch(function () {
+          requeue(events);
+        });
+    } catch (e) {
+      requeue(events);
+    }
   }
 
   function flush(useBeacon) {
@@ -111,6 +171,13 @@
     return 'site';
   }
 
+  function page(path, props) {
+    track('page_view', Object.assign({ path: path || location.pathname + location.search, title: document.title }, props));
+    if (window.arxis && window.arxis._refreshSections) {
+      window.arxis._refreshSections();
+    }
+  }
+
   // ── Auto: page_view ──────────────────────────────────────────────
   track('page_view', { title: document.title });
 
@@ -136,9 +203,217 @@
     if (document.visibilityState === 'hidden') flush(true);
   });
 
+  // ── Scroll depth (% global + por seção nomeada) ──────────────────
+  (function () {
+    var depthHits = { 25: false, 50: false, 75: false, 100: false };
+    var sectionHits = {};
+    var sections = [];
+
+    function refreshSections() {
+      try {
+        sections = Array.prototype.slice.call(document.querySelectorAll('[data-track-section]'));
+      } catch (e) {}
+    }
+
+    function pct() {
+      var scrolled = window.scrollY || document.documentElement.scrollTop;
+      var total = document.documentElement.scrollHeight - window.innerHeight;
+      return total > 0 ? Math.round((scrolled / total) * 100) : 0;
+    }
+
+    function checkSections() {
+      if (!sections.length) refreshSections();
+      sections.forEach(function (el) {
+        var name = el.getAttribute('data-track-section');
+        if (!name || sectionHits[name]) return;
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.7) {
+          sectionHits[name] = true;
+          track('scroll_section', { section: name }, 'engagement');
+        }
+      });
+    }
+
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var p = pct();
+        [25, 50, 75, 100].forEach(function (d) {
+          if (!depthHits[d] && p >= d) {
+            depthHits[d] = true;
+            track('scroll_depth', { depth: d + '%', page_pct: p }, 'engagement');
+          }
+        });
+        checkSections();
+      });
+    }, { passive: true });
+
+    // Expose refresh internally
+    window.arxis = window.arxis || {};
+    window.arxis._refreshSections = refreshSections;
+    refreshSections();
+  })();
+
+  // ── Engagement time milestones ───────────────────────────────────
+  (function () {
+    var start = Date.now();
+    var milestones = [30, 60, 120];
+    var hit = {};
+    var interval = setInterval(function () {
+      var elapsed = Math.round((Date.now() - start) / 1000);
+      milestones.forEach(function (s) {
+        if (!hit[s] && elapsed >= s) {
+          hit[s] = true;
+          track('engagement_time', { seconds: s }, 'engagement');
+        }
+      });
+      if (hit[120]) clearInterval(interval);
+    }, 5000);
+  })();
+
+  // ── Plan hover tracking ──────────────────────────────────────────
+  (function () {
+    document.querySelectorAll('.plan[data-plan]').forEach(function (el) {
+      var tracked = false;
+      el.addEventListener('mouseenter', function () {
+        if (tracked) return;
+        tracked = true;
+        track('plan_hover', { plan: el.getAttribute('data-plan') }, 'pricing');
+      });
+    });
+    document.addEventListener('mouseenter', function (e) {
+      var plan = e.target && e.target.closest ? e.target.closest('.plan') : null;
+      if (!plan || plan._hoverTracked) return;
+      plan._hoverTracked = true;
+      var h4 = plan.querySelector('h4');
+      track('plan_hover', { plan: h4 ? h4.textContent.trim() : 'unknown' }, 'pricing');
+    }, true);
+  })();
+
+  // ── Auto: JS error tracking ──────────────────────────────────────
+  (function () {
+    window.addEventListener('error', function (e) {
+      if (e.filename && e.filename.indexOf('track.js') !== -1) return;
+      track('js_error', {
+        message: e.message || 'Unknown error',
+        filename: e.filename || '',
+        lineno: e.lineno || 0,
+        colno: e.colno || 0,
+        stack: e.error && e.error.stack ? e.error.stack.slice(0, 500) : '',
+      }, 'error');
+    });
+
+    window.addEventListener('unhandledrejection', function (e) {
+      var reason = e.reason;
+      var msg = 'Unhandled promise rejection';
+      var stack = '';
+      if (reason) {
+        if (typeof reason === 'string') msg = reason;
+        else if (reason.message) msg = reason.message;
+        if (reason.stack) stack = reason.stack;
+      }
+      if (stack && stack.indexOf('track.js') !== -1) return;
+      track('js_error', {
+        message: msg,
+        stack: stack.slice(0, 500),
+        promise: true,
+      }, 'error');
+    });
+  })();
+
+  // ── Auto: Web Vitals tracking ────────────────────────────────────
+  (function () {
+    if (typeof performance === 'undefined') return;
+
+    if (performance.getEntriesByType) {
+      var nav = performance.getEntriesByType('navigation')[0];
+      if (nav) {
+        var ttfb = Math.round(nav.responseStart - nav.requestStart);
+        if (ttfb >= 0) {
+          track('web_vitals', { metric: 'TTFB', value: ttfb }, 'performance');
+        }
+      }
+    }
+
+    if (typeof PerformanceObserver === 'undefined') return;
+
+    try {
+      var fcpObs = new PerformanceObserver(function (list) {
+        list.getEntries().forEach(function (entry) {
+          if (entry.name === 'first-contentful-paint') {
+            track('web_vitals', { metric: 'FCP', value: Math.round(entry.startTime) }, 'performance');
+            fcpObs.disconnect();
+          }
+        });
+      });
+      fcpObs.observe({ type: 'paint', buffered: true });
+    } catch (e) {}
+
+    var lcpValue = 0;
+    try {
+      var lcpObs = new PerformanceObserver(function (list) {
+        var entries = list.getEntries();
+        var lastEntry = entries[entries.length - 1];
+        lcpValue = Math.round(lastEntry.startTime);
+      });
+      lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+    } catch (e) {}
+
+    var clsValue = 0;
+    try {
+      var clsObs = new PerformanceObserver(function (list) {
+        list.getEntries().forEach(function (entry) {
+          if (!entry.hadRecentInput) {
+            clsValue += entry.value;
+          }
+        });
+      });
+      clsObs.observe({ type: 'layout-shift', buffered: true });
+    } catch (e) {}
+
+    try {
+      var fidObs = new PerformanceObserver(function (list) {
+        list.getEntries().forEach(function (entry) {
+          var fid = Math.round(entry.processingStart - entry.startTime);
+          track('web_vitals', { metric: 'FID', value: fid }, 'performance');
+          fidObs.disconnect();
+        });
+      });
+      fidObs.observe({ type: 'first-input', buffered: true });
+    } catch (e) {}
+
+    var reportedExit = false;
+    function reportExitVitals() {
+      if (reportedExit) return;
+      reportedExit = true;
+      if (lcpValue > 0) {
+        track('web_vitals', { metric: 'LCP', value: lcpValue }, 'performance');
+      }
+      if (clsValue > 0) {
+        track('web_vitals', { metric: 'CLS', value: Math.round(clsValue * 1000) / 1000 }, 'performance');
+      }
+      flush(true);
+    }
+
+    ['visibilitychange', 'pagehide'].forEach(function (e) {
+      window.addEventListener(e, function () {
+        if (document.visibilityState === 'hidden' || e === 'pagehide') {
+          reportExitVitals();
+        }
+      });
+    });
+  })();
+
   // API pública
   window.arxis = window.arxis || {};
   window.arxis.track = track;
+  window.arxis.page = page;
   window.arxis.flush = function () { flush(false); };
   window.arxis.anonId = anonId;
+
+  // Flush retry queue on load
+  try { tryFlushRetryQueue(); } catch (e) {}
 })();

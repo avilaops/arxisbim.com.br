@@ -185,7 +185,10 @@
     .modal { background:#fff; border-radius:16px; padding:28px; width:440px; max-width:95vw; box-shadow:0 24px 64px rgba(0,0,0,.15); }
     .modal h3 { font-size:16px; font-weight:700; margin-bottom:16px; }
     .modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+    /* ── CHART ── */
+    .chart-wrap { padding:20px 24px; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -385,6 +388,15 @@
           <span style="font-size:12px;color:#aaa;">Rastreamento first-party — dados 100% nossos.</span>
         </div>
         <div class="stats-row" id="track-stats"><div class="loader">Carregando...</div></div>
+
+        <!-- Gráfico timeseries -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header"><h3>Visitantes &amp; Eventos ao longo do tempo</h3></div>
+          <div class="chart-wrap">
+            <canvas id="chart-timeseries" height="90"></canvas>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
           <div class="card"><div class="card-header"><h3>Top páginas</h3></div><div id="track-pages" style="padding:8px 0;"></div></div>
           <div class="card"><div class="card-header"><h3>Top eventos</h3></div><div id="track-events-top" style="padding:8px 0;"></div></div>
@@ -879,6 +891,9 @@ async function loadTracking() {
   document.getElementById('track-referrers').innerHTML = barList(src.referrers, 'referrer', 'total');
   document.getElementById('track-utm').innerHTML = barList(src.utmSources, 'source', 'total');
 
+  // Gráfico de timeseries
+  loadTimeseries(range);
+
   const rows = (feed.events || []).map(e => `
     <tr>
       <td style="white-space:nowrap;color:#888;font-size:12px;">${new Date(e.timestamp).toLocaleString('pt-BR')}</td>
@@ -894,6 +909,66 @@ async function loadTracking() {
 }
 
 document.getElementById('track-range')?.addEventListener('change', loadTracking);
+
+// ── TIMESERIES CHART ──────────────────────────────────
+let _tsChart = null;
+async function loadTimeseries(range) {
+  const bucket = ['1h','24h'].includes(range) ? 'hour' : 'day';
+  const data = await api('/api/v1/admin/analytics/timeseries?range=' + range + '&bucket=' + bucket);
+  const points = data.points || [];
+
+  const labels = points.map(p => {
+    const d = new Date(p.t);
+    return bucket === 'hour'
+      ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  });
+
+  const canvas = document.getElementById('chart-timeseries');
+  if (!canvas) return;
+  if (_tsChart) { _tsChart.destroy(); _tsChart = null; }
+
+  _tsChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Visitantes únicos',
+          data: points.map(p => p.visitors),
+          borderColor: '#007AFF',
+          backgroundColor: 'rgba(0,122,255,0.08)',
+          tension: 0.35,
+          fill: true,
+          pointRadius: points.length > 30 ? 0 : 3,
+          borderWidth: 2,
+        },
+        {
+          label: 'Eventos',
+          data: points.map(p => p.events),
+          borderColor: '#34C759',
+          backgroundColor: 'rgba(52,199,89,0.06)',
+          tension: 0.35,
+          fill: true,
+          pointRadius: points.length > 30 ? 0 : 3,
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'DM Sans', size: 12 }, usePointStyle: true } },
+        tooltip: { backgroundColor: '#fff', titleColor: '#1a1a1a', bodyColor: '#6e6e73', borderColor: '#eee', borderWidth: 1 },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
+}
 </script>
 </body>
 </html>
