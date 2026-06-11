@@ -11,6 +11,20 @@
 
 Mapear tipos IFC para categorias construtivas do produto. Paleta de cores por tipo. Base de classificação para filtros, quantitativos e 4D.
 
+> **Nota para o agente:** Este sprint define uma **taxonomia que vira contrato** para S10, S20, S25 e S30. Ela deve ser configuração (dado), nunca lógica hard-coded espalhada. Mudar a taxonomia depois que há dados de clientes não pode exigir migração de dados — só atualização de mapeamento.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Filtros de visibilidade por disciplina (S10 consome esta taxonomia)
+- Quantitativos agregados (S20)
+- Custos por categoria (S22)
+- Vínculo de atividades 4D por tipo (S25)
+- Machine learning para classificação automática
+
 ---
 
 ## Por que importa a longo prazo
@@ -59,6 +73,7 @@ export const DEFAULT_TYPE_MAP: Record<string, TypeCategory> = {
 | Mapeamento padrão | Embutido no backend como `DEFAULT_TYPE_MAP` | Funciona sem configuração |
 | Override por projeto | `project_type_map JSONB` em `projects` | Cada projeto pode ter taxonomia diferente |
 | Tipos não mapeados | Categoria `other`, cor cinza | Nunca ocultar elemento por falta de mapeamento |
+| Versão da taxonomia | `type_map_version INT` no override do projeto | Migrar formato de mapeamento sem quebrar projetos antigos |
 | Cor no viewer | Material Three.js por categoria | Aplicado em S10 para filtros visuais |
 
 ---
@@ -79,10 +94,17 @@ frontend/src/viewer/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Modelo carregado exibe elementos coloridos por categoria automaticamente
 - [ ] Legenda de cores visível no viewer
+- [ ] Taxonomia exposta como configuração consumível pelo S10 (não hard-coded no viewer)
 - [ ] Override por projeto: admin pode mudar mapeamento de `IfcWall` para `structural`
 - [ ] Tipos não mapeados aparecem em cinza, nunca desaparecem
 - [ ] Mapeamento customizado persiste entre sessões

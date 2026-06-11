@@ -11,6 +11,20 @@
 
 Comentários ancorados a elementos IFC específicos, com thread de replies e notificação por email.
 
+> **Nota para o agente:** O valor de longo prazo aqui não é o comentário em si — é a **âncora resiliente a reimport**. Um comentário que vira órfão quando o modelo é reimportado destrói a confiança no fluxo de revisão. A estratégia de ancoragem em camadas (GlobalId → expressID → posição 3D) é o núcleo do sprint, não a UI do thread.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Compartilhamento / viewer público (S17 apenas lê comentários)
+- Comentários em cenários ou comparações (S18+)
+- Markup/desenho 2D sobre o modelo
+- Notificações em tempo real / presença ao vivo
+- Anexos de arquivo em comentários
+
 ---
 
 ## Por que importa a longo prazo
@@ -82,12 +96,19 @@ frontend/src/viewer/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Comentário criado ao clicar em elemento aparece como marcador 3D no modelo
 - [ ] Thread de reply funciona com até 2 níveis
 - [ ] @menção de usuário do projeto dispara email em < 1 min
 - [ ] `is_resolved` marca comentário como concluído com visual distinto
-- [ ] Comentários persistem ao reimportar modelo (âncora por GlobalId)
+- [ ] Comentário sobrevive a reimport: âncora cai para `world_position` quando GlobalId muda
+- [ ] @menção verifica permissão atual no projeto antes de enviar email
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

@@ -11,6 +11,20 @@
 
 Cobertura de testes e2e do fluxo completo (S01→S30). Auditoria de segurança. Load test com 50 usuários simultâneos. Documentação pública do produto. Sem regressões no build.
 
+> **Nota para o agente:** Este sprint **não adiciona features** — garante que as 31 anteriores funcionam juntas, sob carga, sem vulnerabilidades. O risco sistêmico nº 1 do ArxisVR é **vazamento entre tenants** (RLS falhando sob condição específica) — a auditoria foca nesse vetor antes de tudo. Validar que o princípio do produto (IFC → metadados → cenários → tempo → custo → decisão) funciona ponta a ponta num único fluxo e2e.
+
+---
+
+## Fora de Escopo
+
+Este é o fechamento do v1.0 — pertencem ao **pós-v1 / Digital Twin** (não implementar aqui):
+
+- Integração com sensores IoT / dados de execução real (Digital Twin)
+- Mobile app nativo
+- Marketplace / integrações de terceiros
+- Internacionalização além de pt-BR
+- Pentest profissional contratado (apenas manual + OWASP ZAP nesta fase)
+
 ---
 
 ## Por que importa a longo prazo

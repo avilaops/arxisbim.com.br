@@ -11,6 +11,20 @@
 
 Parser de `.mpp` (MS Project) e `.xer`/`.xml` (Primavera P6) que mapeia atividades, predecessores e datas para o schema interno. Import via upload com relatório de erros linha a linha.
 
+> **Nota para o agente:** 100% dos cronogramas de obra no Brasil estão em MS Project ou Primavera. Sem import nativo, o usuário re-digita — fator de abandono imediato. O ponto crítico é o **mapeamento de predecessores** (FS/FF/SS/SF + lag) e **detecção de ciclo**. Reusa o motor de seleção do S15 para mapear atividades a conjuntos de elementos. Import pesado roda no pipeline do S11, nunca síncrono.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Branching de cenários a partir do cronograma importado (S29)
+- Comparação financeira (S30)
+- Edição do cronograma dentro do produto (apenas import)
+- Sincronização bidirecional (export de volta para MSP/P6)
+- Nivelamento de recursos
+
 ---
 
 ## Por que importa a longo prazo
@@ -70,6 +84,12 @@ backend/src/modules/scheduling/
 | XER com encoding Windows-1252 (comum em obras) | Detectar BOM e encoding no início do arquivo |
 | Cronograma com 5.000+ atividades sobrecarregando o backend | Processar import em BullMQ worker, não em request síncrono |
 | WBS sem código definido em algumas atividades | WBS opcional, fallback para sort_order sequencial |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

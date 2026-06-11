@@ -11,6 +11,21 @@
 
 Toggle de visibilidade por disciplina, por pavimento e por tipo de elemento. Corte transversal navegável.
 
+> **Nota para o agente:** Este sprint **não existe para esconder objetos.** Ele existe para transformar configuração visual em estado serializável e reproduzível — a base para cenários (S12) salvarem "o que está visível", não só "de onde se olha". Toda decisão deve favorecer serialização, granularidade e independência do motor gráfico antes de favorecer conveniência de implementação.
+
+---
+
+## Fora de Escopo
+
+O objetivo é: filtrar → cortar → salvar estado → restaurar estado. Pertencem a sprints futuros — **não implementar aqui**:
+
+- Comparação de cenários (S18)
+- Persistência de visibilidade no servidor / colaboração (estado é local à sessão)
+- Heatmap de custo (S24)
+- Timeline 4D / visibilidade por data (S26, S27)
+- Múltiplos clipping planes / box clipping
+- Saved views nomeadas (derivam do VisibilityState no S12+)
+
 ---
 
 ## Por que importa a longo prazo
@@ -29,7 +44,9 @@ O filtro de disciplina assume que elementos foram classificados corretamente no 
 | Disciplinas | `structural, architectural, mep, site, furniture, other` | Baseado em tipos IFC, configurável no S14 |
 | Filtro de pavimento | Por `storeyId` da hierarquia do S07 | Usa estrutura já extraída |
 | Corte (Clipping Plane) | `THREE.Plane` com UI de slider | Three.js nativo, sem lib extra |
-| Serialização de visibilidade | `{ groups: { structural: true, mep: false }, floors: [0,1], clip: null }` | Mínimo para restaurar estado |
+| Serialização de visibilidade | DTO `VisibilityState` com `version: 1` | Versionar protege adição de campos em S24/S26 sem migração |
+| Taxonomia de disciplina | Lida da config do S14, **nunca hard-coded** | Se S14 muda a classificação, filtros se adaptam sem reescrita |
+| Aplicação por expressID | `VisibilityManager` opera só com expressID/groupKey, nunca Mesh/Object3D | Mantém o desacoplamento do Three.js estabelecido no S09 |
 | Não afetar outros usuários | Estado de visibilidade é por sessão, não persistido no servidor | Colaboração de visibilidade entra depois |
 
 ---
@@ -38,6 +55,7 @@ O filtro de disciplina assume que elementos foram classificados corretamente no 
 
 ```typescript
 interface VisibilityState {
+  version: 1
   groups: {
     structural: boolean
     architectural: boolean
@@ -83,9 +101,11 @@ frontend/src/viewer/
 
 - [ ] Toggle de disciplina oculta/mostra grupo em < 100ms
 - [ ] Filtro de pavimento isola storey corretamente
+- [ ] Taxonomia de disciplina vem da config do S14, não hard-coded no viewer
 - [ ] Clipping plane cria corte limpo navegável com slider
-- [ ] `visibilityManager.getState()` retorna objeto serializável
-- [ ] `visibilityManager.setState()` restaura configuração exata
+- [ ] `visibilityManager.getState()` retorna objeto serializável com `version`
+- [ ] `visibilityManager.setState()` restaura configuração exata (grupos + pavimentos + ocultos + corte)
+- [ ] `VisibilityManager` não expõe Mesh/Object3D fora do viewer
 - [ ] Visibilidade de um usuário não afeta outros na mesma sessão
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

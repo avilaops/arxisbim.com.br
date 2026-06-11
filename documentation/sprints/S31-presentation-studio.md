@@ -11,6 +11,20 @@
 
 Sequência de slides configuráveis com câmera salva, visibilidade, anotações e comparação financeira. Export de apresentação como vídeo MP4 ou sequência de imagens. Compartilhamento por link sem login.
 
+> **Nota para o agente:** Este é o **output do produto** — onde todo o trabalho desde o S01 vira algo enviável ao dono da obra. Cada slide é um snapshot determinístico e replayável, reusando `CameraState` (S09), `VisibilityState` (S10) e `scenario_state` (S12). O link público **reusa o mecanismo de `shared_links` do S17** (token opaco, sem IDs internos), não inventa um novo. Não duplicar o viewer público.
+
+---
+
+## Fora de Escopo
+
+Pertencem a estágios futuros — **não implementar aqui**:
+
+- Digital Twin / dados de execução (S32+)
+- Edição colaborativa simultânea de apresentação
+- Templates / temas de marca white-label
+- Áudio / narração nos slides
+- Transições animadas avançadas entre slides
+
 ---
 
 ## Por que importa a longo prazo
@@ -30,7 +44,7 @@ O export em vídeo atende uma necessidade específica de licitações públicas:
 | Slide = snapshot de estado | `{ camera, visibility, annotations, activeScenario }` | Determinístico, replayável |
 | Sequência | Array ordenado de slides, reordenável via drag-and-drop | Simples e flexível |
 | Export vídeo | `CCapture.js` + Three.js `render()` frame a frame | Funciona sem codec nativo no servidor |
-| Link público | Token JWT com `exp` configurável (7d, 30d, never) | Sem conta necessária para visualizar |
+| Link público | Reusa `shared_links` do S17 (token opaco, expiração configurável) | Sem conta necessária; não expor IDs internos nem inventar novo mecanismo |
 | Modo apresentação | Fullscreen com teclas ← → para navegar entre slides | UX de PowerPoint |
 | Thumbnail | Screenshot automático ao salvar slide | Pré-visualização no editor |
 
@@ -89,6 +103,12 @@ frontend/src/presentations/
 | Export de vídeo lento (frame a frame no browser) | Processar no servidor via Puppeteer headless com WebGL; fallback para sequência de PNGs |
 | Link público expirando no meio de uma apresentação para cliente | Renovar token automaticamente se usuário autenticado reabrir o link |
 | Slide com câmera de cenário arquivado | Detectar e alertar na abertura do editor |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

@@ -11,6 +11,20 @@
 
 Schema de atividades e cronograma com vínculo muitos-para-muitos entre atividades e elementos IFC. Import de CSV e MS Project XML.
 
+> **Nota para o agente:** O vínculo N:N atividade↔elemento é a relação mais complexa do produto e precisa nascer no schema — não dá para adicionar depois sem migração. Como nos custos, o cronograma é **scenario-aware**: mesmo conjunto de elementos, durações diferentes por cenário. Detecção de ciclo em predecessores é obrigatória desde o insert.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Comparação temporal A|B (S26)
+- Animação 4D no viewer (S27)
+- Import Primavera P6 / MSP binário completo (S28 — aqui só CSV + MSP XML básico)
+- CPM forward/backward pass completo (S26)
+- Curva S de custo no tempo (S30)
+
 ---
 
 ## Por que importa a longo prazo
@@ -91,6 +105,12 @@ backend/db/schema/
 | GlobalId de elemento IFC mudando após reimport | Alertar quando vínculo orphan detectado |
 | Ciclo em predecessores (A depende de B, B depende de A) | Detectar ciclo no insert, retornar 422 |
 | Import MSP XML com encoding Windows-1252 | Parser com detecção de encoding |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

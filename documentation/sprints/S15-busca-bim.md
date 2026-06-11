@@ -11,6 +11,20 @@
 
 Busca por GUID, nome, tipo IFC e valor de PropertySet em < 500ms em modelos de 50.000 elementos.
 
+> **Nota para o agente:** Esta busca **não é só uma feature de UI** — é o motor de seleção que o mapeamento automático de atividades 4D (S28) usa para resolver "todos os `IfcBeam` do 3º pavimento" em conjuntos de elementos. Precisão e determinismo da query importam tanto quanto a velocidade.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros ou não fazem parte deste sprint — **não implementar aqui**:
+
+- Elasticsearch / engine de busca externa (Postgres basta agora)
+- Busca semântica / linguagem natural
+- Mapeamento automático de atividades (S28 consome esta busca)
+- Salvamento de buscas como conjuntos nomeados (saved selection sets)
+- Busca cross-model / federada (S18+)
+
 ---
 
 ## Por que importa a longo prazo
@@ -74,12 +88,20 @@ LIMIT 200;
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Busca por GUID retorna elemento correto em < 100ms
 - [ ] Busca por nome parcial (ex.: "pilar") retorna todos os `IfcColumn` com esse nome
 - [ ] Busca por PropertySet `IsExternal=true` filtra corretamente
+- [ ] Query é determinística (mesma entrada → mesma ordem de resultados) — pré-requisito do S28
 - [ ] Resultado destaca elemento no viewer ao clicar
+- [ ] Paginação de resultados (25/página), nunca renderiza 200 de uma vez
 - [ ] Performance < 500ms em modelo de 50.000 elementos
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

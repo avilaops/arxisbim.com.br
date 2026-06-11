@@ -13,6 +13,20 @@
 
 Slider de data que anima a construção. Split-view A|B mostra diferença de prazo. Data de conclusão calculada por cenário. Atraso em cascata para sucessoras.
 
+> **Nota para o agente:** Primeiro momento de **4D real** — não animação bonita, mas ferramenta de decisão de cronograma. Reusa o `SplitView` do S18 (não reescrever). O algoritmo correto de propagação é CPM (topological sort + forward pass), nunca recálculo ingênuo a cada mudança — isso não escala para 500 atividades. Datas pré-computadas no backend.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Animação contínua play/pause completa (S27)
+- Import MS Project / Primavera (S28)
+- Comparação financeira / curva S (S30)
+- Backward pass / folga (float) além do necessário para conclusão
+- Caminho crítico destacado visualmente (S27+)
+
 ---
 
 ## Por que importa a longo prazo
@@ -80,6 +94,23 @@ frontend/src/
 | CPM com cronograma de 500 atividades lento | Pré-computar datas calculadas no backend, não recalcular no frontend |
 | Slider causa recálculo a cada pixel arrastado | Debounce de 100ms no slider |
 | Atividade sem predecessores e sem data → quebra CPM | Validar schedule antes de calcular |
+
+---
+
+## Telemetria de produto
+
+Marco crítico — medir adoção: `timeline_comparison_opened`, `timeline_scrubbed`, `delta_days_viewed`.
+
+## Definição de validado
+
+- **Tecnicamente** quando o split-view mostra dois cronogramas e o delta de prazo correto.
+- **Comercialmente** quando usuários comparam prazos de cenários voluntariamente para decidir.
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

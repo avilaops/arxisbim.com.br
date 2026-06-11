@@ -11,6 +11,20 @@
 
 Link de visualização sem login (read-only), controle de acesso por papel, expiração de link compartilhado.
 
+> **Nota para o agente:** Este sprint é o **mecanismo de distribuição** do produto, mas também a maior superfície de vazamento. A prioridade é garantir que dados sensíveis (custo, fornecedor, dados internos) **nunca** cheguem ao viewer público — a ausência de vazamento tem precedência sobre conveniência de implementação. Token opaco, jamais expor IDs internos na URL.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- PDF de comparação de cenários (S30 consome o link público)
+- Presentation Studio (S31)
+- White-label / domínio customizado enterprise
+- SSO / convites por organização externa
+- Edição colaborativa em tempo real
+
 ---
 
 ## Por que importa a longo prazo
@@ -76,10 +90,17 @@ frontend/src/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Link público abre viewer sem autenticação
-- [ ] Viewer público não exibe campos marcados como sensíveis (custo, fornecedor)
+- [ ] Viewer público não exibe campos marcados como sensíveis (custo, fornecedor) — testado com payload real
+- [ ] Token é opaco; nenhum ID interno (project_id, scenario_id) aparece na URL
 - [ ] Link expirado retorna 410 Gone com mensagem clara
 - [ ] Revogar link torna-o inativo imediatamente (sem cache)
 - [ ] Link para cenário específico abre naquele cenário

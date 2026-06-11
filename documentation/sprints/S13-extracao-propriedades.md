@@ -11,6 +11,20 @@
 
 Extrair e persistir todos os PropertySets de cada elemento IFC. Painel lateral mostra propriedades ao clicar.
 
+> **Nota para o agente:** Este sprint **não existe para exibir um painel de propriedades.** Ele existe para transformar os dados embutidos no IFC em uma camada consultável e quantificável — a fonte de verdade dos quantitativos (S20) e dos custos (S22). Precisão e completude da extração têm prioridade sobre a UI do painel.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Busca/filtro avançado por propriedade (S15)
+- Cálculo de quantitativos agregados (S20)
+- Custos (S19, S22)
+- Edição de propriedades pelo usuário
+- Classificação automática por disciplina (S14)
+
 ---
 
 ## Por que importa a longo prazo
@@ -90,11 +104,20 @@ frontend/src/viewer/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Clique em qualquer elemento abre painel com todos seus PropertySets
 - [ ] `Pset_WallCommon`, `Qto_WallBaseQuantities` e Psets customizados aparecem
 - [ ] `area_m2`, `volume_m3`, `length_m` preenchidos quando disponíveis
+- [ ] Extração roda como etapa `extract_properties` do pipeline S11 (sem re-parse)
+- [ ] Batch insert em lotes de 1000 dentro de transação (50k elementos sem estourar memória)
+- [ ] PropertySet com valor null/tipo inesperado é normalizado, nunca causa throw
 - [ ] Props exportáveis como CSV por elemento ou por tipo
 - [ ] Extração de 50k elementos completa em < 60s no pipeline S11
 - [ ] Build e lint passam

@@ -19,12 +19,29 @@ Usuário cria Cenário A com uma configuração, Cenário B com outra, alterna e
 
 Este é o sprint mais importante do roadmap. O modelo de dados de `Scenario` definido aqui é o objeto central do produto. Cada sprint futuro adiciona mais estado ao cenário:
 
-- S18: adiciona `comparison_partner_id`
-- S19–S22: adiciona `cost_table_id`
-- S25–S26: adiciona `schedule_id`
-- S29: adiciona `parent_scenario_id` (branching)
+- S18: adiciona estado de comparação
+- S19–S22: adiciona vínculo de custo
+- S25–S26: adiciona vínculo de cronograma
+- S29: adiciona `parent_id` (branching)
 
-Se o modelo de `Scenario` for anêmico agora, todos esses sprints exigem migrations. Se for extensível (JSONB para estado customizado), crescem sem migrations.
+Se o modelo de `Scenario` for anêmico agora, todos esses sprints exigem migrations. A solução é um **único JSONB serializável (`scenario_state`) + `state_version`**: o banco enxerga apenas um estado opaco, e o produto evolui o formato sem alterar schema.
+
+---
+
+## Hierarquia conceitual
+
+Vários cenários nascem do **mesmo modelo**. A hierarquia correta é:
+
+```
+Project
+ └── ModelVersion
+      ├── Cenário Base
+      ├── Cenário Econômico
+      ├── Cenário Acelerado
+      └── Cenário Conservador
+```
+
+`Scenario` referencia `ModelVersion` (não `Project` direto) — isso simplifica comparação (S18) e branching (S29), que operam sobre cenários do mesmo modelo.
 
 ---
 
@@ -39,14 +56,12 @@ scenarios (
   description TEXT,
   model_version_id  UUID FK model_versions NOT NULL,
 
-  -- Estado do viewer (serializável, cresce com o produto)
-  camera_state    JSONB,   -- CameraState do S09
-  visibility_state JSONB,  -- VisibilityState do S10
+  -- Estado serializável ÚNICO — cresce sem migration
+  scenario_state JSONB NOT NULL DEFAULT '{}',
+  state_version  INT  NOT NULL DEFAULT 1,    -- permite migrar formatos antigos
 
-  -- Futuro (NULL por enquanto, preenchido em sprints posteriores)
-  cost_table_id    UUID FK cost_tables,    -- S19
-  schedule_id      UUID FK schedules,      -- S25
-  parent_id        UUID FK scenarios,      -- S29 branching
+  -- FKs estruturais futuras (NULL por enquanto)
+  parent_id        UUID FK scenarios,        -- S29 branching
 
   -- Metadados
   is_base_scenario BOOLEAN DEFAULT false,
@@ -57,6 +72,18 @@ scenarios (
   deleted_at       TIMESTAMP
 )
 ```
+
+### Formato de `scenario_state`
+
+```jsonc
+// state_version = 1 (hoje)
+{ "camera": { /* CameraState S09 */ }, "visibility": { /* VisibilityState S10 */ } }
+
+// state_version futuro (sem mudar schema)
+{ "camera": {}, "visibility": {}, "comparison": {}, "cost": {}, "schedule": {}, "presentation": {} }
+```
+
+> Custo e cronograma entram como **chaves dentro de `scenario_state`** (ou FKs adicionadas só quando a relação exigir integridade referencial real, em S19/S25). Nenhuma coluna nullable especulativa agora.
 
 ---
 
@@ -82,6 +109,7 @@ Dashboard de projeto → "Cenários" → Lista vazia
 | Limite por plano | Starter: 2 · Pro: 10 · Business: ∞ | Via `checkPlanLimit('scenarios')` do S04 |
 | Alternância | Troca de cenário ≤ 1s | Apenas restaura estado — não recarrega GLB |
 | Persistência imediata | Auto-save do estado ao clicar em "Salvar" | Não exigir save manual |
+| Captura/restauração | `ScenarioSnapshotService` com `capture()/restore()/validate()/migrate()` | Viewer não persiste direto; S18/S24/S28/S30 reusam a mesma abstração |
 
 ---
 
@@ -89,8 +117,9 @@ Dashboard de projeto → "Cenários" → Lista vazia
 
 ```
 backend/src/modules/scenarios/
-  scenarios.routes.ts   ← CRUD /projects/:id/scenarios
-  scenarios.service.ts  ← create, clone, updateState
+  scenarios.routes.ts          ← CRUD /projects/:id/scenarios
+  scenarios.service.ts         ← create, clone, updateState
+  scenario-snapshot.service.ts ← capture/restore/validate/migrate de scenario_state
 
 backend/db/schema/
   scenarios.ts          ← schema completo com FKs futuras nullable
@@ -105,13 +134,40 @@ frontend/src/
 
 ---
 
+## Telemetria de produto
+
+Este sprint valida uma hipótese de negócio — portanto **precisa ser medido**. Eventos com `tenant_id`, `project_id`, `scenario_id`, `duration_ms`:
+
+- `scenario_created`
+- `scenario_cloned`
+- `scenario_loaded`
+- `scenario_saved`
+- `scenario_switched`
+
+Permite responder: quantos usuários criam cenários? quantos criam mais de um? quantos alternam A/B? quantos nunca usam?
+
+---
+
+## Definição de validado
+
+- **Validado tecnicamente** quando um usuário consegue criar, salvar e alternar entre dois cenários.
+- **Validado comercialmente** quando usuários reais criam voluntariamente **mais de um cenário** no mesmo projeto **sem serem instruídos**.
+
+Entregar a feature ≠ comprovar a hipótese. O sprint pode estar tecnicamente concluído e a hipótese de produto ainda não comprovada — a telemetria acima é o que distingue os dois.
+
+---
+
 ## Critérios de aceite
 
-- [ ] Criar cenário a partir de modelo base salva câmera + visibilidade
+- [ ] Criar cenário a partir de modelo base salva câmera + visibilidade em `scenario_state`
+- [ ] `scenario_state` é um único JSONB com `state_version`
 - [ ] Alternar A↔B restaura estado exato em < 1s (sem recarregar GLB)
 - [ ] Cenários persistem entre sessões e dispositivos
+- [ ] Reabrir o navegador restaura exatamente o último estado salvo do cenário
 - [ ] Clone de cenário parte do estado base, não do último estado
+- [ ] `ScenarioSnapshotService` captura e restaura sem o viewer persistir direto
 - [ ] Limite de plano aplicado (Starter: máximo 2 cenários)
+- [ ] Eventos de telemetria (`scenario_created/cloned/switched`) emitidos
 - [ ] Primeiro usuário real consegue criar e alternar sem instrução
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

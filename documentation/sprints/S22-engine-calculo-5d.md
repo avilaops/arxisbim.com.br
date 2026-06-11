@@ -11,6 +11,20 @@
 
 Calcular custo total do projeto por cenário a partir de `quantidade × preço_unitário` por elemento, com breakdown por hierarquia IFC.
 
+> **Nota para o agente:** A engine é o **coração do 5D** — precisa ser incremental, auditável e scenario-aware. O risco máximo é **drift silencioso**: preço muda e o número exibido fica errado sem ninguém saber. Por isso: calcular on-demand ou invalidar cache explicitamente, nunca persistir resultado sem versão. Todo cálculo monetário em Decimal, jamais FLOAT.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Otimização de performance / cache em larga escala (S23)
+- Painel/heatmap de custo (S24)
+- Comparação financeira entre cenários (S30)
+- Curva S detalhada (depende de schedule — S25+)
+- BDI configurável por composição
+
 ---
 
 ## Por que importa a longo prazo
@@ -81,6 +95,12 @@ backend/src/shared/
 | Cálculo de 50k elementos lento sem cache | Sprint S23 dedicado a otimização |
 | Resultado cached após mudança de preço | Invalidar cache em qualquer mutação de cost_items |
 | FLOAT causando erro de arredondamento em totais | Usar Decimal.js para todos os cálculos monetários |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

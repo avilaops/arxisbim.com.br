@@ -11,6 +11,20 @@
 
 Animação contínua da construção com play/pause/speed, cores por estado (não iniciado / ativo / concluído / removido), e câmera segue atividade ativa.
 
+> **Nota para o agente:** Esta é a animação que **vende contra Navisworks** (pago, desktop, pesado) — rodando no browser. A prioridade técnica é não bloquear o render thread: estados pré-computados em Web Worker, render thread só aplica cores. Reusa `CameraState` (S09) e `SplitView` (S18). Tempo de carregamento e fluidez importam mais que efeito visual.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Import MS Project / Primavera (S28)
+- Branching de cenários (S29)
+- Comparação financeira (S30)
+- Exportação de vídeo / Presentation Studio (S31)
+- Simulação de recursos / nivelamento (resource leveling)
+
 ---
 
 ## Por que importa a longo prazo
@@ -87,6 +101,12 @@ frontend/src/
 | Pré-computação de 50k elementos × 365 frames = memória alta | Pré-computar por janela de 30 dias, stream sob demanda |
 | Câmera seguindo atividade distrai usuário | Opção de desligar câmera automática |
 | Animação dessincronizada entre cenário A e B no split-view | Ticker compartilhado por referência entre os dois viewers |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

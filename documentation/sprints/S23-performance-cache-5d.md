@@ -11,6 +11,19 @@
 
 Cálculo de custo em modelo de 50.000 elementos em < 10s. Cache que não fica stale. Viewer sem regressão de FPS durante cálculo em background.
 
+> **Nota para o agente:** Este sprint **não adiciona feature visível** — adiciona a fundação de performance que faz S24, S26 e S30 funcionarem em modelos reais (30k–150k elementos). A regra inviolável herdada do S22: cache **nunca stale** — a chave inclui versão (`scenario_id + cost_table_version_hash`) e qualquer mutação invalida explicitamente.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Novas features de custo (apenas otimiza o que existe no S22)
+- Painel/heatmap (S24 consome esta performance)
+- Comparação financeira (S30)
+- Cache distribuído multi-região
+
 ---
 
 ## Por que importa a longo prazo
@@ -80,6 +93,12 @@ frontend/src/
 | Recálculo após mudança de preço | < 500ms | < 2s |
 | Render heatmap no viewer | FPS > 30 | FPS > 25 |
 | Query de breakdown por pavimento | < 200ms | < 500ms |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

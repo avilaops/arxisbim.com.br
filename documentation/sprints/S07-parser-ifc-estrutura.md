@@ -11,6 +11,20 @@
 
 Extrair a hierarquia espacial e o grafo de entidades de qualquer arquivo IFC. Sem geometria ainda — apenas estrutura e metadados.
 
+> **Nota para o agente:** Este sprint **não existe para visualizar modelos.** Ele existe para transformar um arquivo IFC em um modelo de domínio estável do ArxisVR. Toda decisão deve favorecer consistência, extensibilidade e independência do parser subjacente antes de favorecer conveniência de implementação.
+
+---
+
+## Fora de Escopo
+
+O objetivo é **entender a estrutura, não desenhar o modelo.** Pertencem a sprints futuros — **não implementar aqui**:
+
+- Renderização / meshes / materiais / texturas (S08)
+- Quantitativos (S20)
+- Custos (S19, S22)
+- Cronogramas (S25)
+- Extração completa de property sets IFC (S13)
+
 ---
 
 ## Por que importa a longo prazo
@@ -29,8 +43,11 @@ A estrutura de dados retornada pelo parser precisa ser projetada para ser persis
 | Execução | Worker thread Node.js | Parser WASM é CPU-bound, não pode bloquear event loop |
 | Formato de saída | DTO próprio `IFCStructure` | Desacopla consumers do formato interno do web-ifc |
 | Hierarquia espacial | `IfcSite → IfcBuilding → IfcStorey → IfcSpace` | Árvore navegável para filtros e 4D |
-| Persistência | `model_structure JSONB` na `model_versions` | Evita re-parse para operações de metadados |
-| Identificador | `expressID` + `GlobalId` do IFC | expressID para lookup rápido, GlobalId para vínculo cross-model |
+| Persistência | `model_structure JSONB` como **cache do parse** | Evita re-parse; fonte de verdade continua sendo o IFC original |
+| Normalização futura | JSONB hoje, schema permite migrar para `ifc_elements`/`ifc_storeys`/`ifc_properties` | Consultar JSONB gigante fica caro em S15/S19/S22 |
+| Identificador | `expressID` (técnico) + `GlobalId` (lógico) | Nenhuma operação crítica depende **exclusivamente** de GlobalId |
+| Versionamento do DTO | `version: 1` na raiz do `IFCStructure` | Adicionar campos em S13/S19 sem quebrar compatibilidade |
+| Bounding box | **Obrigatório** na saída | Alimenta câmera (S08), navegação (S09), cortes (S10), comparação (S18), Presentation (S31) |
 
 ---
 
@@ -38,6 +55,7 @@ A estrutura de dados retornada pelo parser precisa ser projetada para ser persis
 
 ```typescript
 interface IFCStructure {
+  version: 1                  // versão do DTO — protege compat. futura (S13, S19)
   schema: 'IFC2X3' | 'IFC4' | 'IFC4X3'
   projectName: string
   units: { length: string; area: string; volume: string }
@@ -45,20 +63,24 @@ interface IFCStructure {
   elements: IFCElement[]
   stats: {
     totalElements: number
-    byType: Record<string, number>  // { IfcWall: 423, IfcBeam: 88, ... }
-    boundingBox: BoundingBox
+    byType: Record<string, number>        // { IfcWall: 423, IfcBeam: 88, ... }
+    byDiscipline: Record<string, number>  // { architecture: 1200, structure: 840, mep: 620 } — heurística inicial
+    boundingBox: BoundingBox              // OBRIGATÓRIO
   }
 }
 
 interface IFCElement {
   expressID: number
   globalId: string
-  type: string        // 'IfcWall', 'IfcBeam', etc.
+  type: string                  // 'IfcWall', 'IfcBeam', etc.
   name: string | null
   storeyId: number | null
+  parentExpressID: number | null // navega Parede → Pavimento → Edifício sem recalcular a árvore
   hasGeometry: boolean
 }
 ```
+
+> O JSONB persistido é **cache do parse**. A fonte de verdade é sempre o IFC original no storage — em caso de divergência, re-parse a partir do arquivo.
 
 ---
 
@@ -72,6 +94,20 @@ backend/src/modules/ifc/
 
 backend/src/modules/models/
   models.service.ts     ← chama parser após upload
+```
+
+---
+
+## Logs obrigatórios (reusa padrão do S06)
+
+Sucesso:
+```json
+{ "req_id": "...", "model_version_id": "...", "schema": "IFC4",
+  "file_size_mb": 52, "elements": 18422, "duration_ms": 4230, "status": "success" }
+```
+Falha:
+```json
+{ "req_id": "...", "model_version_id": "...", "status": "failed", "error_type": "IFC_PARSE_ERROR" }
 ```
 
 ---
@@ -103,8 +139,13 @@ Baixar da buildingSMART:
 - [ ] Parser lê IFC 2x3 e IFC 4.x sem crash nos 5 modelos de referência
 - [ ] Hierarquia espacial extraída corretamente (Site → Building → Storey)
 - [ ] `byType` com contagem de cada tipo de elemento
+- [ ] `byDiscipline` populado (heurística inicial aceitável)
+- [ ] `boundingBox` presente em toda saída
+- [ ] DTO carrega `version: 1` e `parentExpressID` por elemento
 - [ ] Parsing de 50 MB em < 10 segundos em servidor de produção
+- [ ] Uso de memória durante parse não excede 3× o tamanho do arquivo
 - [ ] GlobalId e expressID disponíveis para cada elemento
+- [ ] Logs de sucesso e falha emitidos no formato do S06 (com `error_type` em falha)
 - [ ] Worker não bloqueia event loop durante parse
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

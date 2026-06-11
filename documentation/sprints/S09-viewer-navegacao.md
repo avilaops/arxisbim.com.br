@@ -11,6 +11,23 @@
 
 Navegação 3D profissional: orbit, pan, zoom, seleção de elemento com highlight, presets de câmera.
 
+> **Nota para o agente:** Este sprint **não existe para movimentar uma câmera.** Ele existe para transformar navegação 3D em estado persistente e reproduzível. Toda decisão deve favorecer serialização, reprodutibilidade e independência do motor gráfico antes de favorecer efeitos visuais ou conveniência de implementação.
+
+---
+
+## Fora de Escopo
+
+O objetivo é: navegar → selecionar → salvar estado → restaurar estado. Pertencem a sprints futuros — **não implementar aqui**:
+
+- Medições
+- Comentários (S16)
+- Filtros (S10)
+- Clipping avançado
+- Comparação de modelos (S18)
+- Timeline 4D (S26, S27)
+- VR / XR
+- Caminhos de câmera / keyframes (S31)
+
 ---
 
 ## Por que importa a longo prazo
@@ -26,8 +43,13 @@ Se a câmera for implementada como estado não-serializável (ex.: referência d
 | Decisão | Escolha | Razão |
 |---|---|---|
 | Controles | OrbitControls customizado | Three.js padrão é bom base, mas precisa de extensões |
-| Serialização de câmera | `{ position: Vec3, target: Vec3, fov: number }` | Mínimo para restaurar estado exato |
-| Presets | `front, top, iso, side-left, side-right` | Padrão AEC |
+| Serialização de câmera | DTO `CameraState` com `version: 1` | Restaura estado exato; versionar protege S26/S31 |
+| Fachada gráfica | `ViewerHost` é a única fachada; consumers nunca tocam OrbitControls/PerspectiveCamera/Object3D | Liberdade de trocar Three.js → Babylon/WebGPU sem quebrar a aplicação |
+| Seleção desacoplada | `Selection` trabalha **só com expressID**; nunca expõe Mesh/Object3D/Material fora do Viewer | S13/S15/S22 não dependem do motor gráfico |
+| Hover state | `onHover` desde já, mesmo simples | Tooltip/preview/highlight temporário sem retrabalho |
+| Presets | Calculados **a partir do bounding box** do modelo, nunca coordenadas fixas | Casa 20m ≠ hospital 400m ≠ ponte 2km |
+| Reset | Determinístico: recalcula do bounding box **atual**, não do último estado salvo | Remove ambiguidade |
+| Raycasting | BVH (three-mesh-bvh) construído **uma vez** no load, nunca por seleção | Evita degradação de performance |
 | Seleção | Raycasting em mouseup com threshold de tolerância | Touch em mobile precisa de área maior |
 | Highlight de seleção | Outline pass (EffectComposer) ou troca de material | Outline visualmente mais limpo |
 | Câmera animada | GSAP ou lerp manual para transições suaves | Evita corte brusco em preset |
@@ -38,11 +60,19 @@ Se a câmera for implementada como estado não-serializável (ex.: referência d
 
 ```typescript
 interface CameraState {
+  version: 1                       // protege contra projectionMode/clippingPlane/cameraType futuros
   position: [number, number, number]
   target: [number, number, number]
   fov: number
   near: number
   far: number
+  focusExpressID?: number          // restaura "vista da fachada" mesmo se coords absolutas mudarem entre versões
+}
+
+// Estado de visualização do viewer (prepara S12/S18/S31 — não persistir ainda)
+interface ViewerState {
+  camera: CameraState
+  selectedExpressId?: number
 }
 
 // Usado em:
@@ -75,7 +105,10 @@ viewer.camera.setPreset('front' | 'top' | 'iso'): void
 viewer.selection.select(expressID: number): void
 viewer.selection.clear(): void
 viewer.selection.onSelect(callback: (id: number | null) => void): void
+viewer.selection.onHover(callback: (id: number | null) => void): void
 ```
+
+> Toda a API troca apenas `expressID` e `CameraState` — nunca tipos do Three.js. Consumers não importam Three.js.
 
 ---
 
@@ -94,9 +127,14 @@ viewer.selection.onSelect(callback: (id: number | null) => void): void
 - [ ] Orbit, pan, zoom funcionam com mouse e touch
 - [ ] Clique em elemento seleciona e destaca visualmente
 - [ ] Clique no vazio deseleciona
+- [ ] Seleção permanece correta após orbit, pan e zoom
+- [ ] Hover destaca elemento temporariamente (sem persistir seleção)
+- [ ] Presets calculados a partir do bounding box (funcionam em modelos de escalas diferentes)
 - [ ] Preset `iso` centra o modelo com câmera isométrica em < 300ms
-- [ ] Reset retorna ao estado inicial do modelo
-- [ ] `camera.getState()` retorna objeto serializável (JSON.stringify funciona)
+- [ ] Reset recalcula do bounding box atual (determinístico)
+- [ ] BVH construído uma vez no load, não reconstruído por seleção
+- [ ] `camera.getState()` retorna objeto serializável com `version` (JSON.stringify funciona)
 - [ ] `camera.setState()` restaura câmera exata
+- [ ] Nenhum consumer fora do Viewer importa Three.js
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

@@ -11,6 +11,21 @@
 
 Schema de custos que suporte cenários independentes, tabelas customizadas e SINAPI. Nenhuma UI ainda — apenas o modelo de dados e API.
 
+> **Nota para o agente:** Este é o schema mais crítico da Fase 5D — todo o cálculo de S22 e a comparação financeira de S30 dependem dele. Dinheiro **nunca** em FLOAT (`DECIMAL` sempre). O schema precisa nascer suportando cenários independentes, versionamento SINAPI e override por elemento — adicionar qualquer um depois é migração arriscada em produção.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Cálculo de custo / agregação (S22)
+- Cálculo de quantitativos / takeoff (S20)
+- Importação SINAPI (S21)
+- Painel / heatmap de custo (S24)
+- Comparação financeira (S30)
+- Qualquer UI
+
 ---
 
 ## Por que importa a longo prazo
@@ -94,11 +109,20 @@ backend/db/migrations/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] `POST /cost-tables` cria tabela vinculada a cenário
 - [ ] `POST /cost-tables/:id/items` adiciona itens com código, descrição, unidade, preço
 - [ ] `element_cost_links` aceita quantidade + override de preço por elemento
+- [ ] Nenhum campo monetário usa FLOAT (todos `DECIMAL`)
+- [ ] Override de preço por elemento exige `note` (rastreabilidade)
+- [ ] Versionamento SINAPI por `reference_month` + `state_code` no schema
 - [ ] Migration reversível sem perda de dados
 - [ ] Dois cenários podem ter tabelas de preços diferentes para o mesmo projeto
 - [ ] Build e lint passam

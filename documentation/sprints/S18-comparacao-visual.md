@@ -13,6 +13,20 @@
 
 Split-view A|B com câmera sincronizada. Diferenças entre cenários destacadas. Comparação exportável como imagem.
 
+> **Nota para o agente:** O `SplitView` construído aqui é **componente reutilizável**, não tela única. S24 (custos), S26 (prazo) e S30 (financeiro) renderizam dentro dele. Projete a API do SplitView para receber qualquer par de cenários + qualquer camada de overlay (diff, heatmap, timeline) sem reescrita. A decisão de 1 WebGL context com 2 viewports é arquitetural e vincula todos esses sprints.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Comparação de custo (S24, S30) — reusa este SplitView
+- Comparação temporal / 4D (S26)
+- Comparação de mais de 2 cenários simultâneos
+- Branching/merge de cenários (S29)
+- Relatório PDF (S30)
+
 ---
 
 ## Por que importa a longo prazo
@@ -42,9 +56,10 @@ Para modelos grandes (500 MB), um context é obrigatório — dois contexts dupl
 ## Algoritmo de diff visual
 
 ```typescript
+// visibility vem de scenario_state.visibility (DTO unificado do S12)
 function computeScenarioDiff(scenarioA: Scenario, scenarioB: Scenario): DiffResult {
-  const hiddenInA = new Set(scenarioA.visibility_state.hiddenElements)
-  const hiddenInB = new Set(scenarioB.visibility_state.hiddenElements)
+  const hiddenInA = new Set(scenarioA.scenario_state.visibility.hiddenElements)
+  const hiddenInB = new Set(scenarioB.scenario_state.visibility.hiddenElements)
 
   return {
     onlyInA: [...hiddenInB].filter(id => !hiddenInA.has(id)),   // vermelho no B
@@ -83,13 +98,33 @@ frontend/src/
 
 ---
 
+## Telemetria de produto
+
+Marco crítico — precisa medir adoção: `comparison_opened`, `comparison_camera_unlocked`, `comparison_exported`, com `tenant_id`, `project_id`, `scenario_a`, `scenario_b`.
+
+## Definição de validado
+
+- **Tecnicamente** quando o split-view sincroniza câmera e destaca diferenças entre dois cenários.
+- **Comercialmente** quando usuários reais abrem a comparação voluntariamente para decidir, sem instrução.
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
-- [ ] Split-view exibe dois cenários lado a lado com câmera sincronizada
+- [ ] `SplitView` aceita par de cenários + camada de overlay plugável (reuso por S24/S26/S30)
+- [ ] Split-view exibe dois cenários lado a lado com câmera sincronizada (mesmo frame loop, sem lag)
 - [ ] Arrastar divisor central ajusta proporção dos viewports
 - [ ] Elementos presentes em A mas ausentes em B destacados em vermelho
 - [ ] Câmera pode ser desacoplada (free mode) e reacoplada
-- [ ] Export PNG gera imagem de alta resolução com os dois viewports
+- [ ] Um único WebGL context (memória GPU não duplicada)
+- [ ] Export PNG gera imagem de alta resolução (`pixelRatio: 2`) com os dois viewports
 - [ ] FPS > 25 em modelo de 10.000 elementos no split-view
+- [ ] Telemetria de comparação emitida
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

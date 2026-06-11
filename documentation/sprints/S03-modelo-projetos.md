@@ -11,6 +11,21 @@
 
 Definir o schema central do produto: Project → Model → Version. Todas as entidades futuras (cenários, atividades, custos) pendurarão nessa hierarquia.
 
+> **Nota para o agente:** Este sprint define a estrutura de dados que será usada pelos módulos 4D, 5D, Cenários, Presentation Studio e Digital Twin. **Evite decisões que acoplem o schema apenas ao upload de IFC.** O modelo deve representar a evolução futura da obra, não apenas o armazenamento de arquivos.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints posteriores — **não implementar aqui**:
+
+- Cenários (S12)
+- Custos / cost tables (S19)
+- Cronogramas (S25)
+- Compartilhamento público (S17)
+- Comentários (S16)
+- Controle de versões visual / diffs entre modelos (S18, S29)
+
 ---
 
 ## Por que importa a longo prazo
@@ -21,13 +36,33 @@ Em especial: a relação `Project 1→N Model 1→N Version` precisa ser pensada
 
 ---
 
+## Compatibilidade futura — cadeia de domínio
+
+A hierarquia deste sprint é a base de toda a cadeia de valor do ArxisVR:
+
+```
+Tenant → Project → Model → ModelVersion
+                              → Scenario        (S12)
+                                 → Schedule     (S25)
+                                 → Cost Table    (S19)
+                                 → Presentation  (S31)
+```
+
+Regra explícita para evitar acoplamento errado: **Scenario referencia ModelVersion, NÃO Project.** O fluxo correto é `Project → Model → ModelVersion → Scenario`. Não modelar `Project → Scenario` direto.
+
+---
+
 ## Decisões arquiteturais
 
 | Decisão | Escolha | Razão |
 |---|---|---|
 | Hierarquia | `tenant → project → model → model_version` | Versioning explícito para suportar reimport |
 | Soft-delete | `deleted_at TIMESTAMP NULL` em todas as entidades | Auditoria e recuperação |
+| Filtro de soft-delete | Responsabilidade do repository, nunca do controller | Nenhuma query de listagem retorna entidades com `deleted_at` preenchido |
 | Status de modelo | `enum: uploading, processing, ready, failed` | Alimenta S11 (processamento assíncrono) |
+| Status de projeto | `status` derivado/cacheado da versão ativa | Dashboard (S05) lista estado sem varrer todas as versões |
+| Código de projeto | `project_code VARCHAR(100)` | Obras usam códigos (PJ-2026-014) em ERP, contratos, relatórios |
+| Integridade de versão | `sha256` em `model_versions` | Detecta upload duplicado, corrupção, evita reprocessamento (S11) |
 | Slug de projeto | `slug UNIQUE por tenant` | URL amigável `/projects/torre-a` |
 | Metadados do modelo | `JSONB: size, units, ifc_schema, bounds` | Extraídos no S07, não requer coluna fixa |
 | Índices | `(tenant_id, deleted_at)` em todas as queries de listagem | Performance em grandes portfólios |
@@ -61,7 +96,9 @@ projects (
   id UUID PK,
   tenant_id UUID FK tenants NOT NULL,
   slug VARCHAR(100) NOT NULL,
+  project_code VARCHAR(100),          -- código de obra: PJ-2026-014, OBR-0048
   name VARCHAR(255) NOT NULL,
+  status VARCHAR(20) DEFAULT 'empty', -- cache derivado da versão ativa: empty/processing/ready/failed
   deleted_at TIMESTAMP,
   created_at TIMESTAMP,
   UNIQUE(tenant_id, slug)
@@ -83,10 +120,14 @@ model_versions (
   status VARCHAR(20) NOT NULL,  -- uploading/processing/ready/failed
   storage_key VARCHAR(500),
   file_size BIGINT,
+  sha256 CHAR(64),              -- integridade; detecta duplicação e corrupção
   metadata JSONB,               -- ifc_schema, bounds, element_count
   processed_at TIMESTAMP,
-  created_at TIMESTAMP
+  created_at TIMESTAMP,
+  UNIQUE(model_id, version)
 )
+
+CREATE INDEX idx_model_versions_status ON model_versions(status);
 ```
 
 ---
@@ -106,7 +147,11 @@ model_versions (
 - [ ] `POST /projects` cria projeto com slug gerado automaticamente
 - [ ] `GET /projects` lista apenas projetos do tenant autenticado
 - [ ] `POST /projects/:id/models` cria model + versão com status `uploading`
+- [ ] Upload subsequente do mesmo model cria nova `model_version`
+- [ ] Número de versão incrementa automaticamente (UNIQUE por model)
+- [ ] `current_version_id` aponta para a versão mais recente após processamento
 - [ ] Paginação funciona em listas com > 100 projetos
 - [ ] Soft-delete: projeto deletado não aparece na listagem, mas existe no banco
+- [ ] Filtro de `deleted_at` aplicado no repository, não no controller
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

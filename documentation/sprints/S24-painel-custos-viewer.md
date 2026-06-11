@@ -11,6 +11,19 @@
 
 Heatmap de custo por elemento no viewer, painel de breakdown com hierarquia, ficha de custo por elemento ao clicar.
 
+> **Nota para o agente:** Este é o **momento "uau" da demo** — onde o produto deixa de parecer um viewer IFC comum. Mas a prioridade arquitetural é projetar o painel de breakdown de forma que o S30 (comparação financeira) renderize **dois painéis lado a lado sem duplicar código**. Componentize pensando no split-view do S18.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Comparação financeira A|B (S30 reusa este painel)
+- Timeline 4D / curva S animada (S26, S27)
+- Edição de preços inline (volta ao S19/S21)
+- Exportação de relatório PDF (S30)
+
 ---
 
 ## Por que importa a longo prazo
@@ -76,6 +89,12 @@ frontend/src/costs/
 | Heatmap lento em modelo com 50k materiais | InstancedMesh: atualizar cor por instância, não por material |
 | Usuário confunde "caro" com "problemático" | Tooltip explica que a escala é relativa ao projeto |
 | Painel não comunica clareza a leigos | Teste de usabilidade com não-engenheiros antes de marcar pronto |
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 

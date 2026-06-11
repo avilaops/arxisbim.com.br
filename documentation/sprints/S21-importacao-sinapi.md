@@ -11,6 +11,20 @@
 
 Ingestão da base SINAPI (planilha mensal da CEF) por estado e mês, com busca por código ou descrição em < 500ms.
 
+> **Nota para o agente:** SINAPI é o **maior diferencial competitivo no Brasil** (referência obrigatória em obra pública). O ponto não-negociável é o **versionamento por (UF, mês)**: um projeto licitado em jan/2026 deve continuar usando a tabela de jan/2026 para sempre. SINAPI é dado de referência imutável — nunca editável pelo usuário.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Cálculo de custo (S22)
+- BDI / encargos sociais detalhados
+- Composição de preços unitários (subitens da composição SINAPI)
+- Outras bases (SICRO, ORSE) — schema deve permitir, mas não importar agora
+- Atualização automática via scraping da CEF
+
 ---
 
 ## Por que importa a longo prazo
@@ -94,12 +108,20 @@ frontend/src/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Upload de planilha SINAPI (XLSX) importa sem erro
+- [ ] Parser valida colunas e alerta se o formato da CEF mudou (não importa lixo silenciosamente)
 - [ ] Busca por código exato retorna item correto em < 100ms
 - [ ] Busca por descrição parcial retorna resultados relevantes em < 500ms
 - [ ] Duas versões do mesmo código (meses diferentes) coexistem sem conflito
+- [ ] Preço com e sem desoneração ambos preservados
 - [ ] Vínculo de item SINAPI a `cost_item` persiste após reimport da tabela
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

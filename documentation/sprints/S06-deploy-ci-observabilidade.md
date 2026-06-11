@@ -11,6 +11,21 @@
 
 Pipeline de deploy estável, logs estruturados, alertas de erro e rollback testado. Nenhum usuário real antes de passar por este sprint.
 
+> **Nota para o agente:** Este sprint **não existe para fazer deploy.** Ele existe para garantir que qualquer falha futura possa ser identificada, reproduzida e corrigida rapidamente. Toda decisão deve favorecer rastreabilidade, diagnóstico e segurança operacional antes de favorecer conveniência de implementação.
+
+---
+
+## Fora de Escopo
+
+Observabilidade **suficiente**, não plataforma DevOps corporativa. Pertencem a estágios futuros — **não implementar aqui**:
+
+- Datadog / New Relic
+- OpenTelemetry completo
+- Kubernetes
+- Prometheus / Grafana
+- Auto-scaling avançado
+- Blue/Green deploy
+
 ---
 
 ## Por que importa a longo prazo
@@ -25,12 +40,15 @@ O padrão de tracing escolhido aqui (correlation ID nos logs) permite rastrear u
 
 | Decisão | Escolha | Razão |
 |---|---|---|
-| Formato de log | JSON estruturado com `level`, `msg`, `req_id`, `tenant_id` | Parseable por qualquer agregador |
+| Formato de log | JSON estruturado com `level`, `msg`, `req_id`, `trace_id`, `tenant_id` | Parseable por qualquer agregador |
+| Trace context | `request_id` + `trace_id` (+ `span_id` opcional); inicialmente `trace_id = request_id` | Rastrear operação que cruza upload→fila→parser→persistência como uma só |
 | Correlation ID | `X-Request-Id` gerado no gateway, propagado por toda requisição | Rastrear req end-to-end |
+| Jobs assíncronos | Geram `job_id` próprio e preservam `origin_req_id` do request original | Rastrear S11/S22/S27 de ponta a ponta |
 | Alertas | Render alertas nativos + webhook Slack/Discord | Sem dependência de Datadog no início |
-| Health check | `/health/live` (processo OK) + `/health/ready` (DB OK) | Render usa `/health/live` |
+| Health check | `/health/live` (processo OK) + `/health/ready` (Postgres + storage OK) | S11/S29 dependem do storage, não só do banco |
+| Métricas | Contadores mínimos via log estruturado (sem Prometheus ainda) | Existir conceitualmente desde já |
 | CI | GitHub Actions: type-check + lint + testes + deploy | Sem Docker no CI ainda |
-| Rollback | Render previous deploy via dashboard | < 2 min |
+| Rollback | Render previous deploy via dashboard, testado em staging | < 2 min, procedimento documentado |
 
 ---
 
@@ -38,10 +56,54 @@ O padrão de tracing escolhido aqui (correlation ID nos logs) permite rastrear u
 
 Todo evento relevante deve logar:
 - `req_id`: ID único da requisição
-- `tenant_id`: quando em contexto autenticado
+- `trace_id`: rastreia a operação completa (inicia igual ao `req_id`)
+- `tenant_id`: **obrigatório em toda operação autenticada** — log sem `tenant_id` em contexto autenticado é considerado incompleto
 - `duration_ms`: tempo de execução
 - `status`: resultado da operação
 - Erros: `stack` completo em `debug`, mensagem sanitizada em `error`
+
+### Jobs assíncronos
+
+```
+req_id=abc        → upload iniciado
+job_id=xyz origin_req_id=abc → processamento iniciado
+```
+
+Todo job preserva o `origin_req_id` do request que o originou.
+
+---
+
+## Redact — campos sempre removidos antes do log
+
+Qualquer campo sensível deve ser removido **antes** de chegar ao log:
+
+- `Authorization`
+- `Cookie`
+- senha / password
+- access token / refresh token / JWT
+- Stripe secret
+- Database URL
+- Storage keys / presigned URLs
+
+---
+
+## Métricas operacionais mínimas
+
+Não exigem Prometheus — podem ser emitidas como log estruturado, mas devem existir:
+
+- `requests_total`
+- `requests_duration_ms`
+- `uploads_total` / `uploads_failed`
+- `auth_failures`
+- `db_query_duration_ms`
+
+---
+
+## Error budget — metas operacionais iniciais
+
+- Disponibilidade: **99,5%**
+- Erros 5xx: **< 1%**
+- Tempo médio de API: **< 500 ms**
 
 ---
 
@@ -68,9 +130,11 @@ backend/src/shared/middleware/
 
 | Risco | Mitigação |
 |---|---|
-| Log de dados sensíveis (JWT, senha) | Redact automático no serializer do pino |
+| Log de dados sensíveis | Redact automático no serializer do pino (ver lista de redact) |
 | CI lento > 5 min desmotiva uso | Paralelizar type-check e testes |
 | Health check retorna 200 mas DB está lento | `/health/ready` inclui query simples ao Postgres |
+| Banco saudável mas storage indisponível | `/health/ready` testa também o storage (S11/S29 dependem dele) |
+| Rollback escrito mas nunca testado | Executar rollback em staging como parte do sprint |
 
 ---
 
@@ -79,8 +143,12 @@ backend/src/shared/middleware/
 - [ ] Push na `main` dispara CI e deploy automático sem intervenção manual
 - [ ] CI falha se type-check ou testes falham (sem `continue-on-error`)
 - [ ] `/health/live` retorna `{ status: "ok" }` em < 200ms
-- [ ] `/health/ready` verifica conexão real com Postgres
-- [ ] Erros 5xx geram log JSON com stack + req_id + tenant_id
-- [ ] Rollback para deploy anterior executável em < 2 minutos
+- [ ] `/health/ready` verifica conexão real com Postgres **e** com o storage
+- [ ] Erros 5xx geram log JSON com stack + req_id + trace_id + tenant_id
+- [ ] Toda operação autenticada loga `tenant_id`
+- [ ] Job assíncrono preserva `origin_req_id` do request original
+- [ ] Campos sensíveis (Authorization, Cookie, tokens, secrets, storage keys) não aparecem em nenhum log
+- [ ] Métricas mínimas (requests_total, uploads_failed, auth_failures, etc.) emitidas
+- [ ] Rollback executado com sucesso em staging em < 2 minutos, com procedimento documentado
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

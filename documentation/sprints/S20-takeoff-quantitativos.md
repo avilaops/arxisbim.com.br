@@ -11,6 +11,20 @@
 
 Extrair automaticamente área, volume, comprimento e contagem de cada elemento IFC e vincular ao schema de custos do S19.
 
+> **Nota para o agente:** A **precisão do takeoff é a confiança no produto** — engenheiros validarão contra planilhas manuais. Cada quantidade deve carregar sua **fonte** (Qto_ Pset / Pset proprietário / cálculo geométrico) e um indicador de confiança, para que o cliente saiba o que é medido e o que é estimado. Nunca zerar silenciosamente um elemento sem quantidade.
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Cálculo de custo (S22 multiplica quantidade × preço)
+- Importação SINAPI (S21)
+- Painel/heatmap de custo (S24)
+- Comparação financeira (S30)
+- Curva S / distribuição temporal de custo (S25+)
+
 ---
 
 ## Por que importa a longo prazo
@@ -40,7 +54,9 @@ O desafio técnico está na normalização: diferentes ferramentas BIM exportam 
 | Agrupamento | Por `ifc_type` + `storey_id` | Quantitativo por pavimento |
 | Persistência | Preencher `element_cost_links.quantity` automaticamente | Vincula diretamente ao schema do S19 |
 | Revisão manual | Usuário pode editar quantidade de qualquer elemento | Override rastreado |
-| Export | XLSX com colunas: elemento, tipo, pavimento, qtd, unidade | Formato padrão de orçamento |
+| Fonte da quantidade | Cada `element_cost_link` registra `quantity_source` + `confidence` | Cliente distingue medido de estimado |
+| Execução | Em background, reusa pipeline S11 (não bloqueia request) | Modelos de 50k elementos |
+| Export | XLSX com colunas: elemento, tipo, pavimento, qtd, unidade, fonte | Formato padrão de orçamento, auditável |
 
 ---
 
@@ -84,12 +100,19 @@ frontend/src/
 
 ---
 
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
+
+---
+
 ## Critérios de aceite
 
 - [ ] Tabela de quantitativos gerada em < 30s para modelo de 10k elementos
 - [ ] Agrupamento por tipo e pavimento correto
 - [ ] `area_m2` de uma parede corresponde ao valor do Revit com desvio < 2%
+- [ ] Cada quantidade registra fonte (Qto_ / Pset proprietário / geométrico) e confiança
 - [ ] Elementos sem Psets geométricos recebem cálculo de fallback (não ficam zerados)
-- [ ] Export XLSX abre corretamente no Excel com unidades
+- [ ] Export XLSX abre corretamente no Excel com unidades e coluna de fonte
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos

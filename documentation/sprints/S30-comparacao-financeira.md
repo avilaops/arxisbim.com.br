@@ -13,6 +13,20 @@
 
 Split-view com custo total, breakdown por categoria e curva S lado a lado para dois cenários. Export de relatório comparativo em PDF. Recomendação automática baseada em custo × prazo.
 
+> **Nota para o agente:** Aqui **fecha o loop completo do produto**: IFC → cenário → custo → comparação → decisão. Tudo desde o S01 converge. Reusa `SplitView` (S18) e o painel de custos (S24) sem duplicar. A recomendação deve ser **transparente** (algoritmo explicável, nunca caixa-preta de ML). O PDF não é opcional — é exigência de documentação de decisão em licitação pública (Lei 14.133/2021).
+
+---
+
+## Fora de Escopo
+
+Pertencem a sprints futuros — **não implementar aqui**:
+
+- Presentation Studio (S31)
+- Recomendação por ML / otimização multiobjetivo
+- Comparação de 3+ cenários no mesmo relatório
+- Integração com ERP / exportação para sistemas de licitação
+- Digital Twin / dados de execução real
+
 ---
 
 ## Por que importa a longo prazo
@@ -116,6 +130,23 @@ frontend/src/scenarios/
 | Curva S sem schedule vinculado | Mostrar custo total sem curva; curva como feature opt-in |
 | PDF com gráfico de barras complexo de renderizar no servidor | Usar `recharts` headless via `@react-pdf/renderer`; fallback para tabela simples |
 | Pesos de recomendação (60% custo, 40% prazo) questionados pelo usuário | Permitir ajuste de pesos na UI |
+
+---
+
+## Telemetria de produto
+
+Marco crítico final — medir o valor central do produto: `financial_comparison_opened`, `recommendation_viewed`, `comparison_pdf_exported`, `recommendation_weights_adjusted`.
+
+## Definição de validado
+
+- **Tecnicamente** quando o relatório compara custo e prazo de dois cenários e gera PDF.
+- **Comercialmente** quando um usuário usa a comparação financeira para decidir qual cenário levar à obra — a hipótese central do ArxisVR comprovada.
+
+---
+
+## Definition of Done (global)
+
+Build · type-check · lint · testes passam · sem regressões conhecidas · documentação atualizada · demo executável em até 5 minutos.
 
 ---
 
