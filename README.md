@@ -1,105 +1,44 @@
-<div align="center">
-	<img src="https://upload.wikimedia.org/wikipedia/commons/8/8d/Steve_Jobs_Headshot_2010-CROP2.jpg" alt="Steve Jobs" width="120"/>
-  
-	# One more thing...
-  
-	# Apresentando o **ArxisVR**
-  
-	<img src="https://img.icons8.com/ios-filled/100/virtual-reality.png" alt="ArxisVR Logo" width="100"/>
-  
-	## "A inovação distingue um líder de um seguidor." – Steve Jobs
-</div>
+# ArxisVR
 
-Imagine um mundo onde a realidade não é um limite, mas um ponto de partida.
+Plataforma de decisão baseada em modelos BIM — IFC nativo, cenários 4D/5D, SINAPI integrado.
 
-Hoje, temos o orgulho de apresentar o **ArxisVR**: uma experiência de Realidade Virtual criada para transformar a maneira como você vê, sente e interage com o impossível.
+**Produção:** [arxisvr.avilaops.com](https://arxisvr.avilaops.com) · API: `api.arxisvr.avilaops.com`
 
 ---
 
-## Por que ArxisVR?
+## Arquitetura
 
-- **Imersão Total:** Sinta-se dentro do universo digital, com gráficos de tirar o fôlego e interação natural.
-- **Performance Inigualável:** Desenvolvido com tecnologia de ponta para máxima fluidez e resposta.
-- **Fácil de Usar:** Interface intuitiva, pronta para todos – do iniciante ao expert.
-- **Expansível:** Projetado para crescer junto com suas ideias e necessidades.
+```
+arxisvr.avilaops.com       (GitHub Pages)
+Frontend: Vite MPA + Three.js + IFC
 
----
+        │ HTTPS / WSS
 
-## O que você pode fazer com o ArxisVR?
+api.arxisvr.avilaops.com   (Render — Fastify)
+Backend: auth · tenants · BIM · observability
+PostgreSQL (Render managed) · R2 Storage
 
-- Explorar ambientes virtuais hiper-realistas
-- Treinar equipes em simulações seguras e controladas
-- Criar experiências educativas inovadoras
-- Desenvolver jogos e aplicações interativas
+        │ WebSocket
 
----
+arxisvr-signaling.onrender.com  (Render — Node WS)
+Signaling: rooms, avatar_update, chat
+```
 
-## Funcionalidades do ArxisVR
-
-### 🏗️ BIM e Modelos IFC
-- **Upload de Modelos IFC:** Carregue seus arquivos BIM (IFC) diretamente na plataforma
-- **Visualização 3D Interativa:** Navegue pelos modelos com controles de FPS (WASD)
-- **Modelos Federados:** Combine múltiplos IFCs (arquitetura, estrutura, MEP) em um único modelo
-- **Quantitativos Automáticos:** Extraia quantitativos dos elementos (paredes, vigas, lajes, etc)
-- **Análise de Custos 5D:** Orçamento integrado com os quantitativos do modelo
-
-### 📅 Cronograma 4D
-- **Planejamento de Obra:** Crie tarefas e vincule aos elementos do modelo IFC
-- **Simulação 4D:** Visualize o progresso da obra ao longo do tempo
-- **Gantt Integrado:** Gerencie dependências e milestones
-- **Progresso em Tempo Real:** Acompanhe o status das tarefas
-
-### 👥 Reuniões XR Multiplayer
-- **Salas de Reunião:** Crie salas virtuais para colaboração em tempo real
-- **Avatares 3D:** Navegue com avatares representando cada participante
-- **Chat em Tempo Real:** Comunique-se via chat durante as reuniões
-- **Áudio e Vídeo:** Ative microfone e câmera para comunicação completa
-- **Laser Pointer:** Aponte elementos do modelo para destacar discussões
-- **Colaboração CRDT:** Seleções e annotations sincronizadas entre participantes
-- **Histórico de Colaboração:** Recupere estados anteriores em caso de desconexão
-
-### 🎮 Cenários 3D
-- **Salvar Estados:** Salve posições de câmera e configurações do viewer
-- **Presets Profissionais:** Cenários prontos para apresentação, coordenação BIM, etc
-- **Navegação Guiada:** Tours arquitetônicos com pontos de interesse
-
-### 🔧 Ferramentas de Análise
-- **Cortes de Seção:** Crie cortes transversais e longitudinais
-- **Medições:** Meça distâncias e áreas no modelo
-- **Query de Elementos:** Busque elementos por tipo, propriedades ou expressID
-- **Análise Estrutural:** Identifique colunas, vigas, lajes e fundações
-- **Análise MEP:** Visualize sistemas elétricos, hidráulicos e HVAC
+> **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
 
 ---
 
-## Como Funciona o Multiplayer
+## Quick start
 
-O sistema de reuniões XR usa **Socket.IO** para comunicação em tempo real:
-
-1. **Autenticação:** Login via JWT token
-2. **Criação de Sala:** Crie uma sala de reunião para seu projeto
-3. **Convite:** Compartilhe o código da sala com outros participantes
-4. **Join:** Participantes entram na sala com seus avatares
-5. **Colaboração:** Movimentos, chat e ações são sincronizados em tempo real
-6. **Histórico:** Todas as colaborações são salvas para recuperação
-
-**Requisitos:**
-- Conexão estável com internet
-- Navegador moderno com suporte a WebGL
-- Permissão de microfone e câmera (para áudio/vídeo em reuniões)
-
----
-
-## Como Começar
-
-### Para Desenvolvedores
 ```bash
-# Clone o repositório
-git clone https://github.com/avilaops/arxisvr.git
+# Infra local (Postgres + MinIO)
+docker compose -f docker-compose.dev.yml up -d
 
 # Backend
 cd backend
+cp .env.example .env     # ajustar DATABASE_URL
 npm install
+npm run migrate
 npm run dev
 
 # Frontend
@@ -108,22 +47,112 @@ npm install
 npm run dev
 ```
 
-### Para Usuários
-1. Acesse a plataforma
-2. Faça login ou crie sua conta
-3. Crie ou selecione um projeto
-4. Faça upload de seus modelos IFC
-5. Convide sua equipe para reuniões XR
-6. Comece a colaborar!
+Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 
 ---
 
-## "As pessoas que são loucas o suficiente para achar que podem mudar o mundo são as que mudam." – Steve Jobs
+## Variáveis de ambiente
 
-Junte-se a nós nessa jornada. Reinvente o impossível. Experimente o **ArxisVR**.
+### Frontend (Vite / GitHub Actions)
+
+| Var | Produção |
+|---|---|
+| `VITE_API_URL` | `https://api.arxisvr.avilaops.com` |
+| `VITE_WS_URL` | `wss://arxisvr-signaling.onrender.com` |
+
+### Backend (Render)
+
+| Var | Descrição |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Secret para access tokens (HS256) |
+| `JWT_REFRESH_SECRET` | Secret para refresh tokens |
+| `STORAGE_DRIVER` | `r2` em produção, `local` em dev |
+| `R2_ACCOUNT_ID` | Cloudflare R2 |
+| `R2_ACCESS_KEY_ID` | Cloudflare R2 |
+| `R2_SECRET_ACCESS_KEY` | Cloudflare R2 |
+| `R2_BUCKET_NAME` | Bucket de modelos IFC |
+| `GOOGLE_CLIENT_ID` | OAuth Google |
+| `GITHUB_CLIENT_ID` | OAuth GitHub |
+| `STRIPE_SECRET_KEY` | Billing |
+| `STRIPE_WEBHOOK_SECRET` | Billing webhooks |
+
+> **CRÍTICO Render:** `PUT /env-vars` substitui TODAS as variáveis. Sempre enviar a lista completa.
 
 ---
 
-<div align="center">
-	<sub>Feito com paixão, inovação e um toque de genialidade.</sub>
-</div>
+## Deploy
+
+| Serviço | Trigger | Como |
+|---|---|---|
+| Frontend | Push em `main` em `frontend/**` | GitHub Actions → GitHub Pages |
+| Backend | Push em `main` | Render auto-deploy |
+| Signaling | Manual | Render — sempre ligado |
+
+Signaling no plano free dorme após 15 min inativo. Frontend envia ping a cada 25s.
+
+---
+
+## Auth
+
+```
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/logout
+POST /api/v1/auth/refresh
+GET  /api/v1/auth/me
+GET  /api/v1/auth/sessions
+DELETE /api/v1/auth/sessions/:id
+GET  /api/v1/auth/google
+GET  /api/v1/auth/github
+GET  /api/v1/auth/verify-email
+```
+
+Segurança: rate limit 10 req/min · bcrypt rounds 12 · JWT access 15min + refresh 30d · reuse detection.
+
+---
+
+## Multiplayer (WebSocket — signaling-server)
+
+| Client → Server | Campos |
+|---|---|
+| `join_room` | `roomId, userId, displayName, [accessToken]` |
+| `avatar_update` | `avatarConfig: AvatarState` |
+| `chat_message` | `content` |
+
+| Server → Client | Campos |
+|---|---|
+| `room_joined` | `roomId, participantId, members[]` |
+| `user_joined` / `user_left` | `participantId, userId` |
+| `avatar_update` | `participantId, avatarConfig, timestamp` |
+| `chat_message` | `participantId, content, timestamp` |
+
+Testar local: `PORT=3002 node signaling-server/server.js` + `VITE_WS_URL=ws://localhost:3002`
+
+---
+
+## Checklist de sessão
+
+```bash
+# 1. Backend vivo?
+curl https://api.arxisvr.avilaops.com/health
+
+# 2. Último deploy frontend
+# → github.com/AvilaOps/arxisvr/actions
+
+# 3. Signaling (pode estar dormindo no free tier)
+curl https://arxisvr-signaling.onrender.com/health
+```
+
+---
+
+## Documentação
+
+| Arquivo | Conteúdo |
+|---|---|
+| [`documentation/vision.md`](documentation/vision.md) | Tese, posicionamento, mercado |
+| [`documentation/business.md`](documentation/business.md) | Pricing, competidores, riscos |
+| [`documentation/roadmap/ROADMAP.md`](documentation/roadmap/ROADMAP.md) | 32 sprints com critérios de aceite |
+| [`documentation/changelog.md`](documentation/changelog.md) | Decisões com data e motivo |
+| [`documentation/CI-CD-ESTRATEGIA.md`](documentation/CI-CD-ESTRATEGIA.md) | Pipeline CI/CD + como rodar local |
+| [`documentation/CUIDADOS_BEFORE_GIT.md`](documentation/CUIDADOS_BEFORE_GIT.md) | Checklist pré-commit |
