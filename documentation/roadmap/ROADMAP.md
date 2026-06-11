@@ -1,127 +1,291 @@
 # ROADMAP — ArxisVR
 
-**Última atualização:** 08/06/2026
-**Status:** ✅ Produção estável · 🔐 Multi-tenant seguro · 👥 Colaboração realtime · 🧱 Persistência durável e Billing são os próximos gargalos
-
-> Plataforma BIM (IFC) com viewer Three.js, colaboração multiplayer (WebXR),
-> Copilot de IA e multi-tenant. Frontend MPA (Vite) no GitHub Pages; backend
-> Fastify + Drizzle + Postgres no Render.
+**Última atualização:** 11/06/2026
+**Versão:** 3.0 — 32 sprints atômicos
+**Status:** Fundação SaaS funcional · Iniciando IFC Core
 
 ---
 
-## 🏃 ANÁLISE DE SPRINTS
+## Tese Central
 
-O projeto evolui por **sprints = sessões de trabalho** focadas. Cada sprint
-fecha com deploy e verificação ao vivo.
+O ArxisVR não é um viewer IFC. É uma plataforma de **tomada de decisão baseada em cenários de obra**.
 
-| Sprint | Data | Tema | Resultado |
-|---|---|---|---|
-| **S1–S4** | 01–02/06 | Core BIM | Multi-tenant API, IFC parsing/streaming/LOD, Copilot routing, 5 features BIM (BIM Query, GLB, 5D, Snapshots, Painel Props), 22 E2E Playwright |
-| **S5** | 08/06 | **Segurança & Colaboração** | Isolamento de tenant, API de modelos protegida, Workspaces/Convites (Fase 2), model-sync de reunião, AI unificado, fix import IFC, infra de deploy. **18 commits.** |
-| **S6** | _próximo_ | **Billing** | Planos, limites por plano, checkout, cobrança de minutos de reunião |
-| **S7** | _planejado_ | **Persistência durável** | Object storage R2/S3 (hoje /tmp efêmero) |
-| **S8** | _planejado_ | **Hardening** | Auditoria de isolamento em todos os controllers + autoDeploy |
+A cadeia de valor:
 
-### Métrica de ritmo
-- S5 entregou ~18 commits num dia, todos deployados e verificados ao vivo.
-- Velocidade alta sustentada por: deploy manual (gh-pages + Render API),
-  verificação E2E via Chrome MCP, e queries diretas ao Postgres para evidência.
+```
+IFC → Metadados → Cenários → Tempo → Custo → Decisão
+```
+
+A camada de visualização (Three.js, Babylon, WebXR) pode ser trocada.
+A cadeia de cenários é o ativo intransferível.
 
 ---
 
-## ✅ CONCLUÍDO
+## Marcos Críticos — Não Movem
 
-### Sprint 5 — Segurança & Colaboração (08/06/2026)
-
-**🔐 Segurança / Multi-tenant**
-- Isolamento real de tenant: email NUNCA define tenant. Cada usuário nasce no
-  próprio tenant único (`u-<local>-<hash>`). Corrigido vazamento onde todo
-  `@gmail.com` caía no mesmo tenant "gmail". (`core/tenancy/tenant-derivation.ts`)
-- Cadastro não aceita mais `tenantId` do cliente (evita auto-atribuição a tenant alheio).
-- API de modelos IFC com `authenticateRequest` + escopo por tenant/sessão em
-  TODAS as rotas (era aberta anonimamente). (`routes/v1/ifc-models.ts`)
-
-**👥 Workspaces & Convites (Fase 2)**
-- Membership N:N (user ↔ tenant) + tabela de convites. (`schema/workspaces.ts`)
-- Endpoints: criar workspace, convidar (email+role, email via Resend), aceitar,
-  recusar, listar, **trocar workspace ativo** (re-emite JWT). (`modules/workspaces`)
-- UI: `WorkspacePanel.js` (trocar/criar/convidar/aceitar) + `accept-invite.html`.
-- Cadastro cria membership owner (register + OAuth).
-- **E2E ao vivo: 10/10** (criar→convidar→isolamento→aceitar→trocar→403/409).
-
-**🤝 Colaboração / Reunião**
-- Demo removido → app 100% autenticado (sem sessão → landing).
-- Painel de propriedades único (inspector embutido; eram 2 barras).
-- Convidado entra **na reunião** (não no demo).
-- **Model-sync**: modelo do anfitrião sincroniza para todos os participantes
-  (= o "Multiplayer Realtime" que estava planejado). (`features/collaboration/ModelSyncService.ts`)
-
-**🎨 Produto / UX**
-- Landing: idioma consistente (PT default), card Reuniões XR, cookie enxuto, scroll-reveal.
-- **1 assistente** (ArxisCopilot) com ícone flutuante único (eram 2 superfícies confusas).
-- Fix import IFC (não carregava): render local primeiro + storage gravável.
-
-**🛠️ Infra**
-- Deploy destravado **sem GitHub Actions** (bloqueado por billing): frontend via
-  push manual no `gh-pages`; backend via Render API.
-- **Keep-alive** anti-sleep: backend se auto-pinga em /health a cada 14 min.
-
-### Sprints 1–4 — Core BIM (01–02/06/2026)
-- Multi-tenant APIs (tenants/companies/projects), IFC parsing/streaming/LOD,
-  Copilot action routing, BIM Query Language, GLB Export, Quantitativos 5D,
-  Snapshots PNG, Painel de Propriedades IFC, 22 testes E2E Playwright.
+| Marco | Sprint | Valida |
+|---|---|---|
+| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" |
+| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" |
+| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" |
 
 ---
 
-## 🎯 BACKLOG PRIORIZADO
+## Definition of Done — Global
 
-### 🥇 Sprint 6 — Billing (próximo foco do dono)
-- [ ] Planos (Free/Starter/Pro/Enterprise) e limites por plano (projetos, modelos, storage, participantes de reunião).
-- [ ] Checkout e gestão de assinatura.
-- [ ] Cobrança de minutos de reunião (já há `session_billing_usage` no schema).
-- [ ] Enforcement dos limites nas rotas (entitlements — `requireEntitlement` já existe).
-- Base existente: `modules/billing`, `schema/billing.ts`, `tenant_entitlements`.
+Todo sprint só é concluído quando:
 
-### 🥈 Sprint 7 — Persistência durável de IFC
-- [ ] `R2StorageService` (Cloudflare R2, S3-compatible) substituindo o disco
-      local efêmero (/tmp no Render free → modelos somem em restart). Chip `task_33413c9c`.
-- [ ] Avaliar upload direto via presigned URL para arquivos grandes (IFCs reais 15–128MB; limite atual 100MB no multipart).
-
-### 🥉 Sprint 8 — Hardening de segurança
-- [ ] Auditar isolamento de tenant nos demais controllers (scheduling,
-      federated-models, model-elements, glb-export…). Chip `task_8c5d09b7`.
-- [ ] Corrigir autoDeploy do Render (webhook GitHub→Render não dispara — hoje deploy manual).
-
-### Contínuo / menor
-- [ ] `05- Estado e Navegação` — otimizações de estado/navegação (em progresso).
-- [ ] Migrar para storage durável também os snapshots/exports.
-- [ ] Reativar CI quando billing do GitHub for ajustado (ou self-hosted runner).
+- [ ] Build passa
+- [ ] Lint passa
+- [ ] Testes passam
+- [ ] Sem regressões conhecidas em sprints anteriores
+- [ ] Demo de até 5 minutos disponível
 
 ---
 
-## ⚠️ CONSTRAINTS (regras duras do dono)
-- ❌ **Sem alterações manuais no banco de produção.** Schema/dados só via migração versionada.
-- ✅ **Contas de usuário são permanentes** — nunca apagar.
-- ✅ Register e Esqueci-senha **validados**.
-- Deploy é manual (Actions bloqueado por billing): gh-pages + Render API. Spending limit do GitHub deve ficar em $0.
+## Sequência Estratégica
+
+```
+S01–S06  Fundação SaaS
+S07–S12  IFC Core          → ★ S12
+S13–S17  Metadados BIM
+S18–S24  5D BIM            → ★ S18
+S25–S28  4D BIM            → ★ S26
+S29–S32  Cenários + Release → ★ S30
+```
 
 ---
 
-## 📈 ESTADO POR ÁREA
+## FASE 1 — Fundação SaaS · S01–S06
 
-| Área | Estado |
-|---|---|
-| Core BIM (viewer, IFC, LOD, 5D, GLB, query) | ✅ |
-| Multi-tenant + isolamento | ✅ seguro e verificado |
-| Auth (JWT, OAuth, verificação email, reset) | ✅ |
-| Workspaces & convites | ✅ (Fase 2) |
-| Colaboração realtime + model-sync | ✅ |
-| Copilot de IA | ✅ (assistente único) |
-| Persistência de modelos | 🟠 efêmera (/tmp) → R2 pendente |
-| Billing / planos | 🔴 próximo sprint |
-| Hardening (auditoria tenant) | 🟠 pendente |
-| CI/CD automático | 🔴 bloqueado (billing GitHub) → deploy manual |
+### S01 · Auth e multi-tenant base
+- Register → login → logout funcionam
+- Token refresh sem re-login
+- Workspaces isolados: user de org A não vê org B
+- Testes de auth-security passando
 
-> **Recomendação:** Sprint 6 = Billing (foco do dono) → Sprint 7 = R2 (destrava
-> persistência real e download de modelo em reunião pós-restart) → Sprint 8 =
-> Hardening. CI volta quando o billing do GitHub for resolvido.
+### S02 · Upload e storage de arquivos
+- Upload de arquivo IFC < 500 MB completa
+- URL assinada expira em 1h
+- Arquivo isolado por tenant
+- Erro claro em tipo inválido
+
+### S03 · Modelo de dados — Projetos
+- POST /projects cria projeto
+- POST /projects/:id/models faz upload vinculado
+- Listagem com paginação
+- Soft-delete preserva histórico
+
+### S04 · Billing e planos
+- Checkout Stripe funciona em test mode
+- Webhook ativa plano no banco
+- Upload bloqueado se limite de modelos atingido
+- Downgrade preserva dados, bloqueia novas entradas
+
+### S05 · Frontend — Onboarding e dashboard
+- Usuário novo faz onboarding em < 3 cliques
+- Dashboard lista projetos com status
+- Upload com barra de progresso
+- Empty state claro para projeto sem modelo
+
+### S06 · Deploy, CI e observabilidade
+- Deploy automático em push na main
+- Health check responde em < 200ms
+- Erros 5xx geram alerta
+- Rollback de deploy em < 2 minutos
+
+---
+
+## FASE 2 — IFC Core · S07–S12
+
+### S07 · Parser IFC — estrutura base
+- Parser lê IFC 2x3 e IFC 4.x sem crash
+- Hierarquia espacial extraída como JSON
+- Teste com 5 modelos de referência buildingSMART
+- Parsing de 50 MB em < 10 segundos
+
+### S08 · Parser IFC — geometria
+- Modelo visível no canvas após parse
+- Cada IfcProduct vira mesh identificável
+- FPS estável em modelo de 10.000 elementos
+- Nenhum elemento sumindo ou invertido
+
+### S09 · Viewer — navegação e câmera
+- Navegação suave em touch e mouse
+- Clique seleciona elemento e destaca
+- Preset de câmera reorienta em < 300ms
+- Reset de câmera reseta corretamente
+
+### S10 · Viewer — filtros e visibilidade
+- Toggle por disciplina oculta/mostra em < 100ms
+- Corte transversal navegável
+- Isolamento de pavimento funciona
+- Visibilidade não afeta outros usuários
+
+### S11 · Processamento assíncrono + observabilidade IFC
+- Upload retorna 202 imediatamente
+- Status polling informa progresso em tempo real
+- Modelo > 200 MB processa sem timeout
+- Falha no parse notifica usuário com erro claro
+- Logs estruturados por etapa de parsing (header, geometria, propriedades)
+- Métrica de tempo por etapa rastreada
+- Falhas identificam modelo e etapa exata
+
+### S12 ★ · Primeiro cenário salvo
+- Criar cenário a partir de modelo base
+- Alternar A↔B muda estado do viewer
+- Cenários persistem entre sessões
+- Primeiro usuário real consegue usar sem instrução
+
+---
+
+## FASE 3 — Metadados BIM · S13–S17
+
+### S13 · Extração de propriedades IFC
+- Clique em elemento abre painel de props
+- PropertySets customizados aparecem corretamente
+- Busca por nome de propriedade filtra elementos
+- Props exportáveis como CSV
+
+### S14 · Classificação e tipos de elementos
+- Elementos coloridos por tipo automaticamente
+- Categorias editáveis por projeto
+- Mapeamento customizável por modelo
+- Legenda visível no viewer
+
+### S15 · Busca BIM
+- Busca por GUID retorna elemento correto
+- Busca por nome com resultado parcial funciona
+- Busca por PropertySet e valor filtra elementos
+- Resultado em < 500ms em modelos de 50.000 elementos
+
+### S16 · Anotações e comentários em elementos
+- Comentário ancorado em elemento específico
+- Thread com replies e @menção
+- Email de notificação em < 1 minuto
+- Comentário visível como marcador no viewer
+
+### S17 · Compartilhamento e permissões
+- Link público abre viewer sem autenticação
+- Viewer público não exibe propriedades sensíveis
+- Revogação de link funciona imediatamente
+- Permissão por papel funciona
+
+---
+
+## FASE 4 — 5D BIM · S18–S24
+
+### S18 ★ · Primeira comparação visual de cenários
+- Split-view A|B sincroniza câmera
+- Elementos diferentes entre cenários destacados
+- Comparação exportável como imagem
+- Funciona com modelos de tamanhos diferentes
+
+### S19 · Modelo de dados de custos
+- CostItem tem código, descrição, unidade, preço unitário
+- CostTable agrupa itens por projeto
+- ElementCostLink vincula GUID IFC a CostItem + quantidade
+- Migration reversível
+
+### S20 · Takeoff automático de quantitativos
+- Tabela de quantitativos gerada em < 30s
+- Agrupamento por tipo e pavimento
+- Exportação para XLSX
+- Desvio < 2% vs quantitativo manual de referência
+
+### S21 · Importação de tabela SINAPI
+- Upload de planilha SINAPI importa sem erro
+- Busca por código ou descrição retorna < 500ms
+- Vínculo salvo por projeto
+- Atualização de base não quebra vínculos existentes
+
+### S22 · Engine de cálculo 5D
+- Custo recalculado em mudança de preço em < 5s
+- Breakdown por nível de hierarquia IFC
+- Curva de custo acumulado gerada
+- Exportação de memória de cálculo
+
+### S23 · Performance e cache 5D
+- Cálculo de custo em modelo de 50.000 elementos em < 10s
+- Cache de quantitativos invalidado apenas em mudança de modelo
+- Consumo de memória estável em sessões longas
+- Sem regressão de FPS no viewer durante cálculo em background
+
+### S24 · Painel de custos no viewer
+- Heatmap renderiza sem queda de FPS
+- Clique em elemento abre ficha de custo
+- Painel de breakdown atualizável em tempo real
+- Usuário leigo entende o painel sem treinamento
+
+---
+
+## FASE 5 — 4D BIM · S25–S28
+
+### S25 · Modelo de dados 4D — atividades
+- Import de CSV com colunas: id, nome, início, fim, predecessores
+- Vínculo atividade ↔ GUID IFC salvo
+- API retorna schedule completo de um projeto
+- Import de MS Project .xml funcionando
+
+### S26 ★ · Primeira comparação temporal de cenários
+- Slider de data anima construção
+- Comparação A|B mostra diferença de prazo
+- Data de conclusão calculada por cenário
+- Atraso de atividade propaga para sucessoras
+
+### S27 · Animação 4D no viewer
+- Animação em > 30 FPS em modelo médio
+- 3 estados de cor distintos e customizáveis
+- Play a 1x, 2x, 5x, 10x velocidade
+- Seek para data específica em < 1s
+
+### S28 · Importação MS Project / Primavera
+- Import de .mpp sem plugin adicional
+- Mapeamento automático com confiança > 70%
+- Revisão manual de vínculos não mapeados
+- Reimport atualiza cronograma sem perder vínculos
+
+---
+
+## FASE 6 — Cenários Avançados + Release · S29–S32
+
+### S29 · Motor de cenários — branching completo
+- Clone de cenário preserva todos os dados
+- Edição de cronograma por cenário sem afetar base
+- Histórico com rollback
+- Máximo 10 cenários ativos por projeto no plano Pro
+
+### S30 ★ · Primeira comparação financeira de cenários
+- Tabela com N cenários lado a lado
+- Delta de custo e prazo calculado automaticamente
+- Export PDF para reunião com cliente
+- Cenário recomendado destacado
+
+### S31 · Presentation Studio
+- Salvar câmera em ponto do timeline
+- Percurso reproduzível sem interação
+- Link de apresentação abre em browser sem login
+- Export para PDF com screenshots automáticos
+
+### S32 · Release Candidate — hardening
+- 100 usuários simultâneos sem degradação
+- Penetration test básico sem vulnerabilidades críticas
+- API docs publicada em /docs
+- SLA de 99.5% comprovado em 2 semanas de staging
+
+---
+
+## Regras para agentes (Claude Code, Copilot, Cursor)
+
+**Quebrar um sprint quando:**
+- Possuir mais de um objetivo principal
+- Exigir áreas técnicas muito diferentes (infra + feature + UI ao mesmo tempo)
+- Não puder ser demonstrado em menos de 5 minutos
+
+**Unir sprints quando:**
+- Uma entrega depende totalmente da outra
+- Os critérios de aceite não fazem sentido isoladamente
+- O usuário final não percebe valor entre as duas entregas
+
+**Prioridade absoluta:** qualquer sprint que bloqueia um marco ★ tem prioridade sobre tudo.
