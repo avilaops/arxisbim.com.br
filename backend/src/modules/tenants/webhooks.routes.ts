@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 import {
   getWebhooksHandler,
   createWebhookHandler,
@@ -8,9 +9,10 @@ import {
 } from './webhooks.controller.js';
 
 export async function webhooksRoutes(fastify: FastifyInstance) {
-  fastify.get('/webhooks', getWebhooksHandler);
-  fastify.post('/webhooks', createWebhookHandler);
-  fastify.get('/webhooks/:id', getWebhookHandler);
-  fastify.put('/webhooks/:id', updateWebhookHandler);
-  fastify.delete('/webhooks/:id', deleteWebhookHandler);
+  const auth = { preHandler: authenticateRequest };
+  fastify.get('/webhooks', auth, getWebhooksHandler);
+  fastify.post('/webhooks', auth, createWebhookHandler);
+  fastify.get('/webhooks/:id', auth, getWebhookHandler);
+  fastify.put('/webhooks/:id', auth, updateWebhookHandler);
+  fastify.delete('/webhooks/:id', auth, deleteWebhookHandler);
 }

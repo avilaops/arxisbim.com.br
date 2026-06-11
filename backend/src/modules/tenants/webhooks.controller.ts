@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { webhookSubscriptions } from '../../shared/database/schema/tenants.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
@@ -14,10 +14,7 @@ function getDb() {
 
 export async function getWebhooksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { tenantId } = (request.query as any);
-    if (!tenantId) {
-      return reply.code(400).send({ error: 'tenantId é obrigatório' });
-    }
+    const { tenantId } = request.user as any;
     const db = getDb();
     const result = await db.select().from(webhookSubscriptions).where(eq(webhookSubscriptions.tenantId, tenantId));
     reply.send(result);
@@ -28,13 +25,14 @@ export async function getWebhooksHandler(request: FastifyRequest, reply: Fastify
 
 export async function createWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
     const body = request.body as any;
-    if (!body || !body.tenantId || !body.companyId || !body.eventType || !body.url) {
-      return reply.code(400).send({ error: 'tenantId, companyId, eventType e url são obrigatórios' });
+    if (!body || !body.companyId || !body.eventType || !body.url) {
+      return reply.code(400).send({ error: 'companyId, eventType e url são obrigatórios' });
     }
     const [created] = await db.insert(webhookSubscriptions).values({
-      tenantId: body.tenantId,
+      tenantId,
       companyId: body.companyId,
       eventType: body.eventType,
       url: body.url,
@@ -49,12 +47,15 @@ export async function createWebhookHandler(request: FastifyRequest, reply: Fasti
 
 export async function getWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
     }
-    const [webhook] = await db.select().from(webhookSubscriptions).where(eq(webhookSubscriptions.id, id)).limit(1);
+    const [webhook] = await db.select().from(webhookSubscriptions).where(
+      and(eq(webhookSubscriptions.id, id), eq(webhookSubscriptions.tenantId, tenantId))
+    ).limit(1);
     if (!webhook) {
       return reply.code(404).send({ error: 'Webhook não encontrado' });
     }
@@ -66,8 +67,9 @@ export async function getWebhookHandler(request: FastifyRequest, reply: FastifyR
 
 export async function updateWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     const body = request.body as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
@@ -79,7 +81,7 @@ export async function updateWebhookHandler(request: FastifyRequest, reply: Fasti
         secret: body.secret,
         isActive: body.isActive,
       })
-      .where(eq(webhookSubscriptions.id, id))
+      .where(and(eq(webhookSubscriptions.id, id), eq(webhookSubscriptions.tenantId, tenantId)))
       .returning();
     if (!updated) {
       return reply.code(404).send({ error: 'Webhook não encontrado' });
@@ -92,12 +94,15 @@ export async function updateWebhookHandler(request: FastifyRequest, reply: Fasti
 
 export async function deleteWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
     }
-    const deleted = await db.delete(webhookSubscriptions).where(eq(webhookSubscriptions.id, id)).returning();
+    const deleted = await db.delete(webhookSubscriptions).where(
+      and(eq(webhookSubscriptions.id, id), eq(webhookSubscriptions.tenantId, tenantId))
+    ).returning();
     if (!deleted.length) {
       return reply.code(404).send({ error: 'Webhook não encontrado' });
     }

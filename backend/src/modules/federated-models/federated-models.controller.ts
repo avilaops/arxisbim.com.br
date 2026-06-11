@@ -1,14 +1,20 @@
-
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { federatedModels } from '../../shared/database/schema/projects.js';
-import { eq } from 'drizzle-orm';
+import { federatedModels, projects } from '../../shared/database/schema/projects.js';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../../shared/database/db.js';
 
 export async function getFederatedModelsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const { projectId } = request.params as { projectId: string };
     if (!projectId) {
       return reply.code(400).send({ error: 'projectId é obrigatório' });
+    }
+    const [project] = await db.select({ id: projects.id }).from(projects).where(
+      and(eq(projects.id, projectId), eq(projects.tenantId, tenantId))
+    ).limit(1);
+    if (!project) {
+      return reply.code(404).send({ error: 'Projeto não encontrado' });
     }
     const result = await db.select().from(federatedModels).where(eq(federatedModels.projectId, projectId));
     reply.send(result);
@@ -20,6 +26,7 @@ export async function getFederatedModelsHandler(request: FastifyRequest, reply: 
 
 export async function createFederatedModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const { projectId } = request.params as { projectId: string };
     const body = request.body as {
       name: string;
@@ -37,6 +44,12 @@ export async function createFederatedModelHandler(request: FastifyRequest, reply
     if (!body || !body.name) {
       return reply.code(400).send({ error: 'name é obrigatório' });
     }
+    const [project] = await db.select({ id: projects.id }).from(projects).where(
+      and(eq(projects.id, projectId), eq(projects.tenantId, tenantId))
+    ).limit(1);
+    if (!project) {
+      return reply.code(404).send({ error: 'Projeto não encontrado' });
+    }
     const [created] = await db.insert(federatedModels).values({
       projectId,
       name: body.name,
@@ -52,15 +65,19 @@ export async function createFederatedModelHandler(request: FastifyRequest, reply
 
 export async function getFederatedModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { projectId, federatedModelId } = request.params as { projectId: string; federatedModelId: string };
+    const { tenantId } = request.user as any;
+    const { federatedModelId } = request.params as { projectId: string; federatedModelId: string };
     if (!federatedModelId) {
       return reply.code(400).send({ error: 'federatedModelId é obrigatório' });
     }
-    const [model] = await db.select().from(federatedModels).where(eq(federatedModels.id, federatedModelId)).limit(1);
-    if (!model) {
+    const rows = await db.select({ fm: federatedModels }).from(federatedModels)
+      .innerJoin(projects, eq(federatedModels.projectId, projects.id))
+      .where(and(eq(federatedModels.id, federatedModelId), eq(projects.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
       return reply.code(404).send({ error: 'Federated model não encontrado' });
     }
-    reply.send(model);
+    reply.send(rows[0].fm);
   } catch (error) {
     const err = error as Error;
     reply.code(500).send({ error: 'Erro ao buscar federated model', message: err.message });
@@ -69,7 +86,8 @@ export async function getFederatedModelHandler(request: FastifyRequest, reply: F
 
 export async function updateFederatedModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { projectId, federatedModelId } = request.params as { projectId: string; federatedModelId: string };
+    const { tenantId } = request.user as any;
+    const { federatedModelId } = request.params as { projectId: string; federatedModelId: string };
     const body = request.body as {
       name?: string;
       description?: string;
@@ -86,6 +104,13 @@ export async function updateFederatedModelHandler(request: FastifyRequest, reply
     if (!federatedModelId) {
       return reply.code(400).send({ error: 'federatedModelId é obrigatório' });
     }
+    const rows = await db.select({ id: federatedModels.id }).from(federatedModels)
+      .innerJoin(projects, eq(federatedModels.projectId, projects.id))
+      .where(and(eq(federatedModels.id, federatedModelId), eq(projects.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
+      return reply.code(404).send({ error: 'Federated model não encontrado' });
+    }
     const [updated] = await db.update(federatedModels)
       .set({
         ...(body.name && { name: body.name }),
@@ -95,9 +120,6 @@ export async function updateFederatedModelHandler(request: FastifyRequest, reply
       })
       .where(eq(federatedModels.id, federatedModelId))
       .returning();
-    if (!updated) {
-      return reply.code(404).send({ error: 'Federated model não encontrado' });
-    }
     reply.send(updated);
   } catch (error) {
     const err = error as Error;
@@ -107,14 +129,19 @@ export async function updateFederatedModelHandler(request: FastifyRequest, reply
 
 export async function deleteFederatedModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { projectId, federatedModelId } = request.params as { projectId: string; federatedModelId: string };
+    const { tenantId } = request.user as any;
+    const { federatedModelId } = request.params as { projectId: string; federatedModelId: string };
     if (!federatedModelId) {
       return reply.code(400).send({ error: 'federatedModelId é obrigatório' });
     }
-    const deleted = await db.delete(federatedModels).where(eq(federatedModels.id, federatedModelId)).returning();
-    if (!deleted.length) {
+    const rows = await db.select({ id: federatedModels.id }).from(federatedModels)
+      .innerJoin(projects, eq(federatedModels.projectId, projects.id))
+      .where(and(eq(federatedModels.id, federatedModelId), eq(projects.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
       return reply.code(404).send({ error: 'Federated model não encontrado' });
     }
+    await db.delete(federatedModels).where(eq(federatedModels.id, federatedModelId));
     reply.code(204).send();
   } catch (error) {
     const err = error as Error;

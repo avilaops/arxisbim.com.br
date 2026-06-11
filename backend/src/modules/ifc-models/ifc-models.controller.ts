@@ -1,10 +1,9 @@
-
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ifcModels } from '../../shared/database/schema/projects.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-// Função utilitária para obter conexão com o banco
+
 function getDb() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL not configured');
@@ -16,11 +15,14 @@ function getDb() {
 export async function getIfcModelsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { projectId } = (request.query as any);
+    const { tenantId } = request.user as any;
+    const { projectId } = request.params as any;
     if (!projectId) {
       return reply.code(400).send({ error: 'projectId é obrigatório' });
     }
-    const result = await db.select().from(ifcModels).where(eq(ifcModels.projectId, projectId));
+    const result = await db.select().from(ifcModels).where(
+      and(eq(ifcModels.projectId, projectId), eq(ifcModels.tenantId, tenantId))
+    );
     reply.send(result);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao listar IFC models', details: String(error) });
@@ -30,13 +32,14 @@ export async function getIfcModelsHandler(request: FastifyRequest, reply: Fastif
 export async function createIfcModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
+    const { tenantId } = request.user as any;
     const body = request.body as any;
-    if (!body || !body.projectId || !body.tenantId || !body.name || !body.originalName || !body.fileUrl) {
-      return reply.code(400).send({ error: 'projectId, tenantId, name, originalName e fileUrl são obrigatórios' });
+    if (!body || !body.projectId || !body.name || !body.originalName || !body.fileUrl) {
+      return reply.code(400).send({ error: 'projectId, name, originalName e fileUrl são obrigatórios' });
     }
     const [created] = await db.insert(ifcModels).values({
       projectId: body.projectId,
-      tenantId: body.tenantId,
+      tenantId,
       name: body.name,
       originalName: body.originalName,
       fileUrl: body.fileUrl,
@@ -57,11 +60,14 @@ export async function createIfcModelHandler(request: FastifyRequest, reply: Fast
 export async function getIfcModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { tenantId } = request.user as any;
+    const { modelId } = request.params as any;
+    if (!modelId) {
+      return reply.code(400).send({ error: 'modelId é obrigatório' });
     }
-    const [model] = await db.select().from(ifcModels).where(eq(ifcModels.id, id)).limit(1);
+    const [model] = await db.select().from(ifcModels).where(
+      and(eq(ifcModels.id, modelId), eq(ifcModels.tenantId, tenantId))
+    ).limit(1);
     if (!model) {
       return reply.code(404).send({ error: 'IFC model não encontrado' });
     }
@@ -74,10 +80,11 @@ export async function getIfcModelHandler(request: FastifyRequest, reply: Fastify
 export async function updateIfcModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
+    const { tenantId } = request.user as any;
+    const { modelId } = request.params as any;
     const body = request.body as any;
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    if (!modelId) {
+      return reply.code(400).send({ error: 'modelId é obrigatório' });
     }
     const [updated] = await db.update(ifcModels)
       .set({
@@ -93,7 +100,7 @@ export async function updateIfcModelHandler(request: FastifyRequest, reply: Fast
         metadata: body.metadata,
         updatedAt: new Date(),
       })
-      .where(eq(ifcModels.id, id))
+      .where(and(eq(ifcModels.id, modelId), eq(ifcModels.tenantId, tenantId)))
       .returning();
     if (!updated) {
       return reply.code(404).send({ error: 'IFC model não encontrado' });
@@ -107,11 +114,14 @@ export async function updateIfcModelHandler(request: FastifyRequest, reply: Fast
 export async function deleteIfcModelHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { tenantId } = request.user as any;
+    const { modelId } = request.params as any;
+    if (!modelId) {
+      return reply.code(400).send({ error: 'modelId é obrigatório' });
     }
-    const deleted = await db.delete(ifcModels).where(eq(ifcModels.id, id)).returning();
+    const deleted = await db.delete(ifcModels).where(
+      and(eq(ifcModels.id, modelId), eq(ifcModels.tenantId, tenantId))
+    ).returning();
     if (!deleted.length) {
       return reply.code(404).send({ error: 'IFC model não encontrado' });
     }

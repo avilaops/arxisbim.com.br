@@ -4,12 +4,22 @@ import { taskElementLinks, timelineSimulations } from '../../shared/database/sch
 import { projects } from '../../shared/database/schema/projects.js';
 import { db } from '../../shared/database/db.js';
 import { eq, desc, and } from 'drizzle-orm';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 
 export async function schedulingRoutes(fastify: FastifyInstance) {
+  const auth = { preHandler: authenticateRequest };
+
   // Get schedules for a project
-  fastify.get('/projects/:projectId/schedules', async (request, reply) => {
+  fastify.get('/projects/:projectId/schedules', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { projectId } = request.params as { projectId: string };
     try {
+      const [project] = await db.select({ id: projects.id }).from(projects).where(
+        and(eq(projects.id, projectId), eq(projects.tenantId, tenantId))
+      ).limit(1);
+      if (!project) {
+        return reply.status(404).send({ error: 'Project not found' });
+      }
       const schedules = await db.select().from(bimSchedules).where(eq(bimSchedules.projectId, projectId)).orderBy(desc(bimSchedules.createdAt));
       return reply.send(schedules);
     } catch (error) {
@@ -19,14 +29,18 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Get schedule by ID
-  fastify.get('/schedules/:scheduleId', async (request, reply) => {
+  fastify.get('/schedules/:scheduleId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     try {
-      const schedule = await db.select().from(bimSchedules).where(eq(bimSchedules.id, scheduleId)).limit(1);
-      if (!schedule || schedule.length === 0) {
+      const rows = await db.select({ s: bimSchedules }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
         return reply.status(404).send({ error: 'Schedule not found' });
       }
-      return reply.send(schedule[0]);
+      return reply.send(rows[0].s);
     } catch (error) {
       fastify.log.error(error);
       return reply.status(500).send({ error: 'Failed to fetch schedule' });
@@ -34,7 +48,8 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Create schedule
-  fastify.post('/projects/:projectId/schedules', async (request, reply) => {
+  fastify.post('/projects/:projectId/schedules', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { projectId } = request.params as { projectId: string };
     const body = request.body as {
       name: string;
@@ -43,14 +58,13 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
       endDate: string;
       createdBy: string;
     };
-
     try {
-      // Verify project exists
-      const project = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
-      if (!project || project.length === 0) {
+      const [project] = await db.select({ id: projects.id }).from(projects).where(
+        and(eq(projects.id, projectId), eq(projects.tenantId, tenantId))
+      ).limit(1);
+      if (!project) {
         return reply.status(404).send({ error: 'Project not found' });
       }
-
       const [newSchedule] = await db.insert(bimSchedules).values({
         projectId,
         name: body.name,
@@ -59,7 +73,6 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
         endDate: body.endDate,
         createdBy: body.createdBy,
       }).returning();
-
       return reply.status(201).send(newSchedule);
     } catch (error) {
       fastify.log.error(error);
@@ -68,7 +81,8 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Update schedule
-  fastify.put('/schedules/:scheduleId', async (request, reply) => {
+  fastify.put('/schedules/:scheduleId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     const body = request.body as {
       name?: string;
@@ -76,8 +90,14 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
       startDate?: string;
       endDate?: string;
     };
-
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
       const [updatedSchedule] = await db.update(bimSchedules)
         .set({
           ...(body.name && { name: body.name }),
@@ -88,11 +108,6 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
         })
         .where(eq(bimSchedules.id, scheduleId))
         .returning();
-
-      if (!updatedSchedule) {
-        return reply.status(404).send({ error: 'Schedule not found' });
-      }
-
       return reply.send(updatedSchedule);
     } catch (error) {
       fastify.log.error(error);
@@ -101,13 +116,18 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Delete schedule
-  fastify.delete('/schedules/:scheduleId', async (request, reply) => {
+  fastify.delete('/schedules/:scheduleId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     try {
-      const [deletedSchedule] = await db.delete(bimSchedules).where(eq(bimSchedules.id, scheduleId)).returning();
-      if (!deletedSchedule) {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
         return reply.status(404).send({ error: 'Schedule not found' });
       }
+      await db.delete(bimSchedules).where(eq(bimSchedules.id, scheduleId));
       return reply.send({ message: 'Schedule deleted successfully' });
     } catch (error) {
       fastify.log.error(error);
@@ -116,9 +136,17 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Get tasks for a schedule
-  fastify.get('/schedules/:scheduleId/tasks', async (request, reply) => {
+  fastify.get('/schedules/:scheduleId/tasks', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
       const tasks = await db.select().from(scheduleTasks).where(eq(scheduleTasks.scheduleId, scheduleId)).orderBy(scheduleTasks.startDate);
       return reply.send(tasks);
     } catch (error) {
@@ -128,7 +156,8 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Create task
-  fastify.post('/schedules/:scheduleId/tasks', async (request, reply) => {
+  fastify.post('/schedules/:scheduleId/tasks', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     const body = request.body as {
       taskName: string;
@@ -138,8 +167,14 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
       dependencies?: string[];
       isCriticalPath?: boolean;
     };
-
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
       const [newTask] = await db.insert(scheduleTasks).values({
         scheduleId,
         taskName: body.taskName,
@@ -149,7 +184,6 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
         dependencies: body.dependencies,
         isCriticalPath: body.isCriticalPath || false,
       }).returning();
-
       return reply.status(201).send(newTask);
     } catch (error) {
       fastify.log.error(error);
@@ -158,7 +192,8 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Update task
-  fastify.put('/tasks/:taskId', async (request, reply) => {
+  fastify.put('/tasks/:taskId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
     const body = request.body as {
       taskName?: string;
@@ -168,8 +203,16 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
       dependencies?: string[];
       isCriticalPath?: boolean;
     };
-
     try {
+      // Verify ownership via schedule → project chain
+      const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
+        .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(scheduleTasks.id, taskId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Task not found' });
+      }
       const [updatedTask] = await db.update(scheduleTasks)
         .set({
           ...(body.taskName && { taskName: body.taskName }),
@@ -181,11 +224,6 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
         })
         .where(eq(scheduleTasks.id, taskId))
         .returning();
-
-      if (!updatedTask) {
-        return reply.status(404).send({ error: 'Task not found' });
-      }
-
       return reply.send(updatedTask);
     } catch (error) {
       fastify.log.error(error);
@@ -194,13 +232,19 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Delete task
-  fastify.delete('/tasks/:taskId', async (request, reply) => {
+  fastify.delete('/tasks/:taskId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
     try {
-      const [deletedTask] = await db.delete(scheduleTasks).where(eq(scheduleTasks.id, taskId)).returning();
-      if (!deletedTask) {
+      const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
+        .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(scheduleTasks.id, taskId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
         return reply.status(404).send({ error: 'Task not found' });
       }
+      await db.delete(scheduleTasks).where(eq(scheduleTasks.id, taskId));
       return reply.send({ message: 'Task deleted successfully' });
     } catch (error) {
       fastify.log.error(error);
@@ -209,9 +253,18 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Get element links for a task
-  fastify.get('/tasks/:taskId/elements', async (request, reply) => {
+  fastify.get('/tasks/:taskId/elements', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
     try {
+      const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
+        .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(scheduleTasks.id, taskId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Task not found' });
+      }
       const links = await db.select().from(taskElementLinks).where(eq(taskElementLinks.taskId, taskId));
       return reply.send(links);
     } catch (error) {
@@ -221,20 +274,27 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Link element to task
-  fastify.post('/tasks/:taskId/elements', async (request, reply) => {
+  fastify.post('/tasks/:taskId/elements', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
     const body = request.body as {
       elementId: string;
       action?: string;
     };
-
     try {
+      const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
+        .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(scheduleTasks.id, taskId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Task not found' });
+      }
       const [newLink] = await db.insert(taskElementLinks).values({
         taskId,
         elementId: body.elementId,
         ...(body.action && { action: body.action })
       }).returning();
-
       return reply.status(201).send(newLink);
     } catch (error) {
       fastify.log.error(error);
@@ -243,9 +303,18 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Unlink element from task
-  fastify.delete('/tasks/:taskId/elements/:elementId', async (request, reply) => {
+  fastify.delete('/tasks/:taskId/elements/:elementId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { taskId, elementId } = request.params as { taskId: string; elementId: string };
     try {
+      const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
+        .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(scheduleTasks.id, taskId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Task not found' });
+      }
       const [deletedLink] = await db.delete(taskElementLinks)
         .where(and(eq(taskElementLinks.taskId, taskId), eq(taskElementLinks.elementId, elementId)))
         .returning();
@@ -260,9 +329,17 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Get simulations for a schedule
-  fastify.get('/schedules/:scheduleId/simulations', async (request, reply) => {
+  fastify.get('/schedules/:scheduleId/simulations', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
       const simulations = await db.select().from(timelineSimulations)
         .where(eq(timelineSimulations.scheduleId, scheduleId))
         .orderBy(desc(timelineSimulations.createdAt));
@@ -274,22 +351,28 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Create simulation
-  fastify.post('/schedules/:scheduleId/simulations', async (request, reply) => {
+  fastify.post('/schedules/:scheduleId/simulations', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     const body = request.body as {
       name?: string;
       simulationDate?: string;
       snapshot?: Record<string, any>;
     };
-
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
       const [newSimulation] = await db.insert(timelineSimulations).values({
         scheduleId,
         name: body.name,
         simulationDate: body.simulationDate ? new Date(body.simulationDate) : undefined,
         snapshot: body.snapshot,
       }).returning();
-
       return reply.status(201).send(newSimulation);
     } catch (error) {
       fastify.log.error(error);
@@ -298,9 +381,17 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   });
 
   // Delete simulation
-  fastify.delete('/simulations/:scheduleId', async (request, reply) => {
+  fastify.delete('/simulations/:scheduleId', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
     try {
+      const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
+        .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
+        .where(and(eq(bimSchedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Simulation not found' });
+      }
       const [deletedSimulation] = await db.delete(timelineSimulations)
         .where(eq(timelineSimulations.scheduleId, scheduleId)).returning();
       if (!deletedSimulation) {

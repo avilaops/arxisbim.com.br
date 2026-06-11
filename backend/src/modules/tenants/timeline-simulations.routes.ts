@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 import {
   getTimelineSimulationsHandler,
   createTimelineSimulationHandler,
@@ -8,9 +9,10 @@ import {
 } from './timeline-simulations.controller.js';
 
 export async function timelineSimulationsRoutes(fastify: FastifyInstance) {
-  fastify.get('/timeline-simulations', getTimelineSimulationsHandler);
-  fastify.post('/timeline-simulations', createTimelineSimulationHandler);
-  fastify.get('/timeline-simulations/:id', getTimelineSimulationHandler);
-  fastify.put('/timeline-simulations/:id', updateTimelineSimulationHandler);
-  fastify.delete('/timeline-simulations/:id', deleteTimelineSimulationHandler);
+  const auth = { preHandler: authenticateRequest };
+  fastify.get('/timeline-simulations', auth, getTimelineSimulationsHandler);
+  fastify.post('/timeline-simulations', auth, createTimelineSimulationHandler);
+  fastify.get('/timeline-simulations/:id', auth, getTimelineSimulationHandler);
+  fastify.put('/timeline-simulations/:id', auth, updateTimelineSimulationHandler);
+  fastify.delete('/timeline-simulations/:id', auth, deleteTimelineSimulationHandler);
 }

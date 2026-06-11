@@ -1,10 +1,9 @@
-
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { scenarios } from '../../shared/database/schema/scenarios.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-// Função utilitária para obter conexão com o banco
+
 function getDb() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL not configured');
@@ -16,11 +15,14 @@ function getDb() {
 export async function getScenariosHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { projectId } = (request.query as any);
+    const { tenantId } = request.user as any;
+    const { projectId } = request.params as any;
     if (!projectId) {
       return reply.code(400).send({ error: 'projectId é obrigatório' });
     }
-    const result = await db.select().from(scenarios).where(eq(scenarios.projectId, projectId));
+    const result = await db.select().from(scenarios).where(
+      and(eq(scenarios.projectId, projectId), eq(scenarios.tenantId, tenantId))
+    );
     reply.send(result);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao listar scenarios', details: String(error) });
@@ -30,12 +32,13 @@ export async function getScenariosHandler(request: FastifyRequest, reply: Fastif
 export async function createScenarioHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
+    const { tenantId } = request.user as any;
     const body = request.body as any;
-    if (!body || !body.tenantId || !body.projectId || !body.name || !body.camera || !body.player || !body.config) {
-      return reply.code(400).send({ error: 'tenantId, projectId, name, camera, player e config são obrigatórios' });
+    if (!body || !body.projectId || !body.name || !body.camera || !body.player || !body.config) {
+      return reply.code(400).send({ error: 'projectId, name, camera, player e config são obrigatórios' });
     }
     const [created] = await db.insert(scenarios).values({
-      tenantId: body.tenantId,
+      tenantId,
       projectId: body.projectId,
       createdBy: body.createdBy,
       name: body.name,
@@ -55,11 +58,14 @@ export async function createScenarioHandler(request: FastifyRequest, reply: Fast
 export async function getScenarioHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { tenantId } = request.user as any;
+    const { scenarioId } = request.params as any;
+    if (!scenarioId) {
+      return reply.code(400).send({ error: 'scenarioId é obrigatório' });
     }
-    const [scenario] = await db.select().from(scenarios).where(eq(scenarios.id, id)).limit(1);
+    const [scenario] = await db.select().from(scenarios).where(
+      and(eq(scenarios.id, scenarioId), eq(scenarios.tenantId, tenantId))
+    ).limit(1);
     if (!scenario) {
       return reply.code(404).send({ error: 'Scenario não encontrado' });
     }
@@ -72,10 +78,11 @@ export async function getScenarioHandler(request: FastifyRequest, reply: Fastify
 export async function updateScenarioHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
+    const { tenantId } = request.user as any;
+    const { scenarioId } = request.params as any;
     const body = request.body as any;
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    if (!scenarioId) {
+      return reply.code(400).send({ error: 'scenarioId é obrigatório' });
     }
     const [updated] = await db.update(scenarios)
       .set({
@@ -88,7 +95,7 @@ export async function updateScenarioHandler(request: FastifyRequest, reply: Fast
         metadata: body.metadata,
         updatedAt: new Date(),
       })
-      .where(eq(scenarios.id, id))
+      .where(and(eq(scenarios.id, scenarioId), eq(scenarios.tenantId, tenantId)))
       .returning();
     if (!updated) {
       return reply.code(404).send({ error: 'Scenario não encontrado' });
@@ -102,11 +109,14 @@ export async function updateScenarioHandler(request: FastifyRequest, reply: Fast
 export async function deleteScenarioHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { id } = (request.params as any);
-    if (!id) {
-      return reply.code(400).send({ error: 'id é obrigatório' });
+    const { tenantId } = request.user as any;
+    const { scenarioId } = request.params as any;
+    if (!scenarioId) {
+      return reply.code(400).send({ error: 'scenarioId é obrigatório' });
     }
-    const deleted = await db.delete(scenarios).where(eq(scenarios.id, id)).returning();
+    const deleted = await db.delete(scenarios).where(
+      and(eq(scenarios.id, scenarioId), eq(scenarios.tenantId, tenantId))
+    ).returning();
     if (!deleted.length) {
       return reply.code(404).send({ error: 'Scenario não encontrado' });
     }

@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { modelElements } from '../../shared/database/schema/projects.js';
-import { eq } from 'drizzle-orm';
+import { modelElements, ifcModels } from '../../shared/database/schema/projects.js';
+import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
@@ -9,16 +9,24 @@ function getDb() {
     throw new Error('DATABASE_URL not configured');
   }
   const client = postgres(process.env.DATABASE_URL);
-  return drizzle(client, { schema: { modelElements } });
+  return drizzle(client, { schema: { modelElements, ifcModels } });
 }
 
 export async function getModelElementsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { ifcModelId } = (request.query as any);
+    const { tenantId } = request.user as any;
+    const { ifcModelId } = request.query as any;
     if (!ifcModelId) {
       return reply.code(400).send({ error: 'ifcModelId é obrigatório' });
     }
     const db = getDb();
+    // Verify the ifcModel belongs to the tenant
+    const [model] = await db.select({ id: ifcModels.id }).from(ifcModels).where(
+      and(eq(ifcModels.id, ifcModelId), eq(ifcModels.tenantId, tenantId))
+    ).limit(1);
+    if (!model) {
+      return reply.code(404).send({ error: 'IFC model não encontrado' });
+    }
     const result = await db.select().from(modelElements).where(eq(modelElements.ifcModelId, ifcModelId));
     reply.send(result);
   } catch (error) {
@@ -28,16 +36,20 @@ export async function getModelElementsHandler(request: FastifyRequest, reply: Fa
 
 export async function getModelElementHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
     }
-    const [element] = await db.select().from(modelElements).where(eq(modelElements.id, id)).limit(1);
-    if (!element) {
+    const rows = await db.select({ el: modelElements }).from(modelElements)
+      .innerJoin(ifcModels, eq(modelElements.ifcModelId, ifcModels.id))
+      .where(and(eq(modelElements.id, id), eq(ifcModels.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
       return reply.code(404).send({ error: 'Elemento não encontrado' });
     }
-    reply.send(element);
+    reply.send(rows[0].el);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao buscar elemento', details: String(error) });
   }
@@ -45,10 +57,17 @@ export async function getModelElementHandler(request: FastifyRequest, reply: Fas
 
 export async function createModelElementHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
     const body = request.body as any;
     if (!body || !body.ifcModelId || !body.expressId || !body.type) {
       return reply.code(400).send({ error: 'ifcModelId, expressId e type são obrigatórios' });
+    }
+    const [model] = await db.select({ id: ifcModels.id }).from(ifcModels).where(
+      and(eq(ifcModels.id, body.ifcModelId), eq(ifcModels.tenantId, tenantId))
+    ).limit(1);
+    if (!model) {
+      return reply.code(404).send({ error: 'IFC model não encontrado' });
     }
     const [created] = await db.insert(modelElements).values({
       ifcModelId: body.ifcModelId,
@@ -67,11 +86,19 @@ export async function createModelElementHandler(request: FastifyRequest, reply: 
 
 export async function updateModelElementHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     const body = request.body as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
+    }
+    const rows = await db.select({ id: modelElements.id }).from(modelElements)
+      .innerJoin(ifcModels, eq(modelElements.ifcModelId, ifcModels.id))
+      .where(and(eq(modelElements.id, id), eq(ifcModels.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
+      return reply.code(404).send({ error: 'Elemento não encontrado' });
     }
     const [updated] = await db.update(modelElements)
       .set({
@@ -82,9 +109,6 @@ export async function updateModelElementHandler(request: FastifyRequest, reply: 
       })
       .where(eq(modelElements.id, id))
       .returning();
-    if (!updated) {
-      return reply.code(404).send({ error: 'Elemento não encontrado' });
-    }
     reply.send(updated);
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao atualizar elemento', details: String(error) });
@@ -93,15 +117,20 @@ export async function updateModelElementHandler(request: FastifyRequest, reply: 
 
 export async function deleteModelElementHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
+    const { tenantId } = request.user as any;
     const db = getDb();
-    const { id } = (request.params as any);
+    const { id } = request.params as any;
     if (!id) {
       return reply.code(400).send({ error: 'id é obrigatório' });
     }
-    const deleted = await db.delete(modelElements).where(eq(modelElements.id, id)).returning();
-    if (!deleted.length) {
+    const rows = await db.select({ id: modelElements.id }).from(modelElements)
+      .innerJoin(ifcModels, eq(modelElements.ifcModelId, ifcModels.id))
+      .where(and(eq(modelElements.id, id), eq(ifcModels.tenantId, tenantId)))
+      .limit(1);
+    if (!rows.length) {
       return reply.code(404).send({ error: 'Elemento não encontrado' });
     }
+    await db.delete(modelElements).where(eq(modelElements.id, id));
     reply.code(204).send();
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao deletar elemento', details: String(error) });
