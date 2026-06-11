@@ -1,11 +1,23 @@
-import { FastifyInstance } from 'fastify';
-import { tenants, companies, users } from '../../shared/database/schema/tenants.js';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { tenants, users } from '../../shared/database/schema/tenants.js';
 import { db } from '../../shared/database/db.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
+import { authenticateRequest } from '../../core/auth/middleware.js';
+import { isSuperAdmin } from '../../core/admin/super-admin.middleware.js';
+
+async function adminGate(request: FastifyRequest, reply: FastifyReply) {
+  const user = (request as any).user as { role?: string; email?: string; permissions?: string[] } | undefined;
+  if (!user) return reply.code(401).send({ error: 'Não autenticado.' });
+  const ok = user.role === 'admin' || user.permissions?.includes('admin') || isSuperAdmin(user.email);
+  if (!ok) return reply.code(403).send({ error: 'Acesso restrito a administradores.' });
+}
 
 export async function tenantRoutes(fastify: FastifyInstance) {
-  // Get all tenants (admin only)
-  fastify.get('/tenants', async (request, reply) => {
+  const admin = { preHandler: [authenticateRequest, adminGate] };
+  const auth = { preHandler: authenticateRequest };
+
+  // Admin: list all tenants
+  fastify.get('/tenants', admin, async (_request, reply) => {
     try {
       const allTenants = await db.select().from(tenants).orderBy(desc(tenants.createdAt));
       return reply.send(allTenants);
@@ -15,23 +27,29 @@ export async function tenantRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get tenant by ID
-  fastify.get('/tenants/:tenantId', async (request, reply) => {
+  // Auth: get own tenant only
+  fastify.get('/tenants/:tenantId', auth, async (request, reply) => {
+    const { tenantId: userTenantId } = request.user as any;
     const { tenantId } = request.params as { tenantId: string };
+    const user = request.user as any;
+    const isAdmin = user.role === 'admin' || user.permissions?.includes('admin') || isSuperAdmin(user.email);
+    if (!isAdmin && userTenantId !== tenantId) {
+      return reply.status(403).send({ error: 'Acesso negado.' });
+    }
     try {
-      const tenant = await db.select().from(tenants).where(eq(tenants.tenantId, tenantId)).limit(1);
-      if (!tenant || tenant.length === 0) {
+      const [tenant] = await db.select().from(tenants).where(eq(tenants.tenantId, tenantId)).limit(1);
+      if (!tenant) {
         return reply.status(404).send({ error: 'Tenant not found' });
       }
-      return reply.send(tenant[0]);
+      return reply.send(tenant);
     } catch (error) {
       fastify.log.error(error);
       return reply.status(500).send({ error: 'Failed to fetch tenant' });
     }
   });
 
-  // Create tenant (admin only)
-  fastify.post('/tenants', async (request, reply) => {
+  // Admin: create tenant
+  fastify.post('/tenants', admin, async (request, reply) => {
     const body = request.body as {
       name: string;
       customDomain?: string;
@@ -43,9 +61,7 @@ export async function tenantRoutes(fastify: FastifyInstance) {
       const [newTenant] = await db.insert(tenants).values({
         tenantId,
         name: body.name,
-        branding: {
-          customDomain: body.customDomain,
-        },
+        branding: { customDomain: body.customDomain },
         subscription: {
           plan: 'free',
           maxProjects: body.maxProjects,
@@ -59,8 +75,8 @@ export async function tenantRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Update tenant
-  fastify.put('/tenants/:tenantId', async (request, reply) => {
+  // Admin: update tenant
+  fastify.put('/tenants/:tenantId', admin, async (request, reply) => {
     const { tenantId } = request.params as { tenantId: string };
     const body = request.body as {
       name?: string;
@@ -75,13 +91,13 @@ export async function tenantRoutes(fastify: FastifyInstance) {
           ...(body.customDomain !== undefined && {
             branding: { customDomain: body.customDomain }
           }),
-          ...(body.maxProjects !== undefined || body.federationEnabled !== undefined) && {
+          ...((body.maxProjects !== undefined || body.federationEnabled !== undefined) && {
             subscription: {
               plan: 'free',
               maxProjects: body.maxProjects,
               federationEnabled: body.federationEnabled,
             }
-          },
+          }),
           updatedAt: new Date(),
         })
         .where(eq(tenants.tenantId, tenantId))
@@ -96,8 +112,8 @@ export async function tenantRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Delete tenant
-  fastify.delete('/tenants/:tenantId', async (request, reply) => {
+  // Admin: delete tenant
+  fastify.delete('/tenants/:tenantId', admin, async (request, reply) => {
     const { tenantId } = request.params as { tenantId: string };
     try {
       const [deletedTenant] = await db.delete(tenants).where(eq(tenants.tenantId, tenantId)).returning();
@@ -111,9 +127,15 @@ export async function tenantRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get users for a tenant
-  fastify.get('/tenants/:tenantId/users', async (request, reply) => {
+  // Auth: list users of own tenant (admin sees any)
+  fastify.get('/tenants/:tenantId/users', auth, async (request, reply) => {
+    const { tenantId: userTenantId } = request.user as any;
     const { tenantId } = request.params as { tenantId: string };
+    const user = request.user as any;
+    const isAdmin = user.role === 'admin' || user.permissions?.includes('admin') || isSuperAdmin(user.email);
+    if (!isAdmin && userTenantId !== tenantId) {
+      return reply.status(403).send({ error: 'Acesso negado.' });
+    }
     try {
       const tenantUsers = await db.select().from(users).where(eq(users.tenantId, tenantId));
       return reply.send(tenantUsers);
