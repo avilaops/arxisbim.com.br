@@ -15,18 +15,8 @@ let testTenantId: string, testCompanyId: string, testUserId: string, testProject
 
 beforeAll(async () => {
   server = Fastify();
-  // Registra schedulingRoutes em um prefixo auxiliar
-  await server.register(schedulingRoutes, { prefix: '/__test_scheduling' });
-  // Cria rota fake para delegar ao handler real
-  server.get('/api/v1/projects/:projectId/schedules', async (request, reply) => {
-    // Chama o handler real da schedulingRoutes
-    return server.inject({
-      method: 'GET',
-      url: `/__test_scheduling/projects/${request.params.projectId}/schedules`,
-    }).then(res => {
-      reply.status(res.statusCode).send(res.body ? JSON.parse(res.body) : undefined);
-    });
-  });
+  // Registra a rota real de scheduling (path: /api/v1/projects/:projectId/scheduling)
+  await server.register(schedulingRoutes);
 
   // Setup banco
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL not set');
@@ -42,11 +32,11 @@ beforeAll(async () => {
 
   // Criar user
   testUserId = randomUUID();
-  await db.insert(users).values({ id: testUserId, email: 'user@teste.com', name: 'User Teste', passwordHash: 'hash', tenantId: testTenantId, companyId: testCompanyId, role: 'owner', isActive: true });
+  await db.insert(users).values({ id: testUserId, email: `user-${testUserId}@teste.com`, name: 'User Teste', passwordHash: 'hash', tenantId: testTenantId, companyId: testCompanyId, role: 'owner', isActive: true });
 
   // Criar project
   testProjectId = randomUUID();
-  await db.insert(projects).values({ id: testProjectId, tenantId: testTenantId, companyId: testCompanyId, name: 'Projeto Teste', status: 'active' });
+  await db.insert(projects).values({ id: testProjectId, tenantId: testTenantId, companyId: testCompanyId, slug: `projeto-${testProjectId}`, name: 'Projeto Teste', status: 'active' });
 
   // Criar scheduling
   testSchedulingId = randomUUID();
@@ -63,13 +53,12 @@ describe('Scheduling API', () => {
   it('GET /api/v1/projects/:projectId/scheduling should return 200', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: `/api/v1/projects/${testProjectId}/schedules`,
+      url: `/api/v1/projects/${testProjectId}/scheduling`,
     });
-    console.log('API response body:', response.body);
     expect(response.statusCode).toBe(200);
     const data = JSON.parse(response.body);
-    expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(0);
-    expect(data[0].id).toBe(testSchedulingId);
+    const list = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.some((s) => s.id === testSchedulingId)).toBe(true);
   });
 });

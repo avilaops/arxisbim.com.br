@@ -57,6 +57,7 @@ export const userSessions = pgTable('user_sessions', {
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   revokedAt: timestamp('revoked_at'),
+  revokeReason: varchar('revoke_reason', { length: 50 }),
 }, (table) => ({
   userIdIdx: index('user_sessions_user_id_idx').on(table.userId),
   tenantIdIdx: index('user_sessions_tenant_id_idx').on(table.tenantId),

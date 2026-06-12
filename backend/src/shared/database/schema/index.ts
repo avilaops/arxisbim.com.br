@@ -49,3 +49,6 @@ export * from './workspaces.js';
 
 // Analytics first-party (rastreamento próprio — landing + app)
 export * from './analytics.js';
+
+// File metadata (upload pipeline — S02)
+export * from './files.js';

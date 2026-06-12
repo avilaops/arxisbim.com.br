@@ -69,9 +69,11 @@ export async function projectRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: 'Company not found' });
       }
 
+      const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) + '-' + Date.now().toString(36);
       const [newProject] = await db.insert(projects).values({
         tenantId,
         companyId,
+        slug,
         name: body.name,
         description: body.description,
         location: body.location,

@@ -1,7 +1,7 @@
 # S04 · Billing e Planos
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** Em andamento (infraestrutura de limites entregue em 2026-06-11)  
 **Depende de:** S01 (tenant), S03 (limites por recurso)  
 **Bloqueia:** S05 (checkout no onboarding)
 
@@ -200,11 +200,11 @@ frontend/src/
 
 ## Critérios de aceite
 
+- [x] Limite atingido retorna `403` com payload `{ code, resource, limit, current }` (não 402)
+- [x] Criação de projeto bloqueada quando limite de projetos atingido
+- [x] Verificação de limite lê `tenant_usage`, não faz `COUNT` na hora
 - [ ] Checkout Stripe em test mode completa e webhook atualiza plano no banco
 - [ ] Produto consulta entitlements, nunca `plan` diretamente (sem `if (plan === ...)` em features)
-- [ ] Limite atingido retorna `403` com payload `{ code, resource, limit, current }` (não 402)
-- [ ] Criação de projeto bloqueada quando limite de projetos atingido
-- [ ] Verificação de limite lê `tenant_usage`, não faz `COUNT` na hora
 - [ ] Upgrade reflete novos limites imediatamente
 - [ ] Downgrade reflete novos limites imediatamente; dados existentes preservados
 - [ ] `subscription_status` distingue `trialing` de `active`
@@ -213,3 +213,22 @@ frontend/src/
 - [ ] Portal de billing abre sem re-login
 - [ ] Build e lint passam
 - [ ] Demo em até 5 minutos
+
+## Implementação (entregue 2026-06-11)
+
+### Arquivos criados:
+- `backend/migrations/036_tenant_usage_failed_webhooks.sql` — tabelas tenant_usage e failed_webhooks
+- `backend/src/core/billing/usage-tracker.ts` — helpers para incrementar contadores (projects, storage, users, scenarios)
+- `backend/tests/e2e/billing-limits.spec.ts` — testes de enforçamento de limites (3/3 ✓)
+
+### Arquivos modificados:
+- `backend/src/core/billing/plan-limits.ts` — statusCode 402→403, resposta estruturada {code, resource, limit, current}, lê tenant_usage em vez de COUNT
+- `backend/src/modules/billing/billing.service.ts` — inicializa tenant_usage em initializeTenantFreeTier()
+- `backend/src/modules/projects/projects.service.ts` — incrementa projects_count ao criar projeto
+- `backend/src/modules/projects/projects.controller.ts` — retorna payload estruturado em PlanLimitError
+- `backend/src/shared/database/schema/billing.ts` — adiciona tenantUsage e failedWebhooks
+
+### Testes (2026-06-11):
+- ✅ 11/11 S03 (projects-models) passam
+- ✅ 3/3 S04 (billing-limits) passam
+- ✅ 69/71 total passam

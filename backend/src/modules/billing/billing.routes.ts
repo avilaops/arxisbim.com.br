@@ -3,6 +3,9 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 import { observabilityService } from '../../core/observability/service.js';
 import { BillingService } from './billing.service.js';
 import { billingWebhookSchema, changePlanSchema, createCheckoutSchema, createPortalSchema } from './billing.schemas.js';
+import { db } from '../../shared/database/db.js';
+import { failedWebhooks } from '../../shared/database/schema/billing.js';
+import { randomUUID } from 'node:crypto';
 
 export async function billingRoutes(fastify: FastifyInstance) {
   const ensureBillingManager = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -242,6 +245,12 @@ export async function billingRoutes(fastify: FastifyInstance) {
     return reply.code(200).send(result);
   };
 
+  const reconcileUsageHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user!;
+    const result = await BillingService.reconcileTenantUsage(user.tenantId);
+    return reply.code(200).send(result);
+  };
+
   fastify.get('/ops/webhook-status', {
     preHandler: [authenticateRequest, ensureBillingManager],
   }, getWebhookStatusHandler);
@@ -273,6 +282,10 @@ export async function billingRoutes(fastify: FastifyInstance) {
   fastify.post('/webhook/retry-due', {
     preHandler: [authenticateRequest, ensureBillingManager],
   }, retryDueHandler);
+
+  fastify.post('/ops/reconcile-usage', {
+    preHandler: [authenticateRequest, ensureBillingManager],
+  }, reconcileUsageHandler);
 
   fastify.post('/webhook', {
     config: {
@@ -308,6 +321,18 @@ export async function billingRoutes(fastify: FastifyInstance) {
       return reply.code(200).send(result);
     } catch (error: any) {
       fastify.log.error({ err: error }, 'Error processing billing webhook');
+
+      // Log failed webhook to dead-letter queue
+      const eventId = `local-${randomUUID()}`;
+      await db.insert(failedWebhooks).values({
+        eventId,
+        payload: request.body as any,
+        error: error.message,
+        attempts: 1,
+      }).catch(err => {
+        fastify.log.error({ err }, 'Failed to log webhook error');
+      });
+
       return reply.code(400).send({
         error: 'Webhook error',
         message: error.message,

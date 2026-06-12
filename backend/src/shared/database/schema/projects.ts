@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, real, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, bigint, char, real, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { tenants, companies, users } from './tenants.js';
 
 // =====================================
@@ -7,7 +7,9 @@ import { tenants, companies, users } from './tenants.js';
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: varchar('tenant_id', { length: 255 }).notNull().references(() => tenants.tenantId, { onDelete: 'cascade' }),
-  companyId: varchar('company_id', { length: 255 }).notNull().references(() => companies.companyId, { onDelete: 'cascade' }),
+  companyId: varchar('company_id', { length: 255 }).references(() => companies.companyId, { onDelete: 'cascade' }),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  projectCode: varchar('project_code', { length: 100 }), // código de obra: PJ-2026-014
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   location: jsonb('location').$type<{
@@ -16,12 +18,54 @@ export const projects = pgTable('projects', {
     country?: string;
     coordinates?: { lat: number; lng: number };
   }>(),
-  status: varchar('status', { length: 50 }).default('active').notNull(), // 'active', 'archived', 'completed'
+  status: varchar('status', { length: 50 }).default('active').notNull(), // cache da versão ativa: empty/processing/ready/failed (legado: active/archived/completed)
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
 }, (table) => ({
   tenantIdIdx: index('projects_tenant_id_idx').on(table.tenantId),
   companyIdIdx: index('projects_company_id_idx').on(table.companyId),
+  tenantDeletedIdx: index('projects_tenant_deleted_idx').on(table.tenantId, table.deletedAt),
+}));
+
+// =====================================
+// MODELS (S03: Project 1→N Model)
+// =====================================
+export const models = pgTable('models', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  currentVersionId: uuid('current_version_id'), // FK circular → model_versions; setada após processamento
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => ({
+  projectIdIdx: index('models_project_id_idx').on(table.projectId),
+  projectDeletedIdx: index('models_project_deleted_idx').on(table.projectId, table.deletedAt),
+}));
+
+// =====================================
+// MODEL_VERSIONS (S03: Model 1→N Version)
+// =====================================
+export const modelVersions = pgTable('model_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  modelId: uuid('model_id').notNull().references(() => models.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('uploading'), // uploading/processing/ready/failed
+  storageKey: varchar('storage_key', { length: 500 }),
+  fileSize: bigint('file_size', { mode: 'number' }),
+  sha256: char('sha256', { length: 64 }),
+  metadata: jsonb('metadata').$type<{
+    ifc_schema?: string;
+    bounds?: { min: number[]; max: number[] };
+    element_count?: number;
+    units?: string;
+  }>(),
+  processedAt: timestamp('processed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  modelIdIdx: index('model_versions_model_id_idx').on(table.modelId),
+  statusIdx: index('model_versions_status_idx').on(table.status),
+  modelVersionUnique: uniqueIndex('model_versions_model_version_idx').on(table.modelId, table.version),
 }));
 
 // =====================================

@@ -4,17 +4,15 @@ import { randomBytes as cryptoRandomBytes } from 'crypto';
 import { AuthService, getLoginFailCount, recordIpFailure, isIpBlocked } from './auth.service.js';
 import { verifyTurnstileToken } from './turnstile.js';
 import { oauthService } from './oauth.service.js';
+import { authRateLimits } from './rate-limiter.js';
 
 // Safe error message — never expose DB queries or stack traces to clients.
 // Auth-domain errors (with a .code) keep their message; everything else → generic.
 function safeAuthError(error: unknown): string {
   if (error instanceof Error) {
     const e = error as any;
-    // Known auth domain error codes — safe to forward
     if (e.code && typeof e.code === 'string') return e.message;
-    // Drizzle wraps DB errors as "Failed query: SELECT ..." — never expose
     if (e.message?.startsWith('Failed query:')) return 'Internal server error';
-    // Short messages without SQL are likely safe (e.g. 'Conta inativa', 'Invalid credentials')
     if (e.message && e.message.length < 120 && !e.message.includes('SELECT') && !e.message.includes('INSERT')) {
       return e.message;
     }
@@ -22,41 +20,13 @@ function safeAuthError(error: unknown): string {
   return 'Internal server error';
 }
 
-// Middleware de rate limit por rota — cria um preHandler que conta por IP
-function createRateLimit(max: number, windowMs: number) {
-  const store = new Map<string, { count: number; resetAt: number }>();
-
-  return async function rateLimitMiddleware(request: FastifyRequest, reply: FastifyReply) {
-    const ip = (request.headers['cf-connecting-ip'] as string) ?? request.ip ?? 'unknown';
-    const now = Date.now();
-    const entry = store.get(ip);
-
-    if (!entry || now > entry.resetAt) {
-      store.set(ip, { count: 1, resetAt: now + windowMs });
-      return;
-    }
-
-    entry.count++;
-    if (entry.count > max) {
-      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
-      reply.header('Retry-After', retryAfter);
-      return reply.status(429).send({
-        statusCode: 429,
-        error: 'Too Many Requests',
-        message: `Rate limit exceeded. Try again in ${retryAfter}s.`,
-      });
-    }
-  };
-}
-
-// Limites específicos para cada rota de autenticação
-const loginRateLimit        = createRateLimit(10, 60_000);
-const registerRateLimit     = createRateLimit(5,  60_000);
-const forgotPasswordLimit   = createRateLimit(5,  60_000);
-const resetPasswordLimit    = createRateLimit(10, 60_000);
-const verifyEmailLimit      = createRateLimit(10, 60_000);
-const refreshLimit          = createRateLimit(20, 60_000);
-const changePasswordLimit   = createRateLimit(5,  60_000);
+const loginRateLimit        = authRateLimits.login;
+const registerRateLimit     = authRateLimits.register;
+const forgotPasswordLimit   = authRateLimits.forgotPassword;
+const resetPasswordLimit    = authRateLimits.resetPassword;
+const verifyEmailLimit      = authRateLimits.verifyEmail;
+const refreshLimit          = authRateLimits.refresh;
+const changePasswordLimit   = authRateLimits.changePassword;
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -220,6 +190,11 @@ export async function authRoutes(fastify: FastifyInstance) {
         const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
         await verifyTurnstileToken(body.turnstileToken ?? '', ip);
         const result = await authService.register(body);
+        // requiresEmailVerification on an existing (unverified) account = duplicate registration
+        // Return 409 to fail the request without revealing "email already registered"
+        if ((result as any).existingUnverified) {
+          return reply.status(409).send({ requiresEmailVerification: true, message: (result as any).message });
+        }
         return reply.status(201).send(result);
       } catch (error) {
         fastify.log.error(error);

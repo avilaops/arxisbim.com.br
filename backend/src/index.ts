@@ -15,7 +15,6 @@ import multipart from '@fastify/multipart';
 import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { authRoutes } from './core/auth/auth.routes.js';
 import { adminRoutes } from './core/admin/admin.routes.js';
@@ -37,6 +36,8 @@ import { collaborationRoutes } from './modules/collaboration/collaboration.route
 import { sessionsRoutes } from './modules/sessions/sessions.routes.js';
 import { observabilityRoutes } from './routes/v1/observability/observability.routes.js';
 import { storageRoutes } from './core/storage/storage.routes.js';
+import { filesRoutes } from './modules/files/files.routes.js';
+import { modelsRoutes } from './modules/models/models.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
@@ -53,6 +54,7 @@ import { authenticateRequest } from './core/auth/middleware.js';
 import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
 import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
+import { createUsageReconcileWorker } from './modules/billing/usage-reconcile.worker.js';
 import { observabilityService, logger } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
@@ -85,8 +87,6 @@ const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BI
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function runMigrations() {
   await sql`
@@ -212,8 +212,20 @@ const billingRetryWorker = createBillingRetryWorker({
   intervalMs: BILLING_RETRY_INTERVAL_MS,
   batchSize: BILLING_RETRY_BATCH_SIZE,
   logger: server.log,
-  processDueStripeRetries: (tenantId?: string, limit?: number) =>
-    BillingService.processDueStripeRetries(tenantId, limit),
+  // Single sweep drives three jobs: Stripe event retries, the local
+  // failed_webhooks dead-letter, and trial/subscription expiry. Counts are
+  // merged so worker health/stats reflect all of them.
+  processDueStripeRetries: async (tenantId?: string, limit?: number) => {
+    const stripeRetries = await BillingService.processDueStripeRetries(tenantId, limit);
+    const failedWebhooks = await BillingService.processFailedWebhooks(limit);
+    const trials = await BillingService.expireDueTrials();
+    const grace = await BillingService.expireGracePeriods();
+    return {
+      processed: stripeRetries.processed + failedWebhooks.processed + trials.expired + grace.expired,
+      succeeded: stripeRetries.succeeded + failedWebhooks.succeeded + trials.expired + grace.expired,
+      failed: stripeRetries.failed + failedWebhooks.failed,
+    };
+  },
   onSweepSuccess: async (result, context) => {
     await observabilityService.recordMetric('billing.retry_worker.sweeps.total', 1, {
       outcome: result.failed > 0 ? 'partial_failure' : 'success',
@@ -253,6 +265,12 @@ const emailQueueWorker = createEmailQueueWorker({
   intervalMs: 5 * 60 * 1000, // 5 min
   batchSize: 20,
   logger: server.log,
+});
+
+const usageReconcileWorker = createUsageReconcileWorker({
+  intervalMs: Math.max(60 * 60 * 1000, Number(process.env.BILLING_USAGE_RECONCILE_INTERVAL_MS || 24 * 60 * 60 * 1000)), // default 24h
+  logger: server.log,
+  reconcileAllUsage: (limit?: number) => BillingService.reconcileAllUsage(limit),
 });
 
 const authCleanupWorker = createAuthCleanupWorker({
@@ -555,6 +573,8 @@ await server.register(budgetsRoutes, { prefix: '/api/v1/budgets' });
 await server.register(observabilityRoutes, { prefix: '/api/v1/observability' });
 await server.register(scenarioRoutes, { prefix: '/api/v1' });
 await server.register(storageRoutes, { prefix: '/api/v1/storage' });
+await server.register(filesRoutes, { prefix: '/api/v1' });
+await server.register(modelsRoutes, { prefix: '/api/v1' });
 await server.register(clashDetectionRoutes, { prefix: '/api/v1/clash-detection' });
 await server.register(bimQueryRoutes);
 await server.register(glbExportRoutes);
@@ -572,6 +592,7 @@ signals.forEach((signal: NodeJS.Signals) => {
     
     try {
       billingRetryWorker.stop();
+      usageReconcileWorker.stop();
       authCleanupWorker.stop();
       emailQueueWorker.stop();
       await server.close();
@@ -608,6 +629,9 @@ try {
 
   // Initialize billing retry worker
   billingRetryWorker.start();
+
+  // Initialize usage reconcile worker (runs every 24h)
+  usageReconcileWorker.start();
 
   // Initialize auth cleanup worker (runs every 6h)
   authCleanupWorker.start();

@@ -9,3 +9,19 @@ const client = postgres(connectionString);
 
 // Create drizzle instance
 export const db = drizzle(client, { schema });
+
+/**
+ * Run a block inside a transaction with RLS tenant context set.
+ * Use this for any write operation that needs RLS enforcement.
+ * SELECT queries are already scoped by application-level WHERE clauses;
+ * RLS provides the DB-level safety net.
+ */
+export async function withTenant<T>(
+  tenantId: string,
+  fn: (tx: typeof db) => Promise<T>,
+): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(`SET LOCAL app.tenant_id = '${tenantId.replace(/'/g, "''")}'`);
+    return fn(tx as unknown as typeof db);
+  });
+}

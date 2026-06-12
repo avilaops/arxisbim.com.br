@@ -1,14 +1,16 @@
-import { and, desc, eq, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, lte, or, sql } from 'drizzle-orm';
 import { db } from '../../shared/database/index.js';
 import {
   billingCheckoutSessions,
   billingInvoices,
   billingPayments,
   billingSubscriptions,
+  failedWebhooks,
   ifcModels,
   projects,
   stripeEvents,
   tenantEntitlements,
+  tenantUsage,
   tenants,
   users,
   analyticsEvents,
@@ -25,15 +27,18 @@ import {
   normalizePlan,
   toTenantSubscription,
 } from './billing.plans.js';
+import { billingWebhookSchema } from './billing.schemas.js';
 import type { BillingWebhookInput, ChangePlanInput, CreateCheckoutInput, CreatePortalInput } from './billing.schemas.js';
 import { STRIPE_WEBHOOK_EVENTS } from './billing.domain.js';
 import { StripeBillingProvider } from './providers/stripe-billing.provider.js';
 import { FiscalService } from './fiscal.service.js';
+import { emailService } from '../../core/email/email.service.js';
 
 const DEFAULT_CURRENCY = 'BRL';
 const DEFAULT_TRIAL_DAYS = 14;
 const MAX_WEBHOOK_RETRY_ATTEMPTS = 8;
 const WEBHOOK_RETRY_BASE_MINUTES = 5;
+const GRACE_PERIOD_DAYS = Math.max(1, Number(process.env.BILLING_GRACE_PERIOD_DAYS || 7));
 
 let stripeProviderSingleton: StripeBillingProvider | null = null;
 
@@ -268,6 +273,8 @@ export class BillingService {
       return { initialized: false, reason: 'already_initialized' };
     }
 
+    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 dias
+
     await this.changePlan(tenantId, {
       plan: 'free',
       billingCycle: 'monthly',
@@ -276,6 +283,20 @@ export class BillingService {
       maxSeats: Math.max(1, BILLING_PLANS.free.limits.maxUsers),
       seatCount: 1,
     });
+
+    // Set trial end date
+    await db.update(billingSubscriptions)
+      .set({ trialEndsAt })
+      .where(eq(billingSubscriptions.tenantId, tenantId));
+
+    // Initialize tenant usage counters
+    await db.insert(tenantUsage).values({
+      tenantId,
+      projectsCount: 0,
+      storageBytes: 0,
+      usersCount: 0,
+      scenariosCount: 0,
+    }).onConflictDoNothing();
 
     return { initialized: true };
   }
@@ -896,12 +917,15 @@ export class BillingService {
         } as any);
 
       if (subscription) {
-        const nextStatus: BillingStatus = eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid ? 'active' : 'grace_period';
+        const paid = eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid;
+        const nextStatus: BillingStatus = paid ? 'active' : 'grace_period';
 
         await db
           .update(billingSubscriptions)
           .set({
             status: nextStatus,
+            // Pagamento ok zera o prazo; falha inicia a janela de grace.
+            gracePeriodExpiresAt: paid ? null : addDays(new Date(), GRACE_PERIOD_DAYS),
             updatedAt: new Date(),
           } as any)
           .where(eq(billingSubscriptions.id, subscription.id));
@@ -958,6 +982,41 @@ export class BillingService {
   }
 
   static async handleWebhook(input: BillingWebhookInput) {
+    // Idempotency: if the caller supplies an eventId, dedupe before processing.
+    // We claim the id via an insert that no-ops on conflict; a missing insert
+    // means we have already seen this event and must not reprocess it.
+    if (input.eventId) {
+      const [claimed] = await db
+        .insert(stripeEvents)
+        .values({
+          eventId: input.eventId,
+          eventType: input.event,
+          tenantId: input.tenantId,
+          provider: input.provider ?? 'internal',
+          status: 'received',
+          rawEvent: input as any,
+        } as any)
+        .onConflictDoNothing({ target: stripeEvents.eventId })
+        .returning();
+
+      if (!claimed) {
+        return { received: true, duplicate: true, eventId: input.eventId };
+      }
+
+      try {
+        const result = await this.applyGenericWebhook(input);
+        await markStripeEventProcessed(input.eventId);
+        return result;
+      } catch (error: any) {
+        await markStripeEventFailed(input.eventId, error?.message || 'Unknown webhook error');
+        throw error;
+      }
+    }
+
+    return this.applyGenericWebhook(input);
+  }
+
+  private static async applyGenericWebhook(input: BillingWebhookInput) {
     if (input.event === 'checkout.completed') {
       const whereClauses = [];
       if (input.sessionId) whereClauses.push(eq(billingCheckoutSessions.id, input.sessionId));
@@ -1004,5 +1063,205 @@ export class BillingService {
     }
 
     return { received: true, event: input.event };
+  }
+
+  /**
+   * Retry locally dead-lettered webhooks (failed_webhooks table).
+   * Re-runs the stored payload through handleWebhook; on success the row is
+   * removed, on failure attempts is incremented and the error recorded.
+   * Rows that exhaust MAX_WEBHOOK_RETRY_ATTEMPTS are left in place for ops.
+   */
+  static async processFailedWebhooks(limit = 20) {
+    const rows = await db
+      .select()
+      .from(failedWebhooks)
+      .where(sql`${failedWebhooks.attempts} < ${MAX_WEBHOOK_RETRY_ATTEMPTS}`)
+      .orderBy(failedWebhooks.createdAt)
+      .limit(limit);
+
+    let succeeded = 0;
+    let failed = 0;
+
+    for (const row of rows) {
+      const parsed = billingWebhookSchema.safeParse(row.payload);
+      if (!parsed.success) {
+        // Permanently malformed payload — burn an attempt so it eventually stops.
+        failed += 1;
+        await db
+          .update(failedWebhooks)
+          .set({ attempts: row.attempts + 1, error: 'invalid_payload', updatedAt: new Date() })
+          .where(eq(failedWebhooks.id, row.id));
+        continue;
+      }
+
+      try {
+        await this.handleWebhook(parsed.data);
+        await db.delete(failedWebhooks).where(eq(failedWebhooks.id, row.id));
+        succeeded += 1;
+      } catch (error: any) {
+        failed += 1;
+        await db
+          .update(failedWebhooks)
+          .set({
+            attempts: row.attempts + 1,
+            error: error?.message || 'Unknown retry error',
+            updatedAt: new Date(),
+          })
+          .where(eq(failedWebhooks.id, row.id));
+      }
+    }
+
+    return { processed: rows.length, succeeded, failed };
+  }
+
+  /**
+   * Expire subscriptions whose trial has elapsed.
+   * Free trials fall back to an active free plan (accounts are permanent);
+   * paid trials move to past_due so payment enforcement can kick in.
+   * Returns how many were transitioned.
+   */
+  static async expireDueTrials(limit = 100) {
+    const now = new Date();
+    const due = await db
+      .select()
+      .from(billingSubscriptions)
+      .where(and(
+        eq(billingSubscriptions.status, 'trialing'),
+        lte(billingSubscriptions.trialEndsAt, now),
+      ))
+      .limit(limit);
+
+    let expired = 0;
+    const results: Array<{ tenantId: string; plan: string; status: BillingStatus }> = [];
+
+    for (const sub of due) {
+      const plan = normalizePlan(sub.plan);
+      const nextStatus: BillingStatus = plan === 'free' ? 'active' : 'past_due';
+
+      await db
+        .update(billingSubscriptions)
+        .set({ status: nextStatus, updatedAt: now } as any)
+        .where(eq(billingSubscriptions.id, sub.id));
+
+      expired += 1;
+      results.push({ tenantId: sub.tenantId, plan, status: nextStatus });
+
+      // Best-effort: avisa os donos do workspace. Nunca quebra o job.
+      await BillingService.notifyTrialExpired(sub.tenantId, plan, nextStatus).catch(() => {});
+    }
+
+    return { expired, results };
+  }
+
+  /**
+   * Transiciona assinaturas cujo grace_period venceu para past_due, fechando
+   * a janela de tolerância pós-falha de pagamento. O gate de status então
+   * bloqueia criação de novos recursos (leitura permanece liberada).
+   */
+  static async expireGracePeriods(limit = 100) {
+    const now = new Date();
+    const due = await db
+      .select()
+      .from(billingSubscriptions)
+      .where(and(
+        eq(billingSubscriptions.status, 'grace_period'),
+        lte(billingSubscriptions.gracePeriodExpiresAt, now),
+      ))
+      .limit(limit);
+
+    let expired = 0;
+    for (const sub of due) {
+      await db
+        .update(billingSubscriptions)
+        .set({ status: 'past_due', gracePeriodExpiresAt: null, updatedAt: now } as any)
+        .where(eq(billingSubscriptions.id, sub.id));
+      expired += 1;
+    }
+
+    return { expired };
+  }
+
+  /**
+   * Recalcula tenant_usage a partir das tabelas-fonte (projetos não deletados,
+   * soma de bytes dos modelos IFC, usuários ativos). Corrige drift acumulado
+   * pelos counters incrementais. Retorna os valores reconciliados.
+   */
+  static async reconcileTenantUsage(tenantId: string) {
+    const [proj] = await db
+      .select({ v: sql<number>`count(*)::int` })
+      .from(projects)
+      .where(and(eq(projects.tenantId, tenantId), isNull(projects.deletedAt)));
+
+    const [stor] = await db
+      .select({ v: sql<number>`coalesce(sum(${ifcModels.fileSizeBytes}), 0)::bigint` })
+      .from(ifcModels)
+      .where(eq(ifcModels.tenantId, tenantId));
+
+    const [usr] = await db
+      .select({ v: sql<number>`count(*)::int` })
+      .from(users)
+      .where(and(eq(users.tenantId, tenantId), eq(users.isActive, true)));
+
+    const projectsCount = Number(proj?.v ?? 0);
+    const storageBytes = Number(stor?.v ?? 0);
+    const usersCount = Number(usr?.v ?? 0);
+
+    await db
+      .insert(tenantUsage)
+      .values({ tenantId, projectsCount, storageBytes, usersCount, scenariosCount: 0 })
+      .onConflictDoUpdate({
+        target: tenantUsage.tenantId,
+        set: { projectsCount, storageBytes, usersCount, updatedAt: new Date() },
+      });
+
+    return { tenantId, projectsCount, storageBytes, usersCount };
+  }
+
+  /** Reconcilia o uso de todos os tenants que possuem registro em tenant_usage. */
+  static async reconcileAllUsage(limit = 500) {
+    const rows = await db
+      .select({ tenantId: tenantUsage.tenantId })
+      .from(tenantUsage)
+      .limit(limit);
+
+    let reconciled = 0;
+    for (const row of rows) {
+      await this.reconcileTenantUsage(row.tenantId);
+      reconciled += 1;
+    }
+    return { reconciled };
+  }
+
+  /** Envia aviso de trial expirado aos owners/admins do tenant. Best-effort. */
+  private static async notifyTrialExpired(tenantId: string, plan: string, nextStatus: BillingStatus) {
+    const recipients = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(and(
+        eq(users.tenantId, tenantId),
+        eq(users.isActive, true),
+        or(eq(users.role, 'owner'), eq(users.role, 'admin')),
+      ));
+
+    if (recipients.length === 0) return;
+
+    const appUrl = getAppBaseUrl();
+    const isFree = nextStatus === 'active';
+    const subject = isFree
+      ? 'Seu período de teste do ArxisVR terminou'
+      : 'Seu período de teste terminou — regularize seu pagamento';
+    const body = isFree
+      ? `<p>Seu teste do plano <strong>${plan}</strong> terminou. Sua conta continua ativa no plano gratuito e seus dados estão preservados.</p>`
+      : `<p>Seu teste do plano <strong>${plan}</strong> terminou e o pagamento está pendente. Regularize para continuar criando novos recursos — seus dados continuam acessíveis.</p>`;
+
+    for (const r of recipients) {
+      const html = `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto">
+          <h2>Olá${r.name ? ' ' + r.name : ''},</h2>
+          ${body}
+          <p><a href="${appUrl}/app.html?billing=overview" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Ver assinatura</a></p>
+        </div>`;
+      await emailService.sendCustomEmail(r.email, subject, html, tenantId).catch(() => {});
+    }
   }
 }

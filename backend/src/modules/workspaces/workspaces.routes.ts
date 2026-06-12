@@ -7,7 +7,7 @@ import { memberships, workspaceInvites } from '../../shared/database/schema/work
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { AuthService } from '../../core/auth/auth.service.js';
 import { emailService } from '../../core/email/email.service.js';
-import { assertCanAddMember, PlanLimitError } from '../../core/billing/plan-limits.js';
+import { assertCanAddMember, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
 
 const authService = new AuthService();
 
@@ -140,8 +140,16 @@ export async function workspaceRoutes(fastify: FastifyInstance) {
     try {
       await assertCanAddMember(inv.tenantId);
     } catch (err) {
+      if (err instanceof SubscriptionInactiveError) {
+        return reply.code(err.statusCode).send({ code: err.code, status: err.status });
+      }
       if (err instanceof PlanLimitError) {
-        return reply.code(err.statusCode).send({ error: err.message, limitKey: err.limitKey, limit: err.limit });
+        return reply.code(err.statusCode).send({
+          code: err.code,
+          resource: err.resource,
+          limit: err.limit,
+          current: err.current,
+        });
       }
       throw err;
     }

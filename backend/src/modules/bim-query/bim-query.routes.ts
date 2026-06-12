@@ -5,6 +5,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { BIMQueryService } from './bim-query.service.js';
 import type { BIMQuery, QueryContext } from './bim-query.types.js';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 import { z } from 'zod';
 
 // =====================================
@@ -286,6 +287,7 @@ export async function bimQueryRoutes(app: FastifyInstance) {
         },
       },
     },
+    preHandler: authenticateRequest,
     handler: executeQueryHandler,
   });
 
@@ -311,6 +313,7 @@ export async function bimQueryRoutes(app: FastifyInstance) {
         },
       },
     },
+    preHandler: authenticateRequest,
     handler: queryByTypeHandler,
   });
 
@@ -337,6 +340,7 @@ export async function bimQueryRoutes(app: FastifyInstance) {
         },
       },
     },
+    preHandler: authenticateRequest,
     handler: queryByPropertyHandler,
   });
 
@@ -353,6 +357,7 @@ export async function bimQueryRoutes(app: FastifyInstance) {
         },
       },
     },
+    preHandler: authenticateRequest,
     handler: parseQueryHandler,
   });
 
@@ -370,6 +375,7 @@ export async function bimQueryRoutes(app: FastifyInstance) {
         },
       },
     },
+    preHandler: authenticateRequest,
     handler: clearCacheHandler,
   });
 }

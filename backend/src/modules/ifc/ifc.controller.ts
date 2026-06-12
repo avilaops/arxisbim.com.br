@@ -7,7 +7,7 @@ import {
   updateIfcMetadataSchema,
 } from './ifc.schemas.js';
 import { ZodError } from 'zod';
-import { assertFileWithinPlan, assertStorageWithinPlan, PlanLimitError } from '../../core/billing/plan-limits.js';
+import { assertFileWithinPlan, assertStorageWithinPlan, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
 
 type AuthenticatedRequest = FastifyRequest & {
   user: {
@@ -79,12 +79,16 @@ export class IfcController {
         );
       }
 
+      if (error instanceof SubscriptionInactiveError) {
+        return reply.code(error.statusCode).send({ code: error.code, status: error.status });
+      }
+
       if (error instanceof PlanLimitError) {
         return reply.code(error.statusCode).send({
-          error: 'PlanLimitExceeded',
-          message: error.message,
-          limitKey: error.limitKey,
+          code: error.code,
+          resource: error.resource,
           limit: error.limit,
+          current: error.current,
         });
       }
 

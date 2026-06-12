@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ProjectsController } from './projects.controller.js';
 import { ProjectsService } from './projects.service.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { requireActiveSubscription } from '../../core/billing/billing.middleware.js';
 
 export async function projectsRoutes(fastify: FastifyInstance) {
   const projectsService = new ProjectsService();
@@ -15,6 +16,22 @@ export async function projectsRoutes(fastify: FastifyInstance) {
     },
     preHandler: authenticateRequest,
     handler: projectsController.list.bind(projectsController),
+  } as any);
+
+  fastify.get('/by-slug/:slug', {
+    schema: {
+      description: 'Get project by slug (friendly URL)',
+      tags: ['projects'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          slug: { type: 'string', minLength: 1, maxLength: 100 },
+        },
+      },
+    },
+    preHandler: authenticateRequest,
+    handler: projectsController.getBySlug.bind(projectsController),
   } as any);
 
   fastify.get('/:id', {
@@ -40,10 +57,11 @@ export async function projectsRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
-        required: ['companyId', 'name'],
+        required: ['name'],
         properties: {
           companyId: { type: 'string' },
           name: { type: 'string', minLength: 2 },
+          projectCode: { type: 'string', maxLength: 100 },
           description: { type: 'string' },
           location: {
             type: 'object',
@@ -79,7 +97,7 @@ export async function projectsRoutes(fastify: FastifyInstance) {
         },
       },
     },
-    preHandler: authenticateRequest,
+    preHandler: [authenticateRequest, requireActiveSubscription],
     handler: projectsController.update.bind(projectsController),
   } as any);
 

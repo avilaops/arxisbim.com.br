@@ -16,7 +16,9 @@ function getDb() {
 export async function getSchedulingsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const db = getDb();
-    const { projectId } = (request.query as any);
+    // A rota é /api/v1/projects/:projectId/scheduling — usa o path param,
+    // com fallback para query string (compatibilidade retroativa).
+    const projectId = (request.params as any)?.projectId ?? (request.query as any)?.projectId;
     if (!projectId) {
       return reply.code(400).send({ error: 'projectId é obrigatório' });
     }

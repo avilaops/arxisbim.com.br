@@ -7,6 +7,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { GLBExportService } from './glb-export.service.js';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 import type { GLBExportOptions, GLBExportRequest } from './glb-export.types.js';
 
 const GLBExportOptionsSchema = z.object({
@@ -46,6 +47,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/export/glb',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Exporta modelo IFC para GLB/glTF',
@@ -132,6 +134,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/export/glb/selection',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Exporta seleção de elementos para GLB',
@@ -182,6 +185,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/export/glb/async',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Cria job de exportação GLB assíncrono',
@@ -226,6 +230,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/glb-export/jobs/:jobId',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Obtém status do job de exportação',
@@ -259,6 +264,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/glb-export/jobs/:jobId/download',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Download resultado do job de exportação',
@@ -300,6 +306,7 @@ export async function glbExportRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/glb-export/jobs/:jobId',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['GLB Export'],
         description: 'Cancela job de exportação',

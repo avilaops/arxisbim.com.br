@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean, integer, bigint, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { tenants, users } from './tenants.js';
 
 export type BillingPlanTier = 'free' | 'starter' | 'professional' | 'enterprise';
@@ -20,6 +20,7 @@ export const billingSubscriptions = pgTable('billing_subscriptions', {
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
   trialEndsAt: timestamp('trial_ends_at'),
+  gracePeriodExpiresAt: timestamp('grace_period_expires_at'),
   cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
   provider: varchar('provider', { length: 50 }).default('internal').notNull(),
   providerCustomerId: varchar('provider_customer_id', { length: 255 }),
@@ -182,4 +183,34 @@ export const tenantEntitlements = pgTable('tenant_entitlements', {
   entitlementKeyIdx: index('tenant_entitlements_entitlement_key_idx').on(table.entitlementKey),
   sourceIdx: index('tenant_entitlements_source_idx').on(table.source),
   effectiveUntilIdx: index('tenant_entitlements_effective_until_idx').on(table.effectiveUntil),
+}));
+
+// =====================================
+// TENANT_USAGE (counter-based usage for avoiding COUNT queries)
+// =====================================
+export const tenantUsage = pgTable('tenant_usage', {
+  tenantId: varchar('tenant_id', { length: 255 }).primaryKey().references(() => tenants.tenantId, { onDelete: 'cascade' }),
+  projectsCount: integer('projects_count').default(0).notNull(),
+  storageBytes: bigint('storage_bytes', { mode: 'number' }).default(0).notNull(),
+  usersCount: integer('users_count').default(0).notNull(),
+  scenariosCount: integer('scenarios_count').default(0).notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  updatedAtIdx: index('tenant_usage_updated_at_idx').on(table.updatedAt),
+}));
+
+// =====================================
+// FAILED_WEBHOOKS (dead-letter queue)
+// =====================================
+export const failedWebhooks = pgTable('failed_webhooks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: varchar('event_id', { length: 255 }).notNull(),
+  payload: jsonb('payload').$type<Record<string, any>>().notNull(),
+  error: text('error'),
+  attempts: integer('attempts').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index('failed_webhooks_event_id_idx').on(table.eventId),
+  createdAtIdx: index('failed_webhooks_created_at_idx').on(table.createdAt),
 }));

@@ -7,6 +7,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { Quantitativos5DService } from './quantitativos-5d.service.js';
+import { authenticateRequest } from '../../core/auth/middleware.js';
 import type { TakeoffParams } from './quantitativos-5d.types.js';
 
 const TakeoffParamsSchema = z.object({
@@ -41,6 +42,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Calcula takeoff (quantificação) do modelo BIM',
@@ -91,6 +93,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff/type/:type',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Calcula takeoff por tipo IFC',
@@ -138,6 +141,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff/property',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Calcula takeoff por propriedade',
@@ -185,6 +189,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff/cache',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Limpa cache de takeoff do modelo',
@@ -220,6 +225,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff/group',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Calcula e agrupa takeoff',
@@ -265,6 +271,7 @@ export async function quantitativos5DRoutes(server: FastifyInstance) {
   }>(
     '/api/v1/projects/:projectId/models/:modelId/takeoff/summary',
     {
+      preHandler: authenticateRequest,
       schema: {
         tags: ['Quantitativos 5D'],
         description: 'Resumo de quantitativos por tipo',

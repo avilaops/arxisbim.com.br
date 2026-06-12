@@ -343,73 +343,67 @@ export class AuthService {
     const tenantDisplayName =
       validated.companyName?.trim() || validated.name?.trim() || validated.email.split('@')[0];
 
-    // Verificar se o tenant existe; se não, criar automaticamente (self-service signup)
-    let [tenant] = await this.db
-      .select()
-      .from(tenants)
-      .where(eq(tenants.tenantId, tenantSlug))
-      .limit(1);
-
-    if (!tenant) {
-      [tenant] = await this.db
-        .insert(tenants)
-        .values({
-          tenantId: tenantSlug,
-          name: tenantDisplayName,
-          isActive: true,
-        })
-        .returning();
-    }
-
-    if (!tenant.isActive) {
-      throw new Error('Tenant inativo');
-    }
-
-    // Email é único globalmente — verifica duplicidade sem filtrar por tenant
+    // Email é único globalmente — verificar ANTES da transação para retorno rápido
     const [existingUser] = await this.db
       .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, emailVerified: users.emailVerified })
       .from(users)
       .where(eq(users.email, validated.email))
       .limit(1);
 
-    // Verificação de email é OBRIGATÓRIA no cadastro por senha — uma conta sem
-    // verificação não pode existir ativa. Não há bypass via env.
-
-    // Email já existe — se não verificado, reenviar código; se verificado, erro
     if (existingUser) {
       if (!existingUser.emailVerified) {
         await this.sendVerificationEmail(existingUser.id, existingUser.email, existingUser.tenantId);
         return {
           user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, tenantId: existingUser.tenantId, companyId: existingUser.companyId || undefined, role: existingUser.role, permissions: existingUser.permissions || [] },
           requiresEmailVerification: true,
-          message: 'Esta conta ainda não foi verificada. Reenviamos o email de confirmação.',
+          existingUnverified: true,
+          message: 'Se este email estiver disponível, você receberá um link de verificação.',
         } as any;
       }
       throw new Error('Email já cadastrado');
     }
 
-    // Hash da senha
+    // Hash antes da transação (bcrypt é lento; não bloqueia a TX desnecessariamente)
     const passwordHash = await bcrypt.hash(validated.password, BCRYPT_ROUNDS);
 
-    const [newUser] = await this.db
-      .insert(users)
-      .values({
-        email: validated.email,
-        name: validated.name,
-        passwordHash,
-        tenantId: tenantSlug,
-        companyId: validated.companyId || null,
-        role: 'user',
-        permissions: [],
-        emailVerified: false,  // sempre falso até confirmar o código
-        isActive: false,       // conta inativa até verificação
-      })
-      .returning();
+    // Transação atômica: tenant + user + membership (ou tudo, ou nada)
+    const newUser = await this.db.transaction(async (tx) => {
+      let [tenant] = await tx
+        .select()
+        .from(tenants)
+        .where(eq(tenants.tenantId, tenantSlug))
+        .limit(1);
 
-    // Membership: o criador é owner do seu próprio workspace.
-    await this.db.insert(memberships)
-      .values({ userId: newUser.id, tenantId: tenantSlug, role: 'owner', status: 'active' })
-      .onConflictDoNothing();
+      if (!tenant) {
+        [tenant] = await tx
+          .insert(tenants)
+          .values({ tenantId: tenantSlug, name: tenantDisplayName, isActive: true })
+          .returning();
+      }
+
+      if (!tenant.isActive) throw new Error('Tenant inativo');
+
+      const [user] = await tx
+        .insert(users)
+        .values({
+          email: validated.email,
+          name: validated.name,
+          passwordHash,
+          tenantId: tenantSlug,
+          companyId: validated.companyId || null,
+          role: 'user',
+          permissions: [],
+          emailVerified: false,
+          isActive: false,
+        })
+        .returning();
+
+      await tx.insert(memberships)
+        .values({ userId: user.id, tenantId: tenantSlug, role: 'owner', status: 'active' })
+        .onConflictDoNothing();
+
+      return user;
+    });
 
     await BillingService.initializeTenantFreeTier(tenantSlug);
 
@@ -529,7 +523,16 @@ export class AuthService {
       }
 
       if (session.isRevoked) {
-        // Sessão revogada por logout ou rotação anterior — não é ataque, só rejeitar.
+        if (session.revokeReason === 'rotation') {
+          // Token rotacionado sendo reutilizado — sinal de roubo de token.
+          // Nuke nuclear: invalidar todas as sessões do usuário.
+          await this.db
+            .update(userSessions)
+            .set({ isRevoked: true, revokedAt: now, isActive: false, revokeReason: 'reuse-nuke' })
+            .where(eq(userSessions.userId, session.userId));
+          throw new Error('TOKEN_REUSE_DETECTED');
+        }
+        // Logout normal — apenas rejeitar.
         throw new Error('TOKEN_REVOKED');
       }
 
@@ -548,10 +551,10 @@ export class AuthService {
         throw new Error('Usuário inativo');
       }
 
-      // Revogar sessão atual (rotação)
+      // Revogar sessão atual (rotação) — marcada para detectar reuse futuro
       await this.db
         .update(userSessions)
-        .set({ isRevoked: true, revokedAt: now, isActive: false })
+        .set({ isRevoked: true, revokedAt: now, isActive: false, revokeReason: 'rotation' })
         .where(eq(userSessions.id, session.id));
 
       // Gerar novos tokens
@@ -606,7 +609,7 @@ export class AuthService {
     const now = new Date();
     const [session] = await this.db
       .update(userSessions)
-      .set({ isRevoked: true, revokedAt: now, isActive: false })
+      .set({ isRevoked: true, revokedAt: now, isActive: false, revokeReason: 'logout' })
       .where(eq(userSessions.refreshToken, refreshToken))
       .returning({ userId: userSessions.userId, tenantId: userSessions.tenantId });
 

@@ -1,7 +1,7 @@
 # S03 · Modelo de Dados — Projetos
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** Em andamento (core entregue em 2026-06-11 — migration 035, módulo models, testes 9/9)  
 **Depende de:** S01 (tenant), S02 (storage)  
 **Bloqueia:** S05 (dashboard), S07 (IFC precisa de project + model IDs)
 
@@ -144,14 +144,30 @@ CREATE INDEX idx_model_versions_status ON model_versions(status);
 
 ## Critérios de aceite
 
-- [ ] `POST /projects` cria projeto com slug gerado automaticamente
-- [ ] `GET /projects` lista apenas projetos do tenant autenticado
-- [ ] `POST /projects/:id/models` cria model + versão com status `uploading`
-- [ ] Upload subsequente do mesmo model cria nova `model_version`
-- [ ] Número de versão incrementa automaticamente (UNIQUE por model)
-- [ ] `current_version_id` aponta para a versão mais recente após processamento
-- [ ] Paginação funciona em listas com > 100 projetos
-- [ ] Soft-delete: projeto deletado não aparece na listagem, mas existe no banco
-- [ ] Filtro de `deleted_at` aplicado no repository, não no controller
-- [ ] Build e lint passam
+- [x] `POST /projects` cria projeto com slug gerado automaticamente *(teste C01/C01b)*
+- [x] `GET /projects` lista apenas projetos do tenant autenticado *(teste C02)*
+- [x] `POST /projects/:id/models` cria model + versão com status `uploading` *(teste C03)*
+- [x] Upload subsequente do mesmo model cria nova `model_version` *(teste C04)*
+- [x] Número de versão incrementa automaticamente (UNIQUE por model) *(teste C04 + UNIQUE no banco)*
+- [x] `current_version_id` aponta para a versão mais recente após processamento *(teste C06; status do projeto cacheado junto)*
+- [x] Paginação funciona em listas com > 100 projetos *(teste C07; page/pageSize/total)*
+- [x] Soft-delete: projeto deletado não aparece na listagem, mas existe no banco *(teste C08)*
+- [x] Filtro de `deleted_at` aplicado no repository, não no controller *(`ProjectsService.notDeleted()`)*
+- [x] Build e lint passam
 - [ ] Demo em até 5 minutos
+
+## Implementação (2026-06-11)
+
+| Item | Arquivo |
+|---|---|
+| Migration (slug, project_code, deleted_at, models, model_versions, RLS) | `backend/migrations/035_projects_models_versions.sql` |
+| Schema Drizzle (projects estendido + models + modelVersions) | `backend/src/shared/database/schema/projects.ts` |
+| ProjectsService (slug, soft-delete no repository, paginação) | `backend/src/modules/projects/projects.service.ts` |
+| Módulo models (CRUD + versões + status → current_version_id) | `backend/src/modules/models/` |
+| Testes E2E (9 critérios) | `backend/tests/e2e/projects-models.spec.ts` |
+
+Notas:
+- `projects.company_id` virou nullable (fluxo self-service cria projeto sem company).
+- Status do projeto é cache derivado: `empty` na criação, `processing/ready/failed` conforme a versão ativa.
+- Escritas em models/model_versions usam `withTenant()` (RLS via `app.tenant_id`).
+- **Pendente produção:** aplicar migrations 032–035 (deploy manual).

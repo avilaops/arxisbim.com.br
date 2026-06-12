@@ -29,6 +29,7 @@ export const changePlanSchema = z.object({
 
 export const billingWebhookSchema = z.object({
   event: z.string().min(1),
+  eventId: z.string().min(1).max(255).optional(),
   provider: z.string().min(1).default('internal'),
   sessionId: z.string().uuid().optional(),
   providerSessionId: z.string().optional(),
