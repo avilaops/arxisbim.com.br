@@ -111,17 +111,29 @@ async function runMigrations() {
   const applied = await sql<{ filename: string }[]>`SELECT filename FROM _migrations`;
   const appliedSet = new Set(applied.map(r => r.filename));
 
+  // Cada migration roda em sua própria transação (atômica: sem aplicação
+  // parcial). Uma falha NÃO halta a cadeia — registra e segue para a próxima,
+  // pra que uma migration conflitante com baseline drizzle-kit não bloqueie
+  // todas as posteriores (incidente 2026-06-12).
+  const failures: Array<{ file: string; message: string }> = [];
   for (const file of files) {
     if (appliedSet.has(file)) continue;
     const sqlContent = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
     try {
-      await sql.unsafe(sqlContent);
-      await sql`INSERT INTO _migrations (filename) VALUES (${file})`;
+      await sql.begin(async (tx) => {
+        await tx.unsafe(sqlContent);
+        await tx`INSERT INTO _migrations (filename) VALUES (${file})`;
+      });
       console.log(`✅ Migration applied: ${file}`);
     } catch (err) {
-      console.error(`❌ Migration failed: ${file}`, err);
-      throw err;
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`❌ Migration failed (continuing): ${file} — ${message}`);
+      failures.push({ file, message });
     }
+  }
+
+  if (failures.length > 0) {
+    console.warn(`⚠️  ${failures.length} migration(s) falharam e foram puladas: ${failures.map(f => f.file).join(', ')}`);
   }
 }
 
