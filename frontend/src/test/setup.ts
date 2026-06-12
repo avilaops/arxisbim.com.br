@@ -2,13 +2,13 @@
  * Vitest setup file
  */
 
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/dom';
+import { vi } from 'vitest';
 
-// Cleanup after each test
-afterEach(() => {
-  cleanup();
-});
+// Habilita act(...) para testes de componente React (react-dom/client).
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+// Nota: @testing-library/dom não exporta `cleanup` (isso é @testing-library/react,
+// não instalado). Cada teste de componente faz seu próprio unmount.
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
