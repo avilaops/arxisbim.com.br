@@ -12,6 +12,17 @@ import { files } from '../../shared/database/schema/files.js';
 import { eq, and } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 import { incrementStorageBytes } from '../../core/billing/usage-tracker.js';
+import { z } from 'zod';
+
+const uploadUrlSchema = z.object({
+  filename: z.string().min(1).max(500),
+  mimeType: z.string().max(255).optional(),
+  sizeBytes: z.number().int().min(0).optional(),
+});
+const confirmSchema = z.object({
+  sha256: z.string().max(128).optional(),
+  sizeBytes: z.number().int().min(0).optional(),
+});
 
 type AuthReq = FastifyRequest & { user: { userId: string; tenantId: string } };
 
@@ -31,15 +42,9 @@ export async function filesRoutes(fastify: FastifyInstance) {
   fastify.post('/projects/:projectId/files/upload-url', auth, async (request: FastifyRequest, reply: FastifyReply) => {
     const { tenantId } = (request as AuthReq).user;
     const { projectId } = request.params as { projectId: string };
-    const body = request.body as {
-      filename: string;
-      mimeType?: string;
-      sizeBytes?: number;
-    };
-
-    if (!body?.filename) {
-      return reply.status(400).send({ error: '`filename` é obrigatório' });
-    }
+    const parsed = uploadUrlSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
 
     try {
       const result = await requestUploadUrl({
@@ -62,11 +67,9 @@ export async function filesRoutes(fastify: FastifyInstance) {
    */
   fastify.post('/files/upload-url', auth, async (request: FastifyRequest, reply: FastifyReply) => {
     const { tenantId } = (request as AuthReq).user;
-    const body = request.body as { filename: string; mimeType?: string; sizeBytes?: number };
-
-    if (!body?.filename) {
-      return reply.status(400).send({ error: '`filename` é obrigatório' });
-    }
+    const parsed = uploadUrlSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
 
     try {
       const result = await requestUploadUrl({
@@ -89,14 +92,16 @@ export async function filesRoutes(fastify: FastifyInstance) {
   fastify.post('/files/:fileId/confirm', auth, async (request: FastifyRequest, reply: FastifyReply) => {
     const { tenantId } = (request as AuthReq).user;
     const { fileId } = request.params as { fileId: string };
-    const body = request.body as { sha256?: string; sizeBytes?: number } | undefined;
+    const parsed = confirmSchema.safeParse(request.body ?? {});
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
 
     try {
       const updated = await confirmUpload({
         tenantId,
         fileId,
-        sha256: body?.sha256,
-        sizeBytes: body?.sizeBytes,
+        sha256: body.sha256,
+        sizeBytes: body.sizeBytes,
       });
       return reply.send(updated);
     } catch (err: any) {

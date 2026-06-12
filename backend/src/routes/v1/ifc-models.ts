@@ -5,6 +5,14 @@ import { db } from '../../shared/database/db.js';
 import { eq, desc, and, or } from 'drizzle-orm';
 import { storage as storageService } from '../../core/storage/index.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { z } from 'zod';
+
+const updateIfcModelSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  discipline: z.string().max(50).optional(),
+  phase: z.string().max(50).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 type AuthedUser = {
   userId: string;
@@ -143,12 +151,9 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
     const { modelId } = request.params as { modelId: string };
     const user = getUser(request);
     if (!user) return reply.status(401).send({ error: 'Unauthorized' });
-    const body = request.body as {
-      name?: string;
-      discipline?: string;
-      phase?: string;
-      metadata?: Record<string, unknown>;
-    };
+    const parsed = updateIfcModelSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const existing = await db.select().from(ifcModels).where(eq(ifcModels.id, modelId)).limit(1);
       if (!existing.length) return reply.status(404).send({ error: 'IFC model not found' });
