@@ -4,7 +4,5 @@ export * from './timeline-simulations.routes.js';
 export * from './timeline-simulations.controller.js';
 export * from './notifications.routes.js';
 export * from './notifications.controller.js';
-export * from './tenants.routes.js';
-export * from './tenants.controller.js';
 export * from './webhooks.routes.js';
 export * from './webhooks.controller.js';
