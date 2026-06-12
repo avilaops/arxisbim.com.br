@@ -3,6 +3,20 @@ import { companies } from '../../shared/database/schema/tenants.js';
 import { db } from '../../shared/database/db.js';
 import { eq, and, desc } from 'drizzle-orm';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { z } from 'zod';
+
+const colorsSchema = z.object({ primary: z.string(), secondary: z.string() });
+const createCompanySchema = z.object({
+  name: z.string().min(1).max(255),
+  logo: z.string().max(2000).optional(),
+  colors: colorsSchema.optional(),
+});
+const updateCompanySchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  logo: z.string().max(2000).optional(),
+  colors: colorsSchema.optional(),
+  isActive: z.boolean().optional(),
+});
 
 export async function companyRoutes(fastify: FastifyInstance) {
   const auth = { preHandler: authenticateRequest };
@@ -40,11 +54,11 @@ export async function companyRoutes(fastify: FastifyInstance) {
   // Create company for the authenticated tenant
   fastify.post('/tenants/:tenantId/companies', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
-    const body = request.body as {
-      name: string;
-      logo?: string;
-      colors?: { primary: string; secondary: string };
-    };
+    const parsed = createCompanySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    }
+    const body = parsed.data;
     try {
       const companyId = body.name.toLowerCase().replace(/\s+/g, '-');
       const [newCompany] = await db.insert(companies).values({
@@ -67,12 +81,11 @@ export async function companyRoutes(fastify: FastifyInstance) {
   fastify.put('/companies/:companyId', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { companyId } = request.params as { companyId: string };
-    const body = request.body as {
-      name?: string;
-      logo?: string;
-      colors?: { primary: string; secondary: string };
-      isActive?: boolean;
-    };
+    const parsed = updateCompanySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    }
+    const body = parsed.data;
     try {
       const [updatedCompany] = await db.update(companies)
         .set({

@@ -1,22 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { schedulingRoutes } from '@modules/scheduling/scheduling.routes';
-import { projectRoutes } from '../../src/routes/v1/projects';
+import { schedulingRoutes } from '../../src/routes/v1/scheduling.js';
 import { tenants, companies, users } from '../../src/shared/database/schema/tenants.ts';
 import { projects } from '../../src/shared/database/schema/projects.ts';
 import { bimSchedules } from '../../src/shared/database/schema/scheduling.ts';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { randomUUID } from 'crypto';
+import jwt from 'jsonwebtoken';
 
 let server: FastifyInstance;
 let db: any;
+let token: string;
 let testTenantId: string, testCompanyId: string, testUserId: string, testProjectId: string, testSchedulingId: string;
 
 beforeAll(async () => {
   server = Fastify();
-  // Registra a rota real de scheduling (path: /api/v1/projects/:projectId/scheduling)
-  await server.register(schedulingRoutes);
+  // Rota viva: routes/v1/scheduling.ts (paths /projects/:projectId/schedules), exige auth
+  await server.register(schedulingRoutes, { prefix: '/api/v1' });
 
   // Setup banco
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL not set');
@@ -43,6 +44,12 @@ beforeAll(async () => {
   // O schema espera datas no formato 'YYYY-MM-DD', não Date
   const today = new Date().toISOString().slice(0, 10);
   await db.insert(bimSchedules).values({ id: testSchedulingId, projectId: testProjectId, name: 'Schedule Teste', description: 'desc', startDate: today, endDate: today, createdBy: testUserId });
+
+  token = jwt.sign(
+    { userId: testUserId, tenantId: testTenantId, email: `u-${testUserId}@test.com`, role: 'owner', permissions: [] },
+    process.env.JWT_SECRET!,
+    { expiresIn: '1h' },
+  );
 });
 
 afterAll(async () => {
@@ -50,15 +57,15 @@ afterAll(async () => {
 });
 
 describe('Scheduling API', () => {
-  it('GET /api/v1/projects/:projectId/scheduling should return 200', async () => {
+  it('GET /api/v1/projects/:projectId/schedules should return 200', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: `/api/v1/projects/${testProjectId}/scheduling`,
+      url: `/api/v1/projects/${testProjectId}/schedules`,
+      headers: { authorization: `Bearer ${token}` },
     });
     expect(response.statusCode).toBe(200);
-    const data = JSON.parse(response.body);
-    const list = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
+    const list = JSON.parse(response.body);
     expect(Array.isArray(list)).toBe(true);
-    expect(list.some((s) => s.id === testSchedulingId)).toBe(true);
+    expect(list.some((s: any) => s.id === testSchedulingId)).toBe(true);
   });
 });

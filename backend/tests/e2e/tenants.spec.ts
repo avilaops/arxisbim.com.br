@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { tenantsRoutes } from '@modules/tenants';
+import { tenantRoutes } from '../../src/routes/v1/tenants.js';
 import { tenants } from '@shared/database/schema/tenants';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -14,7 +14,7 @@ let adminToken;
 
 beforeAll(async () => {
   server = Fastify();
-  await server.register(tenantsRoutes);
+  await server.register(tenantRoutes, { prefix: '/api/v1' });
 
   // Setup banco
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL not set');
@@ -44,11 +44,11 @@ describe('Tenants API', () => {
       headers: { authorization: `Bearer ${adminToken}` },
     });
     expect(response.statusCode).toBe(200);
-    const body = JSON.parse(response.body);
-    expect(Array.isArray(body.data)).toBe(true);
-    expect(body.total).toBeGreaterThan(0);
+    const list = JSON.parse(response.body);
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.length).toBeGreaterThan(0);
 
-    // Verificação determinística do tenant criado (a lista é paginada).
+    // Verificação determinística do tenant criado.
     const single = await server.inject({
       method: 'GET',
       url: `/api/v1/tenants/${testTenantId}`,

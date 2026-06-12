@@ -5,6 +5,46 @@ import { projects } from '../../shared/database/schema/projects.js';
 import { db } from '../../shared/database/db.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { z } from 'zod';
+
+const createScheduleSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+  createdBy: z.string().min(1),
+});
+const updateScheduleSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  startDate: z.string().min(1).optional(),
+  endDate: z.string().min(1).optional(),
+});
+const createTaskSchema = z.object({
+  taskName: z.string().min(1).max(255),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+  progress: z.number().min(0).max(100).optional(),
+  dependencies: z.array(z.string()).optional(),
+  isCriticalPath: z.boolean().optional(),
+});
+const updateTaskSchema = z.object({
+  taskName: z.string().min(1).max(255).optional(),
+  startDate: z.string().min(1).optional(),
+  endDate: z.string().min(1).optional(),
+  progress: z.number().min(0).max(100).optional(),
+  dependencies: z.array(z.string()).optional(),
+  isCriticalPath: z.boolean().optional(),
+});
+const linkElementSchema = z.object({
+  elementId: z.string().min(1),
+  action: z.string().max(50).optional(),
+});
+const createSimulationSchema = z.object({
+  name: z.string().max(255).optional(),
+  simulationDate: z.string().optional(),
+  snapshot: z.record(z.string(), z.any()).optional(),
+});
 
 export async function schedulingRoutes(fastify: FastifyInstance) {
   const auth = { preHandler: authenticateRequest };
@@ -51,13 +91,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.post('/projects/:projectId/schedules', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { projectId } = request.params as { projectId: string };
-    const body = request.body as {
-      name: string;
-      description?: string;
-      startDate: string;
-      endDate: string;
-      createdBy: string;
-    };
+    const parsed = createScheduleSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const [project] = await db.select({ id: projects.id }).from(projects).where(
         and(eq(projects.id, projectId), eq(projects.tenantId, tenantId))
@@ -84,12 +120,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.put('/schedules/:scheduleId', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
-    const body = request.body as {
-      name?: string;
-      description?: string;
-      startDate?: string;
-      endDate?: string;
-    };
+    const parsed = updateScheduleSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
         .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
@@ -159,14 +192,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.post('/schedules/:scheduleId/tasks', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
-    const body = request.body as {
-      taskName: string;
-      startDate: string;
-      endDate: string;
-      progress?: number;
-      dependencies?: string[];
-      isCriticalPath?: boolean;
-    };
+    const parsed = createTaskSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
         .innerJoin(projects, eq(bimSchedules.projectId, projects.id))
@@ -195,14 +223,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.put('/tasks/:taskId', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
-    const body = request.body as {
-      taskName?: string;
-      startDate?: string;
-      endDate?: string;
-      progress?: number;
-      dependencies?: string[];
-      isCriticalPath?: boolean;
-    };
+    const parsed = updateTaskSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       // Verify ownership via schedule → project chain
       const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
@@ -277,10 +300,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.post('/tasks/:taskId/elements', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { taskId } = request.params as { taskId: string };
-    const body = request.body as {
-      elementId: string;
-      action?: string;
-    };
+    const parsed = linkElementSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const rows = await db.select({ id: scheduleTasks.id }).from(scheduleTasks)
         .innerJoin(bimSchedules, eq(scheduleTasks.scheduleId, bimSchedules.id))
@@ -354,11 +376,9 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
   fastify.post('/schedules/:scheduleId/simulations', auth, async (request, reply) => {
     const { tenantId } = request.user as any;
     const { scheduleId } = request.params as { scheduleId: string };
-    const body = request.body as {
-      name?: string;
-      simulationDate?: string;
-      snapshot?: Record<string, any>;
-    };
+    const parsed = createSimulationSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    const body = parsed.data;
     try {
       const rows = await db.select({ id: bimSchedules.id }).from(bimSchedules)
         .innerJoin(projects, eq(bimSchedules.projectId, projects.id))

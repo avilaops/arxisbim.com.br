@@ -4,6 +4,20 @@ import { db } from '../../shared/database/db.js';
 import { eq, desc } from 'drizzle-orm';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { isSuperAdmin } from '../../core/admin/super-admin.middleware.js';
+import { z } from 'zod';
+
+const createTenantSchema = z.object({
+  name: z.string().min(1).max(255),
+  customDomain: z.string().max(255).optional(),
+  maxProjects: z.number().int().min(0).optional(),
+  federationEnabled: z.boolean().optional(),
+});
+const updateTenantSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  customDomain: z.string().max(255).optional(),
+  maxProjects: z.number().int().min(0).optional(),
+  federationEnabled: z.boolean().optional(),
+});
 
 async function adminGate(request: FastifyRequest, reply: FastifyReply) {
   const user = (request as any).user as { role?: string; email?: string; permissions?: string[] } | undefined;
@@ -50,12 +64,11 @@ export async function tenantRoutes(fastify: FastifyInstance) {
 
   // Admin: create tenant
   fastify.post('/tenants', admin, async (request, reply) => {
-    const body = request.body as {
-      name: string;
-      customDomain?: string;
-      maxProjects?: number;
-      federationEnabled?: boolean;
-    };
+    const parsed = createTenantSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    }
+    const body = parsed.data;
     try {
       const tenantId = body.customDomain || body.name.toLowerCase().replace(/\s+/g, '-');
       const [newTenant] = await db.insert(tenants).values({
@@ -78,12 +91,11 @@ export async function tenantRoutes(fastify: FastifyInstance) {
   // Admin: update tenant
   fastify.put('/tenants/:tenantId', admin, async (request, reply) => {
     const { tenantId } = request.params as { tenantId: string };
-    const body = request.body as {
-      name?: string;
-      customDomain?: string;
-      maxProjects?: number;
-      federationEnabled?: boolean;
-    };
+    const parsed = updateTenantSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    }
+    const body = parsed.data;
     try {
       const [updatedTenant] = await db.update(tenants)
         .set({
