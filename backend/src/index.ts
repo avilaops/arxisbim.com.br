@@ -36,6 +36,7 @@ import { collaborationRoutes } from './modules/collaboration/collaboration.route
 import { sessionsRoutes } from './modules/sessions/sessions.routes.js';
 import { observabilityRoutes } from './routes/v1/observability/observability.routes.js';
 import { storageRoutes } from './core/storage/storage.routes.js';
+import { getStorage } from './core/storage/index.js';
 import { filesRoutes } from './modules/files/files.routes.js';
 import { modelsRoutes } from './modules/models/models.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
@@ -146,6 +147,18 @@ async function checkDatabaseConnection() {
   }
 }
 
+async function checkStorageConnection(): Promise<boolean> {
+  // Driver-agnostic probe: `exists` on a sentinel key. A 404/ausência retorna
+  // false sem lançar (storage acessível); falha de conexão/auth lança → down.
+  // S11/S29 dependem do storage, então readiness precisa testá-lo de verdade.
+  try {
+    await getStorage().exists('.health-check');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function getWorkerHealth() {
   const workerStatus = billingRetryWorker.getStatus();
   const workerHealthy = !workerStatus.enabled || !workerStatus.running || workerStatus.stats.consecutiveFailures < 5;
@@ -189,13 +202,15 @@ async function buildHealthPayload() {
 }
 
 async function buildReadinessPayload() {
-  const [dbHealthy, wsHealthy] = await Promise.all([
+  const [dbHealthy, wsHealthy, storageHealthy] = await Promise.all([
     checkDatabaseConnection(),
     checkWebSocketSignaling(),
+    checkStorageConnection(),
   ]);
   const { workerHealthy } = getWorkerHealth();
   const alive = true;
-  const ready = dbHealthy && wsHealthy;
+  // Postgres + storage são dependências duras (S06): readiness reflete ambos.
+  const ready = dbHealthy && storageHealthy;
 
   return {
     alive,
@@ -203,7 +218,7 @@ async function buildReadinessPayload() {
     websocket: wsHealthy,
     worker: workerHealthy,
     redis: false,   // não usado ainda
-    storage: false, // não usado ainda
+    storage: storageHealthy,
     ready,
     timestamp: new Date().toISOString(),
   };
