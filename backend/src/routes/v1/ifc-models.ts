@@ -6,6 +6,7 @@ import { eq, desc, and, or } from 'drizzle-orm';
 import { storage as storageService } from '../../core/storage/index.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { z } from 'zod';
+import { recordUpload } from '../../core/observability/metrics.js';
 
 const updateIfcModelSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -139,9 +140,11 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
         phase: 'new',
       }).returning();
 
+      recordUpload(true, { tenantId: project[0].tenantId, kind: 'ifc' });
       return reply.status(201).send(newModel);
     } catch (error) {
       fastify.log.error(error);
+      recordUpload(false, { tenantId: user.tenantId, kind: 'ifc' });
       return reply.status(500).send({ error: 'Failed to upload IFC model' });
     }
   });

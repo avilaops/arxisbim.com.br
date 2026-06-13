@@ -4,6 +4,7 @@ import { extractTenantContext, type UserContext } from '../tenancy/context.js';
 import { and, eq, gt, or } from 'drizzle-orm';
 import { db } from '../../shared/database/index.js';
 import { tenantEntitlements } from '../../shared/database/schema/index.js';
+import { recordAuthFailure } from '../observability/metrics.js';
 
 let _authService: AuthService | undefined;
 function getAuthService(): AuthService {
@@ -19,6 +20,7 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
   const authHeader = request.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
+    recordAuthFailure('missing_bearer', { route: (request.routeOptions?.url as string) || request.url.split('?')[0] });
     return reply.code(401).send({
       error: 'Unauthorized',
       message: 'Missing or invalid authorization header',
@@ -47,6 +49,7 @@ export async function authenticateRequest(request: FastifyRequest, reply: Fastif
 
     (request as any).user = user;
   } catch (error) {
+    recordAuthFailure('invalid_token', { route: (request.routeOptions?.url as string) || request.url.split('?')[0] });
     return reply.code(401).send({
       error: 'Unauthorized',
       message: 'Invalid or expired token',

@@ -38,6 +38,7 @@ import { observabilityRoutes } from './routes/v1/observability/observability.rou
 import { storageRoutes } from './core/storage/storage.routes.js';
 import { getStorage } from './core/storage/index.js';
 import { PINO_REDACT_PATHS, REDACTED } from './core/observability/redact.js';
+import { recordRequest } from './core/observability/metrics.js';
 import { filesRoutes } from './modules/files/files.routes.js';
 import { modelsRoutes } from './modules/models/models.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
@@ -404,6 +405,12 @@ server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply
     routePattern.startsWith('/health') ||
     routePattern === '/metrics' ||
     routePattern === '/';
+
+  // Métricas operacionais nomeadas (S06): requests_total + requests_duration_ms.
+  // Pula ruído (health/preflight) p/ não poluir os contadores.
+  if (!isNoise) {
+    recordRequest(duration, { method: request.method, route: routePattern, status: statusCode });
+  }
 
   // Log estruturado (sempre)
   logger.info('Request completed', {
