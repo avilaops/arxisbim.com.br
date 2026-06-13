@@ -1,0 +1,3 @@
+
+# IFC fixtures: preservar bytes (sem conversão CRLF) p/ o parser de teste
+*.ifc -text

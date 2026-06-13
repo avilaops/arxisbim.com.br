@@ -50,6 +50,8 @@ Examples-files/
 demos/
 uploads/
 *.ifc
+# Exceção: fixtures de teste do parser IFC (S07) precisam estar no repo p/ CI.
+!backend/tests/fixtures/ifc/*.ifc
 *.DWG
 *.dwg
 *.pdf
