@@ -10,20 +10,23 @@ import { vi } from 'vitest';
 // Nota: @testing-library/dom não exporta `cleanup` (isso é @testing-library/react,
 // não instalado). Cada teste de componente faz seu próprio unmount.
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+// Mock window.matchMedia — só em env com DOM (jsdom). Testes em env 'node'
+// (ex.: roundtrip GLB via GLTFLoader) não têm `window` e devem pular isto.
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
 // Mock localStorage
 const localStorageMock = {
