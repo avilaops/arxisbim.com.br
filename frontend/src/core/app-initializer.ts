@@ -4,6 +4,8 @@
  */
 
 import { createAPIClient, getAPIClient } from './api';
+import { analytics } from './analytics/Analytics';
+import { BackendAnalyticsProvider } from './analytics/BackendAnalyticsProvider';
 // Autenticação removida para uso anônimo
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -17,6 +19,17 @@ export async function initializeApp(): Promise<void> {
   // 1. Criar API Client
   const apiClient = createAPIClient(API_BASE_URL);
   console.log('[App] API Client created:', API_BASE_URL);
+
+  // 1b. Persistir telemetria no backend (funil de onboarding S05). Sem este
+  // provider o funil register→project→upload ficaria cego em produção.
+  try {
+    analytics.addProvider(new BackendAnalyticsProvider({
+      baseUrl: API_BASE_URL,
+      getToken: () => { try { return apiClient.getToken(); } catch { return null; } },
+    }));
+  } catch (err) {
+    console.warn('[App] BackendAnalyticsProvider não registrado:', err);
+  }
 
   // Inicialização sempre em modo anônimo
   console.log('[App] Usuário anônimo, inicializando app em modo demonstração');
