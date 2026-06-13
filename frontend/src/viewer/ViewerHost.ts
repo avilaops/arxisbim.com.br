@@ -29,6 +29,7 @@ import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
 import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
+import type { CameraState } from './CameraState';
 
 
 /**
@@ -63,6 +64,51 @@ export class ViewerHost {
   /**
    * Seleciona objeto pelo ID (ex: expressID IFC)
    */
+  /** true se o viewer subiu sem WebGL (jsdom/SSR) — render desativado. */
+  public get isHeadless(): boolean { return this.headless; }
+
+  // ── API S09-compliant (expressID + CameraState; NÃO vaza Three.js) ──────────
+  // Alvo de migração: consumers devem usar isto em vez de `.camera`/`Object3D`.
+  private s09SelectCbs = new Set<(id: number | null) => void>();
+
+  /** Estado de câmera serializável (S09). Lê position/target/fov/near/far. */
+  public getCameraState(): CameraState {
+    const p = this.camera.position;
+    const t = this.controls?.target ?? new THREE.Vector3(0, 0, 0);
+    return {
+      version: 1,
+      position: [p.x, p.y, p.z],
+      target: [t.x, t.y, t.z],
+      fov: this.camera.fov,
+      near: this.camera.near,
+      far: this.camera.far,
+    };
+  }
+
+  /** Restaura a câmera a partir de um CameraState (S09). */
+  public setCameraState(s: CameraState): void {
+    this.camera.position.set(s.position[0], s.position[1], s.position[2]);
+    this.camera.fov = s.fov; this.camera.near = s.near; this.camera.far = s.far;
+    if (this.controls) { this.controls.target.set(s.target[0], s.target[1], s.target[2]); this.controls.update?.(); }
+    this.camera.lookAt(s.target[0], s.target[1], s.target[2]);
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** Seleciona por expressID (nodes do GLB têm name = expressID). */
+  public selectByExpressId(expressID: number): void { this.selectObject(String(expressID)); }
+
+  /** Assina seleção por expressID (S09) — sem expor Object3D. */
+  public onSelect(cb: (id: number | null) => void): () => void {
+    this.s09SelectCbs.add(cb);
+    return () => this.s09SelectCbs.delete(cb);
+  }
+
+  private notifyS09Select(object: THREE.Object3D | null): void {
+    const id = object ? (((object.userData as any)?.expressID as number | undefined) ?? Number(object.name)) : null;
+    const norm = typeof id === 'number' && Number.isFinite(id) ? id : null;
+    for (const cb of this.s09SelectCbs) cb(norm);
+  }
+
   public selectObject(id: string): void {
     // Busca objeto na cena por ID
     const object = this.scene.getObjectByName(id);
@@ -73,6 +119,7 @@ export class ViewerHost {
     } else {
       if (this.onSelectionChanged) this.onSelectionChanged(null);
     }
+    this.notifyS09Select(object ?? null);
   }
 
   /**
@@ -162,22 +209,32 @@ export class ViewerHost {
 
 
   private destroyed = false;
+  /** true quando WebGL não está disponível (ex.: jsdom/SSR). Sem render, mas
+   *  scene+camera existem e a API de seleção/câmera funciona. Em produção
+   *  (WebGL real) NUNCA é true — o try/catch abaixo só dispara sem GPU. */
+  private headless = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
-    this.init();
+    try {
+      this.init();
+    } catch (err) {
+      this.headless = true;
+      console.warn('[ViewerHost] WebGL indisponível — modo headless (sem render).', err);
+    }
     this.registerServices();
-    
-    // Garantir que canvas usará dimensões corretas após layout
-    requestAnimationFrame(() => {
+
+    if (!this.headless) {
+      // Garantir que canvas usará dimensões corretas após layout
       requestAnimationFrame(() => {
-        if (this.destroyed) return;
-        this.onResize();
-        console.log('✅ Resize forçado após RAF duplo');
+        requestAnimationFrame(() => {
+          if (this.destroyed) return;
+          this.onResize();
+          console.log('✅ Resize forçado após RAF duplo');
+        });
       });
-    });
-    
-    this.startRenderLoop();
+      this.startRenderLoop();
+    }
   }
 
   private init(): void {
@@ -681,6 +738,7 @@ export class ViewerHost {
   }
 
   private onResize(): void {
+    if (this.headless || !this.renderer) return;
     const { width, height, usedFallback } = this.getSafeViewportSize();
 
     if (usedFallback) {
@@ -735,22 +793,23 @@ export class ViewerHost {
       this.keyHandler = undefined;
     }
 
-    this.controls.dispose();
-    this.fpsControls.dispose();
-    this.thirdPersonControls.dispose();
-    this.droneControls.dispose();
+    // Optional-chaining: em modo headless os subsistemas de GPU não existem.
+    this.controls?.dispose();
+    this.fpsControls?.dispose();
+    this.thirdPersonControls?.dispose();
+    this.droneControls?.dispose();
     this.bimEnvironment?.dispose();
-    this.avatarSystem.dispose();
-    
+    this.avatarSystem?.dispose();
+
     if (this.hdriManager) {
       this.hdriManager.dispose();
     }
-    
+
     if (this.webrtcManager) {
       this.webrtcManager.disconnect();
     }
-    
-    this.renderer.dispose();
+
+    this.renderer?.dispose();
   }
   
   /**
