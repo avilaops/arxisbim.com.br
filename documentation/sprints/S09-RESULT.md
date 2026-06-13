@@ -36,7 +36,9 @@ Navegação 3D como **estado persistente e reproduzível**, independente do moto
 | Preset iso < 300ms | ✅ (lógica) | `CameraAnimator` chega exato a B em 300ms; suavidade visual = browser |
 | Nenhum consumer fora do Viewer importa Three.js | ✅ | fachada troca só DTO |
 | Build e lint | ✅ | tsc 0, build ok, **32 testes viewer verdes** |
-| Orbit/pan/zoom mouse+touch | 🟡 browser | OrbitControls (input DOM) — verificação visual |
+| Clique vs arrasto (mouseup + threshold; touch área maior) | ✅ headless | `ViewerInput`/`ViewerInputController` (mouse 4px, touch 12px); arrasto preserva seleção |
+| Seleção correta após orbit/pan/zoom | ✅ (lógica) | arrasto não toca seleção; raycast pós-movimento idêntico (matemática) |
+| Orbit/pan/zoom mouse+touch (gesto real) | 🟡 browser | OrbitControls (eventos DOM) — verificação visual |
 | Highlight visual / outline (pixels) | 🟡 browser | render pass — canvas/GPU |
 | FPS > 30 em 10k elementos | 🟡 browser/GPU | render loop real |
 
