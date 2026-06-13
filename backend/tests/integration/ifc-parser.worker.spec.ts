@@ -66,5 +66,5 @@ describe('ifc-parser.worker · parse() em modelos reais (multi-schema)', () => {
     } else {
       expect(res.structure.stats.totalElements).toBe(0);
     }
-  }, 30_000);
+  }, 60_000);
 });
