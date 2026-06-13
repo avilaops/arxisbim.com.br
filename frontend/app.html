@@ -1062,6 +1062,15 @@
       border-radius: 2px;
       transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
     }
+    /* Upload/processamento em andamento sem % numérico: barra indeterminada. */
+    .project-card__progress-bar--indeterminate {
+      width: 40%;
+      animation: pc-indeterminate 1.2s ease-in-out infinite;
+    }
+    @keyframes pc-indeterminate {
+      0%   { margin-left: -40%; }
+      100% { margin-left: 100%; }
+    }
     .project-card__footer {
       display: flex;
       justify-content: space-between;
@@ -2136,12 +2145,26 @@
         return;
       }
 
+      // Mapa dos 4 estados S05 (recuperados do backend) → rótulo + cor do dot.
+      const STATUS_UI = {
+        uploading:  { label: 'Enviando',    color: '#3B82F6' },
+        processing: { label: 'Processando', color: '#F59E0B' },
+        ready:      { label: 'Pronto',      color: '#10B981' },
+        failed:     { label: 'Falhou',      color: '#EF4444' },
+        active:     { label: 'Ativo',       color: '#10B981' }, // legado
+      };
+
       container.innerHTML = projects.map(p => {
         const avatars = p.collaborators.map(c =>
           `<div class="project-card__avatar" style="background:${c.color}">${c.initial}</div>`
         ).join('');
-        const statusDot = p.status === 'active'
-          ? `<span class="dot"></span>Ativo` : '';
+        const ui = STATUS_UI[p.status];
+        // 'empty' não mostra badge (projeto sem modelo ainda).
+        const statusDot = ui
+          ? `<span class="dot" style="background:${ui.color}"></span>${ui.label}` : '';
+        // Barra indeterminada enquanto envia/processa, mesmo sem % numérico —
+        // dá feedback visível do upload em andamento após um refresh.
+        const inFlight = p.status === 'uploading' || p.status === 'processing';
         return `
           <div class="project-card" data-project="${p.name}">
             <div class="project-card__thumb">
@@ -2159,7 +2182,10 @@
               ${typeof p.progress === 'number' ? `
               <div class="project-card__progress">
                 <div class="project-card__progress-bar" style="width:${p.progress}%"></div>
-              </div>` : ''}
+              </div>` : (inFlight ? `
+              <div class="project-card__progress">
+                <div class="project-card__progress-bar project-card__progress-bar--indeterminate"></div>
+              </div>` : '')}
               <div class="project-card__footer">
                 <span>${p.lastEdit}</span>
                 <div class="project-card__avatars">${avatars}</div>
@@ -2183,7 +2209,10 @@
         const res = await fetch(apiBase() + '/api/v1/projects', { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) return [];
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.projects || data.data || []);
+        // O backend devolve { items, page, pageSize, total }. Aceita também
+        // array cru / .projects / .data por robustez. (Antes lia só projects/data
+        // → nunca achava `items` e caía sempre no empty state.)
+        const list = Array.isArray(data) ? data : (data.items || data.projects || data.data || []);
         // Mapeia SOMENTE campos reais do backend (sem progresso/colaboradores fabricados).
         return list.map(p => ({
           id: p.id,
@@ -2195,8 +2224,11 @@
             ? p.collaborators.map(c => ({ initial: (c.name || c.email || '?')[0].toUpperCase(), color: '#2563EB' }))
             : [],
           progress: typeof p.progress === 'number' ? p.progress : null,
+          // Status real cacheado da versão ativa (empty/processing/ready/failed).
+          // É isto que recupera o estado do upload após um refresh — vem do backend,
+          // não de estado local. Aceita 'uploading' do model version tb.
+          status: p.status || 'empty',
           lastEdit: p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('pt-BR') : '—',
-          status: p.status === 'active' ? 'active' : null,
         }));
       } catch { return []; }
     }
