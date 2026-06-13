@@ -12,6 +12,7 @@
 import { Camera } from './Camera';
 import { Selection } from './Selection';
 import { ElementIndex } from './ElementIndex';
+import { CameraAnimator } from './CameraAnimator';
 import type { CameraState } from './CameraState';
 import type { CameraPreset, BoundingBoxLike } from './CameraPresets';
 import type { IdentifiableObject, GeometryManifest } from './MeshReference';
@@ -46,12 +47,22 @@ export class ViewerFacade {
   private index: ElementIndex | null = null;
   private bounds: BoundingBoxLike | null = null;
   private bridge: RenderBridge;
+  private animator: CameraAnimator;
+  private clock: () => number;
 
-  constructor(bridge: RenderBridge = {}) {
+  constructor(bridge: RenderBridge = {}, clock?: () => number) {
     this.bridge = bridge;
+    this.clock = clock ?? (() => (typeof performance !== 'undefined' ? performance.now() : Date.now()));
     this.selection.onSelect((id) => this.bridge.highlightSelected?.(id));
     this.selection.onHover((id) => this.bridge.highlightHovered?.(id));
+    // Animator interno (engine-agnóstico): aplica o estado interpolado na câmera
+    // + bridge a cada frame. O loop de render chama `tick(now)`.
+    this.animator = new CameraAnimator((s) => { this.camera.setState(s); this.bridge.applyState?.(s); });
   }
+
+  /** O loop de render chama isto a cada frame com o timestamp atual (ms). */
+  tick(now: number): void { this.animator.tick(now); }
+  get isAnimating(): boolean { return this.animator.isAnimating; }
 
   /** Carrega o modelo: índice de identidade + bounds p/ presets. */
   loadModel(manifest: GeometryManifest): void {
@@ -63,8 +74,11 @@ export class ViewerFacade {
   readonly cameraApi: CameraFacade = {
     getState: () => this.camera.getState(),
     setState: (state, animated = false) => {
-      if (animated && this.bridge.animateCamera) this.bridge.animateCamera(state, 300);
-      else { this.camera.setState(state); this.bridge.applyState?.(state); }
+      if (!animated) { this.camera.setState(state); this.bridge.applyState?.(state); return; }
+      // Escape hatch: bridge externa (ex.: GSAP) assume a animação.
+      if (this.bridge.animateCamera) { this.bridge.animateCamera(state, 300); return; }
+      // Animator interno engine-agnóstico — render loop chama tick(now).
+      this.animator.start(this.camera.getState(), state, this.clock());
     },
     setPreset: (preset) => {
       if (!this.bounds) return;

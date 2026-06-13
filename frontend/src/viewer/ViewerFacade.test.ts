@@ -58,6 +58,22 @@ describe('ViewerFacade · API só com expressID + CameraState', () => {
     expect(animateCamera).toHaveBeenCalledWith(s, 300);
   });
 
+  it('setState animado usa animator interno; tick chega exato ao alvo', () => {
+    let t = 0;
+    const v = new ViewerFacade({}, () => t);
+    v.loadModel(manifest);
+    v.cameraApi.setPreset('iso');
+    const target = v.cameraApi.getState();
+    v.cameraApi.setPreset('front'); // muda a câmera p/ ter de onde animar
+
+    t = 1000;
+    v.cameraApi.setState(target, true); // anima a partir de t=1000
+    expect(v.isAnimating).toBe(true);
+    t = 1300; v.tick(t);                // +300ms = fim
+    expect(v.isAnimating).toBe(false);
+    expect(v.cameraApi.getState()).toEqual(target);
+  });
+
   it('setState→getState roundtrip exato pela fachada', () => {
     const v = new ViewerFacade();
     v.loadModel(manifest);
