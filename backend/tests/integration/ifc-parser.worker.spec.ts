@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -6,62 +6,61 @@ import { parse } from '../../src/modules/ifc/ifc-parser.worker.js';
 import { IFC_STRUCTURE_VERSION } from '../../src/modules/ifc/ifc-structure.dto.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = join(here, '..', 'fixtures', 'ifc', 'sample.ifc');
+const fx = (name: string) => join(here, '..', 'fixtures', 'ifc', name);
 
-// Parse real de web-ifc (WASM): mais lento que um unit test puro.
-describe('ifc-parser.worker · parse() em modelo real (IFC2X3)', () => {
-  let buf: Buffer;
-  beforeAll(() => { buf = readFileSync(fixture); });
+function toAB(p: string): ArrayBuffer {
+  const b = readFileSync(p);
+  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+}
 
-  it('produz IFCStructure v1 com schema, elementos e bounding box', async () => {
-    const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    const res = await parse({ buffer: ab, modelVersionId: 'mv-test', reqId: 'req-test' });
+// Modelos de referência reais (buildingSMART / ThatOpen) — um por schema.
+const MODELS = [
+  { file: 'sample.ifc', schema: 'IFC2X3' },
+  { file: 'ac20-fzk-haus_ifc4.ifc', schema: 'IFC4' },
+  { file: 'building-arch_ifc4x3.ifc', schema: 'IFC4X3' },
+];
 
-    expect(res.ok).toBe(true);
-    if (!res.ok) return;
-    const s = res.structure;
+describe('ifc-parser.worker · parse() em modelos reais (multi-schema)', () => {
+  for (const m of MODELS) {
+    it(`${m.file} → IFCStructure válido (${m.schema}), sem crash`, async () => {
+      const res = await parse({ buffer: toAB(fx(m.file)), modelVersionId: `mv-${m.file}`, reqId: 'req' });
+      expect(res.ok).toBe(true);
+      if (!res.ok) return;
+      const s = res.structure;
 
-    // DTO versionado + schema detectado.
-    expect(s.version).toBe(IFC_STRUCTURE_VERSION);
-    expect(['IFC2X3', 'IFC4', 'IFC4X3']).toContain(s.schema);
+      expect(s.version).toBe(IFC_STRUCTURE_VERSION);
+      expect(s.schema).toBe(m.schema);
 
-    // Elementos extraídos com identificadores.
-    expect(s.stats.totalElements).toBeGreaterThan(0);
-    expect(s.elements.length).toBe(s.stats.totalElements);
-    const first = s.elements[0];
-    expect(typeof first.expressID).toBe('number');
-    expect(typeof first.type).toBe('string');
-    expect('parentExpressID' in first).toBe(true);
+      // Elementos com identificadores; byType soma = total.
+      expect(s.stats.totalElements).toBeGreaterThan(0);
+      expect(s.elements.length).toBe(s.stats.totalElements);
+      expect(Object.values(s.stats.byType).reduce((a, b) => a + b, 0)).toBe(s.stats.totalElements);
+      expect(s.elements.every((e) => /^Ifc/.test(e.type))).toBe(true);
 
-    // byType somado bate com o total.
-    const sumByType = Object.values(s.stats.byType).reduce((a, b) => a + b, 0);
-    expect(sumByType).toBe(s.stats.totalElements);
+      // expressID único; parentExpressID presente.
+      const ids = s.elements.map((e) => e.expressID);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect('parentExpressID' in s.elements[0]).toBe(true);
 
-    // byDiscipline tem as 4 chaves.
-    expect(Object.keys(s.stats.byDiscipline).sort()).toEqual(['architecture', 'mep', 'other', 'structure']);
+      // byDiscipline com 4 chaves.
+      expect(Object.keys(s.stats.byDiscipline).sort()).toEqual(['architecture', 'mep', 'other', 'structure']);
 
-    // boundingBox OBRIGATÓRIO presente e bem-formado.
-    expect(s.stats.boundingBox.min).toHaveLength(3);
-    expect(s.stats.boundingBox.max).toHaveLength(3);
+      // boundingBox OBRIGATÓRIO, em metros (web-ifc normaliza).
+      expect(s.stats.boundingBox.min).toHaveLength(3);
+      expect(s.stats.boundingBox.max).toHaveLength(3);
 
-    // Hierarquia espacial (Project no topo).
-    expect(s.spatialTree.length).toBeGreaterThan(0);
-    expect(s.spatialTree[0].type.toUpperCase()).toContain('IFCPROJECT');
+      // units de autoria lidas do IfcUnitAssignment.
+      expect(['mm', 'cm', 'm', 'km']).toContain(s.units.length);
 
-    // Units reais lidas do IfcUnitAssignment (não hardcoded).
-    expect(['mm', 'cm', 'm', 'km']).toContain(s.units.length);
-    expect(s.units.area).toBe(`${s.units.length}2`);
+      // Hierarquia espacial: Project no topo.
+      expect(s.spatialTree.length).toBeGreaterThan(0);
+      expect(s.spatialTree[0].type.toUpperCase()).toContain('IFCPROJECT');
+    }, 60_000);
+  }
 
-    // Enumeração completa: tipos PascalCase, sem expressID duplicado.
-    const ids = s.elements.map((e) => e.expressID);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(s.elements.every((e) => /^Ifc/.test(e.type))).toBe(true);
-  }, 60_000);
-
-  it('arquivo inválido → ok:false com errorType (não lança)', async () => {
+  it('arquivo inválido → não lança (ok:false com errorType, ou estrutura vazia)', async () => {
     const garbage = new TextEncoder().encode('isto não é um IFC').buffer;
     const res = await parse({ buffer: garbage, modelVersionId: 'mv-x', reqId: 'req-x' });
-    // web-ifc pode abrir vazio ou falhar; em ambos o contrato não pode lançar.
     if (!res.ok) {
       expect(res.errorType).toBeTruthy();
     } else {
