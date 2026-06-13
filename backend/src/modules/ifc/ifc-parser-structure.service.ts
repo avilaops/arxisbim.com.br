@@ -91,6 +91,15 @@ export class IfcParserStructureService {
         reject(new IfcParseError('IFC_WORKER_ERROR', err instanceof Error ? err.message : String(err)));
       });
 
+      // Crash duro do WASM pode encerrar a thread sem emitir 'message' — sem este
+      // handler a Promise só resolveria no timeout (60s pendurado). Rejeita na hora.
+      worker.once('exit', (code: number) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(new IfcParseError('IFC_WORKER_EXIT', `worker saiu com código ${code} antes de responder`));
+      });
+
       // ArrayBuffer transferível: evita copiar o arquivo inteiro p/ o worker.
       worker.postMessage(req, [req.buffer]);
     });

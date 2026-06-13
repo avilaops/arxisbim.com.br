@@ -16,6 +16,11 @@ export type IfcSchema = 'IFC2X3' | 'IFC4' | 'IFC4X3';
 /** architecture | structure | mep | other — heurística inicial (S07). */
 export type Discipline = 'architecture' | 'structure' | 'mep' | 'other';
 
+/**
+ * Bounding box em METROS, sempre. web-ifc normaliza a geometria p/ metros
+ * independente da unidade de autoria do arquivo. NÃO multiplique pelo `units` —
+ * `units` descreve a autoria (p/ quantitativos S13/S20), não as coordenadas.
+ */
 export interface BoundingBox {
   min: [number, number, number];
   max: [number, number, number];
@@ -50,6 +55,11 @@ export interface IFCStructure {
   version: typeof IFC_STRUCTURE_VERSION;
   schema: IfcSchema;
   projectName: string;
+  /**
+   * Unidade de AUTORIA do arquivo (IfcUnitAssignment) — ex.: 'mm'. Usada p/
+   * interpretar quantitativos (S13/S20). NÃO é a unidade do `boundingBox`, que
+   * é sempre metros (web-ifc normaliza). Ver doc em BoundingBox.
+   */
   units: { length: string; area: string; volume: string };
   spatialTree: SpatialNode[];           // Site → Building → Storey → Space
   elements: IFCElement[];

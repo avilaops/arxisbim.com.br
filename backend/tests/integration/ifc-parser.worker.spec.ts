@@ -47,6 +47,15 @@ describe('ifc-parser.worker · parse() em modelo real (IFC2X3)', () => {
     // Hierarquia espacial (Project no topo).
     expect(s.spatialTree.length).toBeGreaterThan(0);
     expect(s.spatialTree[0].type.toUpperCase()).toContain('IFCPROJECT');
+
+    // Units reais lidas do IfcUnitAssignment (não hardcoded).
+    expect(['mm', 'cm', 'm', 'km']).toContain(s.units.length);
+    expect(s.units.area).toBe(`${s.units.length}2`);
+
+    // Enumeração completa: tipos PascalCase, sem expressID duplicado.
+    const ids = s.elements.map((e) => e.expressID);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(s.elements.every((e) => /^Ifc/.test(e.type))).toBe(true);
   }, 60_000);
 
   it('arquivo inválido → ok:false com errorType (não lança)', async () => {

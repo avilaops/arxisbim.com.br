@@ -54,6 +54,31 @@ export function boundingBoxFromPoints(points: ReadonlyArray<[number, number, num
   return { min, max };
 }
 
+/**
+ * Acumulador de bounding box que MUTA arrays internos — zero alocação por ponto.
+ * Crítico p/ parse de modelos grandes (milhões de vértices): `mergeBoundingBox`
+ * alocava um objeto por vértice e detonava o GC (fere "memória <3× arquivo").
+ */
+export function createBBoxAccumulator() {
+  const min: [number, number, number] = [Infinity, Infinity, Infinity];
+  const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+  let seen = false;
+  return {
+    expand(x: number, y: number, z: number): void {
+      seen = true;
+      if (x < min[0]) min[0] = x; if (x > max[0]) max[0] = x;
+      if (y < min[1]) min[1] = y; if (y > max[1]) max[1] = y;
+      if (z < min[2]) min[2] = z; if (z > max[2]) max[2] = z;
+    },
+    get isEmpty(): boolean { return !seen; },
+    /** bbox final; degenerado na origem se nenhum ponto foi visto. */
+    result(): BoundingBox {
+      if (!seen) return emptyBoundingBox();
+      return { min: [min[0], min[1], min[2]], max: [max[0], max[1], max[2]] };
+    },
+  };
+}
+
 /** Agrega stats (byType, byDiscipline, total) a partir dos elementos + bbox dado. */
 export function buildStats(elements: ReadonlyArray<IFCElement>, boundingBox: BoundingBox): IFCStats {
   const byType: Record<string, number> = {};

@@ -11,10 +11,10 @@ import { parentPort } from 'node:worker_threads';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import {
-  buildStats, mergeBoundingBox,
+  buildStats, createBBoxAccumulator,
 } from './ifc-structure.builder.js';
 import type {
-  IFCStructure, IFCElement, SpatialNode, IfcSchema, BoundingBox,
+  IFCStructure, IFCElement, SpatialNode, IfcSchema,
 } from './ifc-structure.dto.js';
 import { IFC_STRUCTURE_VERSION } from './ifc-structure.dto.js';
 
@@ -50,11 +50,36 @@ function mapSchema(raw: string): IfcSchema {
   return 'IFC2X3';
 }
 
+/** Fallback 'IFCWALL' → 'IfcWall' (usado só se line.constructor.name faltar). */
+function pascalIfcType(typeName: string): string {
+  const rest = typeName.slice(3).toLowerCase();
+  return 'Ifc' + (rest.charAt(0).toUpperCase() + rest.slice(1));
+}
+
 function strOf(v: any): string | null {
   if (v == null) return null;
   if (typeof v === 'object' && 'value' in v) return v.value == null ? null : String(v.value);
   return String(v);
 }
+
+/**
+ * Tipos de produto IFC enumerados explicitamente (cobre as disciplinas + comuns).
+ * A árvore espacial só devolve o que está em containment espacial; elementos via
+ * IfcRelAggregates ou soltos seriam perdidos. Enumerar por tipo garante byType
+ * completo (critério S07). Constantes inexistentes no schema são puladas.
+ */
+const PRODUCT_TYPE_NAMES = [
+  // architecture
+  'IFCWALL', 'IFCWALLSTANDARDCASE', 'IFCDOOR', 'IFCWINDOW', 'IFCROOF', 'IFCSTAIR',
+  'IFCSTAIRFLIGHT', 'IFCRAMP', 'IFCRAILING', 'IFCCOVERING', 'IFCCURTAINWALL', 'IFCFURNISHINGELEMENT',
+  // structure
+  'IFCBEAM', 'IFCCOLUMN', 'IFCSLAB', 'IFCMEMBER', 'IFCPLATE', 'IFCFOOTING', 'IFCPILE', 'IFCREINFORCINGBAR',
+  // mep
+  'IFCDUCTSEGMENT', 'IFCPIPESEGMENT', 'IFCCABLECARRIERSEGMENT', 'IFCCABLESEGMENT',
+  'IFCFLOWSEGMENT', 'IFCFLOWFITTING', 'IFCFLOWTERMINAL', 'IFCFLOWCONTROLLER',
+  // generic / outros
+  'IFCBUILDINGELEMENTPROXY', 'IFCFURNITURE', 'IFCSYSTEMFURNITUREELEMENT',
+];
 
 /** Aplica matriz 4x4 column-major (web-ifc/glMatrix) a um ponto. */
 function applyMatrix(m: ArrayLike<number>, x: number, y: number, z: number): [number, number, number] {
@@ -63,6 +88,32 @@ function applyMatrix(m: ArrayLike<number>, x: number, y: number, z: number): [nu
     m[1] * x + m[5] * y + m[9] * z + m[13],
     m[2] * x + m[6] * y + m[10] * z + m[14],
   ];
+}
+
+/**
+ * Lê a unidade de comprimento do IfcUnitAssignment. Modelo em mm reportar 'm'
+ * faria o bbox sair 1000× errado. Default 'm' se não encontrar.
+ */
+function readLengthUnit(api: any, modelID: number): { length: string; area: string; volume: string } {
+  try {
+    const ids = api.GetLineIDsWithType(modelID, WebIFC.IFCUNITASSIGNMENT);
+    for (let i = 0; i < ids.size(); i++) {
+      const ua = api.GetLine(modelID, ids.get(i));
+      const units = ua?.Units || [];
+      for (const ref of units) {
+        const unit = api.GetLine(modelID, ref.value ?? ref);
+        if ((strOf(unit?.UnitType) || '').toUpperCase().includes('LENGTHUNIT')) {
+          const name = (strOf(unit?.Name) || 'METRE').toUpperCase();
+          const prefix = (strOf(unit?.Prefix) || '').toUpperCase();
+          if (name.includes('METRE')) {
+            const len = prefix === 'MILLI' ? 'mm' : prefix === 'CENTI' ? 'cm' : prefix === 'KILO' ? 'km' : 'm';
+            return { length: len, area: `${len}2`, volume: `${len}3` };
+          }
+        }
+      }
+    }
+  } catch { /* cai no default */ }
+  return { length: 'm', area: 'm2', volume: 'm3' };
 }
 
 async function parse(req: ParseRequest): Promise<ParseResult> {
@@ -79,25 +130,30 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
 
     const schema = mapSchema(api.GetModelSchema(modelID));
 
-    // ── Árvore espacial + elementos ────────────────────────────────
+    // ── Árvore espacial: monta tree + mapa expressID → {parent, storey} ─────
     const props = new WebIFC.Properties(api);
     const root = await props.getSpatialStructure(modelID, false);
 
-    const elements: IFCElement[] = [];
     const spatialTree: SpatialNode[] = [];
+    // Containment de cada elemento descoberto pela árvore (autoridade p/ parent/storey).
+    const placement = new Map<number, { parent: number | null; storey: number | null }>();
 
     const lineCache = (id: number) => { try { return api.GetLine(modelID, id); } catch { return null; } };
 
     function walk(node: any, parentExpressID: number | null, storeyId: number | null): SpatialNode | null {
       const type: string = node.type || '';
-      const line = lineCache(node.expressID);
-      const globalId = strOf(line?.GlobalId) ?? '';
-      const name = strOf(line?.Name);
       const isSpatial = SPATIAL_TYPES.has(type.toUpperCase());
       const nextStorey = type.toUpperCase() === 'IFCBUILDINGSTOREY' ? node.expressID : storeyId;
 
       if (isSpatial) {
-        const sn: SpatialNode = { expressID: node.expressID, globalId, type, name, children: [] };
+        const line = lineCache(node.expressID);
+        const sn: SpatialNode = {
+          expressID: node.expressID,
+          globalId: strOf(line?.GlobalId) ?? '',
+          type,
+          name: strOf(line?.Name),
+          children: [],
+        };
         for (const child of node.children || []) {
           const childSpatial = walk(child, node.expressID, nextStorey);
           if (childSpatial) sn.children.push(childSpatial);
@@ -105,16 +161,8 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
         return sn;
       }
 
-      // Elemento (não-espacial): registra e segue descendo (agregações).
-      elements.push({
-        expressID: node.expressID,
-        globalId,
-        type,
-        name,
-        storeyId,
-        parentExpressID,
-        hasGeometry: false, // ajustado na varredura de geometria
-      });
+      // Elemento: registra containment; segue descendo (agregações aninhadas).
+      placement.set(node.expressID, { parent: parentExpressID, storey: storeyId });
       for (const child of node.children || []) {
         walk(child, node.expressID, storeyId);
       }
@@ -125,7 +173,6 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
       const sn = walk(child, root.expressID, null);
       if (sn) spatialTree.push(sn);
     }
-    // A própria raiz (IfcProject) vira o topo da árvore.
     const rootLine = lineCache(root.expressID);
     const tree: SpatialNode[] = [{
       expressID: root.expressID,
@@ -135,9 +182,61 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
       children: spatialTree,
     }];
 
-    // ── Geometria → bounding box + hasGeometry ─────────────────────
-    const withGeometry = new Set<number>();
-    let bbox: BoundingBox | null = null;
+    // ── Enumeração COMPLETA de elementos por tipo (não só a árvore) ─────────
+    const elements: IFCElement[] = [];
+    const seenExpress = new Set<number>();
+    const seenGlobalIds = new Set<string>();
+    let duplicateGlobalIds = 0;
+
+    for (const typeName of PRODUCT_TYPE_NAMES) {
+      const typeId = WebIFC[typeName];
+      if (typeId == null) continue; // tipo não existe neste schema
+      let ids: any;
+      try { ids = api.GetLineIDsWithType(modelID, typeId); } catch { continue; }
+      for (let i = 0; i < ids.size(); i++) {
+        const expressID: number = ids.get(i);
+        if (seenExpress.has(expressID)) continue;
+        seenExpress.add(expressID);
+
+        const line = lineCache(expressID);
+        let globalId = strOf(line?.GlobalId) ?? '';
+        if (globalId) {
+          if (seenGlobalIds.has(globalId)) {
+            // GlobalId duplicado (modelo mal-exportado): expressID é a autoridade.
+            duplicateGlobalIds++;
+            globalId = '';
+          } else {
+            seenGlobalIds.add(globalId);
+          }
+        }
+        const place = placement.get(expressID);
+        elements.push({
+          expressID,
+          globalId,
+          // typeName é 'IFCWALL' → normaliza p/ 'IfcWall' (PascalCase do schema).
+          type: line?.constructor?.name && /^Ifc/i.test(line.constructor.name)
+            ? line.constructor.name
+            : pascalIfcType(typeName),
+          name: strOf(line?.Name),
+          storeyId: place?.storey ?? null,
+          parentExpressID: place?.parent ?? null,
+          hasGeometry: false, // ajustado na varredura de geometria
+        });
+      }
+    }
+
+    if (duplicateGlobalIds > 0) {
+      console.warn(JSON.stringify({
+        level: 'warn', message: 'IFC GlobalId duplicates',
+        model_version_id: req.modelVersionId, req_id: req.reqId,
+        duplicate_count: duplicateGlobalIds, timestamp: new Date().toISOString(),
+      }));
+    }
+
+    // ── Geometria → bounding box (in-place) + hasGeometry ──────────────────
+    const elementByExpress = new Map<number, IFCElement>();
+    for (const el of elements) elementByExpress.set(el.expressID, el);
+    const bb = createBBoxAccumulator();
 
     api.StreamAllMeshes(modelID, (mesh: any) => {
       const expressID: number = mesh.expressID;
@@ -150,22 +249,14 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
         // 6 floats por vértice: posição(3) + normal(3). Só posição importa p/ bbox.
         for (let v = 0; v < verts.length; v += 6) {
           const [x, y, z] = applyMatrix(m, verts[v], verts[v + 1], verts[v + 2]);
-          if (!bbox) {
-            bbox = { min: [x, y, z], max: [x, y, z] };
-          } else {
-            bbox = mergeBoundingBox(bbox, { min: [x, y, z], max: [x, y, z] });
-          }
+          bb.expand(x, y, z);
         }
-        withGeometry.add(expressID);
       }
+      const el = elementByExpress.get(expressID);
+      if (el) el.hasGeometry = true;
     });
 
-    for (const el of elements) {
-      if (withGeometry.has(el.expressID)) el.hasGeometry = true;
-    }
-
-    // bbox OBRIGATÓRIO: sem geometria (modelo só-estrutura) → degenerado na origem.
-    const boundingBox: BoundingBox = bbox ?? { min: [0, 0, 0], max: [0, 0, 0] };
+    const boundingBox = bb.result(); // OBRIGATÓRIO; degenerado na origem se sem geometria
 
     const headerName = (() => {
       try {
@@ -178,7 +269,7 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
       version: IFC_STRUCTURE_VERSION,
       schema,
       projectName: strOf(rootLine?.Name) || headerName || 'Untitled',
-      units: { length: 'm', area: 'm2', volume: 'm3' }, // refinado em S13 (UnitAssignment)
+      units: readLengthUnit(api, modelID),
       spatialTree: tree,
       elements,
       stats: buildStats(elements, boundingBox),

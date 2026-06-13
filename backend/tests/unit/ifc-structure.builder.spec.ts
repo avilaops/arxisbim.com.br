@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   classifyDiscipline, emptyBoundingBox, mergeBoundingBox, boundingBoxFromPoints, buildStats,
+  createBBoxAccumulator,
 } from '../../src/modules/ifc/ifc-structure.builder.js';
 import { IFC_STRUCTURE_VERSION } from '../../src/modules/ifc/ifc-structure.dto.js';
 import type { IFCElement } from '../../src/modules/ifc/ifc-structure.dto.js';
@@ -37,6 +38,17 @@ describe('ifc-structure.builder', () => {
     expect(stats.byType).toEqual({ IfcWall: 2, IfcBeam: 1, IfcDoor: 1 });
     expect(stats.byDiscipline).toEqual({ architecture: 3, structure: 1, mep: 0, other: 0 });
     expect(stats.boundingBox.max).toEqual([1, 1, 1]);
+  });
+
+  it('createBBoxAccumulator envelops points in-place, empty → degenerate', () => {
+    const acc = createBBoxAccumulator();
+    expect(acc.isEmpty).toBe(true);
+    expect(acc.result()).toEqual(emptyBoundingBox());
+    acc.expand(1, 2, 3); acc.expand(-1, 5, 0); acc.expand(4, 0, 9);
+    expect(acc.isEmpty).toBe(false);
+    expect(acc.result()).toEqual({ min: [-1, 0, 0], max: [4, 5, 9] });
+    // mesmo resultado que boundingBoxFromPoints — equivalência in-place vs alocado.
+    expect(acc.result()).toEqual(boundingBoxFromPoints([[1, 2, 3], [-1, 5, 0], [4, 0, 9]]));
   });
 
   it('DTO version pinned to 1', () => {
