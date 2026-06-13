@@ -37,6 +37,7 @@ import { sessionsRoutes } from './modules/sessions/sessions.routes.js';
 import { observabilityRoutes } from './routes/v1/observability/observability.routes.js';
 import { storageRoutes } from './core/storage/storage.routes.js';
 import { getStorage } from './core/storage/index.js';
+import { PINO_REDACT_PATHS, REDACTED } from './core/observability/redact.js';
 import { filesRoutes } from './modules/files/files.routes.js';
 import { modelsRoutes } from './modules/models/models.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
@@ -228,6 +229,13 @@ async function buildReadinessPayload() {
 const server = Fastify({
   logger: {
     level: process.env.LOG_LEVEL || 'info',
+    // S06: redact de campos sensíveis no serializer do pino — Authorization,
+    // Cookie, tokens, api keys nunca chegam ao log mesmo se um handler logar
+    // `request.headers` cru.
+    redact: {
+      paths: PINO_REDACT_PATHS,
+      censor: REDACTED,
+    },
   },
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,

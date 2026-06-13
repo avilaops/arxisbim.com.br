@@ -7,6 +7,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../../shared/database/db.js';
 import { auditLogs, metrics, errorLogs, performanceMetrics } from '../../shared/database/schema/observability.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
+import { redactSensitive } from './redact.js';
 
 // =====================================
 // TYPES
@@ -348,7 +349,7 @@ export const logger = {
       level: 'info',
       message,
       timestamp: new Date().toISOString(),
-      ...meta,
+      ...redactSensitive(meta),
     }));
   },
 
@@ -360,7 +361,7 @@ export const logger = {
       error: normalizedError?.message ?? String(error ?? ''),
       stack: normalizedError?.stack,
       timestamp: new Date().toISOString(),
-      ...meta,
+      ...redactSensitive(meta),
     }));
   },
 
@@ -369,7 +370,7 @@ export const logger = {
       level: 'warn',
       message,
       timestamp: new Date().toISOString(),
-      ...meta,
+      ...redactSensitive(meta),
     }));
   },
 
@@ -379,7 +380,7 @@ export const logger = {
         level: 'debug',
         message,
         timestamp: new Date().toISOString(),
-        ...meta,
+        ...redactSensitive(meta),
       }));
     }
   },
