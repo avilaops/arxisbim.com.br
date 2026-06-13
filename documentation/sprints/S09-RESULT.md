@@ -28,20 +28,24 @@ Navegação 3D como **estado persistente e reproduzível**, independente do moto
 | Presets calculados do bounding box (qualquer escala) | ✅ | teste escala 1m vs 400m |
 | Preset iso centra o modelo | ✅ | target = centro do bbox |
 | Reset recalcula do bbox atual (determinístico) | ✅ | `reset` idêntico em repetição |
-| Clique em elemento seleciona | ✅ | `pickObject`→expressID→select |
-| Clique no vazio deseleciona | ✅ | objeto sem expressID → clear |
+| **Clique em mesh retorna expressID correto** | ✅ **headless** | BVH raycast real: GLB→three→raio→ElementIndex→1001 (`ViewerRaycaster.test`) |
+| Clique no vazio deseleciona | ✅ headless | raio que erra → null → `pickObject` clear |
 | Hover destaca sem persistir seleção | ✅ | `hover` não altera selected |
 | Seleção desacoplada (só expressID, nunca Object3D) | ✅ | `Selection`/fachada |
+| **BVH construído 1× no load, não por seleção** | ✅ headless | `buildBVH` idempotente (rebuild no-op) |
+| Preset iso < 300ms | ✅ (lógica) | `CameraAnimator` chega exato a B em 300ms; suavidade visual = browser |
 | Nenhum consumer fora do Viewer importa Three.js | ✅ | fachada troca só DTO |
-| Build e lint | ✅ | tsc 0, build ok, 15 testes verdes |
-| Orbit/pan/zoom mouse+touch | 🟡 browser | OrbitControls — verificação visual |
-| Seleção correta após orbit/pan/zoom | 🟡 browser | raycast real (BVH) — canvas |
-| Highlight visual / outline | 🟡 browser | render pass — canvas |
-| Preset iso < 300ms | 🟡 browser | animação real |
-| BVH construído 1× no load | 🟡 browser | three-mesh-bvh (ABSENT) na camada de render |
+| Build e lint | ✅ | tsc 0, build ok, **32 testes viewer verdes** |
+| Orbit/pan/zoom mouse+touch | 🟡 browser | OrbitControls (input DOM) — verificação visual |
+| Highlight visual / outline (pixels) | 🟡 browser | render pass — canvas/GPU |
+| FPS > 30 em 10k elementos | 🟡 browser/GPU | render loop real |
+
+## Headless provado (atualização)
+
+`three-mesh-bvh@0.5.24` instalado. `ViewerRaycaster` + `CameraAnimator` fecham, SEM browser, os critérios antes tidos como visuais: clique→expressID via BVH real, BVH-1×, preset<300ms (lógica). Raycaster+geometria são matemática pura → testáveis sem WebGL.
 
 ## Aberto
 
-- **Migração do `ViewerHost` legado** (débito): expõe `THREE.PerspectiveCamera` e `Object3D` direto — viola o contrato S09. Deve rotear pela `ViewerFacade`. Refactor de ~766 linhas, tarefa própria.
-- Camada de render (orbit/pan/zoom, raycast+BVH, outline) + `three-mesh-bvh` — verificação visual com canvas/GPU. `RenderBridge` já preparada.
-- Backend: **nada tocado** no S09 (puro frontend). v1/drizzle/zod/migrations intactos (130/130).
+- **Migração do `ViewerHost` legado** (débito): expõe `THREE.PerspectiveCamera` e `Object3D` direto — viola o contrato S09. Deve rotear pela `ViewerFacade`. ~766 linhas; seu `.test` falha por WebGL no jsdom (pré-existente). Tarefa própria.
+- Só-browser/GPU: orbit/pan/zoom (input DOM), outline em pixels, FPS>30, 1º frame<5s. `RenderBridge`/`tick(now)` já preparados p/ a camada de render plugar.
+- Backend: **nada tocado** no S09 (puro frontend). v1/drizzle/zod/migrations intactos (**130/130, tsc 0**).
