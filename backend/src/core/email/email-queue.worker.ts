@@ -4,6 +4,7 @@ import { eq, and, lt, lte } from 'drizzle-orm';
 import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import { emailQueue } from '../../shared/database/schema/email-queue.js';
+import { createJobLogger, newJobId } from '../observability/job-context.js';
 
 type Logger = { info: (...a: any[]) => void; error: (...a: any[]) => void; warn: (...a: any[]) => void };
 
@@ -21,7 +22,7 @@ export async function enqueueEmail(opts: {
   to: string;
   subject: string;
   html: string;
-  metadata?: { emailType?: string; tenantId?: string; userId?: string };
+  metadata?: { emailType?: string; tenantId?: string; userId?: string; originReqId?: string };
 }): Promise<void> {
   const sql = postgres(process.env.DATABASE_URL!);
   const db = drizzle(sql);
@@ -92,12 +93,21 @@ export function createEmailQueueWorker(options: EmailQueueWorkerOptions) {
         .limit(batchSize);
 
       for (const row of rows) {
+        // Cada email é um job: gera job_id próprio e preserva origin_req_id do
+        // request que o enfileirou (S06 trace ponta-a-ponta).
+        const jobLog = createJobLogger(logger, {
+          jobType: 'email.send',
+          jobId: newJobId(),
+          originReqId: row.metadata?.originReqId ?? null,
+          tenantId: row.metadata?.tenantId,
+        });
         try {
           await send(row.to, row.subject, row.html);
           await db
             .update(emailQueue)
             .set({ status: 'sent', sentAt: new Date(), attempts: row.attempts + 1 })
             .where(eq(emailQueue.id, row.id));
+          jobLog.info('email sent', { emailId: row.id, status: 'sent', attempts: row.attempts + 1 });
           sent++;
         } catch (err: any) {
           const nextAttempt = row.attempts + 1;
@@ -115,8 +125,10 @@ export function createEmailQueueWorker(options: EmailQueueWorkerOptions) {
             .where(eq(emailQueue.id, row.id));
 
           if (isFinal) {
-            logger.error(`[email-queue] permanent failure: to=${row.to} subject=${row.subject} err=${err.message}`);
+            jobLog.error('email permanent failure', { emailId: row.id, status: 'failed', attempts: nextAttempt, error: err.message });
             failed++;
+          } else {
+            jobLog.warn('email send retry scheduled', { emailId: row.id, attempts: nextAttempt, backoffMs });
           }
         }
       }

@@ -12,7 +12,9 @@ export const emailQueue = pgTable('email_queue', {
   scheduledAt: timestamp('scheduled_at').defaultNow().notNull(),
   sentAt: timestamp('sent_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  metadata: jsonb('metadata').$type<{ emailType?: string; tenantId?: string; userId?: string }>(),
+  // originReqId: req_id do request HTTP que enfileirou o email (S06 trace). jsonb,
+  // sem migration. Preservado p/ correlacionar o job de envio com a origem.
+  metadata: jsonb('metadata').$type<{ emailType?: string; tenantId?: string; userId?: string; originReqId?: string }>(),
 }, (table) => ({
   statusIdx: index('email_queue_status_idx').on(table.status),
   scheduledAtIdx: index('email_queue_scheduled_at_idx').on(table.scheduledAt),
