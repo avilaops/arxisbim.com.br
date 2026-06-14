@@ -17,8 +17,11 @@ export * from './notifications.js';
 // Billing & Subscriptions
 export * from './billing.js';
 
-// Projects & IFC Models  
+// Projects & IFC Models
 export * from './projects.js';
+
+// IFC processing pipeline runs (S11)
+export * from './processing.js';
 
 // Copilot/viewer scenarios
 export * from './scenarios.js';
