@@ -406,9 +406,11 @@ export class ScenarioService {
       createdBy: row.createdBy || undefined,
       name: row.name,
       description: row.description || undefined,
-      camera: row.camera,
-      player: row.player,
-      config: row.config,
+      // Rows legados sempre têm estes campos; cenários S12 usam scenario_state
+      // e não passam por este mapper.
+      camera: row.camera!,
+      player: row.player!,
+      config: row.config!,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };
