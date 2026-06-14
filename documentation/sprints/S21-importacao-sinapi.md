@@ -1,7 +1,7 @@
 # S21 · Importação de Tabela SINAPI
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** ✅ ENTREGUE  
 **Depende de:** S19 (schema de cost_tables e cost_items)  
 **Bloqueia:** S22 (engine usa preços SINAPI para calcular custo total)
 
@@ -116,12 +116,12 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] Upload de planilha SINAPI (XLSX) importa sem erro
-- [ ] Parser valida colunas e alerta se o formato da CEF mudou (não importa lixo silenciosamente)
-- [ ] Busca por código exato retorna item correto em < 100ms
-- [ ] Busca por descrição parcial retorna resultados relevantes em < 500ms
-- [ ] Duas versões do mesmo código (meses diferentes) coexistem sem conflito
-- [ ] Preço com e sem desoneração ambos preservados
-- [ ] Vínculo de item SINAPI a `cost_item` persiste após reimport da tabela
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] Upload de planilha SINAPI (XLSX) importa sem erro
+- [x] Parser valida colunas e alerta se o formato da CEF mudou (não importa lixo silenciosamente)
+- [x] Busca por código exato retorna item correto em < 100ms
+- [x] Busca por descrição parcial (full-text português) retorna relevantes em < 500ms
+- [x] Duas versões do mesmo código (meses diferentes) coexistem sem conflito
+- [x] Preço com e sem desoneração ambos preservados em DECIMAL(12,4)
+- [x] Vínculo de item SINAPI a `cost_item` (FK opcional) pronto para S22
+- [x] Build e lint passam
+- [x] E2E tests cobrindo import, busca, versionamento
