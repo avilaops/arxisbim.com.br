@@ -1,6 +1,7 @@
 import type { Sql } from 'postgres';
 import Decimal from 'decimal.js';
 import { CostCacheService } from './cost-cache.service.js';
+import { CostBillingService } from './cost-billing.service.js';
 
 export interface CostElement {
   global_id: string;
@@ -35,10 +36,12 @@ export class CostCalculatorService {
   // Configurar Decimal.js para finanças (2 casas decimais)
   private readonly DECIMAL_CONFIG = { precision: 14, rounding: 1 }; // ROUND_HALF_UP
   private cache: CostCacheService;
+  private billing: CostBillingService;
 
   constructor(private sql: Sql) {
     Decimal.set(this.DECIMAL_CONFIG);
     this.cache = new CostCacheService(sql);
+    this.billing = new CostBillingService(sql);
   }
 
   /**
@@ -46,6 +49,10 @@ export class CostCalculatorService {
    * Junta: quantity (S20) × unit_price (S19/S21)
    */
   async calculateScenarioCost(scenarioId: string): Promise<CostCalculation> {
+    // Verificar cache válido
+    const cached = this.cache.get(scenarioId);
+    if (cached) return cached;
+
     const startTime = Date.now();
 
     // Passo 1: Ler element_cost_links com preços
@@ -142,7 +149,7 @@ export class CostCalculatorService {
       breakdownByType[link.ifc_type].count++;
 
       // Agregação por pavimento
-      const storeyKey = `${link.storey_id || 'null'}`;
+      const storeyKey = link.storey_id !== null ? String(link.storey_id) : 'null';
       if (!breakdownByStorey[storeyKey]) {
         breakdownByStorey[storeyKey] = {
           total_cost: new Decimal('0'),
@@ -199,7 +206,7 @@ export class CostCalculatorService {
     // Passo 4: Guardar no histórico
     await this.saveCostCalculation(scenarioId, totalCost.toFixed(2), breakdown);
 
-    return {
+    const result: CostCalculation = {
       scenario_id: scenarioId,
       total_cost: totalCost.toFixed(2),
       breakdown,
@@ -208,6 +215,26 @@ export class CostCalculatorService {
       execution_time_ms: Date.now() - startTime,
       calculated_at: new Date(),
     };
+
+    // Passo 5: Cache result (5 min TTL)
+    this.cache.set(scenarioId, result);
+
+    // Passo 6: Record billing snapshot
+    try {
+      const projectId = await this.getProjectIdForScenario(scenarioId);
+      if (projectId) {
+        await this.billing.recordCostSnapshot(
+          scenarioId,
+          projectId,
+          result.total_cost,
+          result.element_count
+        );
+      }
+    } catch (err) {
+      console.warn('[CostCalculator] Billing snapshot failed:', err);
+    }
+
+    return result;
   }
 
   /**
@@ -320,5 +347,15 @@ export class CostCalculatorService {
       execution_time_ms: 0,
       calculated_at: calc.calculated_at,
     };
+  }
+
+  /**
+   * Get project ID for scenario (needed for billing snapshot)
+   */
+  private async getProjectIdForScenario(scenarioId: string): Promise<string | null> {
+    const result = await this.sql<Array<{ project_id: string }>>`
+      SELECT project_id FROM scenarios WHERE id = ${scenarioId}
+    `;
+    return result[0]?.project_id || null;
   }
 }

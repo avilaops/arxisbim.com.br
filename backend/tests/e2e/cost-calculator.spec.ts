@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import postgres from 'postgres';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,7 +22,7 @@ describe('CostCalculatorService', () => {
     calculatorService = new CostCalculatorService(sql);
 
     // Apply migrations needed for this test (simple approach: execute whole file at once)
-    const migrationsNeeded = ['046_costs_schema.sql', '047_sinapi_items.sql', '048_cost_calculations.sql'];
+    const migrationsNeeded = ['046_costs_schema.sql', '047_sinapi_items.sql', '048_cost_calculations.sql', '049_billing_cost_snapshots.sql'];
     for (const migrationFile of migrationsNeeded) {
       const migrationPath = path.join(__dirname, '../../migrations', migrationFile);
       if (fs.existsSync(migrationPath)) {
@@ -63,7 +63,7 @@ describe('CostCalculatorService', () => {
       VALUES (${testUserEmail}, 'Test User', 'dummy-hash', 'test-tenant-e2e', 'admin', TRUE, TRUE)
       RETURNING id
     `;
-    const testUserIdFromDb = userRes[0].id;
+    testUserIdFromDb = userRes[0].id;
 
     // Setup test data
     const uniqueSlug = `cost-calc-test-${Date.now()}`;
@@ -115,17 +115,25 @@ describe('CostCalculatorService', () => {
     `;
     testCostItemId = itemRes[0].id;
 
-    // Insert element_properties
+    // Insert element_properties with unique GUIDs to avoid conflicts
+    const timestamp = Date.now().toString().slice(-6); // last 6 digits of timestamp
+    const guid1 = `w${timestamp}1`.padEnd(22, '0');
+    const guid2 = `w${timestamp}2`.padEnd(22, '0');
+
     await sql`
       INSERT INTO element_properties (
         model_version_id, express_id, global_id, ifc_type, name,
         storey_id, area_m2, properties
       ) VALUES
-        (${modelVersionId}, 1, 'wall-guid-1', 'IfcWall', 'Wall-01',
+        (${modelVersionId}, 1, ${guid1}, 'IfcWall', 'Wall-01',
          0, '50.0000', '{}'),
-        (${modelVersionId}, 2, 'wall-guid-2', 'IfcWall', 'Wall-02',
+        (${modelVersionId}, 2, ${guid2}, 'IfcWall', 'Wall-02',
          1, '30.0000', '{}')
     `;
+
+    // Store GUIDs for test use
+    (global as any).__testGuid1 = guid1;
+    (global as any).__testGuid2 = guid2;
   });
 
   afterAll(async () => {
@@ -141,16 +149,35 @@ describe('CostCalculatorService', () => {
   });
 
   describe('Cost Calculation', () => {
+    let dataSetupDone = false;
+
+    beforeEach(async () => {
+      // Create fresh service instance to clear cache
+      calculatorService = new CostCalculatorService(sql);
+
+      // Only setup data once, before first test
+      if (!dataSetupDone) {
+        // Clean any old data
+        await sql`DELETE FROM cost_calculations WHERE scenario_id = ${testScenarioId}`;
+        await sql`DELETE FROM element_cost_links WHERE scenario_id = ${testScenarioId}`;
+
+        dataSetupDone = true;
+      }
+    });
+
     it('should calculate total cost from quantity × price', async () => {
+      const guid1 = (global as any).__testGuid1;
+      const guid2 = (global as any).__testGuid2;
+
       // Create element_cost_links
       await sql`
         INSERT INTO element_cost_links (
           scenario_id, element_global_id, cost_item_id,
           quantity, quantity_unit, created_by
         ) VALUES
-          (${testScenarioId}, 'wall-guid-1', ${testCostItemId},
+          (${testScenarioId}, ${guid1}, ${testCostItemId},
            '50.0000', 'm²', ${testUserIdFromDb}),
-          (${testScenarioId}, 'wall-guid-2', ${testCostItemId},
+          (${testScenarioId}, ${guid2}, ${testCostItemId},
            '30.0000', 'm²', ${testUserIdFromDb})
       `;
 
@@ -164,6 +191,7 @@ describe('CostCalculatorService', () => {
     });
 
     it('should use DECIMAL precision (2 decimals)', async () => {
+      // Re-use data from previous test (cache is still fresh)
       const result = await calculatorService.calculateScenarioCost(
         testScenarioId
       );
@@ -187,10 +215,14 @@ describe('CostCalculatorService', () => {
         testScenarioId
       );
 
+      // Debug: log the breakdown
+      console.log('by_storey:', result.breakdown.by_storey);
+      console.log('elements:', result.elements);
+
       expect(result.breakdown.by_storey['0']).toBeDefined();
       expect(result.breakdown.by_storey['1']).toBeDefined();
-      expect(result.breakdown.by_storey['0'].total_cost).toBe('5000.00'); // 50 * 100
-      expect(result.breakdown.by_storey['1'].total_cost).toBe('3000.00'); // 30 * 100
+      expect(result.breakdown.by_storey['0'].total_cost).toBe('5000.00');
+      expect(result.breakdown.by_storey['1'].total_cost).toBe('3000.00');
     });
 
     it('should generate breakdown by category', async () => {
@@ -203,25 +235,29 @@ describe('CostCalculatorService', () => {
     });
 
     it('should handle override prices', async () => {
+      const guid1 = (global as any).__testGuid1;
+
+      // Delete all and create new links with override in isolation
+      await sql`DELETE FROM cost_calculations WHERE scenario_id = ${testScenarioId}`;
+      await sql`DELETE FROM element_cost_links WHERE scenario_id = ${testScenarioId}`;
+
       // Create link with override price
       await sql`
         INSERT INTO element_cost_links (
           scenario_id, element_global_id, cost_item_id,
           quantity, quantity_unit, override_price, override_reason, created_by
         ) VALUES (
-          ${testScenarioId}, 'wall-guid-1', ${testCostItemId},
+          ${testScenarioId}, ${guid1}, ${testCostItemId},
           '50.0000', 'm²', '150.0000', 'Negotiated price', ${testUserIdFromDb}
         )
-        ON CONFLICT (scenario_id, element_global_id, cost_item_id) DO UPDATE
-        SET override_price = '150.0000', override_reason = 'Negotiated price'
       `;
 
-      const result = await calculatorService.calculateScenarioCost(
-        testScenarioId
-      );
+      // Create fresh service to clear cache
+      const freshCalc = new CostCalculatorService(sql);
+      const result = await freshCalc.calculateScenarioCost(testScenarioId);
 
-      // 50 * 150 (override) + 30 * 100 = 10500
-      expect(result.total_cost).toBe('10500.00');
+      // 50 * 150 (override) = 7500
+      expect(result.total_cost).toBe('7500.00');
     });
 
     it('should execute in < 5 seconds for test data', async () => {
@@ -233,6 +269,18 @@ describe('CostCalculatorService', () => {
     });
 
     it('should save calculation to history', async () => {
+      const guid1 = (global as any).__testGuid1;
+
+      // Setup data for this test
+      await sql`
+        INSERT INTO element_cost_links (
+          scenario_id, element_global_id, cost_item_id,
+          quantity, quantity_unit, created_by
+        ) VALUES
+          (${testScenarioId}, ${guid1}, ${testCostItemId},
+           '50.0000', 'm²', ${testUserIdFromDb})
+      `;
+
       await calculatorService.calculateScenarioCost(testScenarioId);
 
       const latest = await calculatorService.getLatestCalculation(

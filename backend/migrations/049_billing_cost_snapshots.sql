@@ -7,7 +7,7 @@ CREATE TABLE billing_cost_snapshots (
   total_cost DECIMAL(14,2) NOT NULL,
   element_count INTEGER NOT NULL DEFAULT 0,
   billing_status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending | invoiced | paid
-  invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+  invoice_id UUID, -- will add FK constraint when invoices table is created (S27+)
   calculated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

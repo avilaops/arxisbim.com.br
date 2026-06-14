@@ -1,9 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { CostCalculatorService } from './cost-calculator.service.js';
+import { CostCacheService } from './cost-cache.service.js';
 import type { Sql } from 'postgres';
 
 export function createCostCalculationRoutes(sql: Sql) {
   const calculatorService = new CostCalculatorService(sql);
+  const cacheService = new CostCacheService(sql);
 
   return async (fastify: FastifyInstance) => {
     // POST /api/v1/scenarios/:scenarioId/cost-calculation/recalculate
@@ -22,6 +24,9 @@ export function createCostCalculationRoutes(sql: Sql) {
         reply: FastifyReply
       ) => {
         try {
+          // Invalidate cache first
+          await cacheService.invalidateOnMutation(request.params.scenarioId);
+
           const result = await calculatorService.calculateScenarioCost(
             request.params.scenarioId
           );

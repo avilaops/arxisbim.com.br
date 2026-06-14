@@ -23,6 +23,9 @@ import { CollaborationPanel } from '../../app/CollaborationPanel';
 import { isAuthenticated } from '../../core/auth/session';
 import { modelSyncService } from '../../features/collaboration/ModelSyncService';
 import { eventBus } from '../../core';
+import { CostManagementPanel } from '../../app/components/CostManagementPanel.js';
+import { TakeoffPanel } from '../../app/components/TakeoffPanel.js';
+import { SINAPIImportPanel } from '../../app/components/SINAPIImportPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
