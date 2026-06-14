@@ -61,17 +61,22 @@ export const ElementCostLinkSchema = z.object({
   updated_at: z.date(),
 });
 
-export const CreateElementCostLinkSchema = ElementCostLinkSchema.omit({
+export const RawCreateElementCostLinkSchema = ElementCostLinkSchema.omit({
   id: true,
   created_by: true,
   created_at: true,
   updated_at: true,
-}).refine(
+});
+
+export const CreateElementCostLinkSchema = RawCreateElementCostLinkSchema.refine(
   (data) => !data.override_price || data.override_reason,
   { message: 'override_reason is required when override_price is set', path: ['override_reason'] }
 );
 
-export const UpdateElementCostLinkSchema = CreateElementCostLinkSchema.partial();
+export const UpdateElementCostLinkSchema = RawCreateElementCostLinkSchema.partial().refine(
+  (data) => !data.override_price || data.override_reason,
+  { message: 'override_reason is required when override_price is set', path: ['override_reason'] }
+);
 
 // Types
 export type CostTable = z.infer<typeof CostTableSchema>;
