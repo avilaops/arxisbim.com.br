@@ -62,3 +62,6 @@ export * from './files.js';
 // Element comments (S16)
 export * from './comments.js';
 
+// Sharing and Permissions (S17)
+export * from './sharing.js';
+
