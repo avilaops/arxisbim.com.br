@@ -30,6 +30,8 @@ import { SearchPanel } from './SearchPanel.js';
 import { CommentMarkers } from './CommentMarkers.js';
 import { CommentPanel } from './CommentPanel.js';
 import { Stars } from './Stars.js';
+import { CostCalculationPanel } from './CostCalculationPanel.js';
+import { costManager } from './CostManager.js';
 
 import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
@@ -72,6 +74,7 @@ export class ViewerHost {
   private searchPanel?: SearchPanel;
   private commentMarkers?: CommentMarkers;
   private commentPanel?: CommentPanel;
+  private costPanel?: CostCalculationPanel;
 
 
   /**
@@ -283,6 +286,8 @@ export class ViewerHost {
       this.searchPanel = new SearchPanel(this.container, this);
       this.commentMarkers = new CommentMarkers(this);
       this.commentPanel = new CommentPanel(this.container, this);
+      this.costPanel = new CostCalculationPanel();
+      this.setupCostPanel();
 
       // Refresh markers when comments change or model loads
       window.addEventListener('comments-updated', () => {
@@ -966,5 +971,50 @@ export class ViewerHost {
    */
   public reapplyColors(): void {
     typeColorizer.applyColorizer(this.scene);
+  }
+
+  /**
+   * Configura o painel de cálculo de custos
+   */
+  private setupCostPanel(): void {
+    if (!this.costPanel) return;
+
+    // Estilo e posicionamento do painel
+    this.costPanel.style.position = 'absolute';
+    this.costPanel.style.top = '60px';
+    this.costPanel.style.right = '20px';
+    this.costPanel.style.width = '400px';
+    this.costPanel.style.maxHeight = '600px';
+    this.costPanel.style.overflowY = 'auto';
+    this.costPanel.style.zIndex = '100';
+    this.costPanel.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    this.costPanel.style.display = 'none';
+
+    this.container.appendChild(this.costPanel);
+
+    // Listen para toggles
+    costManager.addEventListener('panel-toggle', (evt: any) => {
+      if (evt.detail.visible) {
+        this.costPanel!.style.display = 'block';
+        this.costPanel!.scenarioId = evt.detail.scenarioId;
+        this.costPanel!.loadCalculation();
+      } else {
+        this.costPanel!.style.display = 'none';
+      }
+    });
+  }
+
+  /**
+   * Abre o painel de custo para um cenário
+   */
+  public showCostPanel(scenarioId: string): void {
+    costManager.setVisible(true, scenarioId);
+  }
+
+  /**
+   * Fecha o painel de custo
+   */
+  public hideCostPanel(): void {
+    costManager.setVisible(false);
   }
 }

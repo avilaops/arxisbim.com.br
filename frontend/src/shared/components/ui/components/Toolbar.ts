@@ -43,7 +43,9 @@ export class Toolbar {
       { separator: true } as any,
       { id: 'isolate' as ToolType, icon: '🎯', label: 'Isolar', hotkey: 'I' },
       { id: 'hide' as ToolType, icon: '👁️', label: 'Ocultar', hotkey: 'H' },
-      { id: 'transparency' as ToolType, icon: '👻', label: 'Transparência', hotkey: 'T' }
+      { id: 'transparency' as ToolType, icon: '👻', label: 'Transparência', hotkey: 'T' },
+      { separator: true } as any,
+      { id: 'cost' as ToolType, icon: '💰', label: 'Custos', hotkey: 'C' }
     ];
   }
 
@@ -83,8 +85,16 @@ export class Toolbar {
    * Seleciona ferramenta
    */
   private selectTool(toolId: ToolType): void {
+    // Casos especiais
+    if (toolId === 'cost' as any) {
+      // Toggle do painel de custos
+      const { costManager } = require('../../../../../../src/viewer/CostManager.js');
+      costManager.togglePanel();
+      return;
+    }
+
     this.activeTool = toolId;
-    
+
     // Atualiza botões
     const buttons = this.container.querySelectorAll('button');
     buttons.forEach(btn => {
