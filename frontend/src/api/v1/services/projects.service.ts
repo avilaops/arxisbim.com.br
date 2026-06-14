@@ -95,6 +95,35 @@ export class ProjectsService {
     const client = getAPIClient();
     await client.delete(`${this.endpoint}/${projectId}`);
   }
+
+  /**
+   * Obtem o type map efetivo do projeto (default + overrides)
+   */
+  async getTypeMap(projectId: string): Promise<ProjectTypeMapResponse> {
+    const client = getAPIClient();
+    const response = await client.get<ProjectTypeMapResponse>(`${this.endpoint}/${projectId}/type-map`);
+    return response.data;
+  }
+
+  /**
+   * Atualiza as customizacoes de type map do projeto
+   */
+  async updateTypeMap(projectId: string, map: Record<string, Partial<TypeInfo>>): Promise<{ typeMapVersion: number; map: Record<string, any> }> {
+    const client = getAPIClient();
+    const response = await client.put<{ typeMapVersion: number; map: Record<string, any> }>(`${this.endpoint}/${projectId}/type-map`, { map });
+    return response.data;
+  }
+}
+
+export interface TypeInfo {
+  category: 'structural' | 'architectural' | 'mep' | 'furniture' | 'site' | 'other';
+  label: string;
+  color: string;
+}
+
+export interface ProjectTypeMapResponse {
+  typeMapVersion: number;
+  map: Record<string, TypeInfo>;
 }
 
 // Singleton

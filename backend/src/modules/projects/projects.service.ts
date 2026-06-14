@@ -3,6 +3,7 @@ import { db } from '../../shared/database/db.js';
 import { projects } from '../../shared/database/schema/projects.js';
 import { incrementProjectCount } from '../../core/billing/usage-tracker.js';
 import type { CreateProjectInput, UpdateProjectInput, ListProjectsQuery } from './projects.schemas.js';
+import { effectiveTypeMap, type ProjectTypeMap } from '../ifc/ifc-type-map.js';
 
 /** Slugify: "Torre A — Fase 2" → "torre-a-fase-2" */
 function slugify(name: string): string {
@@ -125,5 +126,46 @@ export class ProjectsService {
     await db.update(projects)
       .set({ status, updatedAt: new Date() })
       .where(eq(projects.id, projectId));
+  }
+
+  async getTypeMap(id: string, tenantId: string) {
+    const [row] = await db
+      .select({ map: projects.projectTypeMap, version: projects.typeMapVersion })
+      .from(projects)
+      .where(and(eq(projects.id, id), this.notDeleted(tenantId)))
+      .limit(1);
+
+    if (!row) {
+      throw Object.assign(new Error('Project not found'), { statusCode: 404 });
+    }
+
+    const override: ProjectTypeMap | null = row.map
+      ? { typeMapVersion: row.version ?? 1, map: row.map as ProjectTypeMap['map'] }
+      : null;
+
+    return {
+      typeMapVersion: row.version ?? 1,
+      map: effectiveTypeMap(override),
+    };
+  }
+
+  async updateTypeMap(id: string, tenantId: string, map: Record<string, any>) {
+    const project = await this.get(id, tenantId);
+    const nextVersion = (project.typeMapVersion ?? 1) + 1;
+
+    const [updated] = await db
+      .update(projects)
+      .set({
+        projectTypeMap: map,
+        typeMapVersion: nextVersion,
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, id))
+      .returning();
+
+    return {
+      typeMapVersion: updated.typeMapVersion,
+      map: updated.projectTypeMap,
+    };
   }
 }

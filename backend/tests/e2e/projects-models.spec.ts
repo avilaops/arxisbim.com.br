@@ -303,4 +303,79 @@ describe('S03: Projects → Models → Versions', () => {
     });
     expect(res.statusCode).toBe(404);
   });
+
+  // ── S14: Project Type Map Endpoints ────────────────────────────────────────
+  describe('S14: Project Type Map (GET/PUT)', () => {
+    it('GET /api/v1/projects/:id/type-map retorna mapa padrao', async () => {
+      const { body: proj } = await createProject('Tipo Mapa Teste');
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${proj.id}/type-map`,
+        headers: { authorization: `Bearer ${token}` },
+      });
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.body);
+      expect(body.typeMapVersion).toBe(1);
+      expect(body.map.IfcWall).toBeDefined();
+      expect(body.map.IfcWall.category).toBe('architectural');
+      expect(body.map.IfcWall.label).toBe('Parede');
+    });
+
+    it('PUT /api/v1/projects/:id/type-map atualiza override e GET retorna mapa mesclado', async () => {
+      const { body: proj } = await createProject('Tipo Mapa Override');
+      
+      // Atualiza override
+      const putRes = await app.inject({
+        method: 'PUT',
+        url: `/api/v1/projects/${proj.id}/type-map`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          map: {
+            IfcWall: {
+              category: 'structural',
+              color: '#FF0000',
+            },
+          },
+        },
+      });
+      expect(putRes.statusCode).toBe(200);
+      const putBody = JSON.parse(putRes.body);
+      expect(putBody.typeMapVersion).toBe(2);
+      expect(putBody.map.IfcWall).toEqual({
+        category: 'structural',
+        color: '#FF0000',
+      });
+
+      // GET retorna mapa mesclado
+      const getRes = await app.inject({
+        method: 'GET',
+        url: `/api/v1/projects/${proj.id}/type-map`,
+        headers: { authorization: `Bearer ${token}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+      const getBody = JSON.parse(getRes.body);
+      expect(getBody.typeMapVersion).toBe(2);
+      expect(getBody.map.IfcWall.category).toBe('structural');
+      expect(getBody.map.IfcWall.color).toBe('#FF0000');
+      expect(getBody.map.IfcWall.label).toBe('Parede'); // Preservado do default
+      expect(getBody.map.IfcBeam.category).toBe('structural'); // Intacto
+    });
+
+    it('PUT rejeita payloads com categorias invalidas (Zod)', async () => {
+      const { body: proj } = await createProject('Tipo Mapa Invalido');
+      const putRes = await app.inject({
+        method: 'PUT',
+        url: `/api/v1/projects/${proj.id}/type-map`,
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          map: {
+            IfcWall: {
+              category: 'invalid_category_name',
+            },
+          },
+        },
+      });
+      expect(putRes.statusCode).toBe(400);
+    });
+  });
 });

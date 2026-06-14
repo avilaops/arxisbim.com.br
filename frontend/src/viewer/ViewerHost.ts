@@ -24,6 +24,8 @@ import { ifcModelCache } from '../systems/model/IFCModelCache.js';
 import { ProceduralClouds } from './ProceduralClouds.js';
 import { OcclusionCullingSystem } from '../engine/optimization/OcclusionCullingSystem.js';
 import { ifcMaterialLibrary } from './IFCMaterialLibrary.js';
+import { typeColorizer } from './TypeColorizer.js';
+import { TypeLegend } from './TypeLegend.js';
 import { Stars } from './Stars.js';
 import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
@@ -60,6 +62,8 @@ export class ViewerHost {
   public occlusionCulling!: OcclusionCullingSystem;
   public stars!: Stars;
   private clock!: THREE.Clock;
+  private typeMapUnsubscribe?: () => void;
+  private typeLegend?: TypeLegend;
 
   /**
    * Seleciona objeto pelo ID (ex: expressID IFC)
@@ -187,7 +191,7 @@ export class ViewerHost {
         this.scene.add(model);
         if (this.onModelLoaded) this.onModelLoaded(model);
         // Aplicar materiais PBR por tipo IFC (concreto, vidro, metal, etc.)
-        ifcMaterialLibrary.applyToObject(model);
+        typeColorizer.applyColorizer(model);
         // Ativar AO após primeiro modelo carregado (SAO precisa de geometria)
         this.postProcess?.enableAO();
         // CSM uniforms nos materiais do modelo (depois de PBR)
@@ -224,7 +228,13 @@ export class ViewerHost {
     }
     this.registerServices();
 
+    this.typeMapUnsubscribe = typeColorizer.registerOnTypeMapChanged(() => {
+      this.reapplyColors();
+    });
+
     if (!this.headless) {
+      this.typeLegend = new TypeLegend(this.container);
+
       // Garantir que canvas usará dimensões corretas após layout
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -779,6 +789,16 @@ export class ViewerHost {
     if (this.destroyed) return;
     this.destroyed = true;
 
+    if (this.typeMapUnsubscribe) {
+      this.typeMapUnsubscribe();
+      this.typeMapUnsubscribe = undefined;
+    }
+
+    if (this.typeLegend) {
+      this.typeLegend.destroy();
+      this.typeLegend = undefined;
+    }
+
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
@@ -861,5 +881,12 @@ export class ViewerHost {
    */
   public fitEnvironmentToModel(boundingBox: THREE.Box3): void {
     this.bimEnvironment?.fitToModel(boundingBox);
+  }
+
+  /**
+   * Reaplica as cores com base no type map atual
+   */
+  public reapplyColors(): void {
+    typeColorizer.applyColorizer(this.scene);
   }
 }

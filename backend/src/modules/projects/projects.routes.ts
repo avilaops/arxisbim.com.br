@@ -116,4 +116,36 @@ export async function projectsRoutes(fastify: FastifyInstance) {
     preHandler: authenticateRequest,
     handler: projectsController.delete.bind(projectsController),
   } as any);
+
+  fastify.get('/:id/type-map', {
+    schema: {
+      description: 'Get effective type map for a project',
+      tags: ['projects'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+        },
+      },
+    },
+    preHandler: authenticateRequest,
+    handler: projectsController.getTypeMap.bind(projectsController),
+  } as any);
+
+  fastify.put('/:id/type-map', {
+    schema: {
+      description: 'Update project type map override',
+      tags: ['projects'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+        },
+      },
+    },
+    preHandler: [authenticateRequest, requireActiveSubscription],
+    handler: projectsController.updateTypeMap.bind(projectsController),
+  } as any);
 }

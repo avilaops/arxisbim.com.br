@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { IFCSimpleLoader } from '../../loaders/IFCSimpleLoader';
 import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
 import { initializeAPI } from '../../api/v1/client';
+import { typeColorizer } from '../../viewer/TypeColorizer';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
 import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
@@ -92,6 +93,10 @@ async function init() {
   const apiClient = initializeAPI({
     baseURL: API_BASE_URL,
   });
+
+  if (PROJECT_ID) {
+    typeColorizer.loadForProject(PROJECT_ID).catch(console.error);
+  }
 
   // Initialize Auth Modal
   const authModal = new AuthModal();
@@ -211,10 +216,11 @@ async function init() {
   }
 
   // Listen for project changes
-  window.addEventListener('project-changed', (e: any) => {
+  window.addEventListener('project-changed', async (e: any) => {
     const { projectId } = e.detail;
     PROJECT_ID = projectId;
     console.log('Project changed to:', projectId);
+    await typeColorizer.loadForProject(projectId);
     loadIfcModels();
   });
 

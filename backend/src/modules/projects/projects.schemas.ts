@@ -37,6 +37,19 @@ export const listProjectsQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const updateProjectTypeMapSchema = z.object({
+  map: z.record(
+    z.string(),
+    z.object({
+      category: z.enum(['structural', 'architectural', 'mep', 'furniture', 'site', 'other']).optional(),
+      label: z.string().optional(),
+      color: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+    })
+  ),
+});
+
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
+export type UpdateProjectTypeMapInput = z.infer<typeof updateProjectTypeMapSchema>;
+

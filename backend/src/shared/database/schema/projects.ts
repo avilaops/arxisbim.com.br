@@ -19,6 +19,10 @@ export const projects = pgTable('projects', {
     coordinates?: { lat: number; lng: number };
   }>(),
   status: varchar('status', { length: 50 }).default('active').notNull(), // cache da versão ativa: empty/processing/ready/failed (legado: active/archived/completed)
+  // S14: override de taxonomia de tipos por projeto (merge sobre DEFAULT_TYPE_MAP).
+  // JSONB opaco { IfcWall: { category, label, color } } — muda sem migration de dados.
+  projectTypeMap: jsonb('project_type_map').$type<Record<string, { category?: string; label?: string; color?: string }>>(),
+  typeMapVersion: integer('type_map_version').notNull().default(1),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),

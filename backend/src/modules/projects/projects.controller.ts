@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { ProjectsService } from './projects.service.js';
-import { createProjectSchema, updateProjectSchema, listProjectsQuerySchema } from './projects.schemas.js';
+import { createProjectSchema, updateProjectSchema, listProjectsQuerySchema, updateProjectTypeMapSchema } from './projects.schemas.js';
 import { assertCanCreateProject, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
 
 function sendError(reply: FastifyReply, err: any) {
@@ -81,6 +81,32 @@ export class ProjectsController {
     try {
       await this.projectsService.delete(id, tenantId);
       return reply.code(204).send();
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  }
+
+  async getTypeMap(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const { tenantId } = request.user as any;
+    try {
+      const result = await this.projectsService.getTypeMap(id, tenantId);
+      return reply.send(result);
+    } catch (err) {
+      return sendError(reply, err);
+    }
+  }
+
+  async updateTypeMap(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const { tenantId } = request.user as any;
+    const parsed = updateProjectTypeMapSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Validation error', details: parsed.error.format() });
+    }
+    try {
+      const result = await this.projectsService.updateTypeMap(id, tenantId, parsed.data.map);
+      return reply.send(result);
     } catch (err) {
       return sendError(reply, err);
     }
