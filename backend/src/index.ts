@@ -50,6 +50,7 @@ import { quantitativos5DRoutes } from './modules/quantitativos-5d/quantitativos-
 import { bimSearchRoutes } from './modules/search/bim-search.routes.js';
 import { commentsRoutes } from './modules/comments/comments.routes.js';
 import { sharingRoutes } from './modules/sharing/sharing.routes.js';
+import { registerCostsRoutes } from './modules/costs/costs.routes.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
@@ -628,6 +629,7 @@ await server.register(quantitativos5DRoutes);
 await server.register(bimSearchRoutes, { prefix: '/api/v1/search' });
 await server.register(commentsRoutes, { prefix: '/api/v1' });
 await server.register(sharingRoutes, { prefix: '/api/v1' });
+await registerCostsRoutes(server, sql);
 
 
 // =====================================

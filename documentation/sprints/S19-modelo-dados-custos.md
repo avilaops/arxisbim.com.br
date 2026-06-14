@@ -1,7 +1,7 @@
 # S19 · Modelo de Dados de Custos
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** ✅ ENTREGUE  
 **Depende de:** S12 (cenário — costs pertencem a um cenário)  
 **Bloqueia:** S20 (takeoff vincula a CostItem), S21 (SINAPI preenche CostTable), S22 (engine calcula sobre esse schema)
 
@@ -117,13 +117,13 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] `POST /cost-tables` cria tabela vinculada a cenário
-- [ ] `POST /cost-tables/:id/items` adiciona itens com código, descrição, unidade, preço
-- [ ] `element_cost_links` aceita quantidade + override de preço por elemento
-- [ ] Nenhum campo monetário usa FLOAT (todos `DECIMAL`)
-- [ ] Override de preço por elemento exige `note` (rastreabilidade)
-- [ ] Versionamento SINAPI por `reference_month` + `state_code` no schema
-- [ ] Migration reversível sem perda de dados
-- [ ] Dois cenários podem ter tabelas de preços diferentes para o mesmo projeto
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] `POST /cost-tables` cria tabela vinculada a cenário
+- [x] `POST /cost-tables/:id/items` adiciona itens com código, descrição, unidade, preço
+- [x] `element_cost_links` aceita quantidade + override de preço por elemento
+- [x] Nenhum campo monetário usa FLOAT (todos `DECIMAL`)
+- [x] Override de preço por elemento exige `override_reason` (rastreabilidade)
+- [x] Versionamento SINAPI por `reference_month` + `state_code` no schema
+- [x] Migration reversível sem perda de dados
+- [x] Dois cenários podem ter tabelas de preços diferentes para o mesmo projeto
+- [x] Build e lint passam
+- [x] Testes E2E cobrindo CRUD, DECIMAL precision, override validation
