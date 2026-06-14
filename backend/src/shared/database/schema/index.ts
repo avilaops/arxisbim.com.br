@@ -23,6 +23,9 @@ export * from './projects.js';
 // IFC processing pipeline runs (S11)
 export * from './processing.js';
 
+// IFC element properties / PropertySets (S13)
+export * from './element-properties.js';
+
 // Copilot/viewer scenarios
 export * from './scenarios.js';
 
