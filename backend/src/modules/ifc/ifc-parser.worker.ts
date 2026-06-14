@@ -126,6 +126,15 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
   let modelID = -1;
   try {
     const data = new Uint8Array(req.buffer);
+    const headerSnippet = new TextDecoder('utf-8').decode(data.slice(0, 500));
+    if (!headerSnippet.includes('ISO-10303-21') && !headerSnippet.includes('HEADER;')) {
+      return {
+        ok: false,
+        errorType: 'INVALID_IFC_FORMAT',
+        message: 'Invalid IFC file signature (missing ISO-10303-21 or HEADER)',
+        durationMs: Date.now() - start,
+      };
+    }
     modelID = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true });
 
     const schema = mapSchema(api.GetModelSchema(modelID));

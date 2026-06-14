@@ -136,29 +136,45 @@ describe('TakeoffService', () => {
   let takeoffService: TakeoffService;
   let testScenarioId: string;
   let testModelVersionId: string;
+  let testProjectId: string;
+  let testTenantId: string;
 
   beforeAll(async () => {
     sql = postgres(process.env.DATABASE_URL || 'postgres://localhost/arxisvr_test');
     takeoffService = new TakeoffService(sql);
 
+    testTenantId = 'tenant-takeoff-' + Date.now();
+
     // Setup test data
+    await sql`
+      INSERT INTO tenants (tenant_id, name, is_active)
+      VALUES (${testTenantId}, 'Takeoff Test Tenant', true)
+    `;
+
     const projectRes = await sql<{ id: string }[]>`
-      INSERT INTO projects (name, description)
-      VALUES ('Takeoff Test Project', 'Test')
+      INSERT INTO projects (name, description, tenant_id, slug)
+      VALUES ('Takeoff Test Project', 'Test', ${testTenantId}, 'takeoff-test-project')
       RETURNING id
     `;
-    const projectId = projectRes[0].id;
+    testProjectId = projectRes[0].id;
 
     const modelRes = await sql<{ id: string }[]>`
-      INSERT INTO model_versions (project_id, name, file_name, file_path, size_mb, ifc_schema, processing_status)
-      VALUES (${projectId}, 'Test Model', 'test.ifc', '/storage/test.ifc', 5.0, 'IFC2X3', 'completed')
+      INSERT INTO models (project_id, name)
+      VALUES (${testProjectId}, 'Test Model')
       RETURNING id
     `;
-    testModelVersionId = modelRes[0].id;
+    const modelId = modelRes[0].id;
+
+    const modelVersionRes = await sql<{ id: string }[]>`
+      INSERT INTO model_versions (model_id, version, status, storage_key, file_size)
+      VALUES (${modelId}, 1, 'completed', '/storage/test.ifc', 5242880)
+      RETURNING id
+    `;
+    testModelVersionId = modelVersionRes[0].id;
 
     const scenarioRes = await sql<{ id: string }[]>`
-      INSERT INTO scenarios (project_id, model_version_id, name)
-      VALUES (${projectId}, ${testModelVersionId}, 'Test Scenario')
+      INSERT INTO scenarios (project_id, model_version_id, name, tenant_id)
+      VALUES (${testProjectId}, ${testModelVersionId}, 'Test Scenario', ${testTenantId})
       RETURNING id
     `;
     testScenarioId = scenarioRes[0].id;
@@ -181,7 +197,9 @@ describe('TakeoffService', () => {
     await sql`DELETE FROM element_properties WHERE model_version_id = ${testModelVersionId}`;
     await sql`DELETE FROM scenarios WHERE id = ${testScenarioId}`;
     await sql`DELETE FROM model_versions WHERE id = ${testModelVersionId}`;
-    // Delete project through cascade
+    await sql`DELETE FROM models WHERE project_id = ${testProjectId}`;
+    await sql`DELETE FROM projects WHERE id = ${testProjectId}`;
+    await sql`DELETE FROM tenants WHERE tenant_id = ${testTenantId}`;
     await sql.end();
   });
 

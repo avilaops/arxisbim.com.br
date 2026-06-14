@@ -9,47 +9,49 @@ describe('SINAPIImportService', () => {
   beforeAll(async () => {
     sql = postgres(process.env.DATABASE_URL || 'postgres://localhost/arxisvr_test');
     sinapiService = new SINAPIImportService(sql);
+    // Cleanup any leftover test data
+    await sql`DELETE FROM sinapi_items WHERE state_code IN ('TS', 'XX', 'SP', 'RJ')`;
   });
 
   afterAll(async () => {
     // Cleanup test data
-    await sql`DELETE FROM sinapi_items WHERE state_code = 'TS' OR state_code = 'XX'`;
+    await sql`DELETE FROM sinapi_items WHERE state_code IN ('TS', 'XX', 'SP', 'RJ')`;
     await sql.end();
   });
 
   describe('Import & Validation', () => {
-    it('should validate required columns', () => {
+    it('should validate required columns', async () => {
       const invalidBuffer = Buffer.from('invalid xlsx content');
 
-      expect(
-        async () => await sinapiService.importXLSX(invalidBuffer, 'SP', new Date('2026-01-01'))
-      ).toThrow();
+      await expect(
+        sinapiService.importXLSX(invalidBuffer, 'SP', new Date('2026-01-01'))
+      ).rejects.toThrow();
     });
 
     it('should insert items with correct DECIMAL format', async () => {
       // Criar arquivo XLSX mock (simplificado — em produção usaríamos dados reais)
       // Para teste, vamos inserir diretamente no banco
-      const testDate = new Date('2026-01-01');
+      const testDate = '2026-01-01';
 
-      const result = await sql<{ count: number }[]>`
+      const result = await sql<{ code: string }[]>`
         INSERT INTO sinapi_items (
           code, description, unit, price_with_tax, price_without_tax,
           state_code, reference_month
         ) VALUES
           ('74209/001', 'CONCRETO FCK=25MPA', 'M3', '425.7500', '385.2500', 'TS', ${testDate}),
           ('74210/002', 'AÇO CA-50', 'KG', '12.3450', '11.2300', 'TS', ${testDate})
-        RETURNING COUNT(*) as count
+        RETURNING code
       `;
 
-      expect(result[0].count).toBe(2);
+      expect(result.length).toBe(2);
     });
   });
 
   describe('Search', () => {
-    let testDate: Date;
+    let testDate: string;
 
     beforeAll(async () => {
-      testDate = new Date('2026-02-01');
+      testDate = '2026-02-01';
 
       // Insert test data
       await sql`
@@ -89,7 +91,7 @@ describe('SINAPIImportService', () => {
     });
 
     it('should filter by month', async () => {
-      const results = await sinapiService.searchItems('CONCRETO', undefined, testDate.toISOString().split('T')[0]);
+      const results = await sinapiService.searchItems('CONCRETO', undefined, testDate);
 
       expect(results.length).toBeGreaterThan(0);
     });
@@ -103,8 +105,8 @@ describe('SINAPIImportService', () => {
 
   describe('Versioning', () => {
     it('should coexist multiple versions (different months)', async () => {
-      const date1 = new Date('2026-03-01');
-      const date2 = new Date('2026-04-01');
+      const date1 = '2026-03-01';
+      const date2 = '2026-04-01';
 
       await sql`
         INSERT INTO sinapi_items (

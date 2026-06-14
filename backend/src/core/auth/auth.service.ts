@@ -55,7 +55,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: strongPassword,
-  name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
+  name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').transform(val => val.replace(/</g, '&lt;').replace(/>/g, '&gt;')),
   tenantId: z.string().optional(),
   companyName: z.string().trim().min(2, 'Workspace deve ter no mínimo 2 caracteres').optional(),
   companyId: z.string().optional(),

@@ -56,12 +56,9 @@ export class CostsService {
       return this.getCostTable(tableId) as Promise<CostTable>;
     }
 
-    const setClauses = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-    const values = keys.map(k => updates[k]);
-
     const result = await this.sql<CostTable[]>`
       UPDATE cost_tables
-      SET ${this.sql(setClauses)}
+      SET ${this.sql(updates, ...keys)}
       WHERE id = ${tableId}
       RETURNING *
     `;
@@ -119,10 +116,9 @@ export class CostsService {
       return this.getCostItem(itemId) as Promise<CostItem>;
     }
 
-    const setClauses = keys.map((k) => `${k} = $`).join(', ');
     const result = await this.sql<CostItem[]>`
       UPDATE cost_items
-      SET ${this.sql(setClauses)}
+      SET ${this.sql(updates, ...keys)}
       WHERE id = ${itemId}
       RETURNING *
     `;
@@ -191,10 +187,9 @@ export class CostsService {
       return this.getElementCostLink(linkId) as Promise<ElementCostLink>;
     }
 
-    const setClauses = keys.map((k) => `${k} = $`).join(', ');
     const result = await this.sql<ElementCostLink[]>`
       UPDATE element_cost_links
-      SET ${this.sql(setClauses)}
+      SET ${this.sql(updates, ...keys)}
       WHERE id = ${linkId}
       RETURNING *
     `;

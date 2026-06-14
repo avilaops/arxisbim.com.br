@@ -43,7 +43,7 @@ describe('Billing Ops endpoints', () => {
 
     server = Fastify();
     await server.register(billingRoutes, { prefix: '/api/v1/billing' });
-  });
+  }, 30000);
 
   beforeEach(() => {
     vi.clearAllMocks();

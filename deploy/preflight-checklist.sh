@@ -8,14 +8,21 @@ set -e
 CHECKS_PASSED=0
 CHECKS_FAILED=0
 
+# Use git.exe under WSL to prevent DrvFs performance issues/hangs
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  git() {
+    git.exe "$@"
+  }
+fi
+
 check_pass() {
   echo -e "✅ $1"
-  ((CHECKS_PASSED++))
+  CHECKS_PASSED=$((CHECKS_PASSED + 1))
 }
 
 check_fail() {
   echo -e "❌ $1"
-  ((CHECKS_FAILED++))
+  CHECKS_FAILED=$((CHECKS_FAILED + 1))
 }
 
 echo "=================================================="
@@ -33,7 +40,8 @@ else
   check_fail "Git repository not found"
 fi
 
-if git status --porcelain | grep -q .; then
+CHANGES=$(git status --porcelain)
+if [ -n "$CHANGES" ]; then
   check_fail "Uncommitted changes detected"
 else
   check_pass "Working directory clean"
@@ -99,7 +107,7 @@ fi
 # 5. Migrations
 echo ""
 echo "🗄️ MIGRATIONS"
-MIGRATIONS_COUNT=$(find backend/migrations -name "04*.sql" | wc -l)
+MIGRATIONS_COUNT=$(find backend/migrations -name "04[6-9]*.sql" | wc -l)
 if [ "$MIGRATIONS_COUNT" -eq 4 ]; then
   check_pass "All 4 cost migrations present"
 else

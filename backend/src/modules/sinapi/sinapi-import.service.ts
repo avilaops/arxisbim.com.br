@@ -279,8 +279,7 @@ export class SINAPIImportService {
     }
 
     if (referenceMonth) {
-      const monthDate = new Date(referenceMonth);
-      sql = this.sql`${sql} AND reference_month = ${monthDate}`;
+      sql = this.sql`${sql} AND reference_month = ${referenceMonth}`;
     }
 
     sql = this.sql`${sql} ORDER BY code LIMIT ${limit}`;

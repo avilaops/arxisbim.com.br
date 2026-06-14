@@ -8,6 +8,7 @@ import { projects, models, modelVersions } from '../../src/shared/database/schem
 import { elementProperties } from '../../src/shared/database/schema/element-properties.js';
 import { randomUUID } from 'node:crypto';
 import jwt from 'jsonwebtoken';
+import { eq } from 'drizzle-orm';
 
 function buildApp() {
   const app = Fastify({ logger: false });
@@ -120,12 +121,12 @@ describe('BIM Search API (S15)', () => {
 
   afterAll(async () => {
     // Cleanup records in reverse order
-    await db.delete(elementProperties);
-    await db.delete(modelVersions);
-    await db.delete(models);
-    await db.delete(projects);
-    await db.delete(users);
-    await db.delete(tenants);
+    await db.delete(elementProperties).where(eq(elementProperties.modelVersionId, modelVersionId));
+    await db.delete(modelVersions).where(eq(modelVersions.id, modelVersionId));
+    await db.delete(models).where(eq(models.id, modelId));
+    await db.delete(projects).where(eq(projects.id, projectId));
+    await db.delete(users).where(eq(users.tenantId, tenantId));
+    await db.delete(tenants).where(eq(tenants.tenantId, tenantId));
     await app.close();
   });
 

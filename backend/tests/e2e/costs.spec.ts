@@ -2,28 +2,44 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import postgres from 'postgres';
 import { CostsService } from '../../src/modules/costs/costs.service.js';
 import type { CreateCostTable, CreateCostItem, CreateElementCostLink } from '../../src/modules/costs/costs.schemas.js';
+import { randomUUID } from 'node:crypto';
 
 describe('CostsService', () => {
   let sql: ReturnType<typeof postgres>;
   let costsService: CostsService;
   let testProjectId: string;
   let testScenarioId: string;
+  let testTenantId: string;
+  let testUserId: string;
 
   beforeAll(async () => {
     sql = postgres(process.env.DATABASE_URL || 'postgres://localhost/arxisvr_test');
     costsService = new CostsService(sql);
 
+    testTenantId = 'tenant-costs-' + Date.now();
+    testUserId = randomUUID();
+
     // Setup test data
+    await sql`
+      INSERT INTO tenants (tenant_id, name, is_active)
+      VALUES (${testTenantId}, 'Costs Test Tenant', true)
+    `;
+
+    await sql`
+      INSERT INTO users (id, email, name, password_hash, tenant_id, role, permissions, email_verified, is_active)
+      VALUES (${testUserId}, ${'costs-' + Date.now() + '@test.com'}, 'Costs User', 'x', ${testTenantId}, 'user', '[]', true, true)
+    `;
+
     const projectRes = await sql<{ id: string }[]>`
-      INSERT INTO projects (name, description)
-      VALUES ('Test Project', 'Test')
+      INSERT INTO projects (name, description, tenant_id, slug)
+      VALUES ('Test Project', 'Test', ${testTenantId}, 'test-project-costs')
       RETURNING id
     `;
     testProjectId = projectRes[0].id;
 
     const scenarioRes = await sql<{ id: string }[]>`
-      INSERT INTO scenarios (project_id, name)
-      VALUES (${testProjectId}, 'Test Scenario')
+      INSERT INTO scenarios (project_id, name, tenant_id)
+      VALUES (${testProjectId}, 'Test Scenario', ${testTenantId})
       RETURNING id
     `;
     testScenarioId = scenarioRes[0].id;
@@ -36,6 +52,8 @@ describe('CostsService', () => {
     await sql`DELETE FROM cost_tables`;
     await sql`DELETE FROM scenarios WHERE id = ${testScenarioId}`;
     await sql`DELETE FROM projects WHERE id = ${testProjectId}`;
+    await sql`DELETE FROM users WHERE tenant_id = ${testTenantId}`;
+    await sql`DELETE FROM tenants WHERE tenant_id = ${testTenantId}`;
     await sql.end();
   });
 
@@ -50,7 +68,7 @@ describe('CostsService', () => {
         reference_month: new Date('2026-01-01'),
       };
 
-      const table = await costsService.createCostTable(testProjectId, 'user-123', data);
+      const table = await costsService.createCostTable(testProjectId, testUserId, data);
       expect(table.id).toBeDefined();
       expect(table.name).toBe('SINAPI SP Jan/2026');
       expect(table.source).toBe('sinapi');
@@ -64,7 +82,7 @@ describe('CostsService', () => {
         source: 'custom',
       };
 
-      await costsService.createCostTable(testProjectId, 'user-123', data);
+      await costsService.createCostTable(testProjectId, testUserId, data);
       const tables = await costsService.listCostTablesByProject(testProjectId);
 
       expect(tables.length).toBeGreaterThan(0);
@@ -79,7 +97,7 @@ describe('CostsService', () => {
         source: 'custom',
       };
 
-      const table = await costsService.createCostTable(testProjectId, 'user-123', data);
+      const table = await costsService.createCostTable(testProjectId, testUserId, data);
       const updated = await costsService.updateCostTable(table.id, { name: 'Updated Name' });
 
       expect(updated.name).toBe('Updated Name');
@@ -96,7 +114,7 @@ describe('CostsService', () => {
         name: 'Test Table',
         source: 'custom',
       };
-      const table = await costsService.createCostTable(testProjectId, 'user-123', data);
+      const table = await costsService.createCostTable(testProjectId, testUserId, data);
       tableId = table.id;
     });
 
@@ -126,7 +144,7 @@ describe('CostsService', () => {
     let itemId: string;
 
     beforeAll(async () => {
-      const table = await costsService.createCostTable(testProjectId, 'user-123', {
+      const table = await costsService.createCostTable(testProjectId, testUserId, {
         project_id: testProjectId,
         scenario_id: testScenarioId,
         name: 'Link Test Table',
@@ -146,13 +164,13 @@ describe('CostsService', () => {
     it('should create an element cost link', async () => {
       const data: CreateElementCostLink = {
         scenario_id: testScenarioId,
-        element_global_id: '3a8f5e8d-0e4c-4f8c-9c3d-4b5e8d0e4c4f',
+        element_global_id: '3a8f5e8d0e4c4f8c9c3d4b',
         cost_item_id: itemId,
         quantity: '50.0000',
         quantity_unit: 'm²',
       };
 
-      const link = await costsService.createElementCostLink('user-123', data);
+      const link = await costsService.createElementCostLink(testUserId, data);
       expect(link.id).toBeDefined();
       expect(link.quantity).toBe('50.0000');
     });
@@ -160,14 +178,14 @@ describe('CostsService', () => {
     it('should require override_reason when override_price is set', async () => {
       const data: CreateElementCostLink = {
         scenario_id: testScenarioId,
-        element_global_id: '3a8f5e8d-0e4c-4f8c-9c3d-4b5e8d0e4c4f',
+        element_global_id: '3a8f5e8d0e4c4f8c9c3d4b',
         cost_item_id: itemId,
         quantity: '50.0000',
         override_price: '150.0000',
         override_reason: 'Client negotiated price',
       };
 
-      const link = await costsService.createElementCostLink('user-123', data);
+      const link = await costsService.createElementCostLink(testUserId, data);
       expect(link.override_price).toBe('150.0000');
       expect(link.override_reason).toBe('Client negotiated price');
     });
