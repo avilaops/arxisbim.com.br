@@ -20,6 +20,7 @@ CREATE TABLE cost_calculations (
 
 CREATE INDEX idx_cost_calculations_scenario_id ON cost_calculations(scenario_id);
 CREATE INDEX idx_cost_calculations_calculated_at ON cost_calculations(calculated_at DESC);
+CREATE INDEX idx_cost_calculations_scenario_date ON cost_calculations(scenario_id, calculated_at DESC);
 
 -- Denormalizar em scenarios para query rápida
 ALTER TABLE scenarios ADD COLUMN cached_total_cost DECIMAL(14,2);

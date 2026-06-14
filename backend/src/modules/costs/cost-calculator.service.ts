@@ -1,5 +1,6 @@
 import type { Sql } from 'postgres';
 import Decimal from 'decimal.js';
+import { CostCacheService } from './cost-cache.service.js';
 
 export interface CostElement {
   global_id: string;
@@ -33,9 +34,11 @@ export interface CostCalculation {
 export class CostCalculatorService {
   // Configurar Decimal.js para finanças (2 casas decimais)
   private readonly DECIMAL_CONFIG = { precision: 14, rounding: 1 }; // ROUND_HALF_UP
+  private cache: CostCacheService;
 
   constructor(private sql: Sql) {
     Decimal.set(this.DECIMAL_CONFIG);
+    this.cache = new CostCacheService(sql);
   }
 
   /**
