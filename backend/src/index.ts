@@ -52,6 +52,7 @@ import { commentsRoutes } from './modules/comments/comments.routes.js';
 import { sharingRoutes } from './modules/sharing/sharing.routes.js';
 import { registerCostsRoutes } from './modules/costs/costs.routes.js';
 import { registerTakeoffRoutes } from './modules/costs/takeoff.routes.js';
+import { registerCostCalculationRoutes } from './modules/costs/cost-calculation.routes.js';
 import { registerSINAPIImportRoutes, registerSINAPISearchRoutes } from './modules/sinapi/index.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
@@ -633,6 +634,7 @@ await server.register(commentsRoutes, { prefix: '/api/v1' });
 await server.register(sharingRoutes, { prefix: '/api/v1' });
 await registerCostsRoutes(server, sql);
 await registerTakeoffRoutes(server, sql);
+await registerCostCalculationRoutes(server, sql);
 await registerSINAPIImportRoutes(server, sql);
 await registerSINAPISearchRoutes(server, sql);
 
