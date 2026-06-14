@@ -1,7 +1,7 @@
 # S15 · Busca BIM
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** Concluído  
 **Depende de:** S13 (propriedades no banco com índice GIN)  
 **Bloqueia:** S20 (takeoff precisa de filtro por tipo), S28 (mapeamento de atividades por código WBS)
 
@@ -96,12 +96,12 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] Busca por GUID retorna elemento correto em < 100ms
-- [ ] Busca por nome parcial (ex.: "pilar") retorna todos os `IfcColumn` com esse nome
-- [ ] Busca por PropertySet `IsExternal=true` filtra corretamente
-- [ ] Query é determinística (mesma entrada → mesma ordem de resultados) — pré-requisito do S28
-- [ ] Resultado destaca elemento no viewer ao clicar
-- [ ] Paginação de resultados (25/página), nunca renderiza 200 de uma vez
-- [ ] Performance < 500ms em modelo de 50.000 elementos
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] Busca por GUID retorna elemento correto em < 100ms
+- [x] Busca por nome parcial (ex.: "pilar") retorna todos os `IfcColumn` com esse nome
+- [x] Busca por PropertySet `IsExternal=true` filtra corretamente
+- [x] Query é determinística (mesma entrada → mesma ordem de resultados) — pré-requisito do S28
+- [x] Resultado destaca elemento no viewer ao clicar
+- [x] Paginação de resultados (25/página), nunca renderiza 200 de uma vez
+- [x] Performance < 500ms em modelo de 50.000 elementos
+- [x] Build e lint passam
+- [x] Demo em até 5 minutos

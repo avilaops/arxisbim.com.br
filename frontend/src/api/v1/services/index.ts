@@ -8,3 +8,6 @@ export * from './meetings.service';
 export * from './ifc.service';
 export * from './billing.service';
 export * from './scenarios.service';
+export * from './bim-search.service';
+export * from './comments.service';
+

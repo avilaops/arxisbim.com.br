@@ -1,4 +1,4 @@
-﻿// =====================================
+// =====================================
 // SCHEMA INDEX - All database schemas
 // =====================================
 
@@ -58,3 +58,7 @@ export * from './analytics.js';
 
 // File metadata (upload pipeline — S02)
 export * from './files.js';
+
+// Element comments (S16)
+export * from './comments.js';
+

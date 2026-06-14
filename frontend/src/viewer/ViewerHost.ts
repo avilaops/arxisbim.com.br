@@ -26,7 +26,11 @@ import { OcclusionCullingSystem } from '../engine/optimization/OcclusionCullingS
 import { ifcMaterialLibrary } from './IFCMaterialLibrary.js';
 import { typeColorizer } from './TypeColorizer.js';
 import { TypeLegend } from './TypeLegend.js';
+import { SearchPanel } from './SearchPanel.js';
+import { CommentMarkers } from './CommentMarkers.js';
+import { CommentPanel } from './CommentPanel.js';
 import { Stars } from './Stars.js';
+
 import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
@@ -64,6 +68,10 @@ export class ViewerHost {
   private clock!: THREE.Clock;
   private typeMapUnsubscribe?: () => void;
   private typeLegend?: TypeLegend;
+  private searchPanel?: SearchPanel;
+  private commentMarkers?: CommentMarkers;
+  private commentPanel?: CommentPanel;
+
 
   /**
    * Seleciona objeto pelo ID (ex: expressID IFC)
@@ -100,6 +108,43 @@ export class ViewerHost {
 
   /** Seleciona por expressID (nodes do GLB têm name = expressID). */
   public selectByExpressId(expressID: number): void { this.selectObject(String(expressID)); }
+
+  /** Foca a câmera no bounding box do objeto pelo expressID (S15). */
+  public focusOnObject(expressID: number): void {
+    const object = this.scene.getObjectByName(String(expressID));
+    if (!object) return;
+
+    const box = new THREE.Box3().setFromObject(object);
+    if (box.isEmpty()) return;
+
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const radius = size.length() / 2 || 1;
+
+    const fov = this.camera.fov;
+    const halfFov = (fov * Math.PI) / 180 / 2;
+    const distance = (radius / Math.sin(halfFov)) * 1.5;
+
+    const currentTarget = this.controls?.target ?? new THREE.Vector3(0, 0, 0);
+    const direction = new THREE.Vector3().subVectors(this.camera.position, currentTarget).normalize();
+    if (direction.lengthSq() === 0) {
+      direction.set(1, 1, 1).normalize();
+    }
+
+    const newPos = new THREE.Vector3().addVectors(center, direction.multiplyScalar(distance));
+
+    this.camera.position.copy(newPos);
+    if (this.controls) {
+      this.controls.target.copy(center);
+      this.controls.update();
+    } else {
+      this.camera.lookAt(center);
+    }
+    this.camera.updateProjectionMatrix();
+  }
 
   /** Assina seleção por expressID (S09) — sem expor Object3D. */
   public onSelect(cb: (id: number | null) => void): () => void {
@@ -234,6 +279,20 @@ export class ViewerHost {
 
     if (!this.headless) {
       this.typeLegend = new TypeLegend(this.container);
+      this.searchPanel = new SearchPanel(this.container, this);
+      this.commentMarkers = new CommentMarkers(this);
+      this.commentPanel = new CommentPanel(this.container, this);
+
+      // Refresh markers when comments change or model loads
+      window.addEventListener('comments-updated', () => {
+        this.commentMarkers?.refresh();
+      });
+      eventBus.on('ifc:loaded', () => {
+        this.commentMarkers?.refresh();
+      });
+
+      this.commentMarkers.refresh();
+
 
       // Garantir que canvas usará dimensões corretas após layout
       requestAnimationFrame(() => {
@@ -798,6 +857,22 @@ export class ViewerHost {
       this.typeLegend.destroy();
       this.typeLegend = undefined;
     }
+
+    if (this.searchPanel) {
+      this.searchPanel.destroy();
+      this.searchPanel = undefined;
+    }
+
+    if (this.commentMarkers) {
+      this.commentMarkers.destroy();
+      this.commentMarkers = undefined;
+    }
+
+    if (this.commentPanel) {
+      this.commentPanel.destroy();
+      this.commentPanel = undefined;
+    }
+
 
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);

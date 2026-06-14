@@ -1,7 +1,7 @@
 # S16 · Anotações e Comentários em Elementos
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** Concluído  
 **Depende de:** S09 (seleção de elemento), S01 (autenticação para @menção)  
 **Bloqueia:** S17 (compartilhamento — viewer público pode mostrar comentários)
 
@@ -104,11 +104,11 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] Comentário criado ao clicar em elemento aparece como marcador 3D no modelo
-- [ ] Thread de reply funciona com até 2 níveis
-- [ ] @menção de usuário do projeto dispara email em < 1 min
-- [ ] `is_resolved` marca comentário como concluído com visual distinto
-- [ ] Comentário sobrevive a reimport: âncora cai para `world_position` quando GlobalId muda
-- [ ] @menção verifica permissão atual no projeto antes de enviar email
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] Comentário criado ao clicar em elemento aparece como marcador 3D no modelo
+- [x] Thread de reply funciona com até 2 níveis
+- [x] @menção de usuário do projeto dispara email em < 1 min
+- [x] `is_resolved` marca comentário como concluído com visual distinto
+- [x] Comentário sobrevive a reimport: âncora cai para `world_position` quando GlobalId muda
+- [x] @menção verifica permissão atual no projeto antes de enviar email
+- [x] Build e lint passam
+- [x] Demo em até 5 minutos

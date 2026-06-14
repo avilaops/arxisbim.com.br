@@ -29,11 +29,14 @@ if (typeof window !== 'undefined') {
 }
 
 // Mock localStorage
+let store: Record<string, string> = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((key: string) => store[key] ?? null),
+  setItem: vi.fn((key: string, value: string) => { store[key] = String(value); }),
+  removeItem: vi.fn((key: string) => { delete store[key]; }),
+  clear: vi.fn(() => { store = {}; }),
+  key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
+  get length() { return Object.keys(store).length; }
 };
 global.localStorage = localStorageMock as any;
 

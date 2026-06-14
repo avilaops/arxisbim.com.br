@@ -95,12 +95,13 @@ CREATE POLICY bim_schedules_tenant_isolation ON bim_schedules
   );
 
 -- ============================================================
--- WEBHOOKS
+-- WEBHOOK_SUBSCRIPTIONS
 -- ============================================================
-ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS webhooks_tenant_isolation ON webhooks;
-CREATE POLICY webhooks_tenant_isolation ON webhooks
+ALTER TABLE webhook_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS webhook_subscriptions_tenant_isolation ON webhook_subscriptions;
+CREATE POLICY webhook_subscriptions_tenant_isolation ON webhook_subscriptions
   USING (tenant_id = current_tenant_id());
+
 
 -- ============================================================
 -- NOTIFICATIONS

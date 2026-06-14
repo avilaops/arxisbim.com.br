@@ -47,6 +47,9 @@ import { billingRoutes } from './modules/billing/billing.routes.js';
 import { bimQueryRoutes } from './modules/bim-query/bim-query.routes.js';
 import { glbExportRoutes } from './modules/glb-export/glb-export.routes.js';
 import { quantitativos5DRoutes } from './modules/quantitativos-5d/quantitativos-5d.routes.js';
+import { bimSearchRoutes } from './modules/search/bim-search.routes.js';
+import { commentsRoutes } from './modules/comments/comments.routes.js';
+
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
 import { scenarioRoutes } from './modules/scenario/api/scenario.routes.js';
@@ -621,6 +624,9 @@ await server.register(clashDetectionRoutes, { prefix: '/api/v1/clash-detection' 
 await server.register(bimQueryRoutes);
 await server.register(glbExportRoutes);
 await server.register(quantitativos5DRoutes);
+await server.register(bimSearchRoutes, { prefix: '/api/v1/search' });
+await server.register(commentsRoutes, { prefix: '/api/v1' });
+
 
 // =====================================
 // GRACEFUL SHUTDOWN

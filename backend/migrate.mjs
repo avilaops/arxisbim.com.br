@@ -7,7 +7,8 @@
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import postgres from '/opt/render/project/src/backend/node_modules/postgres/src/index.js';
+import postgres from 'postgres';
+
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -17,7 +18,9 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const sql = postgres(DATABASE_URL, { ssl: 'require', max: 1 });
+const ssl = DATABASE_URL.includes('localhost') || DATABASE_URL.includes('127.0.0.1') || DATABASE_URL.includes('postgres:') ? false : 'require';
+const sql = postgres(DATABASE_URL, { ssl, max: 1 });
+
 
 try {
   // Ensure migrations table exists
@@ -29,7 +32,8 @@ try {
     )
   `;
 
-  const migrationsDir = join(__dirname, '../migrations');
+  const migrationsDir = join(__dirname, 'migrations');
+
   if (!existsSync(migrationsDir)) {
     console.error('❌ Migrations dir not found:', migrationsDir);
     process.exit(1);
