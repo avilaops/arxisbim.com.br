@@ -51,6 +51,7 @@ import { bimSearchRoutes } from './modules/search/bim-search.routes.js';
 import { commentsRoutes } from './modules/comments/comments.routes.js';
 import { sharingRoutes } from './modules/sharing/sharing.routes.js';
 import { registerCostsRoutes } from './modules/costs/costs.routes.js';
+import { registerTakeoffRoutes } from './modules/costs/takeoff.routes.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
@@ -630,6 +631,7 @@ await server.register(bimSearchRoutes, { prefix: '/api/v1/search' });
 await server.register(commentsRoutes, { prefix: '/api/v1' });
 await server.register(sharingRoutes, { prefix: '/api/v1' });
 await registerCostsRoutes(server, sql);
+await registerTakeoffRoutes(server, sql);
 
 
 // =====================================

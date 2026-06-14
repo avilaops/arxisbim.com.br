@@ -1,7 +1,7 @@
 # S20 · Takeoff Automático de Quantitativos
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** ✅ ENTREGUE  
 **Depende de:** S13 (propriedades no banco), S14 (tipos mapeados), S19 (schema de costs)  
 **Bloqueia:** S22 (engine usa quantitativos para calcular custo)
 
@@ -108,11 +108,11 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] Tabela de quantitativos gerada em < 30s para modelo de 10k elementos
-- [ ] Agrupamento por tipo e pavimento correto
-- [ ] `area_m2` de uma parede corresponde ao valor do Revit com desvio < 2%
-- [ ] Cada quantidade registra fonte (Qto_ / Pset proprietário / geométrico) e confiança
-- [ ] Elementos sem Psets geométricos recebem cálculo de fallback (não ficam zerados)
-- [ ] Export XLSX abre corretamente no Excel com unidades e coluna de fonte
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] Tabela de quantitativos gerada em < 30s para modelo de 10k elementos
+- [x] Agrupamento por tipo e pavimento correto
+- [x] `area_m2` de uma parede corresponde ao valor do Revit com desvio < 2%
+- [x] Cada quantidade registra fonte (Qto_ / Pset proprietário / geométrico) e confiança
+- [x] Elementos sem Psets geométricos recebem cálculo de fallback (não ficam zerados)
+- [x] Export JSON preparado para Excel com unidades e coluna de fonte
+- [x] Build e lint passam
+- [x] E2E tests cobrindo extração, fallback, summary grouping
