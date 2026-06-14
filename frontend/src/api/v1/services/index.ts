@@ -10,4 +10,5 @@ export * from './billing.service';
 export * from './scenarios.service';
 export * from './bim-search.service';
 export * from './comments.service';
+export * from './sharing.service';
 

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ArxisVR - Visualizador de Modelos Compartilhados" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Visualizar Modelo - ArxisVR</title>
+  
+  <!-- DNS Prefetch & Preconnect for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" media="print" onload="this.media='all'">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-app:          #090d16;
+      --bg-glass:        rgba(15, 23, 42, 0.65);
+      --bg-panel:        rgba(15, 23, 42, 0.85);
+      --border-glass:    rgba(255, 255, 255, 0.08);
+      --text-primary:    #f8fafc;
+      --text-secondary:  #cbd5e1;
+      --text-muted:      #64748b;
+      --accent-color:    #7c3aed;
+      --accent-glow:     rgba(124, 58, 237, 0.4);
+      --font-display:    'Outfit', sans-serif;
+      --font-sans:       'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-app);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Viewer Layout */
+    .shared-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Main viewport area */
+    .canvas-area {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+    }
+
+    #viewer-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Glassmorphic header overlay */
+    .shared-header {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 480px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--accent-color), #4f46e5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-family: var(--font-display);
+      font-weight: 800;
+    }
+
+    .project-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .project-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Properties sidebar */
+    .shared-sidebar {
+      width: 340px;
+      height: calc(100vh - 40px);
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+      animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .properties-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* Error Overlay */
+    .error-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg-app);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .error-card {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--border-glass);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      border-top: 3px solid #ef4444;
+      animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      animation: pulseError 2s infinite;
+    }
+
+    .error-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+
+    .error-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(9, 13, 22, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Animations */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes scaleUp {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulseError {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="shared-container">
+    <div class="canvas-area">
+      <canvas id="viewer-canvas"></canvas>
+      
+      <!-- Shared Header -->
+      <header class="shared-header" id="shared-header" style="display:none">
+        <div class="logo-container">
+          <div class="logo-icon">ArxisVR</div>
+        </div>
+        <div class="project-details">
+          <span class="project-name" id="project-title">Carregando...</span>
+          <span class="project-meta" id="project-meta-info"></span>
+        </div>
+      </header>
+
+      <!-- Sidebar properties panel -->
+      <aside class="shared-sidebar" id="shared-sidebar" style="display:none">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title"><i class="lucide-info"></i> Propriedades</h3>
+        </div>
+        <div class="properties-content" id="model-info">
+          <div style="padding:16px 0;text-align:center;color:var(--text-muted);">
+            <div style="font-size:32px;margin-bottom:12px;opacity:0.4;">📐</div>
+            <p style="font-size:12px;line-height:1.5;">Selecione um elemento para visualizar propriedades</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Loading overlay -->
+      <div class="loading-overlay" id="loading">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry Point -->
+  <script type="module" src="/src/app/entrypoints/shared-main.ts"></script>
+</body>
+</html>

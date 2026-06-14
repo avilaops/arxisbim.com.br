@@ -113,6 +113,7 @@ export default defineConfig({
         arCalibration: resolve(__dirname, 'ar-calibration.html'),
         oauthCallback: resolve(__dirname, 'oauth-callback.html'),
         join: resolve(__dirname, 'join.html'),
+        shared: resolve(__dirname, 'shared.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
         lgpd: resolve(__dirname, 'lgpd.html'),

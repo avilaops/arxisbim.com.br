@@ -45,6 +45,7 @@ export class ViewerHost {
   public onSelectionChanged?: (object: THREE.Object3D | null) => void;
   public onModelLoaded?: (model: THREE.Object3D) => void;
   public onError?: (error: Error) => void;
+  public customRender?: () => void;
 
   private container: HTMLElement;
   public scene!: THREE.Scene;
@@ -683,7 +684,9 @@ export class ViewerHost {
       this.adaptiveQuality?.tick();
 
       // Post-processing pipeline (SSAO + Bloom + DoF + SMAA + Vignette)
-      if (this.postProcess) {
+      if (this.customRender) {
+        this.customRender();
+      } else if (this.postProcess) {
         this.postProcess.render();
       } else {
         this.renderer.render(this.scene, this.camera);

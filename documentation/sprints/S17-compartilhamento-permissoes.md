@@ -1,7 +1,7 @@
 # S17 · Compartilhamento e Permissões
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** Concluído  
 **Depende de:** S01 (RBAC base), S12 (cenário a ser compartilhado)  
 **Bloqueia:** S30 (PDF de comparação de cenários precisa de link público), S31 (Presentation Studio usa link público)
 
@@ -98,12 +98,12 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [ ] Link público abre viewer sem autenticação
-- [ ] Viewer público não exibe campos marcados como sensíveis (custo, fornecedor) — testado com payload real
-- [ ] Token é opaco; nenhum ID interno (project_id, scenario_id) aparece na URL
-- [ ] Link expirado retorna 410 Gone com mensagem clara
-- [ ] Revogar link torna-o inativo imediatamente (sem cache)
-- [ ] Link para cenário específico abre naquele cenário
-- [ ] `view_count` incrementado a cada abertura única
-- [ ] Build e lint passam
-- [ ] Demo em até 5 minutos
+- [x] Link público abre viewer sem autenticação
+- [x] Viewer público não exibe campos marcados como sensíveis (custo, fornecedor) — testado com payload real
+- [x] Token é opaco; nenhum ID interno (project_id, scenario_id) aparece na URL
+- [x] Link expirado retorna 410 Gone com mensagem clara
+- [x] Revogar link torna-o inativo imediatamente (sem cache)
+- [x] Link para cenário específico abre naquele cenário
+- [x] `view_count` incrementado a cada abertura única
+- [x] Build e lint passam
+- [x] Demo em até 5 minutos

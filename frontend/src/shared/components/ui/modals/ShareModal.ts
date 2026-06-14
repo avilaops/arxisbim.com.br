@@ -1,591 +1,445 @@
 /**
  * ShareModal Component - Compartilhar projeto
- * Geração de links e código embed
+ * Integração real com backend APIs para gerenciamento de links públicos e membros
  */
 
-import { Modal } from '../design-system/components/Modal';
-import { Button } from '../design-system/components/Button';
-import { Input } from '../design-system/components/Input';
-import { Toggle } from '../design-system/components/Toggle';
-import { Select } from '../design-system/components/Select';
-
-export interface ShareSettings {
-  allowComments: boolean;
-  allowMeasurements: boolean;
-  allowDownload: boolean;
-  expiresIn: number; // dias (0 = nunca)
-  password: string;
-  accessLevel: 'public' | 'private' | 'restricted';
-}
+import { Modal } from '../design-system/components/Modal.js';
+import { Button } from '../design-system/components/Button.js';
+import { Input } from '../design-system/components/Input.js';
+import { Select } from '../design-system/components/Select.js';
+import { SharingAPIService, SharedLink, ProjectMember } from '../../../../api/v1/services/sharing.service.js';
 
 export class ShareModal {
   private modal: Modal;
-  private shareLink: string = '';
-  private embedCode: string = '';
-  private settings: ShareSettings;
+  private projectId: string;
+  private links: SharedLink[] = [];
+  private members: ProjectMember[] = [];
+  private activeTab: string = 'link';
 
   constructor() {
-    this.settings = {
-      allowComments: true,
-      allowMeasurements: true,
-      allowDownload: false,
-      expiresIn: 30,
-      password: '',
-      accessLevel: 'private'
-    };
+    this.projectId = localStorage.getItem('arxisvr_project_id') || '';
 
     this.modal = new Modal({
       title: '🔗 Compartilhar Projeto',
-      size: 'md',
+      size: 'lg',
       closeOnEscape: true
     });
 
-    this.generateShareLink();
-    this.buildUI();
+    this.init();
     this.applyStyles();
   }
 
-  /**
-   * Gera link de compartilhamento
-   */
-  private generateShareLink(): void {
-    const projectId = Math.random().toString(36).substring(2, 10);
-    const baseUrl = window.location.origin;
-    this.shareLink = `${baseUrl}/view/${projectId}`;
-    
-    this.embedCode = `<iframe 
-  src="${this.shareLink}?embed=true" 
-  width="800" 
-  height="600" 
-  frameborder="0" 
-  allowfullscreen>
-</iframe>`;
+  private async init(): Promise<void> {
+    if (this.projectId) {
+      await this.loadData();
+    }
+    this.buildUI();
   }
 
-  /**
-   * Constrói a UI
-   */
+  private async loadData(): Promise<void> {
+    try {
+      this.links = await SharingAPIService.listLinks(this.projectId);
+      this.members = await SharingAPIService.listMembers(this.projectId);
+    } catch (err) {
+      console.error('Erro ao carregar dados do compartilhamento:', err);
+    }
+  }
+
   private buildUI(): void {
     const container = document.createElement('div');
     container.className = 'share-modal';
 
-    // Tabs
-    const tabs = this.createTabs();
-    container.appendChild(tabs);
+    // Tabs headers
+    const tabsHeader = document.createElement('div');
+    tabsHeader.className = 'share-tabs';
 
-    // Tab contents
-    const linkTab = this.createLinkTab();
-    const embedTab = this.createEmbedTab();
-    const settingsTab = this.createSettingsTab();
+    const tabItems = [
+      { id: 'link', label: '🔗 Links de Acesso' },
+      { id: 'members', label: '👥 Membros do Projeto' }
+    ];
 
-    linkTab.classList.add('share-tab--active');
+    tabItems.forEach(tab => {
+      const btn = document.createElement('button');
+      btn.className = `share-tab-btn ${this.activeTab === tab.id ? 'active' : ''}`;
+      btn.textContent = tab.label;
+      btn.addEventListener('click', () => this.switchTab(tab.id));
+      tabsHeader.appendChild(btn);
+    });
 
-    container.appendChild(linkTab);
-    container.appendChild(embedTab);
-    container.appendChild(settingsTab);
+    container.appendChild(tabsHeader);
 
+    // Tab Content
+    const contentArea = document.createElement('div');
+    contentArea.className = 'share-tab-content';
+
+    if (this.activeTab === 'link') {
+      contentArea.appendChild(this.createLinkTab());
+    } else {
+      contentArea.appendChild(this.createMembersTab());
+    }
+
+    container.appendChild(contentArea);
     this.modal.setContent(container);
   }
 
-  /**
-   * Cria tabs
-   */
-  private createTabs(): HTMLElement {
-    const tabs = document.createElement('div');
-    tabs.className = 'share-tabs';
-
-    const tabItems = [
-      { id: 'link', label: '🔗 Link', icon: '🔗' },
-      { id: 'embed', label: '📦 Embed', icon: '📦' },
-      { id: 'settings', label: '⚙️ Configurações', icon: '⚙️' }
-    ];
-
-    tabItems.forEach((tab, index) => {
-      const btn = new Button({
-        label: tab.label,
-        variant: index === 0 ? 'primary' : 'ghost',
-        size: 'sm',
-        onClick: () => this.switchTab(tab.id)
-      });
-
-      const tabEl = btn.getElement();
-      tabEl.setAttribute('data-tab', tab.id);
-      tabs.appendChild(tabEl);
-    });
-
-    return tabs;
-  }
-
-  /**
-   * Switch tab
-   */
   private switchTab(tabId: string): void {
-    // Update buttons
-    const btns = this.modal.getElement().querySelectorAll('[data-tab]');
-    btns.forEach(btn => {
-      const btnTabId = btn.getAttribute('data-tab');
-      if (btnTabId === tabId) {
-        btn.classList.add('arxis-btn--primary');
-        btn.classList.remove('arxis-btn--ghost');
-      } else {
-        btn.classList.add('arxis-btn--ghost');
-        btn.classList.remove('arxis-btn--primary');
-      }
-    });
-
-    // Update content
-    const tabs = this.modal.getElement().querySelectorAll('.share-tab');
-    tabs.forEach(tab => {
-      const contentTabId = tab.getAttribute('data-tab-content');
-      tab.classList.toggle('share-tab--active', contentTabId === tabId);
-    });
+    this.activeTab = tabId;
+    this.buildUI();
   }
 
   /**
-   * Cria tab de link
+   * Links tab view
    */
   private createLinkTab(): HTMLElement {
     const tab = document.createElement('div');
-    tab.className = 'share-tab';
-    tab.setAttribute('data-tab-content', 'link');
+    tab.className = 'share-tab-link';
 
-    const description = document.createElement('p');
-    description.className = 'share-description';
-    description.textContent = 'Compartilhe este link para visualização do projeto:';
-    tab.appendChild(description);
+    // 1. Create link form
+    const form = document.createElement('div');
+    form.className = 'share-create-form';
+    form.innerHTML = `<h4>Gerar novo link público</h4>`;
 
-    // Link display
-    const linkContainer = document.createElement('div');
-    linkContainer.className = 'share-link-container';
-
-    const linkInput = new Input({
-      value: this.shareLink,
-      fullWidth: true,
-      readonly: true
-    });
-
-    const copyBtn = new Button({
-      label: '📋',
-      variant: 'primary',
-      onClick: () => this.copyToClipboard(this.shareLink, 'Link copiado!')
-    });
-
-    linkContainer.appendChild(linkInput.getElement());
-    linkContainer.appendChild(copyBtn.getElement());
-    tab.appendChild(linkContainer);
-
-    // Quick share buttons
-    const quickShare = document.createElement('div');
-    quickShare.className = 'share-quick-buttons';
-
-    const shareButtons = [
-      { label: 'Email', icon: '📧', action: () => this.shareViaEmail() },
-      { label: 'WhatsApp', icon: '💬', action: () => this.shareViaWhatsApp() },
-      { label: 'Teams', icon: '👥', action: () => this.shareViaTeams() },
-      { label: 'Slack', icon: '💼', action: () => this.shareViaSlack() }
-    ];
-
-    shareButtons.forEach(btn => {
-      const button = new Button({
-        label: `${btn.icon} ${btn.label}`,
-        variant: 'ghost',
-        size: 'sm',
-        onClick: btn.action
-      });
-      quickShare.appendChild(button.getElement());
-    });
-
-    tab.appendChild(quickShare);
-
-    // QR Code
-    const qrSection = document.createElement('div');
-    qrSection.className = 'share-qr-section';
-    qrSection.innerHTML = `
-      <div class="share-qr-title">QR Code</div>
-      <div class="share-qr-code">
-        <div class="share-qr-placeholder">📱</div>
-        <div class="share-qr-text">Escaneie para visualizar</div>
-      </div>
-    `;
-    tab.appendChild(qrSection);
-
-    return tab;
-  }
-
-  /**
-   * Cria tab de embed
-   */
-  private createEmbedTab(): HTMLElement {
-    const tab = document.createElement('div');
-    tab.className = 'share-tab';
-    tab.setAttribute('data-tab-content', 'embed');
-
-    const description = document.createElement('p');
-    description.className = 'share-description';
-    description.textContent = 'Incorpore o visualizador em seu site:';
-    tab.appendChild(description);
-
-    // Embed code
-    const codeContainer = document.createElement('div');
-    codeContainer.className = 'share-code-container';
-
-    const codeArea = document.createElement('textarea');
-    codeArea.className = 'share-code-textarea';
-    codeArea.value = this.embedCode;
-    codeArea.readOnly = true;
-    codeContainer.appendChild(codeArea);
-
-    const copyBtn = new Button({
-      label: '📋 Copiar Código',
-      variant: 'primary',
-      fullWidth: true,
-      onClick: () => this.copyToClipboard(this.embedCode, 'Código copiado!')
-    });
-    codeContainer.appendChild(copyBtn.getElement());
-
-    tab.appendChild(codeContainer);
-
-    // Preview
-    const previewSection = document.createElement('div');
-    previewSection.className = 'share-preview-section';
-    previewSection.innerHTML = `
-      <div class="share-preview-title">Preview</div>
-      <div class="share-preview-frame">
-        <div class="share-preview-mockup">
-          <div class="share-preview-header"></div>
-          <div class="share-preview-content">🏗️ Visualizador BIM</div>
-        </div>
-      </div>
-    `;
-    tab.appendChild(previewSection);
-
-    return tab;
-  }
-
-  /**
-   * Cria tab de configurações
-   */
-  private createSettingsTab(): HTMLElement {
-    const tab = document.createElement('div');
-    tab.className = 'share-tab';
-    tab.setAttribute('data-tab-content', 'settings');
-
-    const description = document.createElement('p');
-    description.className = 'share-description';
-    description.textContent = 'Configure as permissões de visualização:';
-    tab.appendChild(description);
-
-    // Access level
-    const accessSelect = new Select({
-      label: 'Nível de Acesso',
+    const levelSelect = new Select({
+      label: 'Permissão',
       options: [
-        { value: 'public', label: '🌐 Público - Qualquer pessoa com o link' },
-        { value: 'private', label: '🔒 Privado - Apenas usuários autorizados' },
-        { value: 'restricted', label: '🔐 Restrito - Requer senha' }
+        { value: 'viewer', label: 'Visualizador (Somente Leitura)' },
+        { value: 'commenter', label: 'Comentador (Visualização + Comentar)' }
       ],
-      value: this.settings.accessLevel,
-      onChange: (value) => {
-        this.settings.accessLevel = value as any;
-      }
+      value: 'viewer'
     });
-    tab.appendChild(accessSelect.getElement());
 
-    // Expiration
-    const expiresSelect = new Select({
-      label: 'Expiração do Link',
+    const expirySelect = new Select({
+      label: 'Expiração',
       options: [
-        { value: '1', label: '1 dia' },
         { value: '7', label: '7 dias' },
         { value: '30', label: '30 dias' },
-        { value: '90', label: '90 dias' },
         { value: '0', label: 'Nunca expira' }
       ],
-      value: this.settings.expiresIn.toString(),
-      onChange: (value) => {
-        this.settings.expiresIn = parseInt(value);
-      }
+      value: '7'
     });
-    tab.appendChild(expiresSelect.getElement());
 
-    // Password (if restricted)
-    const passwordInput = new Input({
-      label: 'Senha (opcional)',
-      type: 'password',
-      placeholder: 'Digite uma senha',
-      fullWidth: true,
-      onChange: (value) => {
-        this.settings.password = value;
-      }
-    });
-    tab.appendChild(passwordInput.getElement());
+    const createBtn = new Button({
+      label: 'Gerar Link',
+      variant: 'primary',
+      onClick: async () => {
+        const accessLevel = levelSelect.getElement().querySelector('select')?.value as 'viewer' | 'commenter' || 'viewer';
+        const expiryDays = parseInt(expirySelect.getElement().querySelector('select')?.value || '7');
 
-    // Permissions toggles
-    const permissionsTitle = document.createElement('div');
-    permissionsTitle.className = 'share-section-title';
-    permissionsTitle.textContent = 'Permissões';
-    tab.appendChild(permissionsTitle);
-
-    const permissions = [
-      { key: 'allowComments', label: 'Permitir comentários' },
-      { key: 'allowMeasurements', label: 'Permitir medições' },
-      { key: 'allowDownload', label: 'Permitir download' }
-    ];
-
-    permissions.forEach(({ key, label }) => {
-      const toggle = new Toggle({
-        label,
-        checked: (this.settings as any)[key],
-        onChange: (checked) => {
-          (this.settings as any)[key] = checked;
+        try {
+          await SharingAPIService.createLink(this.projectId, {
+            accessLevel,
+            expiresInDays: expiryDays > 0 ? expiryDays : undefined
+          });
+          this.showNotification('Link gerado com sucesso!');
+          await this.loadData();
+          this.buildUI();
+        } catch (err) {
+          alert('Erro ao gerar link: ' + err);
         }
-      });
-      tab.appendChild(toggle.getElement());
+      }
     });
 
+    form.appendChild(levelSelect.getElement());
+    form.appendChild(expirySelect.getElement());
+    form.appendChild(createBtn.getElement());
+    tab.appendChild(form);
+
+    // 2. Active links list
+    const listSection = document.createElement('div');
+    listSection.className = 'share-links-list';
+    listSection.innerHTML = `<h4>Links Ativos</h4>`;
+
+    if (this.links.length === 0) {
+      listSection.innerHTML += `<p class="empty-msg">Nenhum link ativo para este projeto.</p>`;
+    } else {
+      this.links.forEach(link => {
+        const item = document.createElement('div');
+        item.className = 'share-link-item';
+
+        const linkUrl = `${window.location.origin}/shared.html?token=${link.token}`;
+        
+        const expiryLabel = link.expiresAt
+          ? `Expira em: ${new Date(link.expiresAt).toLocaleDateString()}`
+          : 'Nunca expira';
+
+        item.innerHTML = `
+          <div class="link-info">
+            <span class="link-url-text">${linkUrl}</span>
+            <span class="link-meta">${link.accessLevel.toUpperCase()} • ${expiryLabel} • Acessos: ${link.viewCount}</span>
+          </div>
+          <div class="link-actions">
+            <button class="action-btn copy-btn" title="Copiar Link">📋</button>
+            <button class="action-btn revoke-btn" title="Revogar Link">🗑️</button>
+          </div>
+        `;
+
+        item.querySelector('.copy-btn')?.addEventListener('click', () => {
+          navigator.clipboard.writeText(linkUrl).then(() => {
+            this.showNotification('Link copiado!');
+          });
+        });
+
+        item.querySelector('.revoke-btn')?.addEventListener('click', async () => {
+          if (confirm('Revogar este link de compartilhamento imediatamente?')) {
+            try {
+              await SharingAPIService.revokeLink(this.projectId, link.token);
+              this.showNotification('Link revogado!');
+              await this.loadData();
+              this.buildUI();
+            } catch (err) {
+              alert('Erro ao revogar: ' + err);
+            }
+          }
+        });
+
+        listSection.appendChild(item);
+      });
+    }
+
+    tab.appendChild(listSection);
     return tab;
   }
 
   /**
-   * Copia para clipboard
+   * Members tab view
    */
-  private copyToClipboard(text: string, message: string): void {
-    navigator.clipboard.writeText(text).then(() => {
-      console.log(`✅ ${message}`);
-      // Feedback visual
-      const notification = document.createElement('div');
-      notification.className = 'share-notification';
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => notification.remove(), 2000);
+  private createMembersTab(): HTMLElement {
+    const tab = document.createElement('div');
+    tab.className = 'share-tab-members';
+
+    // 1. Add member form
+    const form = document.createElement('div');
+    form.className = 'share-create-form';
+    form.innerHTML = `<h4>Adicionar membro</h4>`;
+
+    const userInput = new Input({
+      label: 'ID do Usuário (UUID)',
+      placeholder: 'Cole o ID do usuário',
+      fullWidth: true
     });
+
+    const roleSelect = new Select({
+      label: 'Função',
+      options: [
+        { value: 'viewer', label: 'Visualizador' },
+        { value: 'editor', label: 'Editor' },
+        { value: 'admin', label: 'Administrador' }
+      ],
+      value: 'viewer'
+    });
+
+    const addBtn = new Button({
+      label: 'Adicionar',
+      variant: 'primary',
+      onClick: async () => {
+        const userUuid = userInput.getElement().querySelector('input')?.value.trim();
+        const role = roleSelect.getElement().querySelector('select')?.value || 'viewer';
+
+        if (!userUuid) {
+          alert('Por favor insira o UUID do usuário');
+          return;
+        }
+
+        try {
+          await SharingAPIService.addMember(this.projectId, userUuid, role);
+          this.showNotification('Membro adicionado!');
+          await this.loadData();
+          this.buildUI();
+        } catch (err) {
+          alert('Erro ao adicionar membro: ' + err);
+        }
+      }
+    });
+
+    form.appendChild(userInput.getElement());
+    form.appendChild(roleSelect.getElement());
+    form.appendChild(addBtn.getElement());
+    tab.appendChild(form);
+
+    // 2. Members list
+    const listSection = document.createElement('div');
+    listSection.className = 'share-links-list';
+    listSection.innerHTML = `<h4>Membros Atuais</h4>`;
+
+    if (this.members.length === 0) {
+      listSection.innerHTML += `<p class="empty-msg">Nenhum membro vinculado.</p>`;
+    } else {
+      this.members.forEach(member => {
+        const item = document.createElement('div');
+        item.className = 'share-link-item';
+
+        item.innerHTML = `
+          <div class="link-info">
+            <span class="link-url-text">${member.name || member.email || member.userId}</span>
+            <span class="link-meta">Função: ${member.role.toUpperCase()}</span>
+          </div>
+          <div class="link-actions">
+            <button class="action-btn remove-member-btn" title="Remover Membro">🗑️</button>
+          </div>
+        `;
+
+        item.querySelector('.remove-member-btn')?.addEventListener('click', async () => {
+          if (confirm('Remover este membro do projeto?')) {
+            try {
+              await SharingAPIService.removeMember(this.projectId, member.userId);
+              this.showNotification('Membro removido!');
+              await this.loadData();
+              this.buildUI();
+            } catch (err) {
+              alert('Erro ao remover: ' + err);
+            }
+          }
+        });
+
+        listSection.appendChild(item);
+      });
+    }
+
+    tab.appendChild(listSection);
+    return tab;
   }
 
-  /**
-   * Compartilha via email
-   */
-  private shareViaEmail(): void {
-    const subject = encodeURIComponent('Visualize este projeto BIM');
-    const body = encodeURIComponent(`Confira este projeto: ${this.shareLink}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+  private showNotification(message: string): void {
+    const notification = document.createElement('div');
+    notification.className = 'share-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 2500);
   }
 
-  /**
-   * Compartilha via WhatsApp
-   */
-  private shareViaWhatsApp(): void {
-    const text = encodeURIComponent(`Visualize este projeto BIM: ${this.shareLink}`);
-    window.open(`https://wa.me/?text=${text}`);
-  }
-
-  /**
-   * Compartilha via Teams
-   */
-  private shareViaTeams(): void {
-    const url = encodeURIComponent(this.shareLink);
-    window.open(`https://teams.microsoft.com/share?url=${url}`);
-  }
-
-  /**
-   * Compartilha via Slack
-   */
-  private shareViaSlack(): void {
-    const url = encodeURIComponent(this.shareLink);
-    window.open(`https://slack.com/intl/pt-br/share?url=${url}`);
-  }
-
-  /**
-   * Abre o modal
-   */
   public open(): void {
     this.modal.open();
   }
 
-  /**
-   * Aplica estilos CSS
-   */
+  public destroy(): void {
+    this.modal.destroy();
+  }
+
   private applyStyles(): void {
-    if (document.getElementById('share-modal-styles')) return;
+    if (document.getElementById('share-modal-styles-v2')) return;
 
     const style = document.createElement('style');
-    style.id = 'share-modal-styles';
+    style.id = 'share-modal-styles-v2';
     style.textContent = `
       .share-modal {
         display: flex;
         flex-direction: column;
         gap: 20px;
+        color: #f8fafc;
+        font-family: 'Inter', sans-serif;
       }
-
       .share-tabs {
         display: flex;
-        gap: 8px;
-        padding-bottom: 12px;
+        gap: 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 8px;
       }
-
-      .share-tab {
-        display: none;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .share-tab--active {
-        display: flex;
-      }
-
-      .share-description {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.7);
-        margin: 0;
-      }
-
-      .share-link-container {
-        display: flex;
-        gap: 8px;
-      }
-
-      .share-link-container .arxis-input-container {
-        flex: 1;
-      }
-
-      .share-quick-buttons {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-      }
-
-      .share-qr-section {
-        margin-top: 8px;
-      }
-
-      .share-qr-title {
-        font-size: 13px;
+      .share-tab-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
         font-weight: 600;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 8px 12px;
+        transition: color 0.2s, border-bottom 0.2s;
       }
-
-      .share-qr-code {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 24px;
-        background: rgba(255, 255, 255, 0.05);
+      .share-tab-btn.active {
+        color: #7c3aed;
+        border-bottom: 2px solid #7c3aed;
+      }
+      .share-tab-btn:hover {
+        color: #f1f5f9;
+      }
+      .share-create-form {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 8px;
-        border: 2px dashed rgba(255, 255, 255, 0.2);
-      }
-
-      .share-qr-placeholder {
-        font-size: 64px;
-        margin-bottom: 8px;
-      }
-
-      .share-qr-text {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .share-code-container {
+        padding: 16px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        margin-bottom: 20px;
       }
-
-      .share-code-textarea {
-        width: 100%;
-        height: 120px;
-        padding: 12px;
-        background: rgba(20, 20, 20, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+      .share-create-form h4 {
+        margin: 0;
+        font-size: 14px;
+        color: #cbd5e1;
+      }
+      .share-links-list h4 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #cbd5e1;
+      }
+      .share-link-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 6px;
-        color: var(--theme-accent, #00ff88);
-        font-family: 'Courier New', monospace;
-        font-size: 11px;
-        resize: vertical;
+        padding: 10px 12px;
+        margin-bottom: 8px;
       }
-
-      .share-preview-section {
-        margin-top: 8px;
-      }
-
-      .share-preview-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 12px;
-      }
-
-      .share-preview-frame {
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-      }
-
-      .share-preview-mockup {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
+      .link-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
         overflow: hidden;
       }
-
-      .share-preview-header {
-        height: 30px;
+      .link-url-text {
+        font-size: 13px;
+        color: #7c3aed;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .link-meta {
+        font-size: 11px;
+        color: #64748b;
+      }
+      .link-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .action-btn {
         background: rgba(255, 255, 255, 0.05);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        color: #cbd5e1;
+        cursor: pointer;
+        padding: 6px 8px;
+        font-size: 14px;
+        transition: background 0.2s;
       }
-
-      .share-preview-content {
-        padding: 40px;
+      .action-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #f8fafc;
+      }
+      .empty-msg {
+        font-size: 12px;
+        color: #64748b;
         text-align: center;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.6);
+        padding: 16px;
       }
-
-      .share-section-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.9);
-        margin-top: 8px;
-      }
-
       .share-notification {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        bottom: 24px;
+        right: 24px;
+        background: #10b981;
+        color: #ffffff;
         padding: 12px 24px;
-        background: rgba(0, 255, 136, 0.9);
-        color: #000;
-        border-radius: 6px;
+        border-radius: 8px;
         font-size: 13px;
         font-weight: 600;
         z-index: 10001;
-        animation: share-notification-show 0.3s ease;
-      }
-
-      @keyframes share-notification-show {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
       }
     `;
     document.head.appendChild(style);
   }
-
-  /**
-   * Destrói o modal
-   */
-  public destroy(): void {
-    this.modal.destroy();
-  }
 }
 
-/**
- * Helper para abrir modal de compartilhamento
- */
 export function openShareModal(): ShareModal {
   const modal = new ShareModal();
   modal.open();
