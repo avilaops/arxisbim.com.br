@@ -44,6 +44,7 @@ CREATE TABLE element_cost_links (
   cost_item_id UUID NOT NULL REFERENCES cost_items(id) ON DELETE CASCADE,
   quantity DECIMAL(14,4) NOT NULL DEFAULT 0, -- calculado no S20
   quantity_unit VARCHAR(20), -- pode diferir de cost_item.unit (converção em S22)
+  quantity_source VARCHAR(30) DEFAULT 'geometric_fallback', -- 'qto_pset' | 'pset_custom' | 'geometric_fallback'
   override_price DECIMAL(12,4), -- NULL = usa unit_price do cost_item
   override_reason TEXT, -- obrigatório se override_price não-NULL (rastreabilidade)
   note TEXT,
@@ -61,3 +62,6 @@ ALTER TABLE scenarios ADD COLUMN estimated_cost DECIMAL(16,2); -- custo total es
 ALTER TABLE scenarios ADD COLUMN cost_table_id UUID REFERENCES cost_tables(id) ON DELETE SET NULL; -- tabela de preços padrão
 
 CREATE INDEX idx_scenarios_cost_table_id ON scenarios(cost_table_id);
+
+-- S20: Add quantity_source tracking for takeoff
+ALTER TABLE element_cost_links ADD COLUMN IF NOT EXISTS quantity_source VARCHAR(30) DEFAULT 'geometric_fallback';

@@ -32,6 +32,8 @@ import { CommentPanel } from './CommentPanel.js';
 import { Stars } from './Stars.js';
 import { CostCalculationPanel } from './CostCalculationPanel.js';
 import { costManager } from './CostManager.js';
+import { costHeatmapSystem } from './CostHeatmapSystem.js';
+import { CostBreakdownPanel } from './CostBreakdownPanel.js';
 
 import { SunPositionCalculator, COMMON_LOCATIONS } from './SunPositionCalculator.js';
 import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProcessingPipeline.js';
@@ -75,6 +77,9 @@ export class ViewerHost {
   private commentMarkers?: CommentMarkers;
   private commentPanel?: CommentPanel;
   private costPanel?: CostCalculationPanel;
+  private costBreakdownPanel?: CostBreakdownPanel;
+  private heatmapEnabled = false;
+  private currentScenarioId = '';
 
 
   /**
@@ -992,16 +997,67 @@ export class ViewerHost {
 
     this.container.appendChild(this.costPanel);
 
+    // Create breakdown panel (S24)
+    this.costBreakdownPanel = new CostBreakdownPanel();
+    this.container.appendChild(this.costBreakdownPanel);
+
     // Listen para toggles
     costManager.addEventListener('panel-toggle', (evt: any) => {
       if (evt.detail.visible) {
         this.costPanel!.style.display = 'block';
         this.costPanel!.scenarioId = evt.detail.scenarioId;
         this.costPanel!.loadCalculation();
+
+        // Show breakdown panel with heatmap
+        this.currentScenarioId = evt.detail.scenarioId;
+        this.enableCostHeatmap(evt.detail.scenarioId);
       } else {
         this.costPanel!.style.display = 'none';
+        this.disableCostHeatmap();
       }
     });
+
+    // Handle element selection to show cost detail
+    if (this.onSelectionChanged) {
+      const originalCallback = this.onSelectionChanged;
+      this.onSelectionChanged = (obj: THREE.Object3D | null) => {
+        originalCallback(obj);
+        if (obj && this.heatmapEnabled && this.costBreakdownPanel) {
+          const costData = obj.userData?.costData;
+          if (costData) {
+            this.costBreakdownPanel.setSelectedElement(costData);
+          }
+        }
+      };
+    }
+  }
+
+  /**
+   * Ativa heatmap de custos (S24)
+   */
+  private async enableCostHeatmap(scenarioId: string): Promise<void> {
+    if (this.heatmapEnabled) return;
+
+    try {
+      await costHeatmapSystem.loadCostsForScenario(scenarioId);
+      costHeatmapSystem.applyHeatmap(this.scene);
+      this.heatmapEnabled = true;
+
+      if (this.costBreakdownPanel) {
+        this.costBreakdownPanel.scenarioId = scenarioId;
+      }
+    } catch (err) {
+      console.error('[CostHeatmap] Failed to load:', err);
+    }
+  }
+
+  /**
+   * Desativa heatmap
+   */
+  private disableCostHeatmap(): void {
+    if (!this.heatmapEnabled) return;
+    costHeatmapSystem.clearHeatmap(this.scene);
+    this.heatmapEnabled = false;
   }
 
   /**

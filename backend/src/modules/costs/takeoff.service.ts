@@ -26,9 +26,9 @@ export class TakeoffService {
 
     // Passo 1: Obter cenário + versão de modelo
     const scenarioData = await this.sql<
-      Array<{ model_version_id: string; cost_table_id: string | null }>
+      Array<{ model_version_id: string }>
     >`
-      SELECT s.model_version_id, s.cost_table_id
+      SELECT s.model_version_id
       FROM scenarios s
       WHERE s.id = ${scenarioId}
     `;
@@ -37,7 +37,17 @@ export class TakeoffService {
       throw new Error(`Scenario ${scenarioId} not found`);
     }
 
-    const { model_version_id, cost_table_id } = scenarioData[0];
+    const { model_version_id } = scenarioData[0];
+
+    // Obter cost_table_id se existir
+    const costTableData = await this.sql<
+      Array<{ id: string }>
+    >`
+      SELECT id FROM cost_tables
+      WHERE scenario_id = ${scenarioId}
+      LIMIT 1
+    `;
+    const cost_table_id = costTableData[0]?.id || null;
     if (!model_version_id) {
       throw new Error(`Scenario ${scenarioId} has no model version`);
     }
@@ -149,6 +159,12 @@ export class TakeoffService {
       LIMIT 1000
     `;
 
+    // Get the cost table's creator for audit trail
+    const ctRes = await this.sql<Array<{ created_by: string }>>`
+      SELECT created_by FROM cost_tables WHERE id = ${costTableId}
+    `;
+    const createdBy = ctRes[0]?.created_by || null;
+
     // Criar mapping simples: cada elemento tenta linkar ao primeiro item compatível
     for (const qty of quantities) {
       // Se houver cost_item para este tipo, vincular
@@ -157,21 +173,25 @@ export class TakeoffService {
 
       try {
         await this.sql`
+          DELETE FROM element_cost_links
+          WHERE scenario_id = ${scenarioId}
+            AND element_global_id = ${qty.global_id}
+            AND cost_item_id = ${item.id}
+        `;
+
+        await this.sql`
           INSERT INTO element_cost_links (
             scenario_id, element_global_id, cost_item_id,
-            quantity, quantity_unit, quantity_source: ${qty.quantity_source},
+            quantity, quantity_unit, quantity_source,
             created_by, created_at, updated_at
           ) VALUES (
             ${scenarioId}, ${qty.global_id}, ${item.id},
             ${qty.quantity.value}, ${qty.quantity.unit}, ${qty.quantity_source},
-            'system', NOW(), NOW()
+            ${createdBy}, NOW(), NOW()
           )
-          ON CONFLICT (scenario_id, element_global_id, cost_item_id) DO UPDATE
-          SET quantity = ${qty.quantity.value}, updated_at = NOW()
         `;
         created++;
       } catch (err) {
-        // Log erro mas continua processando outros elementos
         console.warn(
           `[TakeoffService] Failed to create link for element ${qty.global_id}:`,
           err
