@@ -543,6 +543,22 @@ server.decorate('authenticate', authenticateRequest);
 server.decorate('adminOnly', adminOnly);
 
 // =====================================
+// ROOT ROUTES
+// =====================================
+
+server.get('/', async (_request: FastifyRequest, reply: FastifyReply) => {
+  return reply.code(200).send({
+    name: 'ArxisVR Backend API',
+    status: 'online',
+    version: '1.0.0',
+  });
+});
+
+server.head('/', async (_request: FastifyRequest, reply: FastifyReply) => {
+  return reply.code(200).send();
+});
+
+// =====================================
 // HEALTH CHECK
 // =====================================
 
