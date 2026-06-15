@@ -1,4 +1,5 @@
 import { ViewerHost } from '../../viewer/ViewerHost';
+import { registerViewer4dBridge } from '../../viewer/scheduling/viewer4dBridge';
 import * as THREE from 'three';
 import { IFCSimpleLoader } from '../../loaders/IFCSimpleLoader';
 import { IFCUploadManager } from '../../systems/model/IFCUploadManager';
@@ -243,6 +244,9 @@ async function init() {
   window.__viewerHost = viewerHost;
   (appController as any).viewerHost = viewerHost;
   console.log('ViewerHost inicializado');
+
+  // S35: registra hooks globais da simulação 4D (window.__startSchedule4D)
+  registerViewer4dBridge();
 
   // Inicializar IFCUploadManager após API Client estar pronto
   viewerHost.ifcUploadManager = IFCUploadManager.getInstance();

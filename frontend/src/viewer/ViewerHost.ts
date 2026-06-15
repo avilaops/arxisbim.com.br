@@ -40,7 +40,7 @@ import { PostProcessingPipeline, PostProcessQuality } from '../engine/PostProces
 import { CascadedShadowManager } from '../engine/CascadedShadowManager.js';
 import { AdaptiveQualityManager, AdaptiveMode } from '../engine/AdaptiveQualityManager.js';
 import type { CameraState } from './CameraState';
-
+export type ViewerControlMode = 'fps' | 'third-person' | 'drone' | 'orbit';
 
 /**
  * ViewerHost component
@@ -81,6 +81,13 @@ export class ViewerHost {
   private heatmapEnabled = false;
   private currentScenarioId = '';
 
+  public controlMode: ViewerControlMode = 'orbit';
+  public keyHandler?: (e: KeyboardEvent) => void;
+  public bimEnvironment!: BIMEnvironment;
+  public avatarSystem!: AvatarSystem;
+  private resizeObserver?: ResizeObserver;
+  private animationFrameId?: number;
+
 
   /**
    * Seleciona objeto pelo ID (ex: expressID IFC)
@@ -113,6 +120,10 @@ export class ViewerHost {
     if (this.controls) { this.controls.target.set(s.target[0], s.target[1], s.target[2]); this.controls.update?.(); }
     this.camera.lookAt(s.target[0], s.target[1], s.target[2]);
     this.camera.updateProjectionMatrix();
+  }
+
+  public setLOD(level: number): void {
+    console.log('LOD level set to:', level);
   }
 
   /** Seleciona por expressID (nodes do GLB têm name = expressID). */

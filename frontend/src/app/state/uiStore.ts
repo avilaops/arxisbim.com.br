@@ -76,6 +76,7 @@ export interface UIState {
   toolState: ToolState;
   editorTabs: string[];
   activeTab: string | null;
+  engineMode: 'three' | 'webgpu' | 'pixel_streaming';
 }
 
 type Listener = (state: UIState) => void;
@@ -118,7 +119,8 @@ export class UIStore {
       cameraMode: 'FPS'
     },
     editorTabs: [],
-    activeTab: null
+    activeTab: null,
+    engineMode: 'three'
   };
 
   private listeners: Set<Listener> = new Set();
@@ -274,6 +276,12 @@ export class UIStore {
   public setActiveTab(id: string): void {
     this.setState(draft => {
       draft.activeTab = id;
+    });
+  }
+
+  public setEngineMode(mode: 'three' | 'webgpu' | 'pixel_streaming'): void {
+    this.setState(draft => {
+      draft.engineMode = mode;
     });
   }
 }

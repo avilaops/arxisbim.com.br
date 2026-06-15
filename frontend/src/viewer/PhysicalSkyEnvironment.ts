@@ -237,7 +237,7 @@ export class PhysicalSkyEnvironment {
       fogColor = new THREE.Color(0xc8dce8);
     }
 
-    this.scene.fog = new THREE.FogExp2(fogColor, 0.0008);
+    this.scene.fog = new THREE.FogExp2(fogColor.getHex(), 0.0008);
     this.scene.background = new THREE.Color(fogColor).lerp(new THREE.Color(0x88aabb), 0.3);
 
     // Cor do ground combina com o ambiente

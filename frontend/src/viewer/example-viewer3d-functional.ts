@@ -1,5 +1,5 @@
-// Exemplo funcional de uso do ViewerHost com carregamento e seleção
-import { ViewerHost } from './viewer';
+import * as THREE from 'three';
+import { ViewerHost } from './ViewerHost';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('canvas3d');
@@ -8,21 +8,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const viewer = new ViewerHost(container);
 
   // Eventos customizados
-  viewer.onModelLoaded = (model) => {
+  viewer.onModelLoaded = (model: THREE.Object3D) => {
     console.log('Modelo carregado:', model);
     // Seleciona e destaca um objeto fictício após carregar
     setTimeout(() => {
       viewer.selectObject('demo-object');
     }, 1000);
   };
-  viewer.onSelectionChanged = (obj) => {
+  viewer.onSelectionChanged = (obj: THREE.Object3D | null) => {
     if (obj) {
       console.log('Objeto selecionado:', obj.name);
     } else {
       console.log('Nenhum objeto selecionado');
     }
   };
-  viewer.onError = (err) => {
+  viewer.onError = (err: Error) => {
     console.error('Erro no viewer:', err);
   };
 

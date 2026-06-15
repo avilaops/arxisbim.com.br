@@ -1,5 +1,5 @@
 // Exemplo mínimo de uso do ViewerHost
-import { ViewerHost } from './viewer';
+import { ViewerHost } from './ViewerHost';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('canvas3d');

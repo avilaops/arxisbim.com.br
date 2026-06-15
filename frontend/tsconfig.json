@@ -5,9 +5,11 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "experimentalDecorators": true,
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -21,9 +23,14 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "three/addons/*": ["./node_modules/three/examples/jsm/*", "./node_modules/@types/three/examples/jsm/*"]
     },
-    "types": ["@webgpu/types", "vite/client"]
+
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "**/*.patch.ts"
+  ]
 }

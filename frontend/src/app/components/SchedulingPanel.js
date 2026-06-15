@@ -395,6 +395,24 @@ class SchedulingPanel {
                 cursor: pointer;
                 font-size: 12px;
               ">+ Tarefa</button>
+              <button class="schedule-simulate-4d" data-id="${selectedSchedule.id}" data-name="${selectedSchedule.name}" style="
+                padding: 6px 12px;
+                background: var(--accent-green, #16a34a);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+              ">🎬 Simular 4D</button>
+              <button class="schedule-simulate-split" data-id="${selectedSchedule.id}" data-name="${selectedSchedule.name}" style="
+                padding: 6px 12px;
+                background: var(--accent-purple, #7c3aed);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+              ">⇆ Planejado×Realizado</button>
               <button class="schedule-delete" data-id="${selectedSchedule.id}" style="
                 padding: 6px 12px;
                 background: var(--accent-red);
@@ -572,6 +590,44 @@ class SchedulingPanel {
 
     container.querySelectorAll('.schedule-delete').forEach(btn => {
       btn.addEventListener('click', () => this.deleteSchedule(btn.dataset.id));
+    });
+
+    // S35: iniciar simulação 4D no viewer (auto-mapeia elementos e abre overlay)
+    container.querySelectorAll('.schedule-simulate-4d').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const start = window.__startSchedule4D;
+        if (!start) {
+          this.error = 'Simulação 4D indisponível — abra um modelo IFC primeiro.';
+          this.render();
+          return;
+        }
+        const handle = await start(btn.dataset.id, { autoMatch: true, projectName: btn.dataset.name });
+        if (handle) {
+          this.close(); // fecha o modal para revelar o viewer + overlay 4D
+        } else {
+          this.error = 'Não foi possível iniciar a simulação 4D. Verifique se há um modelo carregado.';
+          this.render();
+        }
+      });
+    });
+
+    // S35: comparação Planejado×Realizado lado a lado
+    container.querySelectorAll('.schedule-simulate-split').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const start = window.__startSchedule4DSplit;
+        if (!start) {
+          this.error = 'Comparação 4D indisponível — abra um modelo IFC primeiro.';
+          this.render();
+          return;
+        }
+        const handle = await start(btn.dataset.id, { autoMatch: true, projectName: btn.dataset.name });
+        if (handle) {
+          this.close();
+        } else {
+          this.error = 'Não foi possível iniciar a comparação 4D. Verifique se há um modelo carregado.';
+          this.render();
+        }
+      });
     });
 
     container.querySelectorAll('.task-delete').forEach(btn => {

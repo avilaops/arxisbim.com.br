@@ -1,3 +1,4 @@
+
 /**
  * AppShell - Layout principal (tipo Blazor MainLayout)
  * ActivityBar + Sidebar + Editor + StatusBar
@@ -16,117 +17,11 @@ import { ModalHost } from '../shared/components/ui/components/ModalHost';
 import { WorkspaceTopBar } from './WorkspaceTopBar';
 import { ViewportOverlay } from './ViewportOverlay';
 import { BIM4DTimelineStrip } from '../features/bim-4d/ui/BIM4DTimelineStrip';
-
-/**
- * AppShell = Composition root da UI
- */
-export class AppShell {
-  private container: HTMLElement;
-  private viewerHost!: ViewerHost;
-  private activityBar?: ActivityBar;
-  private sidebar?: Sidebar;
-  private statusBar?: StatusBar;
-  private modalHost?: ModalHost;
-  private workspaceTopBar?: WorkspaceTopBar;
-  private viewportOverlay?: ViewportOverlay;
-  private bim4dTimeline?: BIM4DTimelineStrip;
-
-  private unsubscribe?: () => void;
-  private eventUnsubscribers: Array<() => void> = [];
-
-  constructor(container: HTMLElement) {
-    this.container = container;
-    this.render();
-    this.subscribeToState();
-    this.setupEventListeners();
-  }
-
-  /**
-   * Renderiza estrutura do AppShell
-   */
-  private render(): void {
-    // Limpa container (remove loading screen)
-    this.container.innerHTML = '';
-    this.container.className = 'app-shell';
-
-    const grid = document.createElement('div');
-    grid.className = 'app-shell__grid';
-
-    const activityBarEl = document.createElement('aside');
-    activityBarEl.className = 'app-shell__activity-bar';
-    activityBarEl.setAttribute('aria-label', 'Navegação principal');
-    this.activityBar = new ActivityBar(activityBarEl);
-
-    const sidebarEl = document.createElement('aside');
-    sidebarEl.className = 'app-shell__sidebar';
-    sidebarEl.setAttribute('aria-label', 'Painel lateral');
-    this.sidebar = new Sidebar(sidebarEl);
-
-    const sidebarOverlay = document.createElement('div');
-    sidebarOverlay.className = 'sidebar-overlay';
-    sidebarOverlay.addEventListener('click', () => {
-      uiStore.toggleSidebar();
-    });
-
-    const workspaceEl = document.createElement('section');
-    workspaceEl.className = 'app-shell__workspace';
-
-    const topbarEl = document.createElement('header');
-    topbarEl.className = 'app-shell__topbar';
-    this.workspaceTopBar = new WorkspaceTopBar(topbarEl);
-
-    // Editor Area (canvas Three.js)
-    const editorEl = document.createElement('div');
-    editorEl.className = 'app-shell__editor';
-    this.viewerHost = new ViewerHost(editorEl);
-    this.viewportOverlay = new ViewportOverlay(editorEl);
-    this.bim4dTimeline = new BIM4DTimelineStrip(editorEl, {
-      enableControls: true,
-      showProgress: true,
-      showSegments: true
-    });
-
-    workspaceEl.appendChild(topbarEl);
-    workspaceEl.appendChild(editorEl);
-
-    grid.appendChild(activityBarEl);
-    grid.appendChild(sidebarEl);
-    grid.appendChild(sidebarOverlay);
-    grid.appendChild(workspaceEl);
-    this.container.appendChild(grid);
-
-    const statusBarEl = document.createElement('footer');
-    this.statusBar = new StatusBar(statusBarEl);
-    this.container.appendChild(statusBarEl);
-
-    const modalHostEl = document.createElement('div');
-    this.modalHost = new ModalHost(modalHostEl);
-    this.container.appendChild(modalHostEl);
-
-    // Apply initial state
-    this.updateLayout(uiStore.getState());
-  }
-
-  // ...restante dos métodos copiados do arquivo original...
-}
-/**
- * AppShell - Layout principal (tipo Blazor MainLayout)
- * ActivityBar + Sidebar + Editor + StatusBar
- */
-
-import { uiStore } from './state/uiStore';
-import { eventBus as appEventBus } from './state/eventBus';
-import { appState, eventBus as coreEventBus, EventType } from '../core';
-import { ViewerHost } from '../viewer/ViewerHost';
-import type { ProjectWorkspaceState, UIState } from './state/uiStore';
-import { appController } from './AppController';
-import { ActivityBar } from '../shared/components/ui/components/ActivityBar';
-import { Sidebar } from '../shared/components/ui/components/Sidebar';
-import { StatusBar } from '../shared/components/ui/components/StatusBar';
-import { ModalHost } from '../shared/components/ui/components/ModalHost';
-import { WorkspaceTopBar } from './WorkspaceTopBar';
-import { ViewportOverlay } from './ViewportOverlay';
-import { BIM4DTimelineStrip } from '../features/bim-4d/ui/BIM4DTimelineStrip';
+import { RenderManager } from '../viewer/render/RenderManager';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { PixelStreamingView } from '../viewer/render/PixelStreamingView';
+import { getAPIClient } from '../api/v1/client';
 
 /**
  * AppShell = Composition root da UI
@@ -142,6 +37,10 @@ export class AppShell {
   private workspaceTopBar?: WorkspaceTopBar;
   private viewportOverlay?: ViewportOverlay;
   private bim4dTimeline?: BIM4DTimelineStrip;
+  private renderManager!: RenderManager;
+  private streamingContainer!: HTMLElement;
+  private reactRoot?: ReactDOM.Root;
+  private currentMode: 'three' | 'webgpu' | 'pixel_streaming' = 'three';
 
   private unsubscribe?: () => void;
   private eventUnsubscribers: Array<() => void> = [];
@@ -169,7 +68,6 @@ export class AppShell {
 
     const activityBarEl = document.createElement('aside');
     activityBarEl.className = 'app-shell__activity-bar';
-  export class AppShell { 
     this.activityBar = new ActivityBar(activityBarEl);
 
     const sidebarEl = document.createElement('aside');
@@ -193,6 +91,8 @@ export class AppShell {
     // Editor Area (canvas Three.js)
     const editorEl = document.createElement('div');
     editorEl.className = 'app-shell__editor';
+    editorEl.style.position = 'relative';
+
     this.viewerHost = new ViewerHost(editorEl);
     this.viewportOverlay = new ViewportOverlay(editorEl);
     this.bim4dTimeline = new BIM4DTimelineStrip(editorEl, {
@@ -200,6 +100,27 @@ export class AppShell {
       showProgress: true,
       showSegments: true
     });
+
+    // WebGPU Canvas (Babylon.js)
+    const webgpuCanvas = document.createElement('canvas');
+    webgpuCanvas.id = 'webgpu-canvas-el';
+    webgpuCanvas.className = 'webgpu-canvas-el';
+    webgpuCanvas.style.cssText = 'width: 100% !important; height: 100% !important; display: none; position: absolute; top: 0; left: 0; outline: none; z-index: 1;';
+    editorEl.appendChild(webgpuCanvas);
+    
+    // Instantiate RenderManager
+    this.renderManager = new RenderManager(webgpuCanvas);
+    this.renderManager.initialize().catch((err) => {
+      console.error('[AppShell] WebGPU initialization failed:', err);
+    });
+
+    // Pixel Streaming Container (React overlay)
+    const streamingContainer = document.createElement('div');
+    streamingContainer.id = 'pixel-streaming-container';
+    streamingContainer.className = 'pixel-streaming-container';
+    streamingContainer.style.cssText = 'width: 100% !important; height: 100% !important; display: none; position: absolute; top: 0; left: 0; z-index: 10;';
+    editorEl.appendChild(streamingContainer);
+    this.streamingContainer = streamingContainer;
 
     workspaceEl.appendChild(topbarEl);
     workspaceEl.appendChild(editorEl);
@@ -247,6 +168,9 @@ export class AppShell {
 
     // Update data-active-view for theming
     grid.setAttribute('data-active-view', state.activeView);
+
+    // Update graphic engine mode
+    this.updateEngineMode(state.engineMode);
   }
 
   /**
@@ -566,6 +490,79 @@ export class AppShell {
     });
   }
 
+  private updateEngineMode(mode: 'three' | 'webgpu' | 'pixel_streaming'): void {
+    if (this.currentMode === mode) return;
+    this.currentMode = mode;
+    console.log('[AppShell] Swapping graphics engine to:', mode);
+
+    const threeCanvas = this.container.querySelector('#viewer-canvas-el') as HTMLElement;
+    const webgpuCanvas = this.container.querySelector('#webgpu-canvas-el') as HTMLElement;
+    const streamingEl = this.streamingContainer;
+
+    // Hide all
+    if (threeCanvas) threeCanvas.style.display = 'none';
+    if (webgpuCanvas) webgpuCanvas.style.display = 'none';
+    if (streamingEl) streamingEl.style.display = 'none';
+
+    // Unmount React pixel streaming if active
+    if (this.reactRoot) {
+      this.reactRoot.unmount();
+      this.reactRoot = undefined;
+    }
+
+    if (mode === 'three') {
+      if (threeCanvas) threeCanvas.style.display = 'block';
+    } else if (mode === 'webgpu') {
+      if (webgpuCanvas) {
+        webgpuCanvas.style.display = 'block';
+        if (this.renderManager) {
+          this.renderManager.switchToWebGPU();
+        }
+      }
+    } else if (mode === 'pixel_streaming') {
+      if (streamingEl) {
+        streamingEl.style.display = 'block';
+        this.startPixelStreaming();
+      }
+    }
+  }
+
+  private async startPixelStreaming(): Promise<void> {
+    let signalingUrl = 'ws://localhost:8889/ws'; // Default local signaling server
+    
+    try {
+      const client = getAPIClient();
+      const projectId = '00000000-0000-0000-0000-000000000000'; // dummy UUID
+      console.log('[AppShell] Requesting streaming session allocation...');
+      
+      const response = await client.post('/api/v1/streaming/session', { projectId });
+      if (response && response.data && response.data.signalingUrl) {
+        signalingUrl = response.data.signalingUrl;
+        console.log('[AppShell] Allocated streaming session at:', signalingUrl);
+      }
+    } catch (err) {
+      console.warn('[AppShell] Failed to allocate streaming instance from backend, using default local fallback:', err);
+    }
+
+    if (this.streamingContainer) {
+      this.reactRoot = ReactDOM.createRoot(this.streamingContainer);
+      this.reactRoot.render(
+        React.createElement(PixelStreamingView, {
+          signalingUrl,
+          onClose: () => {
+            uiStore.setEngineMode('three');
+          },
+          onConnectionSuccess: (dataChannel: RTCDataChannel) => {
+            console.log('[AppShell] Pixel streaming WebRTC data channel established');
+            if (this.renderManager) {
+              this.renderManager.switchToStreaming(dataChannel);
+            }
+          }
+        })
+      );
+    }
+  }
+
   /**
    * Get ViewerHost (para acessar scene/camera/renderer)
    */
@@ -583,6 +580,19 @@ export class AppShell {
 
     this.eventUnsubscribers.forEach(unsubscribe => unsubscribe());
     this.eventUnsubscribers = [];
+
+    // Clean up WebGPU and Pixel streaming
+    if (this.reactRoot) {
+      try {
+        this.reactRoot.unmount();
+      } catch (e) {
+        // Safe check
+      }
+      this.reactRoot = undefined;
+    }
+    if (this.renderManager) {
+      this.renderManager.dispose();
+    }
 
     this.activityBar?.destroy();
     this.sidebar?.destroy();

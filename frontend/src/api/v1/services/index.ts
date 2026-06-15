@@ -12,4 +12,5 @@ export * from './bim-search.service';
 export * from './comments.service';
 export * from './sharing.service';
 export * from './cost.service';
+export * from './scheduling.service';
 

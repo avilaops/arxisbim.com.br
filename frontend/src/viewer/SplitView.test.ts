@@ -1,8 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { SplitView } from './SplitView';
-import { CameraSync } from './CameraSync';
-import { DiffHighlighter } from './DiffHighlighter';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // Mock analytics
@@ -11,6 +9,8 @@ vi.mock('../core/analytics/Analytics', () => ({
     track: vi.fn()
   }
 }));
+
+import { analytics } from '../core/analytics/Analytics';
 
 describe('SplitView', () => {
   let container: HTMLElement;
@@ -28,20 +28,42 @@ describe('SplitView', () => {
     container.style.height = '600px';
     document.body.appendChild(container);
 
+    container.getBoundingClientRect = () => ({
+      width: 1000,
+      height: 600,
+      top: 0,
+      left: 0,
+      right: 1000,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => {}
+    });
+
     // Setup canvas
     canvas = document.createElement('canvas');
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 1000, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 600, configurable: true });
     container.appendChild(canvas);
 
-    // Setup renderer
-    renderer = new THREE.WebGLRenderer({ canvas });
-    renderer.setSize(1000, 600);
+    // Setup renderer mock to bypass JSDOM lack of WebGL context
+    renderer = {
+      domElement: canvas,
+      setSize: vi.fn(),
+      setViewport: vi.fn(),
+      setScissor: vi.fn(),
+      setScissorTest: vi.fn(),
+      clear: vi.fn(),
+      render: vi.fn()
+    } as any;
 
     // Mock ViewerHost
+    const testCamera = new THREE.PerspectiveCamera(75, 1000 / 600, 0.1, 1000);
     viewerHost = {
-      camera: new THREE.PerspectiveCamera(75, 1000 / 600, 0.1, 1000),
+      camera: testCamera,
       scene: new THREE.Scene(),
       renderer,
-      controls: new OrbitControls(viewerHost.camera, canvas),
+      controls: new OrbitControls(testCamera, canvas),
       customRender: undefined
     };
 
@@ -141,7 +163,6 @@ describe('SplitView', () => {
     });
 
     it('should emit telemetry event when camera is unlocked', () => {
-      const { analytics } = require('../core/analytics/Analytics');
       splitView.setCameraLock(false);
       expect(analytics.track).toHaveBeenCalledWith(
         'comparison_camera_unlocked',
@@ -171,6 +192,7 @@ describe('SplitView', () => {
 
     it('should restore original visibility when deactivated', () => {
       const mesh = new THREE.Mesh();
+      mesh.name = 'mesh-id';
       mesh.visible = true;
       viewerHost.scene.add(mesh);
 
@@ -195,7 +217,6 @@ describe('SplitView', () => {
     });
 
     it('should emit comparison_opened telemetry event on activation', () => {
-      const { analytics } = require('../core/analytics/Analytics');
       expect(analytics.track).toHaveBeenCalledWith(
         'comparison_opened',
         expect.objectContaining({
@@ -237,7 +258,7 @@ describe('SplitView', () => {
       splitView.render();
       // Last calls should include right viewport
       const calls = setViewportSpy.mock.calls;
-      const rightViewportCall = calls.find(call => call[0] > 0); // x > 0
+      const rightViewportCall = calls.find(call => (call[0] as any) > 0); // x > 0
       expect(rightViewportCall).toBeTruthy();
     });
   });

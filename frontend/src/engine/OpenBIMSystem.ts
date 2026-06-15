@@ -345,6 +345,7 @@ export class BCFManager {
 // COBie (Construction Operations Building information exchange)
 // ============================================================================
 
+export interface COBieSheet {
   name: string;
   rows: object[];
 }
@@ -393,6 +394,7 @@ export interface COBieType {
   features?: string;
 }
 
+export class COBieManager {
   private components: Map<string, COBieComponent> = new Map();
   private types: Map<string, COBieType> = new Map();
   private facilities: object[] = [];
@@ -564,6 +566,7 @@ export interface COBieType {
 // IDS (Information Delivery Specification)
 // ============================================================================
 
+export interface IDSSpecification {
   identifier: string;
   name: string;
   description?: string;
@@ -607,6 +610,7 @@ export interface IDSProperty {
   dataType?: string;
 }
 
+export interface IDSRequirementRule {
   cardinality: 'required' | 'optional' | 'prohibited';
   type: 'attribute' | 'property' | 'classification' | 'material' | 'partOf';
   data: unknown;

@@ -1,5 +1,5 @@
 // Barrel para viewer: exporta engine, controles, loaders, inspector, performance
-export { default as ViewerHost } from './ViewerHost';
+export { ViewerHost } from './ViewerHost';
 export { default as FPSControls } from './controls/FPSControls';
 export { default as DroneControls } from './controls/DroneControls';
 export { default as OrbitControls } from './controls/OrbitControls';

@@ -1,5 +1,5 @@
-// Exemplo de integração: upload e visualização de GLB/IFC no Viewer 3D
-import { ViewerHost } from './viewer';
+import * as THREE from 'three';
+import { ViewerHost } from './ViewerHost';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('canvas3d');
@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const viewer = new ViewerHost(container);
 
-  viewer.onModelLoaded = (model) => {
+  viewer.onModelLoaded = (model: THREE.Object3D) => {
     console.log('Modelo carregado:', model);
     alert('Modelo carregado com sucesso!');
   };
-  viewer.onError = (err) => {
+  viewer.onError = (err: Error) => {
     alert('Erro ao carregar modelo: ' + err.message);
   };
 
-  input.addEventListener('change', async (e) => {
+  input.addEventListener('change', async () => {
     const file = input.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase();

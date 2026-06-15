@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SearchPanel } from './SearchPanel';
 import { ViewerHost } from './ViewerHost';
 import { BIMSearchAPIService } from '../api/v1/services/bim-search.service';

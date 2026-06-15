@@ -7,6 +7,7 @@
 import {
   Box,
   ChevronRight,
+  Cpu,
   Focus,
   FolderOpen,
   MessageSquare,
@@ -174,11 +175,13 @@ export class WorkspaceTopBar {
     collaborateButton.classList.add('app-topbar__button--collaborate');
 
     const environmentButton = this.createEnvironmentDropdown();
+    const engineButton = this.createEngineDropdown();
 
     right.appendChild(fileContext);
     right.appendChild(searchButton);
     right.appendChild(collaborateButton);
     right.appendChild(environmentButton);
+    right.appendChild(engineButton);
     right.appendChild(openButton);
     right.appendChild(settingsButton);
 
@@ -237,10 +240,29 @@ export class WorkspaceTopBar {
       const cameraMode = state.statusBar.cameraMode || 'FPS';
       const selected = state.statusBar.selectedCount ?? 0;
       const activeTool = TOOL_LABELS[state.toolState.activeTool || ToolType.NONE] || state.toolState.activeTool || 'Ferramenta';
+      
+      const activeEngine = state.engineMode || 'three';
+      const engineLabel = activeEngine === 'three' ? 'Three.js WebGL' : activeEngine === 'webgpu' ? 'Babylon.js WebGPU' : 'Pixel Streaming';
 
-      fileContext.textContent = `${VIEW_LABELS[state.activeView]} · ${activeTool} · ${cameraMode} · ${selected} selecionado${selected === 1 ? '' : 's'}`;
+      fileContext.textContent = `${engineLabel} · ${VIEW_LABELS[state.activeView]} · ${activeTool} · ${cameraMode} · ${selected} selecionado${selected === 1 ? '' : 's'}`;
       fileContext.title = fileName;
     }
+
+    const activeEngine = state.engineMode || 'three';
+    const engineItems = this.container.querySelectorAll('.app-topbar__engine-menu-item');
+    engineItems.forEach((item) => {
+      const engineId = item.getAttribute('data-engine-id');
+      const isSelected = engineId === activeEngine;
+      const labelSpan = item.querySelector('.engine-label') as HTMLElement;
+      const checkSpan = item.querySelector('.engine-checkmark') as HTMLElement;
+      if (labelSpan) {
+        labelSpan.style.fontWeight = isSelected ? '600' : '400';
+        labelSpan.style.color = isSelected ? '#2563eb' : '#111827';
+      }
+      if (checkSpan) {
+        checkSpan.innerHTML = isSelected ? '✓' : '';
+      }
+    });
   }
 
   private handleCoordinationAction(action: CoordinationAction): void {
@@ -431,6 +453,93 @@ export class WorkspaceTopBar {
       'aria-hidden': 'true',
       focusable: 'false',
     }));
+    return wrapper;
+  }
+
+  private createEngineDropdown(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'app-topbar__engine';
+    wrapper.style.position = 'relative';
+
+    const button = this.createIconButton(Cpu, 'Tecnologia 3D / Motor Gráfico', () => {
+      const open = wrapper.getAttribute('data-open') === 'true';
+      wrapper.setAttribute('data-open', String(!open));
+      menu.style.display = open ? 'none' : 'block';
+    });
+    button.classList.add('app-topbar__button--engine');
+
+    const menu = document.createElement('div');
+    menu.className = 'app-topbar__engine-menu';
+    menu.setAttribute('role', 'menu');
+    menu.style.cssText = [
+      'position: absolute',
+      'top: calc(100% + 6px)',
+      'right: 0',
+      'min-width: 220px',
+      'background: #ffffff',
+      'border: 1px solid #e5e7eb',
+      'border-radius: 8px',
+      'box-shadow: 0 12px 32px rgba(15,23,42,0.16)',
+      'padding: 6px 0',
+      'display: none',
+      'z-index: 400',
+    ].join(';');
+
+    const modes = [
+      { id: 'three', label: 'WebGL (Three.js)', icon: '🌐' },
+      { id: 'webgpu', label: 'WebGPU (Babylon.js)', icon: '⚡' },
+      { id: 'pixel_streaming', label: 'Pixel Streaming (Unreal Cloud)', icon: '☁️' }
+    ] as const;
+
+    modes.forEach((mode) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.setAttribute('role', 'menuitem');
+      item.setAttribute('data-engine-id', mode.id);
+      item.className = 'app-topbar__engine-menu-item';
+      item.style.cssText = [
+        'display: flex',
+        'align-items: center',
+        'justify-content: space-between',
+        'width: 100%',
+        'padding: 10px 14px',
+        'background: transparent',
+        'border: none',
+        'color: #111827',
+        'font-size: 14px',
+        'cursor: pointer',
+        'text-align: left',
+      ].join(';');
+      
+      const isSelected = uiStore.getState().engineMode === mode.id;
+      
+      item.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px">${mode.icon}</span>
+          <span class="engine-label" style="${isSelected ? 'font-weight:600;color:#2563eb;' : 'color:#111827;'}">${mode.label}</span>
+        </div>
+        <span class="engine-checkmark" style="color:#2563eb;font-weight:bold;">${isSelected ? '✓' : ''}</span>
+      `;
+      
+      item.addEventListener('mouseenter', () => { item.style.background = '#eff6ff'; });
+      item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+      item.addEventListener('click', () => {
+        uiStore.setEngineMode(mode.id);
+        menu.style.display = 'none';
+        wrapper.setAttribute('data-open', 'false');
+      });
+      menu.appendChild(item);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target as Node)) {
+        menu.style.display = 'none';
+        wrapper.setAttribute('data-open', 'false');
+      }
+    });
+
+    wrapper.appendChild(button);
+    wrapper.appendChild(menu);
     return wrapper;
   }
 

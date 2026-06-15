@@ -56,6 +56,7 @@ import { registerScenariosRoutes } from './modules/scenarios/scenarios.routes.js
 import { registerTakeoffRoutes } from './modules/costs/takeoff.routes.js';
 import { registerCostCalculationRoutes } from './modules/costs/cost-calculation.routes.js';
 import { registerSINAPIImportRoutes, registerSINAPISearchRoutes } from './modules/sinapi/index.js';
+import { registerStreamingRoutes } from './modules/streaming/streaming.routes.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
@@ -645,6 +646,7 @@ await registerTakeoffRoutes(server, sql);
 await registerCostCalculationRoutes(server, sql);
 await registerSINAPIImportRoutes(server, sql);
 await registerSINAPISearchRoutes(server, sql);
+await registerStreamingRoutes(server);
 
 
 // =====================================

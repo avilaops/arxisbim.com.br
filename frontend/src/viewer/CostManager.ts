@@ -1,4 +1,4 @@
-export class CostManager extends EventTarget {
+export class CostManager {
   private showPanel = false;
   private scenarioId: string | null = null;
   private listeners: Map<string, Set<Function>> = new Map();

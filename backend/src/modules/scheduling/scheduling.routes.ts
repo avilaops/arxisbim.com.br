@@ -1,10 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../shared/database/db.js';
 import { schedules, activities, activityElements, activityPredecessors, bimSchedules, scheduleTasks, scheduleImportJobs } from '../../shared/database/schema/scheduling.js';
-import { projects } from '../../shared/database/schema/projects.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { projects, models } from '../../shared/database/schema/projects.js';
+import { elementProperties } from '../../shared/database/schema/element-properties.js';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { parseCSV, parseMSPXml, parseP6Xer, validateParsedActivities, persistParsedSchedule } from './schedule-import.service.js';
+import { matchSchedule, type MatcherActivity, type MatcherElement } from './schedule-matcher.service.js';
 import { z } from 'zod';
 import { createSchedulingHandler, getSchedulingsHandler, getSchedulingHandler, updateSchedulingHandler, deleteSchedulingHandler } from './scheduling.controller.js';
 
@@ -479,6 +481,83 @@ export async function schedulingRoutes(fastify: FastifyInstance) {
     }
   });
 
+
+  // Auto-match BIM elements to schedule activities (S35)
+  // POST /schedules/:scheduleId/auto-match  { threshold?, maxElementsPerActivity?, persist? }
+  fastify.post('/schedules/:scheduleId/auto-match', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
+    const { scheduleId } = request.params as { scheduleId: string };
+
+    const optsSchema = z.object({
+      threshold: z.number().min(0).max(1).optional(),
+      maxElementsPerActivity: z.number().int().positive().optional(),
+      persist: z.boolean().optional().default(false),
+    });
+    const parsed = optsSchema.safeParse(request.body ?? {});
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Validation error', details: parsed.error.issues });
+    }
+    const { threshold, maxElementsPerActivity, persist } = parsed.data;
+
+    try {
+      // Validate schedule belongs to tenant and resolve project
+      const rows = await db.select({ projectId: schedules.projectId }).from(schedules)
+        .innerJoin(projects, eq(schedules.projectId, projects.id))
+        .where(and(eq(schedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+
+      if (!rows.length) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
+      const projectId = rows[0].projectId;
+
+      // Fetch activities of this schedule
+      const acts = await db.select({ id: activities.id, name: activities.name, wbsCode: activities.wbsCode })
+        .from(activities).where(eq(activities.scheduleId, scheduleId));
+
+      if (acts.length === 0) {
+        return reply.status(400).send({ error: 'Schedule has no activities to match' });
+      }
+
+      // Fetch BIM elements from the project's current model versions
+      const projectModels = await db.select({ currentVersionId: models.currentVersionId })
+        .from(models).where(eq(models.projectId, projectId));
+      const versionIds = projectModels.map(m => m.currentVersionId).filter((v): v is string => !!v);
+
+      let els: { globalId: string; name: string | null; ifcType: string | null; storeyId: number | null }[] = [];
+      if (versionIds.length > 0) {
+        els = await db.select({
+          globalId: elementProperties.globalId,
+          name: elementProperties.name,
+          ifcType: elementProperties.ifcType,
+          storeyId: elementProperties.storeyId,
+        }).from(elementProperties).where(inArray(elementProperties.modelVersionId, versionIds));
+      }
+
+      const matcherActivities: MatcherActivity[] = acts.map(a => ({ id: a.id, name: a.name, wbsCode: a.wbsCode }));
+      const matcherElements: MatcherElement[] = els;
+
+      const result = matchSchedule(matcherActivities, matcherElements, { threshold, maxElementsPerActivity });
+
+      let persisted = 0;
+      if (persist) {
+        const links = result.mappings.flatMap(m =>
+          m.matchedElements.map(e => ({ activityId: m.activityId, globalId: e.globalId, stateDuring: 'active' }))
+        );
+        if (links.length > 0) {
+          // Replace existing auto-links for these activities, then insert fresh
+          await db.delete(activityElements).where(inArray(activityElements.activityId, acts.map(a => a.id)));
+          await db.insert(activityElements).values(links).onConflictDoNothing();
+          persisted = links.length;
+        }
+      }
+
+      return reply.send({ ...result, persisted });
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to auto-match schedule' });
+    }
+  });
 
   // Legacy /scheduling routes
   fastify.get('/api/v1/projects/:projectId/scheduling', getSchedulingsHandler);

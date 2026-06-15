@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
-export type SimulationElementState = 'not_started' | 'active' | 'complete' | 'removed' | 'hidden';
+export type SimulationElementState = 'not_started' | 'active' | 'complete' | 'removed' | 'hidden' | 'delayed';
 
 export class ElementStateRenderer {
   private originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
   private originalVisibilities = new Map<THREE.Mesh, boolean>();
-  private cachedMeshes: Array<{
+  public cachedMeshes: Array<{
     mesh: THREE.Mesh;
     expressId: string;
     globalId: string;
@@ -34,6 +34,16 @@ export class ElementStateRenderer {
     metalness: 0.1,
     transparent: true,
     opacity: 0.7,
+    side: THREE.DoubleSide
+  });
+
+  // Delayed: physical execution behind schedule (planned vs actual). Solid red.
+  private delayedMaterial = new THREE.MeshStandardMaterial({
+    color: 0xdc2626, // Red-600
+    roughness: 0.5,
+    metalness: 0.1,
+    emissive: 0xdc2626,
+    emissiveIntensity: 0.2,
     side: THREE.DoubleSide
   });
 
@@ -103,6 +113,9 @@ export class ElementStateRenderer {
           break;
         case 'removed':
           mesh.material = this.removedMaterial;
+          break;
+        case 'delayed':
+          mesh.material = this.delayedMaterial;
           break;
         case 'hidden':
           mesh.visible = false;
