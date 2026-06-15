@@ -809,5 +809,51 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
     },
   });
+
+  /**
+   * GET /auth/facebook
+   * Redirect user to Facebook (Meta) OAuth consent screen.
+   */
+  fastify.get('/facebook', {
+    schema: { description: 'Redirect to Facebook OAuth', tags: ['auth'] },
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
+      const clientId = process.env.FACEBOOK_APP_ID;
+      if (!clientId) return reply.status(501).send({ error: 'Facebook OAuth not configured' });
+
+      const graphVersion = process.env.FACEBOOK_GRAPH_VERSION || 'v21.0';
+      const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/v1/auth/facebook/callback`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: process.env.FACEBOOK_LOGIN_SCOPE || 'email,public_profile',
+        response_type: 'code',
+        state: cryptoRandomBytes(16).toString('hex'),
+      });
+      return reply.redirect(`https://www.facebook.com/${graphVersion}/dialog/oauth?${params}`);
+    },
+  });
+
+  /**
+   * GET /auth/facebook/callback
+   * Facebook OAuth callback — exchange code for tokens.
+   */
+  fastify.get('/facebook/callback', {
+    schema: { description: 'Facebook OAuth callback', tags: ['auth'] },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { code, error } = request.query as Record<string, string>;
+        if (error || !code) return oauthRedirect(reply, null, error || 'No code received');
+
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/v1/auth/facebook/callback`;
+        const profile = await oauthService.fetchFacebookProfile(code, redirectUri);
+        const result = await oauthService.loginOrCreate(profile, ip, request.headers['user-agent']);
+        return oauthRedirect(reply, result);
+      } catch (err: any) {
+        fastify.log.error(err);
+        return oauthRedirect(reply, null, safeAuthError(err));
+      }
+    },
+  });
 }
 

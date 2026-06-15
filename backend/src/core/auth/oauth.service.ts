@@ -9,7 +9,7 @@ import { observabilityService } from '../observability/service.js';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 
-type OAuthProvider = 'google' | 'github';
+type OAuthProvider = 'google' | 'github' | 'facebook';
 
 interface OAuthProfile {
   id: string;
@@ -209,6 +209,33 @@ export class OAuthService {
     if (!gUser.email) throw new Error('Google account has no email');
 
     return { id: gUser.id, email: gUser.email, name: gUser.name, provider: 'google' };
+  }
+
+  /** Exchange Facebook code for access token, then fetch user profile (Graph API). */
+  async fetchFacebookProfile(code: string, redirectUri: string): Promise<OAuthProfile> {
+    const clientId = process.env.FACEBOOK_APP_ID;
+    const clientSecret = process.env.FACEBOOK_APP_SECRET;
+    if (!clientId || !clientSecret) throw new Error('Facebook OAuth not configured');
+
+    const graphVersion = process.env.FACEBOOK_GRAPH_VERSION || 'v21.0';
+    const tokenUrl = `https://graph.facebook.com/${graphVersion}/oauth/access_token?` + new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      code,
+    });
+    const tokenRes = await fetch(tokenUrl);
+    const tokenData = await tokenRes.json() as { access_token?: string; error?: { message: string } };
+    if (!tokenData.access_token) throw new Error(`Facebook token error: ${tokenData.error?.message ?? 'unknown'}`);
+
+    const userRes = await fetch(`https://graph.facebook.com/${graphVersion}/me?` + new URLSearchParams({
+      fields: 'id,name,email',
+      access_token: tokenData.access_token,
+    }));
+    const fbUser = await userRes.json() as { id: string; name: string; email?: string };
+    if (!fbUser.email) throw new Error('Facebook account has no accessible email (grant the email permission)');
+
+    return { id: fbUser.id, email: fbUser.email, name: fbUser.name, provider: 'facebook' };
   }
 }
 

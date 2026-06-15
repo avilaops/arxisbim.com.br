@@ -295,3 +295,13 @@ body {
   background: rgba(255,255,255,.14);
   border-color: rgba(255,255,255,.25);
 }
+
+.auth-oauth-btn--facebook {
+  background: rgba(24,119,242,.12);
+  color: #fff;
+  border: 1px solid rgba(24,119,242,.45);
+}
+.auth-oauth-btn--facebook:hover {
+  background: rgba(24,119,242,.22);
+  border-color: rgba(24,119,242,.7);
+}

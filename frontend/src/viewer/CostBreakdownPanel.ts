@@ -264,7 +264,7 @@ export class CostBreakdownPanel extends LitElement {
   }
 
   private renderByType() {
-    if (!this.breakdown.by_type) return html`<div class="loading">Sem dados</div>`;
+    if (!this.breakdown || !this.breakdown.by_type) return html`<div class="loading">Sem dados</div>`;
 
     const items = Object.entries(this.breakdown.by_type).map(
       ([type, data]: [string, any]) => html`
@@ -284,7 +284,7 @@ export class CostBreakdownPanel extends LitElement {
   }
 
   private renderByStorey() {
-    if (!this.breakdown.by_storey) return html`<div class="loading">Sem dados</div>`;
+    if (!this.breakdown || !this.breakdown.by_storey) return html`<div class="loading">Sem dados</div>`;
 
     const items = Object.entries(this.breakdown.by_storey).map(
       ([storey, data]: [string, any]) => html`
@@ -299,7 +299,7 @@ export class CostBreakdownPanel extends LitElement {
   }
 
   private renderByCategory() {
-    if (!this.breakdown.by_category) return html`<div class="loading">Sem dados</div>`;
+    if (!this.breakdown || !this.breakdown.by_category) return html`<div class="loading">Sem dados</div>`;
 
     const categoryLabels: Record<string, string> = {
       structure: '🏗️ Estrutura',
@@ -325,7 +325,7 @@ export class CostBreakdownPanel extends LitElement {
     let minCost = Infinity;
     let maxCost = -Infinity;
 
-    if (this.breakdown.by_type) {
+    if (this.breakdown && this.breakdown.by_type) {
       for (const data of Object.values(this.breakdown.by_type)) {
         const d = data as any;
         count += d.count || 0;

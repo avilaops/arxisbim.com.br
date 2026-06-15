@@ -2166,7 +2166,7 @@
         // dá feedback visível do upload em andamento após um refresh.
         const inFlight = p.status === 'uploading' || p.status === 'processing';
         return `
-          <div class="project-card" data-project="${p.name}">
+          <div class="project-card" data-id="${p.id}" data-project="${p.name}" style="cursor:pointer;">
             <div class="project-card__thumb">
               <div class="project-card__thumb-grid"></div>
               <div class="project-card__thumb-icon">${p.icon}</div>
@@ -2249,6 +2249,47 @@
       if (realProjects && realProjects[0]?.id) {
         localStorage.setItem('arxisvr_project_id', realProjects[0].id);
         window.dispatchEvent(new CustomEvent('arxisvr:project-selected', { detail: { projectId: realProjects[0].id } }));
+      }
+
+      function selectProject(projectId) {
+        localStorage.setItem('arxisvr_project_id', projectId);
+        window.dispatchEvent(new CustomEvent('project-changed', { detail: { projectId } }));
+        window.dispatchEvent(new CustomEvent('arxisvr:project-selected', { detail: { projectId } }));
+        window.ArxisWelcome?.hide();
+      }
+
+      // Click handler for project cards
+      const container = document.getElementById('welcome-project-cards');
+      if (container) {
+        container.addEventListener('click', (e) => {
+          const card = e.target.closest('.project-card');
+          if (card) {
+            const projectId = card.getAttribute('data-id');
+            if (projectId) {
+              selectProject(projectId);
+            }
+          }
+        });
+      }
+
+      // Click handler for Continuar último
+      const qaLast = document.getElementById('qa-last');
+      if (qaLast) {
+        qaLast.style.cursor = 'pointer';
+        qaLast.addEventListener('click', () => {
+          if (realProjects && realProjects[0] && realProjects[0].id) {
+            selectProject(realProjects[0].id);
+          }
+        });
+      }
+
+      // Click handler for Importar projeto
+      const qaImport = document.getElementById('qa-import');
+      if (qaImport) {
+        qaImport.style.cursor = 'pointer';
+        qaImport.addEventListener('click', () => {
+          window.__workspacePanel?.open();
+        });
       }
 
       // Build greeting from JWT name or just "Olá"

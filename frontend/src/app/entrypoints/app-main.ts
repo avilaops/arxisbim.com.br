@@ -115,6 +115,7 @@ async function init() {
 
   // Initialize Scheduling Panel
   const schedulingPanel = new SchedulingPanel();
+  (window as any).__schedulingPanel = schedulingPanel;
 
   // Initialize Meetings Panel
   const meetingsPanel = new MeetingsPanel();
@@ -867,7 +868,8 @@ function setupNavigation() {
 
         case 'bim4d':
           if (PROJECT_ID) {
-            schedulingPanel.open(PROJECT_ID);
+            const panel = (window as any).__schedulingPanel;
+            if (panel) panel.open(PROJECT_ID);
           } else {
             (window as any).__showModuleModal?.('📅 Planejamento 4D', `
               <p style="margin-bottom:14px;">Selecione um projeto para acessar o cronograma vinculado ao modelo IFC.</p>
