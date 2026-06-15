@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { metaService, type MetaError } from './meta.service.js';
+import { conversionsService, type CapiEvent } from './conversions.service.js';
 
 /**
  * Rotas Meta (Facebook) — Graph API + Marketing API (Ads).
@@ -61,5 +62,35 @@ export async function metaRoutes(fastify: FastifyInstance) {
     const { adAccountId } = request.params as { adAccountId: string };
     const q = request.query as any;
     return handle(() => metaService.getInsights(adAccountId, q?.datePreset || 'last_30d', q?.token))(request, reply);
+  });
+
+  // ── Conversions API (CAPI) — eventos server-side ──
+
+  // Envia eventos para o Pixel. Body: { events: CapiEvent[], testEventCode?: string }
+  // Enriquece user_data com IP/User-Agent da requisição quando ausentes.
+  fastify.post('/meta/conversions', auth, async (request, reply) => {
+    const body = (request.body || {}) as { events?: CapiEvent[]; testEventCode?: string };
+    const ip = (request.headers['cf-connecting-ip'] as string) || request.ip;
+    const ua = request.headers['user-agent'] as string | undefined;
+    const events = (body.events || []).map((e) => ({
+      ...e,
+      userData: { clientIpAddress: ip, clientUserAgent: ua, ...(e.userData || {}) },
+    }));
+    return handle(() => conversionsService.send(events, body.testEventCode))(request, reply);
+  });
+
+  // Atalho de validação: envia 1 PageView de teste (usa FACEBOOK_TEST_EVENT_CODE
+  // ou o testEventCode do body) para aparecer na aba Test Events.
+  fastify.post('/meta/conversions/test', auth, async (request, reply) => {
+    const body = (request.body || {}) as { testEventCode?: string; eventName?: string };
+    const ip = (request.headers['cf-connecting-ip'] as string) || request.ip;
+    const ua = request.headers['user-agent'] as string | undefined;
+    const event: CapiEvent = {
+      eventName: body.eventName || 'PageView',
+      actionSource: 'website',
+      eventSourceUrl: (request.headers['referer'] as string) || 'https://www.arxisvr.avilaops.com/',
+      userData: { clientIpAddress: ip, clientUserAgent: ua },
+    };
+    return handle(() => conversionsService.send([event], body.testEventCode))(request, reply);
   });
 }
