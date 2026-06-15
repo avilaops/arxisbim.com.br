@@ -4,6 +4,8 @@ import type { ViewerHost } from './ViewerHost';
 import { CameraSync } from './CameraSync';
 import { DiffHighlighter } from './DiffHighlighter';
 import { analytics } from '../core/analytics/Analytics';
+import { ElementStateRenderer } from './ElementStateRenderer';
+import { CameraFollower } from './CameraFollower';
 
 export class SplitView {
   private container: HTMLElement;
@@ -34,6 +36,21 @@ export class SplitView {
   private onlyInA: string[] = [];
   private onlyInB: string[] = [];
   private originalVisibilities = new Map<THREE.Object3D, boolean>();
+
+  public temporalComparison: {
+    active: boolean;
+    currentDate: Date;
+    currentFrameIndex: number;
+    resolverA: any;
+    resolverB: any;
+    framesA: any[];
+    framesB: any[];
+  } | null = null;
+
+  public stateRendererA = new ElementStateRenderer();
+  public stateRendererB = new ElementStateRenderer();
+  public cameraFollowerA: CameraFollower | null = null;
+  public cameraFollowerB: CameraFollower | null = null;
 
   // Drag interaction handlers
   private dragHandler: ((e: MouseEvent | TouchEvent) => void) | null = null;
@@ -142,6 +159,13 @@ export class SplitView {
     this.controlsB.dispose();
     this.cameraSync.disable();
     this.diffHighlighter.restore();
+    this.stateRendererA.restore(this.hiddenA);
+    this.stateRendererB.restore(this.hiddenB);
+    this.stateRendererA.clearCache();
+    this.stateRendererB.clearCache();
+    this.temporalComparison = null;
+    this.cameraFollowerA = null;
+    this.cameraFollowerB = null;
     this.restoreVisibility();
 
     if (this.dividerEl) {
@@ -198,6 +222,22 @@ export class SplitView {
     this.originalVisibilities.clear();
   }
 
+  public activateTemporalComparison(resolverA: any, resolverB: any, framesA: any[], framesB: any[]): void {
+    this.stateRendererA.cacheSceneMeshes(this.viewerHost.scene);
+    this.stateRendererB.cacheSceneMeshes(this.viewerHost.scene);
+    this.temporalComparison = {
+      active: true,
+      currentDate: new Date(),
+      currentFrameIndex: 0,
+      resolverA,
+      resolverB,
+      framesA,
+      framesB
+    };
+    this.cameraFollowerA = new CameraFollower(this.cameraA, this.controlsA);
+    this.cameraFollowerB = new CameraFollower(this.cameraB, this.controlsB);
+  }
+
   public render(): void {
     if (!this.active) return;
 
@@ -211,6 +251,56 @@ export class SplitView {
 
     // Clear background once
     renderer.clear();
+
+    if (this.temporalComparison && this.temporalComparison.active) {
+      const { currentFrameIndex, framesA, framesB } = this.temporalComparison;
+      
+      const statesA = framesA && framesA[currentFrameIndex] ? framesA[currentFrameIndex].elementStates : {};
+      const statesB = framesB && framesB[currentFrameIndex] ? framesB[currentFrameIndex].elementStates : {};
+
+      // ── LEFT VIEWPORT (Scenario A) ──
+      renderer.setViewport(0, 0, leftWidth, height);
+      renderer.setScissor(0, 0, leftWidth, height);
+      renderer.setScissorTest(true);
+
+      this.cameraA.aspect = leftWidth / height;
+      this.cameraA.updateProjectionMatrix();
+
+      this.stateRendererA.applyStates(statesA, this.hiddenA);
+
+      if (this.cameraFollowerA && this.cameraFollowerA.enabled) {
+        const activeMeshesA = this.stateRendererA.cachedMeshes
+          .filter(item => statesA[item.globalId] === 'active' || statesA[item.expressId] === 'active')
+          .map(item => item.mesh);
+        this.cameraFollowerA.updateFocus(activeMeshesA);
+      }
+
+      renderer.render(this.viewerHost.scene, this.cameraA);
+      this.stateRendererA.restore(this.hiddenA);
+
+      // ── RIGHT VIEWPORT (Scenario B) ──
+      renderer.setViewport(leftWidth, 0, rightWidth, height);
+      renderer.setScissor(leftWidth, 0, rightWidth, height);
+      renderer.setScissorTest(true);
+
+      this.cameraB.aspect = rightWidth / height;
+      this.cameraB.updateProjectionMatrix();
+
+      this.stateRendererB.applyStates(statesB, this.hiddenB);
+
+      if (this.cameraFollowerB && this.cameraFollowerB.enabled) {
+        const activeMeshesB = this.stateRendererB.cachedMeshes
+          .filter(item => statesB[item.globalId] === 'active' || statesB[item.expressId] === 'active')
+          .map(item => item.mesh);
+        this.cameraFollowerB.updateFocus(activeMeshesB);
+      }
+
+      this.controlsB.update();
+      renderer.render(this.viewerHost.scene, this.cameraB);
+      this.stateRendererB.restore(this.hiddenB);
+      
+      return;
+    }
 
     // ── LEFT VIEWPORT (Scenario A) ──
     renderer.setViewport(0, 0, leftWidth, height);

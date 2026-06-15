@@ -26,6 +26,7 @@ export const scenarios = pgTable('scenarios', {
   parentId: uuid('parent_id').references((): AnyPgColumn => scenarios.id, { onDelete: 'set null' }),
   isBaseScenario: boolean('is_base_scenario').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
+  archivedAt: timestamp('archived_at'),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

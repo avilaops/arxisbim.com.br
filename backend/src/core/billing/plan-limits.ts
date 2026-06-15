@@ -9,6 +9,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db, withTenant } from '../../shared/database/db.js';
 import { billingSubscriptions, tenantUsage } from '../../shared/database/schema/billing.js';
 import { projects } from '../../shared/database/schema/projects.js';
+import { scenarios } from '../../shared/database/schema/scenarios.js';
 import { memberships } from '../../shared/database/schema/workspaces.js';
 import { getTenantEntitlements as getEntitlements } from './entitlements.js';
 import { BILLING_PLANS, normalizePlan } from '../../modules/billing/billing.plans.js';
@@ -192,3 +193,33 @@ export async function assertStorageWithinPlan(tenantId: string, newFileSizeBytes
     );
   }
 }
+
+/** Garante que o tenant pode criar mais um cenário no projeto (maxScenarios por projeto). */
+export async function assertCanCreateScenario(tenantId: string, projectId: string): Promise<void> {
+  await assertSubscriptionActive(tenantId);
+  const entitlements = await getEntitlements(tenantId);
+  if (entitlements.maxScenarios === -1) return;
+
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(scenarios)
+    .where(
+      and(
+        eq(scenarios.projectId, projectId),
+        eq(scenarios.tenantId, tenantId),
+        sql`deleted_at IS NULL`
+      )
+    );
+
+  const current = countResult?.count ?? 0;
+  if (current >= entitlements.maxScenarios) {
+    throw new PlanLimitError(
+      'PLAN_LIMIT_REACHED',
+      'scenarios',
+      entitlements.maxScenarios,
+      current,
+      `Limite do plano atingido: ${entitlements.maxScenarios} cenário(s) por projeto. Faça upgrade para criar mais.`,
+    );
+  }
+}
+

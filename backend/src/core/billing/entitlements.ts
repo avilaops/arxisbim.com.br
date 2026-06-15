@@ -40,7 +40,7 @@ export async function getTenantEntitlements(tenantId: string): Promise<TenantEnt
     maxProjects: overrides['max_projects'] ?? planLimits.maxProjects,
     maxStorageGB: overrides['max_storage_gb'] ?? planLimits.maxStorageGB,
     maxUsers: overrides['max_users'] ?? planLimits.maxUsers,
-    maxScenarios: overrides['max_scenarios'] ?? 0, // not in BILLING_PLANS yet
+    maxScenarios: overrides['max_scenarios'] ?? planLimits.maxScenarios,
     maxFileSizeMB: overrides['max_file_size_mb'] ?? planLimits.maxFileSizeMB,
   };
 }

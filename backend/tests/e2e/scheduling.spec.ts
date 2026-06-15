@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
-import { schedulingRoutes } from '../../src/routes/v1/scheduling.js';
+import { schedulingRoutes } from '../../src/modules/scheduling/index.js';
 import { tenants, companies, users } from '../../src/shared/database/schema/tenants.ts';
 import { projects } from '../../src/shared/database/schema/projects.ts';
 import { bimSchedules } from '../../src/shared/database/schema/scheduling.ts';

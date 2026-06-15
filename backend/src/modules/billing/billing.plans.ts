@@ -24,6 +24,7 @@ export interface BillingPlanLimits {
   maxFileSizeMB: number;
   collaboratorsPerSession: number;
   apiCallsPerMonth: number;
+  maxScenarios: number;
 }
 
 export interface BillingPlanDefinition {
@@ -53,6 +54,7 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
       maxFileSizeMB: 50,
       collaboratorsPerSession: 2,
       apiCallsPerMonth: 0,
+      maxScenarios: 2,
     },
   },
   starter: {
@@ -70,6 +72,7 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
       maxFileSizeMB: 200,
       collaboratorsPerSession: 5,
       apiCallsPerMonth: 1000,
+      maxScenarios: 2,
     },
   },
   professional: {
@@ -99,6 +102,7 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
       maxFileSizeMB: 1000,
       collaboratorsPerSession: 20,
       apiCallsPerMonth: 50000,
+      maxScenarios: 10,
     },
   },
   enterprise: {
@@ -131,6 +135,7 @@ export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
       maxFileSizeMB: -1,
       collaboratorsPerSession: -1,
       apiCallsPerMonth: -1,
+      maxScenarios: -1,
     },
   },
 };

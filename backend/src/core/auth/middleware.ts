@@ -17,7 +17,14 @@ function getAuthService(): AuthService {
 // =====================================
 
 export async function authenticateRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  const authHeader = request.headers.authorization;
+  let authHeader = request.headers.authorization;
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    const tokenQuery = (request.query as any)?.token;
+    if (tokenQuery) {
+      authHeader = `Bearer ${tokenQuery}`;
+    }
+  }
 
   if (!authHeader?.startsWith('Bearer ')) {
     recordAuthFailure('missing_bearer', { route: (request.routeOptions?.url as string) || request.url.split('?')[0] });

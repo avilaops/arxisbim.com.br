@@ -3,6 +3,8 @@ import { SplitView } from '../viewer/SplitView';
 import { ComparisonExport } from '../viewer/ComparisonExport';
 import { ScenarioRecord } from '../api/v1/services/scenarios.service';
 import type { ViewerHost } from '../viewer/ViewerHost';
+import { TimelineComparison } from '../timeline/TimelineComparison';
+import { FinancialComparison } from '../scenarios/FinancialComparison';
 
 export class ComparisonPage {
   private container: HTMLElement;
@@ -16,8 +18,11 @@ export class ComparisonPage {
   private scenarioB: ScenarioRecord | null = null;
   
   private splitView: SplitView | null = null;
+  private timelineComparison: TimelineComparison | null = null;
+  private financialComparison: FinancialComparison | null = null;
   private cameraLocked: boolean = true;
   private isCollapsed: boolean = true;
+  private viewMode: 'temporal' | 'financial' = 'temporal';
 
   constructor(container: HTMLElement, viewerHost: ViewerHost) {
     this.container = container;
@@ -169,6 +174,15 @@ export class ComparisonPage {
         color: #cbd5e1;
         padding: 6px 0;
       }
+      .financial-comparison-dashboard {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        width: 480px;
+        max-height: calc(100% - 48px);
+        overflow-y: auto;
+        z-index: 100;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -202,6 +216,13 @@ export class ComparisonPage {
           <span>Sincronizar Câmeras</span>
           <input type="checkbox" id="camera-sync-lock" ${this.cameraLocked ? 'checked' : ''} style="cursor:pointer" />
         </div>
+        <div class="bim-comparison-toggle-row" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
+          <span>Visualização</span>
+          <select id="comparison-view-mode" style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer;">
+            <option value="temporal" ${this.viewMode === 'temporal' ? 'selected' : ''}>Temporal (4D)</option>
+            <option value="financial" ${this.viewMode === 'financial' ? 'selected' : ''}>Financeira (5D)</option>
+          </select>
+        </div>
         <button class="bim-comparison-btn" id="export-comparison-btn">📸 Exportar PNG (A|B)</button>
         <button class="bim-comparison-btn secondary" id="deactivate-comparison-btn">Deixar Comparação</button>
       </div>
@@ -211,6 +232,11 @@ export class ComparisonPage {
       e.stopPropagation();
       this.isCollapsed = true;
       this.render();
+    });
+
+    document.getElementById('comparison-view-mode')?.addEventListener('change', (e) => {
+      this.viewMode = (e.target as HTMLSelectElement).value as 'temporal' | 'financial';
+      this.updateViewMode();
     });
 
     const pickerAEl = document.getElementById('picker-a-container');
@@ -253,6 +279,9 @@ export class ComparisonPage {
     this.splitView = new SplitView(this.container, this.viewerHost, this.scenarioA, this.scenarioB);
     this.splitView.setCameraLock(this.cameraLocked);
 
+    // Initialize the selected view mode
+    this.updateViewMode();
+
     // Bind event listeners for actions
     const syncLock = document.getElementById('camera-sync-lock') as HTMLInputElement | null;
     syncLock?.addEventListener('change', () => {
@@ -271,7 +300,44 @@ export class ComparisonPage {
     });
   }
 
+  private updateViewMode(): void {
+    if (!this.scenarioA || !this.scenarioB) return;
+
+    if (this.viewMode === 'temporal') {
+      if (this.financialComparison) {
+        this.financialComparison.destroy();
+        this.financialComparison = null;
+      }
+      if (!this.timelineComparison) {
+        this.timelineComparison = new TimelineComparison(this.container, this.splitView!);
+        this.timelineComparison.initialize(this.scenarioA.id, this.scenarioB.id);
+      }
+    } else {
+      if (this.timelineComparison) {
+        this.timelineComparison.destroy();
+        this.timelineComparison = null;
+      }
+      if (!this.financialComparison) {
+        const projectId = localStorage.getItem('arxisvr_project_id') || '';
+        this.financialComparison = new FinancialComparison(
+          this.container,
+          projectId,
+          this.scenarioA.id,
+          this.scenarioB.id
+        );
+      }
+    }
+  }
+
   private deactivate(): void {
+    if (this.timelineComparison) {
+      this.timelineComparison.destroy();
+      this.timelineComparison = null;
+    }
+    if (this.financialComparison) {
+      this.financialComparison.destroy();
+      this.financialComparison = null;
+    }
     if (this.splitView) {
       this.splitView.deactivate();
       this.splitView = null;

@@ -12,7 +12,7 @@ export class ScenarioPicker {
     this.container = container;
     this.label = label;
     this.onChangeCb = onChange;
-
+ 
     this.init();
   }
 

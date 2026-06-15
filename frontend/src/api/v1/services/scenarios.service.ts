@@ -1,4 +1,5 @@
 import { getAPIClient } from '../client';
+import { resolveApiBaseUrl } from '../../../config/apiBaseUrl';
 
 export type ScenarioPresetId =
   | 'guided-tour'
@@ -130,6 +131,40 @@ export class ScenariosService {
   async delete(id: string): Promise<void> {
     const client = getAPIClient();
     await client.delete(`${this.endpoint}/${id}`);
+  }
+
+  async fork(scenarioId: string, projectId: string, name: string, description?: string): Promise<{ success: boolean; scenarioId: string }> {
+    const client = getAPIClient();
+    const response = await client.post<{ success: boolean; scenarioId: string }>(`${this.endpoint}/${scenarioId}/fork`, { projectId, name, description });
+    return response.data;
+  }
+
+  async getDiff(scenarioIdA: string, scenarioIdB: string, projectId: string): Promise<any> {
+    const client = getAPIClient();
+    const response = await client.get<any>(`${this.endpoint}/${scenarioIdA}/diff/${scenarioIdB}`, {
+      params: { projectId }
+    });
+    return response.data;
+  }
+
+  async merge(scenarioId: string, projectId: string): Promise<{ success: boolean }> {
+    const client = getAPIClient();
+    const response = await client.post<{ success: boolean }>(`${this.endpoint}/${scenarioId}/merge`, { projectId });
+    return response.data;
+  }
+
+  async getFinancialComparison(scenarioIdA: string, scenarioIdB: string, projectId: string, costWeight: number, timeWeight: number): Promise<any> {
+    const client = getAPIClient();
+    const response = await client.get<any>(`${this.endpoint}/${scenarioIdA}/compare/${scenarioIdB}/financial`, {
+      params: { projectId, costWeight, timeWeight }
+    });
+    return response.data;
+  }
+
+  getComparisonPdfUrl(scenarioIdA: string, scenarioIdB: string, projectId: string, costWeight: number, timeWeight: number): string {
+    const baseUrl = resolveApiBaseUrl();
+    const token = localStorage.getItem('arxisvr_token') || '';
+    return `${baseUrl}${this.endpoint}/${scenarioIdA}/compare/${scenarioIdB}/pdf?projectId=${projectId}&costWeight=${costWeight}&timeWeight=${timeWeight}&token=${token}`;
   }
 }
 
