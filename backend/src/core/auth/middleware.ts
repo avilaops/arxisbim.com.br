@@ -5,6 +5,7 @@ import { and, eq, gt, or } from 'drizzle-orm';
 import { db } from '../../shared/database/index.js';
 import { tenantEntitlements } from '../../shared/database/schema/index.js';
 import { recordAuthFailure } from '../observability/metrics.js';
+import { isSuperAdmin } from '../admin/super-admin.middleware.js';
 
 let _authService: AuthService | undefined;
 function getAuthService(): AuthService {
@@ -150,6 +151,24 @@ export function requireRole(...roles: Array<UserContext['role']>) {
       });
     }
   };
+}
+
+export async function adminOnly(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  const user = (request as any).user as UserContext | undefined;
+  if (!user) {
+    return reply.code(401).send({
+      error: 'Unauthorized',
+      message: 'Authentication required',
+    });
+  }
+
+  const ok = user.role === 'admin' || user.permissions?.includes('admin') || isSuperAdmin(user.email);
+  if (!ok) {
+    return reply.code(403).send({
+      error: 'Forbidden',
+      message: 'Acesso restrito a administradores.',
+    });
+  }
 }
 
 // =====================================

@@ -1,7 +1,7 @@
 import type { Sql } from 'postgres';
 import { CPMService, parseUTCDate, diffDays } from '../scheduling/cpm.service.js';
 import { CostCalculatorService } from '../costs/cost-calculator.service.js';
-import Decimal from 'decimal.js';
+import { Decimal } from 'decimal.js';
 
 function formatDate(date: any): string | null {
   if (!date) return null;

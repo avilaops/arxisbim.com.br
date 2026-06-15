@@ -95,6 +95,7 @@ export function extractQuantity(
     area_m2?: string;
     volume_m3?: string;
     length_m?: string;
+    count_un?: string;
   }
 ): ExtractedQuantity | null {
   const mapping = QUANTITY_MAP[ifcType];
@@ -157,7 +158,7 @@ function tryExtractFromPsets(
  */
 function tryGeometricFallback(
   mapping: (typeof QUANTITY_MAP)[string],
-  fallback: { area_m2?: string; volume_m3?: string; length_m?: string }
+  fallback: { area_m2?: string; volume_m3?: string; length_m?: string; count_un?: string }
 ): ExtractedQuantity | null {
   const value = fallback[mapping.primaryType];
   if (!value) return null;

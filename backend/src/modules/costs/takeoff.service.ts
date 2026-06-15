@@ -208,7 +208,7 @@ export class TakeoffService {
   private async getStoreyNames(
     modelVersionId: string
   ): Promise<Map<number, string>> {
-    const storeys = await this.sql<Array<{ express_id: number; name: string }>>`
+    const storeys = await this.sql<Array<{ storey_id: number; name: string }>>`
       SELECT express_id as storey_id, name
       FROM element_properties
       WHERE model_version_id = ${modelVersionId}

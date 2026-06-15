@@ -32,7 +32,7 @@ export function createCostsRoutes(sql: Sql) {
           const data = CreateCostTableSchema.parse(request.body);
           const result = await costsService.createCostTable(
             data.project_id,
-            request.user.id,
+            request.user!.userId,
             data
           );
           reply.code(201).send(result);
@@ -273,7 +273,7 @@ export function createCostsRoutes(sql: Sql) {
       async (request: FastifyRequest<{ Body: any }>, reply: FastifyReply) => {
         try {
           const data = CreateElementCostLinkSchema.parse(request.body);
-          const result = await costsService.createElementCostLink(request.user.id, data);
+          const result = await costsService.createElementCostLink(request.user!.userId, data);
           reply.code(201).send(result);
         } catch (err) {
           fastify.log.error(err);

@@ -1,5 +1,5 @@
 import type { Sql } from 'postgres';
-import Decimal from 'decimal.js';
+import { Decimal } from 'decimal.js';
 import { CPMService, parseUTCDate, diffDays } from '../scheduling/cpm.service.js';
 import { CostCalculatorService } from '../costs/cost-calculator.service.js';
 
@@ -123,7 +123,7 @@ export class FinancialComparisonService {
       const pct = costB.gt(0) ? costB.minus(costA).div(costB).times(100).toFixed(1) : '0';
       explanation = `Recomendamos o **${detailA.name}** (Score: ${scoreA.composite.toFixed(1)}/100). `;
       if (costA.lt(costB)) {
-        explanation += `Apresenta menor custo (economia de R$ ${costB.minus(costA).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ou ~${pct}%) `;
+        explanation += `Apresenta menor custo (economia de R$ ${costB.minus(costA).toNumber().toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ou ~${pct}%) `;
       } else {
         explanation += `Apresenta maior custo, porém compensado pelo prazo reduzido. `;
       }
@@ -137,7 +137,7 @@ export class FinancialComparisonService {
       const pct = costA.gt(0) ? costA.minus(costB).div(costA).times(100).toFixed(1) : '0';
       explanation = `Recomendamos o **${detailB.name}** (Score: ${scoreB.composite.toFixed(1)}/100). `;
       if (costB.lt(costA)) {
-        explanation += `Apresenta menor custo (economia de R$ ${costA.minus(costB).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ou ~${pct}%) `;
+        explanation += `Apresenta menor custo (economia de R$ ${costA.minus(costB).toNumber().toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ou ~${pct}%) `;
       } else {
         explanation += `Apresenta maior custo, porém compensado pelo prazo reduzido. `;
       }
@@ -185,7 +185,13 @@ export class FinancialComparisonService {
       totalCost: costCalc.total_cost || '0.00',
       durationDays,
       completionDate,
-      categoryBreakdown: costCalc.breakdown.by_category,
+      categoryBreakdown: Object.entries(costCalc.breakdown.by_category).reduce(
+        (acc, [cat, data]) => {
+          acc[cat] = data.total_cost;
+          return acc;
+        },
+        {} as Record<string, string>
+      ),
       sCurve
     };
   }

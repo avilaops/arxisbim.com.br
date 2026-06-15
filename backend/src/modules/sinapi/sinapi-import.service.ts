@@ -215,7 +215,7 @@ export class SINAPIImportService {
               i.price_without_tax,
               i.state_code,
               i.reference_month,
-            ])
+            ]) as any
           )}
         ) AS t(code, description, unit, price_with_tax, price_without_tax, state_code, reference_month)
         ON CONFLICT (code, state_code, reference_month) DO UPDATE
@@ -284,7 +284,7 @@ export class SINAPIImportService {
 
     sql = this.sql`${sql} ORDER BY code LIMIT ${limit}`;
 
-    return sql;
+    return sql as any;
   }
 
   /**

@@ -63,7 +63,7 @@ import { scenarioRoutes } from './modules/scenario/api/scenario.routes.js';
 import { budgetsRoutes } from './modules/budgets/budgets.routes.js';
 import { MeetingsGateway } from './modules/virtual-meetings/meetings.gateway.js';
 import { NotificationsGateway } from './modules/notifications/notifications.gateway.js';
-import { authenticateRequest } from './core/auth/middleware.js';
+import { authenticateRequest, adminOnly } from './core/auth/middleware.js';
 import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
 import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
@@ -539,6 +539,7 @@ server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: Fast
 
 // Register authenticate decorator
 server.decorate('authenticate', authenticateRequest);
+server.decorate('adminOnly', adminOnly);
 
 // =====================================
 // HEALTH CHECK

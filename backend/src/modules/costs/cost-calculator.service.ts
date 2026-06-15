@@ -1,5 +1,5 @@
 import type { Sql } from 'postgres';
-import Decimal from 'decimal.js';
+import { Decimal } from 'decimal.js';
 import { CostCacheService } from './cost-cache.service.js';
 import { CostBillingService } from './cost-billing.service.js';
 
@@ -34,7 +34,7 @@ export interface CostCalculation {
 
 export class CostCalculatorService {
   // Configurar Decimal.js para finanças (2 casas decimais)
-  private readonly DECIMAL_CONFIG = { precision: 14, rounding: 1 }; // ROUND_HALF_UP
+  private readonly DECIMAL_CONFIG = { precision: 14, rounding: 1 as const }; // ROUND_HALF_UP
   private cache: CostCacheService;
   private billing: CostBillingService;
 
