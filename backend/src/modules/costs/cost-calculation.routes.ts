@@ -16,7 +16,13 @@ export function createCostCalculationRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Recalculate scenario cost (invalidates cache)',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (
@@ -51,7 +57,13 @@ export function createCostCalculationRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get latest cost calculation for scenario',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (
@@ -89,7 +101,13 @@ export function createCostCalculationRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get cost breakdown by type, storey, category',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (

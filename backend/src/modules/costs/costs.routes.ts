@@ -24,7 +24,6 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Create cost table',
-          body: CreateCostTableSchema,
         },
       },
       async (request: FastifyRequest<{ Body: any }>, reply: FastifyReply) => {
@@ -51,7 +50,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'List cost tables for project',
-          params: { projectId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['projectId'],
+            properties: {
+              projectId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { projectId: string } }>, reply: FastifyReply) => {
@@ -73,7 +78,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get cost table',
-          params: { tableId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['tableId'],
+            properties: {
+              tableId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { tableId: string } }>, reply: FastifyReply) => {
@@ -98,7 +109,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Update cost table',
-          params: { tableId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['tableId'],
+            properties: {
+              tableId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { tableId: string }; Body: any }>, reply: FastifyReply) => {
@@ -121,7 +138,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Delete cost table',
-          params: { tableId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['tableId'],
+            properties: {
+              tableId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { tableId: string } }>, reply: FastifyReply) => {
@@ -148,7 +171,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Create cost item',
-          params: { tableId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['tableId'],
+            properties: {
+              tableId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { tableId: string }; Body: any }>, reply: FastifyReply) => {
@@ -171,7 +200,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'List cost items',
-          params: { tableId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['tableId'],
+            properties: {
+              tableId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { tableId: string } }>, reply: FastifyReply) => {
@@ -193,7 +228,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get cost item',
-          params: { itemId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['itemId'],
+            properties: {
+              itemId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { itemId: string } }>, reply: FastifyReply) => {
@@ -218,7 +259,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Update cost item',
-          params: { itemId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['itemId'],
+            properties: {
+              itemId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { itemId: string }; Body: any }>, reply: FastifyReply) => {
@@ -241,7 +288,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Delete cost item',
-          params: { itemId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['itemId'],
+            properties: {
+              itemId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { itemId: string } }>, reply: FastifyReply) => {
@@ -290,7 +343,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'List element cost links by scenario',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { scenarioId: string } }>, reply: FastifyReply) => {
@@ -312,7 +371,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get element cost link',
-          params: { linkId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['linkId'],
+            properties: {
+              linkId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { linkId: string } }>, reply: FastifyReply) => {
@@ -337,7 +402,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Update element cost link',
-          params: { linkId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['linkId'],
+            properties: {
+              linkId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { linkId: string }; Body: any }>, reply: FastifyReply) => {
@@ -360,7 +431,13 @@ export function createCostsRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Delete element cost link',
-          params: { linkId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['linkId'],
+            properties: {
+              linkId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (request: FastifyRequest<{ Params: { linkId: string } }>, reply: FastifyReply) => {

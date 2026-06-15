@@ -14,7 +14,13 @@ export function createTakeoffRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Run automatic takeoff for scenario',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (
@@ -44,7 +50,13 @@ export function createTakeoffRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Get takeoff summary by type and storey',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (
@@ -71,7 +83,13 @@ export function createTakeoffRoutes(sql: Sql) {
         schema: {
           tags: ['Costs'],
           summary: 'Export takeoff data for Excel',
-          params: { scenarioId: { type: 'string', format: 'uuid' } },
+          params: {
+            type: 'object',
+            required: ['scenarioId'],
+            properties: {
+              scenarioId: { type: 'string', format: 'uuid' },
+            },
+          },
         },
       },
       async (
