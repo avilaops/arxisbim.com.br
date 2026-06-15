@@ -554,10 +554,6 @@ server.get('/', async (_request: FastifyRequest, reply: FastifyReply) => {
   });
 });
 
-server.head('/', async (_request: FastifyRequest, reply: FastifyReply) => {
-  return reply.code(200).send();
-});
-
 // =====================================
 // HEALTH CHECK
 // =====================================
