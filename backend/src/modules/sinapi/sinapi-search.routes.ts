@@ -22,21 +22,25 @@ export function createSINAPISearchRoutes(sql: Sql) {
           tags: ['SINAPI'],
           summary: 'Search SINAPI items by code or description',
           querystring: {
-            q: {
-              type: 'string',
-              description: 'Search query (code or description)',
-            },
-            state: {
-              type: 'string',
-              description: 'Optional: filter by state (UF)',
-            },
-            month: {
-              type: 'string',
-              description: 'Optional: filter by month (ISO date, ex: 2026-01-01)',
-            },
-            limit: {
-              type: 'string',
-              description: 'Optional: max results (default 50)',
+            type: 'object',
+            required: ['q'],
+            properties: {
+              q: {
+                type: 'string',
+                description: 'Search query (code or description)',
+              },
+              state: {
+                type: 'string',
+                description: 'Optional: filter by state (UF)',
+              },
+              month: {
+                type: 'string',
+                description: 'Optional: filter by month (ISO date, ex: 2026-01-01)',
+              },
+              limit: {
+                type: 'string',
+                description: 'Optional: max results (default 50)',
+              },
             },
           },
         },

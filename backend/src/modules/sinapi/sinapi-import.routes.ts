@@ -18,8 +18,12 @@ export function createSINAPIImportRoutes(sql: Sql) {
           tags: ['SINAPI'],
           summary: 'Import SINAPI table from XLSX',
           querystring: {
-            state_code: { type: 'string', description: 'UF (ex: SP)' },
-            reference_month: { type: 'string', description: 'ISO date (ex: 2026-01-01)' },
+            type: 'object',
+            required: ['state_code', 'reference_month'],
+            properties: {
+              state_code: { type: 'string', description: 'UF (ex: SP)' },
+              reference_month: { type: 'string', description: 'ISO date (ex: 2026-01-01)' },
+            },
           },
         },
       },
