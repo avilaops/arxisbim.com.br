@@ -123,4 +123,6 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 **Integração na UI:** botões por cronograma no `SchedulingPanel.js` → "🎬 Simular 4D" (`window.__startSchedule4D`) e "⇆ Planejado×Realizado" (`window.__startSchedule4DSplit`), registrados em `app-main.ts`. Rodam auto-match, abrem overlay com Gantt+controles sobre o viewer e aplicam as cores na cena (modo único ou split lado a lado).
 
-Total S35: **64 testes** (16 backend + 48 frontend), type-check limpo nos arquivos do sprint.
+**Verificação ao vivo (Render, autenticado):** login → criar projeto → criar cronograma → importar CSV (4 atividades persistidas) → `GET /schedules/:id` → `POST /schedules/:id/auto-match` (HTTP 200, MatchResult íntegro) → limpeza. O matching real com elementos (≥75%) é coberto pelo e2e `schedule-automatch-routes.spec.ts`, que semeia `models`/`model_versions`/`element_properties`/atividades em Postgres e valida pela rota real: globalIds corretos, órfãos/não-mapeados, `matchRate ≥ 0.75`, `persist` gravando `activity_elements` de forma idempotente.
+
+Total S35: **67 testes** (16 unit backend + 3 e2e backend + 48 frontend), type-check limpo nos arquivos do sprint.

@@ -12,6 +12,56 @@ import { mountSchedule4D, type Schedule4DHandle } from './mountSchedule4D';
 import { mountSchedule4DSplit, type Schedule4DSplitHandle } from './mountSchedule4DSplit';
 import type { ElementSphereLookup } from './Schedule4DController';
 
+/**
+ * CSS auto-contido do S35. Injetado em runtime para que a simulação funcione em
+ * qualquer entry/HTML, independentemente de `styles/app.css` ser carregado.
+ */
+const S35_STYLE_ID = 'schedule-4d-styles';
+const S35_CSS = `
+.schedule-4d-overlay{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(920px,94vw);display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(15,23,42,.95);border:1px solid #334155;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:9500;font-family:system-ui,sans-serif}
+.schedule-4d-overlay__bar{display:flex;align-items:center;justify-content:space-between}
+.schedule-4d-overlay__title{font-weight:600;color:#e2e8f0}
+.schedule-4d-overlay__close{background:none;border:none;color:#94a3b8;font-size:20px;line-height:1;cursor:pointer}
+.schedule-4d-overlay__close:hover{color:#e2e8f0}
+.schedule-4d-overlay__gantt{max-height:220px;overflow-y:auto}
+.schedule-4d-split-labels{position:fixed;top:64px;left:0;right:0;display:flex;justify-content:space-around;pointer-events:none;z-index:9400}
+.schedule-4d-split-labels__left,.schedule-4d-split-labels__right{padding:4px 12px;border-radius:4px;font-size:13px;font-weight:600;color:#fff;background:rgba(15,23,42,.8)}
+.schedule-4d-split-labels__left{border-left:3px solid #94a3b8}
+.schedule-4d-split-labels__right{border-left:3px solid #38bdf8}
+.gantt-timeline{position:relative;width:100%;background:#1e293b;border:1px solid #334155;border-radius:8px;overflow:hidden;font-size:12px}
+.gantt-timeline__rows{display:flex;flex-direction:column}
+.gantt-timeline__empty{padding:16px;color:#94a3b8;text-align:center}
+.gantt-timeline__row{display:flex;align-items:center;height:26px;border-bottom:1px solid #334155;cursor:pointer}
+.gantt-timeline__row:hover{background:rgba(148,163,184,.08)}
+.gantt-timeline__row--delayed .gantt-timeline__label{color:#dc2626;font-weight:600}
+.gantt-timeline__label{flex:0 0 180px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0}
+.gantt-timeline__track{position:relative;flex:1 1 auto;height:100%;border-left:1px solid #334155}
+.gantt-timeline__bar{position:absolute;border-radius:3px}
+.gantt-timeline__bar--planned{top:4px;height:7px;background:rgba(148,163,184,.35);border:1px solid rgba(148,163,184,.5)}
+.gantt-timeline__bar--actual{bottom:4px;height:7px;background:#eab308}
+.gantt-timeline__bar--actual.gantt-timeline__bar--not_started{background:rgba(100,116,139,.4)}
+.gantt-timeline__bar--actual.gantt-timeline__bar--active{background:#eab308}
+.gantt-timeline__bar--actual.gantt-timeline__bar--delayed{background:#dc2626}
+.gantt-timeline__bar--actual.gantt-timeline__bar--complete{background:#10b981}
+.gantt-timeline__cursor{position:absolute;top:0;bottom:0;width:2px;background:#38bdf8;pointer-events:none;z-index:2}
+.sim-controls{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1e293b;border:1px solid #334155;border-radius:8px}
+.sim-controls__btn,.sim-controls__mode{background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:13px}
+.sim-controls__btn:hover,.sim-controls__mode:hover{background:#475569}
+.sim-controls__mode[data-mode='planned']{border-color:rgba(148,163,184,.6)}
+.sim-controls__mode[data-mode='actual']{border-color:#38bdf8}
+.sim-controls__speed{background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:4px;padding:4px 6px}
+.sim-controls__date{margin-left:auto;color:#94a3b8;font-size:13px;font-variant-numeric:tabular-nums}
+`;
+
+/** Injeta o CSS do S35 uma única vez. */
+export function injectSchedule4DStyles(): void {
+  if (typeof document === 'undefined' || document.getElementById(S35_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = S35_STYLE_ID;
+  style.textContent = S35_CSS;
+  document.head.appendChild(style);
+}
+
 /** Constrói o lookup globalId→boundingSphere percorrendo as malhas da cena. */
 export function buildSceneSphereLookup(scene: THREE.Object3D): ElementSphereLookup {
   const boxes = new Map<string, THREE.Box3>();
@@ -141,6 +191,7 @@ export async function startSchedule4D(
   }
 
   teardown();
+  injectSchedule4DStyles();
   const { overlay, controlsEl, ganttEl } = buildOverlay();
   activeOverlay = overlay;
 
@@ -177,6 +228,7 @@ export async function startSchedule4DSplit(
   }
 
   teardown();
+  injectSchedule4DStyles();
   const splitContainer = host.renderer.domElement.parentElement ?? document.body;
   const { overlay, controlsEl, ganttEl } = buildOverlay();
   activeOverlay = overlay;

@@ -17,7 +17,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 // ========== CONFIG ==========
 
-const PORT               = process.env.PORT || process.env.SIGNALING_PORT || 3002;
+const PORT               = process.env.SIGNALING_PORT || process.env.PORT || 3002;
 const HEARTBEAT_INTERVAL = 30_000;
 const LOG_VERBOSE        = process.env.LOG_VERBOSE === 'true';
 const JWT_SECRET         = process.env.JWT_SECRET;

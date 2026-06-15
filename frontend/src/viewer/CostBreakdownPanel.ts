@@ -8,12 +8,22 @@ import { getAPIClient } from '../api/v1/client.js';
 
 @customElement('cost-breakdown-panel')
 export class CostBreakdownPanel extends LitElement {
-  @property() scenarioId: string = '';
-  @state() private breakdown: any = null;
-  @state() private totalCost = '0.00';
-  @state() private activeTab: 'summary' | 'type' | 'storey' | 'category' = 'summary';
-  @state() private loading = false;
-  @state() private selectedElement: any = null;
+  @property() declare scenarioId: string;
+  @state() declare private breakdown: any;
+  @state() declare private totalCost: string;
+  @state() declare private activeTab: 'summary' | 'type' | 'storey' | 'category';
+  @state() declare private loading: boolean;
+  @state() declare private selectedElement: any;
+
+  constructor() {
+    super();
+    this.scenarioId = '';
+    this.breakdown = null;
+    this.totalCost = '0.00';
+    this.activeTab = 'summary';
+    this.loading = false;
+    this.selectedElement = null;
+  }
 
   static styles = css`
     :host {

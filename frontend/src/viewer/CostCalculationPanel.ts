@@ -5,11 +5,20 @@ import { CostService, CostCalculation } from '../api/v1/services/cost.service.js
 
 @customElement('cost-calculation-panel')
 export class CostCalculationPanel extends LitElement {
-  @property() scenarioId: string = '';
-  @state() calculation: CostCalculation | null = null;
-  @state() loading = false;
-  @state() error: string | null = null;
-  @state() activeTab: 'summary' | 'type' | 'storey' | 'category' = 'summary';
+  @property() declare scenarioId: string;
+  @state() declare calculation: CostCalculation | null;
+  @state() declare loading: boolean;
+  @state() declare error: string | null;
+  @state() declare activeTab: 'summary' | 'type' | 'storey' | 'category';
+
+  constructor() {
+    super();
+    this.scenarioId = '';
+    this.calculation = null;
+    this.loading = false;
+    this.error = null;
+    this.activeTab = 'summary';
+  }
 
   async loadCalculation() {
     if (!this.scenarioId) return;
