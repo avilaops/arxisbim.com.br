@@ -1553,6 +1553,7 @@
             <button class="profile-menu-item" onclick="window.location.href='/app.html'">👤 Meu perfil</button>
             <button class="profile-menu-item" id="profile-settings-btn">⚙️ Configurações</button>
             <button class="profile-menu-item" id="profile-billing-btn">💳 Plano &amp; Billing</button>
+            <button class="profile-menu-item" id="profile-admin-btn" style="display:none;color:#a78bfa;" onclick="window.location.href='/admin.html'">🛡️ Painel Admin</button>
             <div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 0;"></div>
             <button class="profile-menu-item profile-menu-item--danger" id="profile-logout-btn">🚪 Sair</button>
           </div>
@@ -2024,6 +2025,12 @@
           if (profileName)  profileName.textContent  = u.name  || u.email || 'Usuário';
           if (profileEmail) profileEmail.textContent = u.email || '';
           if (profileBtn)   profileBtn.textContent   = (u.name || 'U').charAt(0).toUpperCase();
+          // Mostra botão admin apenas para role admin/owner
+          const adminBtn = document.getElementById('profile-admin-btn');
+          if (adminBtn) {
+            const isAdmin = u.role === 'admin' || u.role === 'owner';
+            adminBtn.style.display = isAdmin ? 'block' : 'none';
+          }
         }
       } catch {}
     }
