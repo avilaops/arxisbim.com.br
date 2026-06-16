@@ -36,5 +36,4 @@ wrangler deploy
 - Logs: `wrangler tail` mostra cada disparo do cron com o status de cada alvo.
 
 ## Alvos pingados
-- `https://api.arxisvr.avilaops.com/health`
-- `https://arxisvr-signaling.onrender.com/health`
+- `https://api.arxisvr.avilaops.com/health` (backend — também serve o WebSocket)

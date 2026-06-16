@@ -29,8 +29,8 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_URL: https://api.arxisvr.avilaops.com
-          VITE_WS_URL: wss://arxisvr-signaling.onrender.com
-          VITE_WS_SERVER: wss://arxisvr-signaling.onrender.com
+          VITE_WS_URL: wss://api.arxisvr.avilaops.com
+          VITE_WS_SERVER: wss://api.arxisvr.avilaops.com
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

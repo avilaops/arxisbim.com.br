@@ -10,10 +10,10 @@
  * Custo: zero (Workers free + Cron Triggers gratuitos).
  */
 
+// Único serviço Render do projeto. O WebSocket (signaling/realtime) é servido
+// pelo próprio backend — não há serviço de signaling separado.
 const TARGETS = [
   'https://api.arxisvr.avilaops.com/health',
-  // signaling também dorme no free tier do Render:
-  'https://arxisvr-signaling.onrender.com/health',
 ];
 
 async function pingAll() {

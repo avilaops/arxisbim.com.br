@@ -63,7 +63,7 @@ Testar pipeline: `window.__postProcess` exposto no browser.
 ```bash
 cp .env.example .env.local
 # VITE_API_URL=https://api.arxisvr.avilaops.com
-# VITE_WS_URL=wss://arxisvr-signaling.onrender.com
+# VITE_WS_URL=wss://api.arxisvr.avilaops.com
 ```
 
 ---

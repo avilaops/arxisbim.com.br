@@ -16,13 +16,13 @@ Frontend: Vite MPA + Three.js + IFC
 
 api.arxisvr.avilaops.com   (Render — Fastify)
 Backend: auth · tenants · BIM · observability
+WebSocket (signaling/realtime: rooms, avatar_update, chat) no mesmo serviço
 PostgreSQL (Render managed) · R2 Storage
-
-        │ WebSocket
-
-arxisvr-signaling.onrender.com  (Render — Node WS)
-Signaling: rooms, avatar_update, chat
 ```
+
+> Só existem 2 serviços em produção: o frontend (GitHub Pages) e o backend
+> (Render). NÃO há serviço de signaling separado — o WebSocket é servido pelo
+> backend. O diretório `signaling-server/` é apenas dev local (porta 3002).
 
 > **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
 
@@ -58,7 +58,7 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | Var | Produção |
 |---|---|
 | `VITE_API_URL` | `https://api.arxisvr.avilaops.com` |
-| `VITE_WS_URL` | `wss://arxisvr-signaling.onrender.com` |
+| `VITE_WS_URL` | `wss://api.arxisvr.avilaops.com` |
 
 ### Backend (Render)
 
@@ -140,8 +140,8 @@ curl https://api.arxisvr.avilaops.com/health
 # 2. Último deploy frontend
 # → github.com/AvilaOps/arxisvr/actions
 
-# 3. Signaling (pode estar dormindo no free tier)
-curl https://arxisvr-signaling.onrender.com/health
+# (O WebSocket/signaling é o próprio backend — coberto pelo check 1.
+#  Keep-alive externo: Cloudflare Worker arxisvr-keepalive, cron */10.)
 ```
 
 ---

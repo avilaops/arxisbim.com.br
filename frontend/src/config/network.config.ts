@@ -45,8 +45,8 @@ export function getServerUrl(): string {
     return import.meta.env.VITE_WS_SERVER || 'ws://localhost:3002';
   }
   
-  // Production - use environment variable or default
-  return import.meta.env.VITE_WS_SERVER || 'wss://arxisvr-backend.onrender.com';
+  // Production - use environment variable or default (WS servido pelo backend)
+  return import.meta.env.VITE_WS_SERVER || 'wss://api.arxisvr.avilaops.com';
 }
 
 /**

@@ -187,7 +187,9 @@ function getWorkerHealth() {
 
 async function checkWebSocketSignaling(): Promise<boolean> {
   try {
-    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://arxisvr-signaling.onrender.com/health';
+    // O WebSocket (signaling/realtime) é servido pelo próprio backend — não há
+    // serviço de signaling separado. Checa a saúde do próprio backend.
+    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://api.arxisvr.avilaops.com/health';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(signalingUrl, { signal: controller.signal });
