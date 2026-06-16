@@ -4,6 +4,12 @@ Mantém o backend (e o signaling) do Render acordados, pingando `/health` a cada
 10 min via Cron Trigger. Resolve os "Failed to fetch" causados pela hibernação
 do free tier do Render. **Custo: zero.**
 
+## Status: DEPLOYADO (2026-06-16)
+- Worker: `arxisvr-keepalive` · cron `*/10 * * * *`
+- Teste manual: `https://arxisvr-keepalive.nicolas-85b.workers.dev/`
+- Deployado via REST API usando `CLOUDFLARE_API_GLOBAL_KEY` (o `CLOUDFLARE_API_TOKEN`
+  do projeto é R2-only → 403 em Workers; a Global Key tem acesso total).
+
 ## Por que externo?
 O keep-alive interno do backend (`ping /health a cada 14 min`) não segura a
 hibernação: quando o Render suspende o processo, ele não consegue se
