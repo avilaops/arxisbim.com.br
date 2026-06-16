@@ -64,6 +64,18 @@
       --statusbar-height: 26px;
       --sidebar-width:   300px;
       --right-panel-width: 320px;
+
+      /* Aliases para componentes que usam nomes genéricos (TenantProjectSelector etc.) */
+      --bg-primary:   #1F2937;
+      --bg-secondary: #111827;
+    }
+
+    /* Opções de <select> no popup nativo: força contraste legível no tema escuro
+       (sem isto, texto claro cai em fundo branco do SO e fica invisível). */
+    select option,
+    select optgroup {
+      background-color: #1F2937;
+      color: #F9FAFB;
     }
 
     body {
