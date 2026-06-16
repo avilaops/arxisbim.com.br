@@ -4,7 +4,27 @@ import { SignalingClient } from './SignalingClient';
 interface PixelStreamingViewProps {
   signalingUrl: string;
   onClose: () => void;
-  onConnectionSuccess?: (dataChannel: RTCDataChannel) => void;
+  onConnectionSuccess?: (dataChannel: RTCDataChannel, peerConnection: RTCPeerConnection) => void;
+}
+
+/** Lê o RTT real (ms) do candidate-pair WebRTC ativo. */
+async function readRtt(pc: RTCPeerConnection): Promise<number | null> {
+  try {
+    const stats = await pc.getStats();
+    let rttMs: number | null = null;
+    stats.forEach((report: any) => {
+      if (
+        report.type === 'candidate-pair' &&
+        (report.nominated || report.state === 'succeeded') &&
+        typeof report.currentRoundTripTime === 'number'
+      ) {
+        rttMs = Math.round(report.currentRoundTripTime * 1000);
+      }
+    });
+    return rttMs;
+  } catch {
+    return null;
+  }
 }
 
 export const PixelStreamingView: React.FC<PixelStreamingViewProps> = ({
@@ -43,7 +63,7 @@ export const PixelStreamingView: React.FC<PixelStreamingViewProps> = ({
       dataChannel.onopen = () => {
         setStatus('connected');
         if (onConnectionSuccess) {
-          onConnectionSuccess(dataChannel);
+          onConnectionSuccess(dataChannel, pc);
         }
       };
 
@@ -83,9 +103,10 @@ export const PixelStreamingView: React.FC<PixelStreamingViewProps> = ({
         }
       );
 
-      // Simula o monitoramento de ping sobre a rede
-      pingInterval = setInterval(() => {
-        setPing(Math.floor(Math.random() * 40) + 10); // Simulado: 10-50ms
+      // Monitoramento de ping real via WebRTC getStats() (candidate-pair RTT)
+      pingInterval = setInterval(async () => {
+        const rtt = await readRtt(pc);
+        if (rtt !== null) setPing(rtt);
       }, 2000);
     };
 

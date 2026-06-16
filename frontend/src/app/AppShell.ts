@@ -108,11 +108,29 @@ export class AppShell {
     webgpuCanvas.style.cssText = 'width: 100% !important; height: 100% !important; display: none; position: absolute; top: 0; left: 0; outline: none; z-index: 1;';
     editorEl.appendChild(webgpuCanvas);
     
-    // Instantiate RenderManager
-    this.renderManager = new RenderManager(webgpuCanvas);
-    this.renderManager.initialize().catch((err) => {
-      console.error('[AppShell] WebGPU initialization failed:', err);
+    // Instantiate RenderManager (S33) com bridges de seleção/fallback/ping
+    this.renderManager = new RenderManager(webgpuCanvas, {
+      onSelection: (expressId) => {
+        console.log('[AppShell] WebGPU selection → ExpressID:', expressId);
+        coreEventBus.emit(EventType.MODEL_SELECTED, { modelID: expressId ?? -1 } as any);
+      },
+      onFallback: (reason) => {
+        console.warn('[AppShell] Streaming fallback → WebGPU:', reason);
+        uiStore.setEngineMode('webgpu');
+      },
+      onPing: (rtt) => {
+        if (rtt !== null) console.debug('[AppShell] Streaming RTT:', Math.round(rtt), 'ms');
+      },
     });
+    this.renderManager.initialize()
+      .then(() => {
+        // Sem pipeline IFC→GLB no cliente ainda (S08): monta cena de demonstração
+        // com ExpressIDs sintéticos para validar seleção e filtros no WebGPU.
+        this.renderManager.buildPlaceholderScene();
+      })
+      .catch((err) => {
+        console.error('[AppShell] WebGPU initialization failed:', err);
+      });
 
     // Pixel Streaming Container (React overlay)
     const streamingContainer = document.createElement('div');
@@ -552,10 +570,10 @@ export class AppShell {
           onClose: () => {
             uiStore.setEngineMode('three');
           },
-          onConnectionSuccess: (dataChannel: RTCDataChannel) => {
+          onConnectionSuccess: (dataChannel: RTCDataChannel, peerConnection: RTCPeerConnection) => {
             console.log('[AppShell] Pixel streaming WebRTC data channel established');
             if (this.renderManager) {
-              this.renderManager.switchToStreaming(dataChannel);
+              this.renderManager.switchToStreaming(dataChannel, peerConnection);
             }
           }
         })

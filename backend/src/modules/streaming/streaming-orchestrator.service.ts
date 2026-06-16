@@ -12,9 +12,33 @@ export interface StreamingSession {
 
 export class StreamingOrchestratorService {
   private sessions: Map<string, StreamingSession> = new Map();
+  private seq = 0;
+
+  /** Janela de ociosidade após a qual um pod é recuperado/desalocado (S33.08). */
+  public readonly IDLE_RECLAIM_MS = 5 * 60 * 1000;
+
+  /**
+   * Retorna a sessão ativa (pending/running) de um usuário, se existir.
+   * Usado para prevenir alocação duplicada de GPU por usuário (S33.09).
+   */
+  public findActiveSessionByUser(userId: string): StreamingSession | null {
+    for (const session of this.sessions.values()) {
+      if (session.userId === userId && (session.status === 'pending' || session.status === 'running')) {
+        return session;
+      }
+    }
+    return null;
+  }
 
   public async allocateInstance(userId: string, projectId: string): Promise<StreamingSession> {
-    const sessionId = `stream-${userId.substring(0, 8)}-${Date.now()}`;
+    // Dedup: um usuário não pode segurar duas instâncias de GPU ao mesmo tempo.
+    const existing = this.findActiveSessionByUser(userId);
+    if (existing) {
+      console.log(`[StreamingOrchestrator] Reusing active session ${existing.id} for user`);
+      return existing;
+    }
+
+    const sessionId = `stream-${userId.substring(0, 8)}-${Date.now()}-${++this.seq}`;
     
     const session: StreamingSession = {
       id: sessionId,
@@ -135,6 +159,36 @@ export class StreamingOrchestratorService {
 
   public async getSession(sessionId: string): Promise<StreamingSession | null> {
     return this.sessions.get(sessionId) || null;
+  }
+
+  /** Marca atividade na sessão, adiando sua recuperação por ociosidade. */
+  public touchSession(sessionId: string): void {
+    const session = this.sessions.get(sessionId);
+    if (session) session.updatedAt = new Date();
+  }
+
+  /**
+   * Recupera (desaloca) sessões ociosas além de IDLE_RECLAIM_MS desde a última
+   * atividade. Retorna os IDs recuperados. Idempotente — seguro para um loop.
+   */
+  public async reclaimIdleSessions(now: number = Date.now()): Promise<string[]> {
+    const reclaimed: string[] = [];
+    for (const session of [...this.sessions.values()]) {
+      if (session.status === 'terminated') continue;
+      if (now - session.updatedAt.getTime() >= this.IDLE_RECLAIM_MS) {
+        await this.terminateSession(session.id);
+        reclaimed.push(session.id);
+        console.log(`[StreamingOrchestrator] Reclaimed idle session ${session.id}`);
+      }
+    }
+    return reclaimed;
+  }
+
+  /** Inicia o loop periódico de recuperação de pods ociosos. */
+  public startReclamationLoop(intervalMs = 60_000): ReturnType<typeof setInterval> {
+    return setInterval(() => {
+      void this.reclaimIdleSessions();
+    }, intervalMs);
   }
 
   public async terminateSession(sessionId: string): Promise<boolean> {
