@@ -858,13 +858,27 @@ function setupNavigation() {
 
       // Load view-specific functionality
       switch (view) {
-        case 'ifc':
-          // Show IFC Project Panel
-          console.log('IFC view activated - loading models from backend');
-          if (PROJECT_ID && hasAuthToken()) {
-            loadIfcModels();
+        case 'ifc': {
+          // Gerenciar Modelos IFC: revela o workspace e carrega a lista do projeto.
+          if (!hasAuthToken()) {
+            showNavToast('Faça login para ver os modelos do projeto.');
+            navButtons.forEach(b => b.classList.remove('active'));
+            (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
+            break;
           }
+          // PROJECT_ID é auto-setado pelo home (arxisvr:project-selected); cai no localStorage por garantia.
+          if (!PROJECT_ID) PROJECT_ID = localStorage.getItem('arxisvr_project_id') || '';
+          if (!PROJECT_ID) {
+            showNavToast('Abra ou crie um projeto primeiro para listar os modelos.');
+            navButtons.forEach(b => b.classList.remove('active'));
+            (document.querySelector('.nav-button[data-view="viewer"]') as HTMLElement)?.classList.add('active');
+            break;
+          }
+          // Sai do overlay de boas-vindas para que a sidebar (#ifc-list) fique visível.
+          (window as any).ArxisWelcome?.hide?.();
+          loadIfcModels();
           break;
+        }
 
         case 'bim4d':
           if (PROJECT_ID) {
@@ -909,8 +923,8 @@ function setupNavigation() {
 
         case 'viewer':
         default:
-          // Default workspace view - no special loading
-          console.log('Workspace view active');
+          // Workspace 3D: sai do overlay de boas-vindas e mostra o viewer.
+          (window as any).ArxisWelcome?.hide?.();
           break;
       }
     });
