@@ -1473,7 +1473,7 @@
     <!-- Header -->
     <header class="header">
       <div class="header__left">
-        <div class="header__logo">
+        <div class="header__logo" id="header-home-logo" style="cursor:pointer;" title="Voltar ao início">
           <img src="/logo-icon.svg" alt="ArxisVR" />
           ArxisVR
         </div>
@@ -2291,6 +2291,17 @@
         qaImport.style.cursor = 'pointer';
         qaImport.addEventListener('click', () => {
           window.__workspacePanel?.open();
+        });
+      }
+
+      // Click no logo "ArxisVR" → volta ao home (mostra o overlay de boas-vindas).
+      const homeLogo = document.getElementById('header-home-logo');
+      if (homeLogo) {
+        homeLogo.addEventListener('click', () => {
+          window.ArxisWelcome?.show();
+          // Reposiciona o nav no estado padrão (Workspace ativo).
+          document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+          document.querySelector('.nav-button[data-view="viewer"]')?.classList.add('active');
         });
       }
 
