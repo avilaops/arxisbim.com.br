@@ -27,6 +27,7 @@ export const tenants = pgTable('tenants', {
     timezone?: string;
     features?: string[];
   }>(),
+  featureFlags: jsonb('feature_flags').$type<Record<string, boolean>>(),
   trialEndsAt: timestamp('trial_ends_at'),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
