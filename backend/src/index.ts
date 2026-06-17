@@ -12,7 +12,7 @@ import postgres from 'postgres';
 import path from 'node:path';
 import fs from 'node:fs';
 import { authRoutes } from './core/auth/auth.routes.js';
-import { adminRoutes } from './ce um trigore/admin/admin.routes.js';
+import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
