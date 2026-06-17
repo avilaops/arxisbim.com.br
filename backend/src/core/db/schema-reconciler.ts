@@ -59,17 +59,23 @@ export interface ReconcileResult {
 export async function reconcileSchema(sql: postgres.Sql): Promise<ReconcileResult> {
   const result: ReconcileResult = { checked: 0, added: [], skipped: [], errors: [] };
 
-  // Busca todas as colunas existentes de uma vez (1 query)
+  const tables = [...new Set(REQUIRED_COLUMNS.map(c => c.table))];
+
+  // Fetch all columns for the relevant tables.
+  // Uses individual equality checks joined with OR — avoids sql.array() which
+  // has incompatible behaviour across postgres.js versions.
   const existingRows = await sql<{ table_name: string; column_name: string }[]>`
     SELECT table_name, column_name
     FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = ANY(${sql.array(
-        [...new Set(REQUIRED_COLUMNS.map(c => c.table))]
-      )})
   `;
 
-  const existing = new Set(existingRows.map(r => `${r.table_name}.${r.column_name}`));
+  // Filter in JS — information_schema is small, this is fast
+  const existing = new Set(
+    existingRows
+      .filter(r => tables.includes(r.table_name))
+      .map(r => `${r.table_name}.${r.column_name}`)
+  );
 
   for (const col of REQUIRED_COLUMNS) {
     result.checked++;
@@ -82,7 +88,6 @@ export async function reconcileSchema(sql: postgres.Sql): Promise<ReconcileResul
 
     // Coluna faltando → aplicar
     try {
-      const defaultClause = col.default ? sql.unsafe(` DEFAULT ${col.default}`) : sql``;
       await sql.unsafe(
         `ALTER TABLE "${col.table}" ADD COLUMN IF NOT EXISTS "${col.column}" ${col.type}${col.default ? ` DEFAULT ${col.default}` : ''}`
       );
@@ -97,6 +102,7 @@ export async function reconcileSchema(sql: postgres.Sql): Promise<ReconcileResul
 
   return result;
 }
+
 
 // ─── Runtime error interceptor ────────────────────────────────────────────────
 
