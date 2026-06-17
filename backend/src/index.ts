@@ -1,11 +1,6 @@
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
-import { config as dotenvConfig } from 'dotenv';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-dotenvConfig({ path: resolve(__dirname, '../../../.env.production'), override: false });
-dotenvConfig({ path: resolve(__dirname, '../.env'), override: false });
+import { reconcileSchema } from './core/db/schema-reconciler.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -17,7 +12,7 @@ import postgres from 'postgres';
 import path from 'node:path';
 import fs from 'node:fs';
 import { authRoutes } from './core/auth/auth.routes.js';
-import { adminRoutes } from './core/admin/admin.routes.js';
+import { adminRoutes } from './ce um trigore/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
@@ -699,11 +694,17 @@ signals.forEach((signal: NodeJS.Signals) => {
 // =====================================
 
 try {
-  // Emergency patch: ensure critical columns exist before anything else.
-  // Uses IF NOT EXISTS — safe to run on every startup even if already applied.
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_provider VARCHAR(50)`.catch(() => {});
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS oauth_id VARCHAR(255)`.catch(() => {});
-  console.log('✅ Critical columns ensured (oauth_provider, oauth_id)');
+  // Schema drift reconciler — detecta e adiciona colunas faltando automaticamente.
+  // Idempotente: usa ADD COLUMN IF NOT EXISTS. Roda ANTES das migrations e do boot.
+  const reconcile = await reconcileSchema(sql);
+  if (reconcile.added.length > 0) {
+    console.log(`✅ Schema reconciler: added ${reconcile.added.length} missing column(s): ${reconcile.added.join(', ')}`);
+  } else {
+    console.log(`✅ Schema reconciler: no drift detected (${reconcile.checked} columns checked)`);
+  }
+  if (reconcile.errors.length > 0) {
+    console.warn(`⚠️  Schema reconciler errors: ${reconcile.errors.join(' | ')}`);
+  }
 
   await runMigrations().catch((err: unknown) => {
     console.error('⚠️  Migration error (non-fatal): server will start with existing schema', err instanceof Error ? err.message : err);
