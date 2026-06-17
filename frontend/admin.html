@@ -444,7 +444,7 @@
 <script>
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:3001'
-  : 'https://arxisvr.onrender.com';
+  : (import.meta.env.VITE_API_URL || 'https://api.arxisvr.avilaops.com');
 
 let TOKEN = localStorage.getItem('arxisvr_admin_token') || '';
 let currentUser = null;
