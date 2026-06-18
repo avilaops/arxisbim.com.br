@@ -1,0 +1,27 @@
+{
+	"inputs": [],
+	"servers": {
+		"io.github.github/github-mcp-server": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.3"
+		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@playwright/mcp@latest"
+			]
+		},
+		"sequential-thinking": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking"
+			]
+		}
+	}
+}

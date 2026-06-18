@@ -1,0 +1,7 @@
+{
+  "required_paths": [
+    "vendor.bundle.js.gz",
+    "vendor.meta.json",
+    "tools/git_overview.bundle.js"
+  ]
+}

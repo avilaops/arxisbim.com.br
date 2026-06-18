@@ -1,0 +1,25 @@
+{
+  "manifest_version": "0.1",
+  "id": "MicrosoftStoreMCPServer",
+  "name": "microsoftstore-mcp",
+  "display_name": "Microsoft Store MCP Server",
+  "version": "0.1.0",
+  "description": "Provides access to Microsoft Store products.",
+  "long_description": "This extension allows Clients to interact with the Microsoft Store's product catalogue. This can be useful for tasks such as finding apps and games.",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://apps.microsoft.com/"
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "microsoftstore-mcp.exe",
+    "mcp_config": {
+      "command": "microsoftstore-mcp.exe",
+      "args": []
+    }
+  },
+  "keywords": [
+    "store",
+    "microsoftstore"
+  ]
+}

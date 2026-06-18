@@ -1,0 +1,13 @@
+{
+    "mcpServers":  {
+                       "render":  {
+                                      "headers":  {
+                                                      "Authorization":  "Bearer rnd_DoSZ3esvZvxhDm2V6UfNZzDM5yX7"
+                                                  },
+                                      "url":  "https://mcp.render.com/mcp"
+                                  },
+                       "sentry":  {
+                                      "url":  "https://mcp.sentry.dev/mcp"
+                                  }
+                   }
+}

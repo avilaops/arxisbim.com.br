@@ -13,7 +13,7 @@ const WebSocket = require('ws');
 const http      = require('http');
 const https     = require('https');
 const path      = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env.local') });
 
 // ========== CONFIG ==========
 

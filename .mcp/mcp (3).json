@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "render": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@render-oss/render-mcp-server"
+      ],
+      "env": {
+        "RENDER_API_KEY": "rnd_DoSZ3esvZvxhDm2V6UfNZzDM5yX7"
+      }
+    },
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
+    }
+  }
+}

@@ -97,7 +97,7 @@ const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BI
 
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
-console.log('DEBUG: process.env.CORS_ORIGIN =', process.env.CORS_ORIGIN);
+
 
 
 async function runMigrations() {
