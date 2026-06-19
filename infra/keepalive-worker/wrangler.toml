@@ -2,6 +2,7 @@ name = "arxisvr-keepalive"
 main = "src/worker.js"
 compatibility_date = "2026-06-16"
 
-# Cron a cada 10 min — abaixo da janela de hibernação do Render (15 min).
+# Cron a cada 1 min (mínimo do Cloudflare). O worker faz 2 pings por execução
+# (0s e 30s) para manter o Render acordado abaixo da janela de 50s de inatividade.
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["* * * * *"]

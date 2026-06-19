@@ -1,22 +1,19 @@
 /**
  * arxisvr-keepalive — Cloudflare Worker (Cron Trigger)
  *
- * Mantém o backend do Render acordado pingando /health em intervalo menor que
- * a janela de hibernação (15 min). O keep-alive INTERNO do backend não segura
- * a hibernação porque, quando o Render suspende o processo, ele não consegue
- * se auto-pingar. Este ping é EXTERNO (roda na rede do Cloudflare), então
- * reseta o timer de ociosidade de forma confiável.
+ * Mantém os serviços do Render acordados. O Render free tier hiberna após
+ * ~50s sem requisições externas. Este Worker roda a cada minuto e pinga
+ * duas vezes (t=0s e t=30s) para manter o timer de ociosidade zerado.
  *
  * Custo: zero (Workers free + Cron Triggers gratuitos).
  */
 
-// Único serviço Render do projeto. O WebSocket (signaling/realtime) é servido
-// pelo próprio backend — não há serviço de signaling separado.
 const TARGETS = [
   'https://api.arxisvr.avilaops.com/health',
+  'https://arxisvr-signaling.onrender.com/health',
 ];
 
-async function pingAll() {
+async function ping() {
   const results = await Promise.allSettled(
     TARGETS.map((url) =>
       fetch(url, { method: 'GET', cf: { cacheTtl: 0 } }).then((r) => `${url} -> ${r.status}`)
@@ -28,14 +25,20 @@ async function pingAll() {
   }
 }
 
+async function pingTwice() {
+  await ping();
+  await new Promise((resolve) => setTimeout(resolve, 30_000));
+  await ping();
+}
+
 export default {
-  // Disparado pelo Cron Trigger (ver wrangler.toml).
+  // Cron a cada 1 min (mínimo do CF). Dois pings em 30s de intervalo.
   async scheduled(_event, _env, ctx) {
-    ctx.waitUntil(pingAll());
+    ctx.waitUntil(pingTwice());
   },
-  // Endpoint manual para testar/disparar sob demanda.
+  // Endpoint manual para testar sob demanda.
   async fetch() {
-    await pingAll();
+    await ping();
     return new Response('arxisvr keepalive: ping enviado\n', {
       headers: { 'content-type': 'text/plain; charset=utf-8' },
     });
