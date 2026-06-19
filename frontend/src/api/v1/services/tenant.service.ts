@@ -399,6 +399,7 @@ class TenantService {
     const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/ifc-models`, {
       headers: this.getAuthHeaders(),
     });
+    if (response.status === 404) return [];
     if (!response.ok) throw new Error('Failed to fetch IFC models');
     return response.json();
   }
@@ -640,6 +641,7 @@ class TenantService {
     const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}/tasks`, {
       headers: this.getAuthHeaders(),
     });
+    if (response.status === 404) return [];
     if (!response.ok) throw new Error('Failed to fetch tasks');
     return response.json();
   }

@@ -360,6 +360,191 @@ tuitecnologia.com.br   → e66dba4702e34be1cbf94c3193a2c051
 
 ---
 
+## 10. Padrão DNS por Tipo de Domínio
+
+### Zone Settings (todos os domínios)
+```
+always_use_https : on
+ssl              : flexible
+brotli           : on
+http3            : on
+browser_cache_ttl: 14400
+security_level   : medium
+min_tls_version  : 1.0
+```
+
+---
+
+### Tipo A — Domínio com email Porkbun (avila.inc, avilaops.com)
+```
+# GitHub Pages (apex)
+A     <dominio>  185.199.108.153  proxied=false
+A     <dominio>  185.199.109.153  proxied=false
+A     <dominio>  185.199.110.153  proxied=false
+A     <dominio>  185.199.111.153  proxied=false
+
+# www → backend Render ou GitHub Pages
+CNAME www.<dominio>  <projeto>.onrender.com  proxied=false
+
+# Email — Porkbun forwarding
+MX    <dominio>  fwd1.porkbun.com  priority=10
+MX    <dominio>  fwd2.porkbun.com  priority=20
+TXT   <dominio>  "v=spf1 include:_spf.porkbun.com ~all"
+TXT   _dmarc.<dominio>  "v=DMARC1; p=none; rua=mailto:nicolas@avila.inc"
+```
+
+---
+
+### Tipo B — Domínio sem email (arcsat.com.br, gabrielarincao.com.br, griffedaprata.com.br)
+```
+# GitHub Pages (apex)
+A     <dominio>  185.199.108.153  proxied=false
+A     <dominio>  185.199.109.153  proxied=false
+A     <dominio>  185.199.110.153  proxied=false
+A     <dominio>  185.199.111.153  proxied=false
+
+# www → GitHub Pages
+CNAME www.<dominio>  avilaops.github.io  proxied=false
+
+# Sem email — bloquear explicitamente (RFC 7505)
+MX    <dominio>  .  priority=0
+TXT   <dominio>  "v=spf1 -all"
+TXT   _dmarc.<dominio>  "v=DMARC1; p=reject; rua=mailto:nicolas@avila.inc"
+```
+
+---
+
+### Tipo C — Domínio com Cloudflare Email Routing (tuitecnologia.com.br)
+```
+# GitHub Pages (apex)
+A     <dominio>  185.199.108.153  proxied=false
+A     <dominio>  185.199.109.153  proxied=false
+A     <dominio>  185.199.110.153  proxied=false
+A     <dominio>  185.199.111.153  proxied=false
+
+# www → GitHub Pages
+CNAME www.<dominio>  avilaops.github.io  proxied=false
+
+# Email — Cloudflare Email Routing (configurado pelo dashboard)
+MX    <dominio>  route1.mx.cloudflare.net
+MX    <dominio>  route2.mx.cloudflare.net
+MX    <dominio>  route3.mx.cloudflare.net
+TXT   <dominio>  "v=spf1 include:_spf.mx.cloudflare.net ~all"
+TXT   _dmarc.<dominio>  "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s;"
+TXT   *._domainkey.<dominio>  "v=DKIM1; p="
+```
+
+---
+
+### Mapeamento atual
+| Domínio | Tipo | Email |
+|---|---|---|
+| avila.inc | A | Porkbun |
+| avilaops.com | A | Porkbun |
+| arcsat.com.br | B | nenhum |
+| gabrielarincao.com.br | B | nenhum |
+| griffedaprata.com.br | B | nenhum |
+| tuitecnologia.com.br | C | Cloudflare Email Routing |
+
+---
+
+## 11. Notificações
+
+Todas as notificações são enviadas para `nicolas@avilaops.com`.
+
+### Listar políticas ativas
+```powershell
+$accountId = "85b914dcdebf6fa2fce7b819bc542294"
+Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/accounts/$accountId/alerting/v3/policies" -Headers $gHeaders |
+  % { $_.result } | Select name, enabled | Sort name | Format-Table -AutoSize
+```
+
+### Criar nova política de alerta (sem filtros obrigatórios)
+```powershell
+$body = @{
+  name       = "nome-do-alerta"
+  alert_type = "tipo_do_alerta"   # ex: incident_alert, dos_attack_l7
+  enabled    = $true
+  mechanisms = @{ email = @(@{ id = "nicolas@avilaops.com" }) }
+} | ConvertTo-Json -Depth 4
+
+Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/accounts/$accountId/alerting/v3/policies" -Method POST -Headers $gHeaders -Body $body
+```
+
+### Alertas ativos (41 configurados)
+Cobertura atual: SSL/TLS, DDoS, Script Monitor, Tunnel, Security Insights,
+Logpush, BGP Hijack, CASB, Cloudflare Status, Workers, Stream, Billing triggers,
+Trust & Safety, Cloudforce One credential leak, e mais.
+
+### Alertas que precisam de recursos para serem criados
+| Tipo | Pré-requisito |
+|---|---|
+| `pages_event_alert` | Projeto no Cloudflare Pages |
+| `health_check_status_notification` | Health Checks configurados na zona |
+| `billing_budget_alert` | Definir limite de gasto em $ |
+| `billing_usage_alert` | Definir produto e limite de uso |
+| `brand_protection_*` / `logo_match_alert` | Queries salvas no Brand Protection |
+| `stakeout_saved_query_*` | Queries salvas no Cloudforce One |
+| `synthetic_test_*` / `device_connectivity_anomaly_alert` | Testes no Digital Experience |
+| `workers_observability_alert` | Alertas configurados no Workers Observability |
+
+### Ver tipos de alerta disponíveis
+```powershell
+$alerts = Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/accounts/$accountId/alerting/v3/available_alerts" -Headers $gHeaders
+$alerts.result.PSObject.Properties | ForEach-Object {
+  $_.Value | ForEach-Object { [PSCustomObject]@{ type = $_.type; display_name = $_.display_name } }
+} | Format-Table -AutoSize
+```
+
+---
+
+## 12. Cloudflare One (Zero Trust)
+
+Cloudflare One é a plataforma de segurança Zero Trust da Cloudflare.
+Conta atual: **avilaops** — Plano **Zero Trust Free**.
+
+### O que inclui
+
+| Recurso | O que faz |
+|---|---|
+| **Access** | Protege apps internas com login (SSO, GitHub, Google) |
+| **Tunnel** | Expõe serviços locais na internet sem abrir portas |
+| **Gateway** | Filtra DNS e tráfego HTTP para bloquear ameaças |
+| **CASB** | Monitora integrações SaaS (Google Drive, GitHub, etc.) |
+| **Browser Isolation** | Isola navegação em container remoto |
+| **Email Security** | Proteção contra phishing e spam (via Area 1) |
+| **Digital Experience** | Testes de latência e disponibilidade de apps |
+| **Device Posture** | Verifica estado dos dispositivos conectados |
+
+### Casos de uso comuns
+- Proteger o painel admin do arxisvr com login SSO
+- Criar túnel Cloudflare para expor o backend sem IP público
+- Filtrar DNS da rede para bloquear malware e trackers
+
+### Criar túnel (expor serviço local)
+```powershell
+# Instalar cloudflared
+# https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+
+# Autenticar
+cloudflared tunnel login
+
+# Criar túnel
+cloudflared tunnel create arxisvr-backend
+
+# Configurar rota
+cloudflared tunnel route dns arxisvr-backend api.arxisvr.avilaops.com
+
+# Rodar
+cloudflared tunnel run arxisvr-backend
+```
+
+### Links úteis
+- Dashboard: https://one.dash.cloudflare.com/
+- Docs: https://developers.cloudflare.com/cloudflare-one/
+
+---
+
 ## Referência da API
 - Documentação oficial: https://developers.cloudflare.com/api/
 - R2 API: https://developers.cloudflare.com/r2/api/

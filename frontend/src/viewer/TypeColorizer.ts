@@ -98,8 +98,10 @@ export class TypeColorizer {
         this.notifyTypeMapChanged();
         console.log(`🎨 TypeColorizer: Loaded type map override for project ${projectId}`);
       }
-    } catch (err) {
-      console.warn(`🎨 TypeColorizer: Failed to load type map for project ${projectId}. Using defaults.`, err);
+    } catch (err: any) {
+      if (!err?.message?.includes('not found') && !err?.message?.includes('404')) {
+        console.warn(`🎨 TypeColorizer: Failed to load type map for project ${projectId}. Using defaults.`, err);
+      }
       this.currentTypeMap = { ...DEFAULT_TYPE_MAP };
       this.clearCache();
       this.notifyTypeMapChanged();
