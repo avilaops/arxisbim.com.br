@@ -64,7 +64,7 @@
         "jsonwebtoken": "^9.0.3",
         "livekit-server-sdk": "^2.15.3",
         "minio": "^8.0.7",
-        "nodemailer": "^8.0.10",
+        "nodemailer": "^9.0.1",
         "otplib": "^13.4.1",
         "postgres": "^3.4.9",
         "qrcode": "^1.5.4",
