@@ -1,3 +1,6 @@
+import { setupObservability } from './shared/observability/index.js';
+setupObservability();
+
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import { reconcileSchema } from './core/db/schema-reconciler.js';
