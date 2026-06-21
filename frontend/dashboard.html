@@ -1,191 +1,324 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="/logo-icon.svg" />
   <link rel="shortcut icon" href="/logo-icon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - ArxisVR Observability</title>
+  <title>Avila Ops - ArxisVR Console</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
-  <!-- DM Sans Font (Luma style) -->
+  <!-- Inter Font for Cloudflare look -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Lucide Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.341.0/font/lucide.min.css" />
 
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+
   <style>
-    :root {
-      --bg-app: linear-gradient(135deg, #F5F5F7 0%, #EDE9FF 35%, #E3F0FF 75%, #F5F5F7 100%);
-      --bg-panel: rgba(255, 255, 255, 0.78);
-      --border-color: rgba(0, 0, 0, 0.06);
-    }
     body {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-app);
-      min-height: 100vh;
-      color: #1a1a1a;
-      letter-spacing: -0.1px;
-    }
-    .card {
-      background: var(--bg-panel);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border-color);
-      border-radius: 20px; /* Luma Smooth Cards */
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.04);
-    }
-    .stat-card {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 36px rgba(196, 181, 244, 0.2);
-      background: #ffffff;
-    }
-    .refresh-button {
-      transition: all 0.2s;
-    }
-    .refresh-button:hover {
-      background: #222222;
-    }
-    .refresh-button:active {
-      transform: scale(0.97);
-    }
-    .select-pill {
-      border-radius: 50px; /* Luma Pill Style */
-      padding: 8px 20px;
-      border: 1px solid var(--border-color);
-      background: #ffffff;
-      outline: none;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    .select-pill:focus {
-      border-color: rgba(0,0,0,0.15);
+      background-color: #030303;
+      color: #f4f4f5;
     }
     
-    /* Scrollbar */
+    .console-card {
+      background-color: #121214;
+      border: 1px solid #1f1f23;
+      border-radius: 6px;
+    }
+    
+    .console-sidebar-link {
+      color: #a1a1aa;
+      transition: all 0.15s ease;
+    }
+    .console-sidebar-link:hover, .console-sidebar-link.active {
+      color: #f4f4f5;
+      background-color: #18181b;
+    }
+
     ::-webkit-scrollbar {
       width: 6px;
+      height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: transparent;
+      background: #030303;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.06);
-      border-radius: 50px;
+      background: #1f1f23;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2d2d34;
     }
   </style>
 </head>
-<body class="p-6">
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-[#000000] tracking-tight flex items-center gap-2">
-          <img src="/logo-icon.svg" alt="" style="width: 28px; height: 28px;">
-          ArxisVR Observability
-        </h1>
-        <p class="text-gray-500 mt-2 font-medium">Dashboard de métricas e monitoramento em tempo real</p>
+<body class="font-sans flex min-h-screen">
+
+  <!-- 1. Left Sidebar -->
+  <aside class="w-64 bg-[#09090b] border-r border-[#1f1f23] p-4 flex flex-col justify-between select-none shrink-0">
+    <div class="flex flex-col gap-6">
+      <!-- Logo / Brand -->
+      <div class="flex items-center gap-2.5 px-2 py-1.5">
+        <img src="/logo-icon.svg" alt="ArxisVR Logo" class="w-6 h-6">
+        <span class="font-bold text-zinc-100 text-sm tracking-wide">Avila Ops</span>
       </div>
-      <div class="flex gap-3 items-center">
-        <select id="timeRange" class="select-pill text-sm font-medium text-[#1a1a1a]">
-          <option value="1">Última hora</option>
-          <option value="6">Últimas 6 horas</option>
-          <option value="24" selected>Últimas 24 horas</option>
-          <option value="168">Última semana</option>
-        </select>
-        <button onclick="refreshData()" class="refresh-button btn-primary bg-black text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#222222] transition-all flex items-center gap-2 shadow-sm">
-          <i class="lucide lucide-refresh-cw" style="stroke-width: 1.8px; width: 14px; height: 14px;"></i> Atualizar
+
+      <!-- Navigation Links -->
+      <nav class="flex flex-col gap-1.5">
+        <a href="#" class="console-sidebar-link active flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-home w-4 h-4"></i> Página inicial da conta
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-clock w-4 h-4"></i> Recentes
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-globe w-4 h-4"></i> Domínios
+        </a>
+
+        <div class="text-[10px] uppercase font-bold text-zinc-500 tracking-wider px-3 mt-4 mb-1">Observe</div>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-shield w-4 h-4"></i> Investigate
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-bar-chart3 w-4 h-4"></i> Análise
+        </a>
+
+        <div class="text-[10px] uppercase font-bold text-zinc-500 tracking-wider px-3 mt-4 mb-1">Build</div>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-terminal w-4 h-4"></i> Computação
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-sparkles w-4 h-4"></i> IA
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-database w-4 h-4"></i> Armazenamento e banc...
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-play w-4 h-4"></i> Mídia
+        </a>
+
+        <div class="text-[10px] uppercase font-bold text-zinc-500 tracking-wider px-3 mt-4 mb-1">Proteja e conecte</div>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-lock w-4 h-4"></i> Segurança do aplicativo
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-key w-4 h-4"></i> Zero Trust
+        </a>
+        <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+          <i class="lucide lucide-network w-4 h-4"></i> Rede
+        </a>
+      </nav>
+    </div>
+
+    <!-- User Section -->
+    <div class="border-t border-[#1f1f23] pt-4 mt-auto flex flex-col gap-2">
+      <a href="#" class="console-sidebar-link flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md">
+        <i class="lucide lucide-settings w-4 h-4"></i> Gerenciar conta
+      </a>
+    </div>
+  </aside>
+
+  <!-- 2. Main Content -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+    
+    <!-- Topbar / Header -->
+    <header class="h-14 border-b border-[#1f1f23] px-8 flex items-center justify-between bg-[#030303]">
+      <div class="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+        <span>Avila Ops</span>
+        <i class="lucide lucide-chevron-right w-4 h-4 text-zinc-600"></i>
+        <span class="text-zinc-400 font-medium">Análise de dados</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="bg-[#18181b] border border-[#27272a] text-zinc-300 hover:bg-[#202024] px-3.5 py-1.5 rounded text-xs font-medium flex items-center gap-1.5 transition-all">
+          <i class="lucide lucide-sparkles w-3.5 h-3.5 text-blue-400"></i> Ask AI
+        </button>
+        <button class="bg-[#2563eb] text-white hover:bg-[#1d4ed8] px-3.5 py-1.5 rounded text-xs font-semibold shadow-sm transition-all">
+          + Adicionar
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Status Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-      <div class="stat-card card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Usuários Ativos</div>
-        <div class="text-3xl font-bold text-black" id="totalUsers">-</div>
-      </div>
-      <div class="stat-card card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Requests</div>
-        <div class="text-3xl font-bold text-black" id="totalRequests">-</div>
-      </div>
-      <div class="stat-card card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Erros</div>
-        <div class="text-3xl font-bold text-red-500" id="totalErrors">-</div>
-      </div>
-      <div class="stat-card card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Sessões Ativas</div>
-        <div class="text-3xl font-bold text-[#8e74e6]" id="activeSessions">-</div>
-      </div>
-      <div class="stat-card card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Taxa de Erro</div>
-        <div class="text-3xl font-bold text-orange-500" id="errorRate">-</div>
-      </div>
-    </div>
-
-    <!-- Performance Metrics -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-      <div class="card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Latência Média</div>
-        <div class="text-2xl font-bold text-black" id="avgDuration">-</div>
-        <div class="text-xs text-gray-400 mt-1">Tempo médio de resposta</div>
-      </div>
-      <div class="card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P50 (Mediana)</div>
-        <div class="text-2xl font-bold text-black" id="p50">-</div>
-        <div class="text-xs text-gray-400 mt-1">50% das requests</div>
-      </div>
-      <div class="card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P95</div>
-        <div class="text-2xl font-bold text-black" id="p95">-</div>
-        <div class="text-xs text-gray-400 mt-1">95% das requests</div>
-      </div>
-      <div class="card p-6">
-        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">P99</div>
-        <div class="text-2xl font-bold text-red-500" id="p99">-</div>
-        <div class="text-xs text-gray-400 mt-1">99% das requests</div>
-      </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <div class="card p-6">
-        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4">Requests por Hora</h3>
-        <canvas id="requestsChart"></canvas>
-      </div>
-      <div class="card p-6">
-        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4">Latência (Percentis)</h3>
-        <canvas id="latencyChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Recent Actions -->
-      <div class="card p-6">
-        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4 flex items-center gap-2">
-          <i class="lucide lucide-activity text-gray-500" style="width: 18px; height: 18px;"></i> Ações Recentes
-        </h3>
-        <div id="recentActions" class="space-y-3 max-h-96 overflow-y-auto">
-          <div class="text-gray-400 text-center py-4">Carregando...</div>
+    <!-- Console Main Content -->
+    <main class="flex-1 p-8 max-w-7xl w-full mx-auto flex flex-col gap-6">
+      
+      <!-- Section Title & Filter -->
+      <div class="flex justify-between items-center border-b border-[#1f1f23] pb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-zinc-50 tracking-tight">Avila Ops</h1>
+          <p class="text-zinc-500 text-xs mt-1">Análise de dados e observabilidade da infraestrutura ArxisVR</p>
+        </div>
+        <div class="flex gap-2.5 items-center">
+          <select id="timeRange" class="bg-[#121214] border border-[#1f1f23] text-zinc-300 text-xs rounded px-3 py-1.5 outline-none font-medium cursor-pointer transition-all hover:bg-[#18181b]">
+            <option value="1">Última hora</option>
+            <option value="6">Últimas 6 horas</option>
+            <option value="24" selected>Últimas 24 horas</option>
+            <option value="168">Última semana</option>
+          </select>
+          <button onclick="refreshData()" class="bg-[#18181b] hover:bg-[#202024] border border-[#1f1f23] text-zinc-300 text-xs rounded px-3 py-1.5 font-semibold flex items-center gap-1.5 transition-all">
+            <i class="lucide lucide-refresh-cw w-3.5 h-3.5"></i> Atualizar
+          </button>
         </div>
       </div>
 
-      <!-- Recent Errors -->
-      <div class="card p-6">
-        <h3 class="text-lg font-bold text-[#000000] tracking-tight mb-4 flex items-center gap-2">
-          <i class="lucide lucide-alert-triangle text-gray-500" style="width: 18px; height: 18px;"></i> Erros Recentes
-        </h3>
-        <div id="recentErrors" class="space-y-3 max-h-96 overflow-y-auto">
-          <div class="text-gray-400 text-center py-4">Carregando...</div>
+      <!-- Cloudflare Style Main Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Segurança Card -->
+        <div class="console-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Segurança</h3>
+              <i class="lucide lucide-shield text-zinc-500 w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div>
+                <span class="text-zinc-500 text-[10px] font-semibold uppercase block">Erros Detectados</span>
+                <span class="text-2xl font-bold text-red-500" id="totalErrors">-</span>
+              </div>
+              <div>
+                <span class="text-zinc-500 text-[10px] font-semibold uppercase block">Taxa de Erro</span>
+                <span class="text-xl font-bold text-orange-500" id="errorRate">-</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-zinc-500 mt-4 border-t border-[#1f1f23] pt-3">Filtros de mitigação e bloqueios WAF ativos</div>
+        </div>
+
+        <!-- Performance Card -->
+        <div class="console-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Performance</h3>
+              <i class="lucide lucide-zap text-zinc-500 w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div>
+                <span class="text-zinc-500 text-[10px] font-semibold uppercase block">Latência Média</span>
+                <span class="text-2xl font-bold text-zinc-100" id="avgDuration">-</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <span class="text-zinc-500 text-[9px] font-bold block">P50</span>
+                  <span class="text-xs font-semibold text-zinc-300" id="p50">-</span>
+                </div>
+                <div>
+                  <span class="text-zinc-500 text-[9px] font-bold block">P95</span>
+                  <span class="text-xs font-semibold text-zinc-300" id="p95">-</span>
+                </div>
+                <div>
+                  <span class="text-zinc-500 text-[9px] font-bold block">P99</span>
+                  <span class="text-xs font-semibold text-red-400" id="p99">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-zinc-500 mt-4 border-t border-[#1f1f23] pt-3">Latência de resposta da API do backend</div>
+        </div>
+
+        <!-- Atividade Card -->
+        <div class="console-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Atividade</h3>
+              <i class="lucide lucide-activity text-zinc-500 w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col gap-4">
+              <div>
+                <span class="text-zinc-500 text-[10px] font-semibold uppercase block">Tráfego Web (Requests)</span>
+                <span class="text-2xl font-bold text-zinc-100" id="totalRequests">-</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <span class="text-zinc-500 text-[10px] font-semibold block">Usuários Ativos</span>
+                  <span class="text-sm font-bold text-zinc-300" id="totalUsers">-</span>
+                </div>
+                <div>
+                  <span class="text-zinc-500 text-[10px] font-semibold block">Sessões Ativas</span>
+                  <span class="text-sm font-bold text-blue-400" id="activeSessions">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-zinc-500 mt-4 border-t border-[#1f1f23] pt-3">Atividade e conexões de usuários autenticados</div>
         </div>
       </div>
-    </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="console-card p-6">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4">Volume de Requisições</h3>
+          <div class="relative w-full aspect-video">
+            <canvas id="requestsChart"></canvas>
+          </div>
+        </div>
+        <div class="console-card p-6">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4">Distribuição de Latência (ms)</h3>
+          <div class="relative w-full aspect-video">
+            <canvas id="latencyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lists Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Logs de Auditoria -->
+        <div class="console-card p-6 flex flex-col">
+          <div class="flex justify-between items-center mb-4 border-b border-[#1f1f23] pb-3">
+            <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+              <i class="lucide lucide-file-text text-zinc-500 w-4 h-4"></i> Logs de auditoria
+            </h3>
+            <span class="text-[10px] font-semibold text-zinc-500 uppercase">Histórico Recente</span>
+          </div>
+          <div id="recentActions" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <div class="text-zinc-500 text-center py-4 text-xs">Carregando auditorias...</div>
+          </div>
+        </div>
+
+        <!-- Erros Recentes -->
+        <div class="console-card p-6 flex flex-col">
+          <div class="flex justify-between items-center mb-4 border-b border-[#1f1f23] pb-3">
+            <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+              <i class="lucide lucide-alert-triangle text-zinc-500 w-4 h-4"></i> Erros em Produção
+            </h3>
+            <span class="text-[10px] font-semibold text-zinc-500 uppercase">Tempo Real</span>
+          </div>
+          <div id="recentErrors" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <div class="text-zinc-500 text-center py-4 text-xs">Carregando logs de erro...</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="h-12 border-t border-[#1f1f23] px-8 flex items-center justify-between text-[11px] text-zinc-500 bg-[#030303] mt-8">
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:underline">Suporte</a>
+        <a href="#" class="hover:underline">Status do Sistema</a>
+        <a href="#" class="hover:underline">Termos de uso</a>
+        <a href="#" class="hover:underline">Política de Privacidade</a>
+      </div>
+      <div>
+        © 2026 Cloudflare, Inc. (Adaptado para ArxisVR)
+      </div>
+    </footer>
+
   </div>
 
   <script>
@@ -244,20 +377,18 @@
     function updateRecentActions(actions) {
       const container = document.getElementById('recentActions');
       if (!actions || actions.length === 0) {
-        container.innerHTML = '<div class="text-gray-400 text-center py-4">Nenhuma ação recente</div>';
+        container.innerHTML = '<div class="text-zinc-500 text-center py-4 text-xs">Nenhuma ação recente</div>';
         return;
       }
 
       container.innerHTML = actions.map(action => `
-        <div class="bg-white rounded-xl p-3.5 border border-[rgba(0,0,0,0.05)] shadow-sm">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="font-semibold text-black">${action.action}</div>
-              <div class="text-xs text-gray-500 mt-0.5">${action.resource || '-'}</div>
-            </div>
-            <div class="text-xs text-gray-400 font-medium">
-              ${new Date(action.timestamp).toLocaleTimeString('pt-BR')}
-            </div>
+        <div class="bg-[#121214] border border-[#1f1f23] rounded p-3 flex justify-between items-center transition-all hover:bg-[#18181b]">
+          <div>
+            <div class="font-medium text-xs text-zinc-100">${action.action}</div>
+            <div class="text-[10px] text-zinc-500 mt-0.5">${action.resource || '-'}</div>
+          </div>
+          <div class="text-[10px] text-zinc-500">
+            ${new Date(action.timestamp).toLocaleTimeString('pt-BR')}
           </div>
         </div>
       `).join('');
@@ -266,31 +397,31 @@
     function updateRecentErrors(errors) {
       const container = document.getElementById('recentErrors');
       if (!errors || errors.length === 0) {
-        container.innerHTML = '<div class="text-gray-400 text-center py-4">Nenhum erro recente 🎉</div>';
+        container.innerHTML = '<div class="text-zinc-500 text-center py-4 text-xs">Nenhum erro recente 🎉</div>';
         return;
       }
 
       container.innerHTML = errors.map(error => `
-        <div class="bg-white rounded-xl p-3.5 border ${error.severity === 'critical' ? 'border-red-100 bg-red-50/40' : 'border-amber-100 bg-amber-50/40'} shadow-sm">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="font-semibold ${error.severity === 'critical' ? 'text-red-600' : 'text-amber-600'} text-sm">
-                ${error.errorCode || 'ERROR'}
-              </div>
-              <div class="text-xs text-gray-700 mt-1">${error.errorMessage}</div>
-              <div class="text-[11px] text-gray-400 mt-1.5 font-medium">
-                Severidade: <span class="capitalize font-semibold">${error.severity}</span> · ${error.resolved ? '✅ Resolvido' : '⏳ Pendente'}
-              </div>
+        <div class="bg-[#121214] border ${error.severity === 'critical' ? 'border-red-950/40 bg-red-950/5 text-red-400' : 'border-amber-950/40 bg-amber-950/5 text-amber-400'} rounded p-3 flex justify-between items-start transition-all hover:bg-[#18181b]">
+          <div class="flex-1">
+            <div class="font-semibold text-xs flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full ${error.severity === 'critical' ? 'bg-red-500' : 'bg-amber-500'}"></span>
+              ${error.errorCode || 'ERROR'}
             </div>
-            <div class="text-xs text-gray-400 font-medium">
-              ${new Date(error.timestamp).toLocaleTimeString('pt-BR')}
-            </div>
+            <div class="text-[10px] text-zinc-400 mt-1">${error.errorMessage}</div>
+          </div>
+          <div class="text-[10px] text-zinc-500 self-center">
+            ${new Date(error.timestamp).toLocaleTimeString('pt-BR')}
           </div>
         </div>
       `).join('');
     }
 
     function updateCharts(hourlyMetrics, performance) {
+      const isDark = true;
+      const gridColor = '#1f1f23';
+      const textColor = '#71717a';
+
       // Requests Chart
       const ctx1 = document.getElementById('requestsChart');
       if (requestsChart) {
@@ -307,8 +438,8 @@
           datasets: [{
             label: 'Requests',
             data: requests.reverse(),
-            borderColor: '#000000', /* Luma Black Line */
-            backgroundColor: 'rgba(196, 181, 244, 0.25)', /* Luma Lavender Fill */
+            borderColor: '#2563eb', /* Blue border */
+            backgroundColor: 'rgba(37, 99, 235, 0.08)', /* Soft blue fill */
             tension: 0.35,
             fill: true,
             borderWidth: 2,
@@ -317,19 +448,19 @@
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
           },
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
-              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
+              grid: { color: gridColor },
             },
             x: {
-              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
-              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
+              grid: { color: gridColor },
             },
           },
         },
@@ -354,28 +485,29 @@
               performance.p99,
             ],
             backgroundColor: [
-              '#C4B5F4', /* Luma Lavender */
-              '#007AFF', /* iOS Blue */
-              '#FF9500', /* iOS Orange */
-              '#FF3B30', /* iOS Red */
+              '#3b82f6', /* Blue */
+              '#10b981', /* Green */
+              '#f59e0b', /* Yellow */
+              '#ef4444', /* Red */
             ],
-            borderRadius: 8,
+            borderRadius: 4,
+            barThickness: 32,
           }],
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
           },
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
-              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
+              grid: { color: gridColor },
             },
             x: {
-              ticks: { color: '#8e8e93', font: { family: 'DM Sans' } },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
               grid: { display: false },
             },
           },
@@ -385,7 +517,6 @@
 
     function showError(message) {
       alert(message);
-      // Redirecionar para login se não autenticado
       if (!token) {
         window.location.href = '/';
       }
@@ -395,10 +526,8 @@
       fetchDashboardData();
     }
 
-    // Auto-refresh a cada 30 segundos
     setInterval(fetchDashboardData, 30000);
 
-    // Carregar dados inicialmente
     if (!token) {
       showError('Você precisa fazer login para acessar o dashboard.');
       window.location.href = '/';
@@ -406,7 +535,6 @@
       fetchDashboardData();
     }
 
-    // Listener para mudança de período
     document.getElementById('timeRange').addEventListener('change', fetchDashboardData);
   </script>
 </body>
