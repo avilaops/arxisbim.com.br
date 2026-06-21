@@ -85,6 +85,10 @@ class ObservabilityService {
   async logAudit(data: AuditLogData): Promise<void> {
     if (!this.dbAvailable) return;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(auditLogs).values({
         tenantId: data.tenantId,
@@ -122,6 +126,10 @@ class ObservabilityService {
         }
       : dataOrName;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(metrics).values({
         tenantId: data.tenantId,
@@ -153,6 +161,10 @@ class ObservabilityService {
         }
       : dataOrError;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(errorLogs).values({
         tenantId: data.tenantId,
@@ -174,6 +186,10 @@ class ObservabilityService {
    */
   async recordPerformance(data: PerformanceMetricData): Promise<void> {
     if (!this.dbAvailable) return;
+
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
 
     try {
       await db.insert(performanceMetrics).values({
