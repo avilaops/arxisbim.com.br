@@ -181,18 +181,87 @@
   // ── Auto: page_view ──────────────────────────────────────────────
   track('page_view', { title: document.title });
 
-  // ── Auto: cliques marcados com data-track ────────────────────────
-  document.addEventListener('click', function (ev) {
-    var el = ev.target && ev.target.closest ? ev.target.closest('[data-track]') : null;
-    if (!el) return;
-    var name = el.getAttribute('data-track') || 'click';
-    var props = {};
-    for (var i = 0; i < el.attributes.length; i++) {
-      var a = el.attributes[i];
-      if (a.name.indexOf('data-track-') === 0) props[a.name.slice(11)] = a.value;
+  // ── Auto: monitoramento de latência e delays (fetch) ──────────────
+  (function () {
+    if (typeof window === 'undefined' || !window.fetch) return;
+    var originalFetch = window.fetch;
+    window.fetch = function (input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+      
+      // Evitar loop infinito com endpoint de track
+      if (url && url.indexOf('/api/v1/track') !== -1) {
+        return originalFetch.apply(this, arguments);
+      }
+      
+      var start = Date.now();
+      return originalFetch.apply(this, arguments).then(function (response) {
+        var duration = Date.now() - start;
+        track('api_latency', {
+          url: url,
+          method: (init && init.method) || 'GET',
+          status: response.status,
+          durationMs: duration
+        }, 'performance');
+        return response;
+      }).catch(function (error) {
+        var duration = Date.now() - start;
+        track('api_latency_error', {
+          url: url,
+          method: (init && init.method) || 'GET',
+          durationMs: duration,
+          error: error && error.message ? error.message : String(error)
+        }, 'error');
+        throw error;
+      });
+    };
+  })();
+
+  function getXPath(element) {
+    if (!element || element.nodeType !== 1) return '';
+    if (element.id) return '#' + element.id;
+    var path = [];
+    while (element && element.nodeType === 1) {
+      var entry = element.tagName.toLowerCase();
+      var siblings = element.parentNode ? element.parentNode.children : [];
+      var sameTagSiblings = Array.prototype.filter.call(siblings, function (el) {
+        return el.tagName === element.tagName;
+      });
+      if (sameTagSiblings.length > 1) {
+        var index = Array.prototype.indexOf.call(sameTagSiblings, element) + 1;
+        entry += '[' + index + ']';
+      }
+      path.unshift(entry);
+      element = element.parentNode;
     }
-    if (!props.text) props.text = (el.textContent || '').trim().slice(0, 80);
-    track(name, props);
+    return path.join(' > ');
+  }
+
+  // ── Auto: todos os cliques ───────────────────────────────────────
+  document.addEventListener('click', function (ev) {
+    var target = ev.target;
+    if (!target) return;
+    
+    var el = target.closest ? target.closest('[data-track]') : null;
+    var name = el ? (el.getAttribute('data-track') || 'click') : 'click';
+    
+    var props = {
+      tag: target.tagName,
+      id: target.id || undefined,
+      class: target.className || undefined,
+      text: (target.textContent || '').trim().slice(0, 80) || undefined,
+      xpath: getXPath(target)
+    };
+    
+    if (el) {
+      for (var i = 0; i < el.attributes.length; i++) {
+        var a = el.attributes[i];
+        if (a.name.indexOf('data-track-') === 0) {
+          props[a.name.slice(11)] = a.value;
+        }
+      }
+    }
+    
+    track(name, props, 'click');
   }, true);
 
   // ── Auto: flush ao sair ──────────────────────────────────────────

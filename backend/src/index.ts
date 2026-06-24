@@ -69,7 +69,7 @@ import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
 import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
 import { createUsageReconcileWorker } from './modules/billing/usage-reconcile.worker.js';
-import { observabilityService, logger } from './core/observability/service.js';
+import { observabilityService, logger, fastifyCombinedStream } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
@@ -251,6 +251,7 @@ const server = Fastify({
       paths: PINO_REDACT_PATHS,
       censor: REDACTED,
     },
+    stream: fastifyCombinedStream
   },
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,

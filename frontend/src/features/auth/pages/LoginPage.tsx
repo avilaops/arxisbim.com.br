@@ -42,7 +42,7 @@ export default function LoginPage() {
       const nextParam = new URLSearchParams(window.location.search).get('next');
       const next = nextParam && nextParam.charAt(0) === '/' && nextParam.charAt(1) !== '/'
         ? nextParam
-        : '/app.html';
+        : '/dashboard.html';
       try {
         (window as any).arxis?.track('login_success');
         (window as any).arxis?.flush();

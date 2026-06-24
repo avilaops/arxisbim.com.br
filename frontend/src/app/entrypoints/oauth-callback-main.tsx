@@ -14,7 +14,7 @@ if (token && refreshToken) {
   // CRÍTICO: deriva e grava arxisvr_user a partir do token.
   // Sem isso, greeting (lê token) e header (exigia user) divergiam → "Olá, Nicolas" + "Entrar".
   hydrateUserFromToken();
-  window.location.replace('/app.html');
+  window.location.replace('/dashboard.html');
 } else {
   // No tokens — redirect to login with error
   const params = new URLSearchParams(window.location.search);

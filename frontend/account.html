@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script src="/meta-pixel.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArxisVR — Conta</title>
+  <link rel="icon" type="image/svg+xml" href="/logo-icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/track.js" defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --c-bg:       #0a0a0a;
+      --c-surface:  #111111;
+      --c-surface2: #161616;
+      --c-surface3: #1c1c1c;
+      --c-border:   rgba(255,255,255,0.07);
+      --c-border2:  rgba(255,255,255,0.12);
+      --c-text:     #ededed;
+      --c-text2:    #a0a0a0;
+      --c-text3:    #666666;
+      --c-blue:     #3b82f6;
+      --c-blue-dim: rgba(59,130,246,0.10);
+      --c-green:    #22c55e;
+      --c-green-dim:rgba(34,197,94,0.10);
+      --c-red:      #ef4444;
+      --c-yellow:   #eab308;
+      --c-purple:   #a78bfa;
+      --sidebar-w:  220px;
+      --topbar-h:   48px;
+      --r:          6px;
+      --sidebar-collapsed-w: 48px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--c-bg);
+      color: var(--c-text);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 4px; }
+
+    .ico { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; }
+    .ico svg { width: 100%; height: 100%; }
+
+    #app {
+      display: none;
+      height: 100vh;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: var(--topbar-h) 1fr;
+    }
+    #app.ready { display: grid; }
+
+    /* ── Top bar ── */
+    .topbar {
+      grid-column: 1 / -1;
+      background: var(--c-surface);
+      border-bottom: 1px solid var(--c-border);
+      display: flex; align-items: center;
+      padding: 0 20px 0 0; gap: 0; z-index: 100;
+    }
+    .topbar__brand {
+      width: var(--sidebar-w); height: 100%;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px; border-right: 1px solid var(--c-border);
+      flex-shrink: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.2px;
+    }
+    .topbar__brand img { width: 22px; height: 22px; }
+    .topbar__mid { flex: 1; display: flex; align-items: center; padding-left: 20px; gap: 16px; }
+    .topbar__breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--c-text2); }
+    .topbar__breadcrumb strong { color: var(--c-text); font-weight: 500; }
+    .topbar__breadcrumb-sep { opacity: 0.3; }
+    .topbar__end { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .topbar__link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0 10px; height: 32px; border-radius: var(--r);
+      font-size: 12px; color: var(--c-text2); transition: background .12s, color .12s;
+    }
+    .topbar__link:hover { background: var(--c-surface3); color: var(--c-text); }
+    .topbar__avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      cursor: pointer; user-select: none; position: relative;
+    }
+    .dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      width: 200px; background: #1e1e1e; border: 1px solid var(--c-border2);
+      border-radius: var(--r); box-shadow: 0 16px 48px rgba(0,0,0,0.7); z-index: 9999; overflow: hidden;
+    }
+    .dropdown.open { display: block; }
+    .dropdown__user { padding: 12px 14px 10px; border-bottom: 1px solid var(--c-border); }
+    .dropdown__name { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .dropdown__email { font-size: 11px; color: var(--c-text3); margin-top: 1px; }
+    .dropdown__item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; font-size: 12.5px; color: var(--c-text2);
+      cursor: pointer; transition: background .1s, color .1s;
+      border: none; background: none; width: 100%; text-align: left; font-family: inherit;
+    }
+    .dropdown__item:hover { background: rgba(255,255,255,0.05); color: var(--c-text); }
+    .dropdown__sep { height: 1px; background: var(--c-border); margin: 4px 0; }
+    .dropdown__item--danger { color: #f87171; }
+    .dropdown__item--danger:hover { background: rgba(239,68,68,0.08); color: #fca5a5; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--c-surface); border-right: 1px solid var(--c-border);
+      overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column;
+    }
+    .sidebar__search {
+      margin: 10px 10px 4px;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--c-surface2); border: 1px solid var(--c-border);
+      border-radius: var(--r); padding: 0 10px; height: 30px;
+      color: var(--c-text3); font-size: 12px; cursor: text; flex-shrink: 0;
+      transition: border-color .12s;
+    }
+    .sidebar__search:hover { border-color: var(--c-border2); }
+    .sidebar__search span { flex: 1; }
+    .sidebar__section { padding: 12px 0 4px; }
+    .sidebar__section + .sidebar__section { border-top: 1px solid var(--c-border); margin-top: 4px; }
+    .sidebar__label {
+      padding: 0 14px 4px; font-size: 10.5px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--c-text3);
+    }
+    .sidebar__item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 14px; font-size: 13px; font-weight: 400;
+      color: var(--c-text2); cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: color .12s, background .12s; position: relative;
+    }
+    .sidebar__item:hover { color: var(--c-text); background: rgba(255,255,255,0.03); }
+    .sidebar__item.active {
+      color: var(--c-text); font-weight: 500;
+      background: var(--c-blue-dim); border-left-color: var(--c-blue);
+    }
+    .sidebar__item.active .sidebar__ico { color: var(--c-blue); filter: brightness(0) saturate(100%) invert(53%) sepia(66%) saturate(700%) hue-rotate(196deg) brightness(101%) contrast(101%); }
+    .sidebar__ico { color: var(--c-text3); transition: color .12s; }
+    .sidebar__item-arrow { margin-left: auto; color: var(--c-text3); opacity: 0.5; }
+    .sidebar__accordion {
+      width: 100%; background: none; border: none; font-family: inherit;
+      font-size: 13px; font-weight: 400; text-align: left; cursor: pointer;
+    }
+    .sidebar__accordion-arrow { transition: transform .2s ease; }
+    .sidebar__accordion.open .sidebar__accordion-arrow { transform: rotate(90deg); }
+    .sidebar__subitems {
+      display: none; flex-direction: column;
+      background: var(--c-surface); border-top: 1px solid var(--c-border);
+      border-bottom: 1px solid var(--c-border); padding: 4px 0;
+    }
+    .sidebar__subitems.open { display: flex; }
+    .sidebar__subitem {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px 7px 32px; font-size: 12.5px; color: var(--c-text2);
+      transition: background .1s, color .1s; cursor: pointer;
+    }
+    .sidebar__subitem:hover { background: rgba(255,255,255,0.04); color: var(--c-text); }
+    .sidebar__subitem.active { color: var(--c-blue); font-weight: 500; }
+    .sidebar__sep { height: 1px; background: var(--c-border); margin: 4px 0; }
+    .sidebar__toggle-bar { display: flex; align-items: center; padding: 6px 10px; gap: 6px; }
+    .sidebar__toggle {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: var(--r);
+      border: none; background: none; cursor: pointer;
+      color: var(--c-text3); flex-shrink: 0; transition: background .12s, color .12s;
+    }
+    .sidebar__toggle:hover { background: var(--c-surface3); color: var(--c-text); }
+    .sidebar__toggle svg { width: 16px; height: 16px; }
+
+    /* ── Inline SVG icons via bg ── */
+    .i-home    { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-clock   { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-box     { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-cal     { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-users   { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M23 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-dollar  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-shield  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-search  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-logout  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-life    { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cline x1='4.93' y1='4.93' x2='9.17' y2='9.17'/%3E%3Cline x1='14.83' y1='14.83' x2='19.07' y2='19.07'/%3E%3Cline x1='14.83' y1='9.17' x2='19.07' y2='4.93'/%3E%3Cline x1='4.93' y1='19.07' x2='9.17' y2='14.83'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-plus    { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-chevron { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E") center/contain no-repeat; }
+    .i-settings{ background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+    .sidebar__ico.i-home,.sidebar__ico.i-clock,.sidebar__ico.i-box,
+    .sidebar__ico.i-cal,.sidebar__ico.i-users,.sidebar__ico.i-dollar,
+    .sidebar__ico.i-shield,.sidebar__ico.i-settings,.sidebar__ico.i-search,.sidebar__ico.i-logout {
+      width: 15px; height: 15px; display: inline-block; flex-shrink: 0;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 30px; padding: 0 12px; border-radius: var(--r);
+      font-size: 12px; font-weight: 500; color: var(--c-text2);
+      background: var(--c-surface2); border: 1px solid var(--c-border2);
+      cursor: pointer; transition: background .12s, border-color .12s, color .12s; font-family: inherit;
+    }
+    .btn:hover { background: var(--c-surface3); color: var(--c-text); }
+    .btn--primary { background: var(--c-blue); border-color: var(--c-blue); color: #fff; }
+    .btn--primary:hover { opacity: 0.9; background: var(--c-blue); }
+    .btn--danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171; }
+    .btn--danger:hover { background: rgba(239,68,68,0.2); }
+    .btn--sm { height: 26px; padding: 0 10px; font-size: 11.5px; }
+
+    /* ── Page shell ── */
+    .page {
+      display: none; flex-direction: column; gap: 0;
+      height: 100%;
+    }
+    .page.active { display: flex; }
+
+    .page-header {
+      padding: 20px 28px 0;
+      border-bottom: 1px solid var(--c-border);
+      flex-shrink: 0;
+    }
+    .page-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 16px; }
+    .page-tabs { display: flex; gap: 0; }
+    .page-tab {
+      padding: 8px 16px; font-size: 12.5px; font-weight: 500; color: var(--c-text3);
+      cursor: pointer; border: none; background: none; font-family: inherit;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .12s;
+    }
+    .page-tab:hover { color: var(--c-text2); }
+    .page-tab.active { color: var(--c-text); border-bottom-color: var(--c-blue); }
+
+    .page-body { flex: 1; overflow-y: auto; padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--c-surface2); border: 1px solid var(--c-border);
+      border-radius: var(--r); overflow: hidden;
+    }
+    .card__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--c-border);
+    }
+    .card__title { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .card__sub { font-size: 11.5px; color: var(--c-text3); margin-top: 2px; }
+    .card__body { padding: 16px; }
+    .card__footer { padding: 12px 16px; border-top: 1px solid var(--c-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* ── Form ── */
+    .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+    .form-row:last-child { margin-bottom: 0; }
+    .form-row label { font-size: 12px; color: var(--c-text2); font-weight: 500; }
+    .form-input {
+      background: var(--c-surface3); border: 1px solid var(--c-border2);
+      border-radius: var(--r); padding: 7px 10px;
+      font-size: 13px; color: var(--c-text); font-family: inherit;
+      transition: border-color .12s; outline: none; width: 100%;
+    }
+    .form-input:focus { border-color: var(--c-blue); }
+    .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-hint { font-size: 11px; color: var(--c-text3); margin-top: 2px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Table ── */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th {
+      text-align: left; padding: 8px 12px;
+      font-size: 11px; font-weight: 600; color: var(--c-text3);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--c-border);
+    }
+    .tbl td { padding: 10px 12px; font-size: 12.5px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,0.02); }
+    .tbl .tbl-name { font-weight: 500; color: var(--c-text); }
+    .tbl .tbl-meta { color: var(--c-text3); font-size: 11.5px; }
+    .tbl-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 0 7px; height: 20px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-blue   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .badge-green  { background: rgba(34,197,94,0.15);  color: #4ade80; }
+    .badge-yellow { background: rgba(234,179,8,0.15);  color: #facc15; }
+    .badge-red    { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .badge-grey   { background: rgba(255,255,255,0.07); color: var(--c-text3); }
+
+    /* ── Avatar ── */
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .avatar-sm { width: 24px; height: 24px; font-size: 10px; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 40px 20px; color: var(--c-text3); }
+    .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }
+    .empty h3 { font-size: 14px; color: var(--c-text2); margin-bottom: 6px; }
+    .empty p { font-size: 12px; }
+
+    /* ── Loading spinner ── */
+    #loading { position: fixed; inset: 0; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 9999; }
+    .spin { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.06); border-top-color: var(--c-blue); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { font-size: 12px; color: var(--c-text3); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #1e1e1e; border: 1px solid var(--c-border2);
+      border-radius: var(--r); padding: 10px 16px;
+      font-size: 13px; color: var(--c-text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999; opacity: 0; transition: opacity .2s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { border-color: rgba(34,197,94,0.4); }
+    #toast.error   { border-color: rgba(239,68,68,0.4); }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 8888;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1a1a1a; border: 1px solid var(--c-border2);
+      border-radius: 8px; width: 420px; max-width: 95vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    }
+    .modal-head { padding: 16px 18px; border-bottom: 1px solid var(--c-border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--c-text3); font-size: 18px; cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: var(--c-text); }
+    .modal-body { padding: 18px; }
+    .modal-foot { padding: 14px 18px; border-top: 1px solid var(--c-border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* ── Plan cards ── */
+    .plan-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .plan-card {
+      background: var(--c-surface3); border: 1px solid var(--c-border);
+      border-radius: var(--r); padding: 16px; position: relative;
+    }
+    .plan-card.current { border-color: var(--c-blue); }
+    .plan-card__name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .plan-card__price { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .plan-card__price span { font-size: 13px; font-weight: 400; color: var(--c-text3); }
+    .plan-card__features { margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+    .plan-card__feat { font-size: 12px; color: var(--c-text2); display: flex; align-items: center; gap: 6px; }
+    .plan-card__feat::before { content: '✓'; color: var(--c-green); font-weight: 700; }
+    .plan-badge { position: absolute; top: 10px; right: 10px; }
+
+    /* ── Notification toggle ── */
+    .notif-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--c-border);
+    }
+    .notif-row:last-child { border-bottom: none; }
+    .notif-label { font-size: 13px; color: var(--c-text); }
+    .notif-desc  { font-size: 11.5px; color: var(--c-text3); margin-top: 2px; }
+    .toggle {
+      width: 36px; height: 20px; border-radius: 999px;
+      background: var(--c-surface3); border: none; cursor: pointer;
+      position: relative; flex-shrink: 0; transition: background .2s;
+    }
+    .toggle.on { background: var(--c-blue); }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 14px; height: 14px; border-radius: 50%; background: #fff;
+      transition: transform .2s;
+    }
+    .toggle.on::after { transform: translateX(16px); }
+
+    /* ── Tag ── */
+    .tag-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-bottom: 1px solid var(--c-border);
+    }
+    .tag-row:last-child { border-bottom: none; }
+    .tag-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+    .tag-name { font-size: 12.5px; color: var(--c-text); flex: 1; font-weight: 500; }
+    .tag-desc { font-size: 11.5px; color: var(--c-text3); }
+
+    /* ── Session row ── */
+    .session-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--c-border);
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-icon { font-size: 20px; width: 36px; text-align: center; }
+    .session-info { flex: 1; }
+    .session-device { font-size: 13px; font-weight: 500; color: var(--c-text); }
+    .session-meta { font-size: 11.5px; color: var(--c-text3); margin-top: 2px; }
+
+    @media (max-width: 800px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { display: none; }
+      .plan-cards { grid-template-columns: 1fr; }
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><p>Carregando...</p></div>
+<div id="toast"></div>
+
+<!-- Invite Modal -->
+<div class="modal-backdrop" id="modal-invite">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Convidar membro</span>
+      <button class="modal-close" onclick="closeModal('modal-invite')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>E-mail</label>
+        <input class="form-input" type="email" id="invite-email" placeholder="usuario@empresa.com">
+      </div>
+      <div class="form-row">
+        <label>Função</label>
+        <select class="form-input" id="invite-role">
+          <option value="member">Membro</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Visualizador</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-invite')">Cancelar</button>
+      <button class="btn btn--primary" onclick="sendInvite()">Enviar convite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Token Modal -->
+<div class="modal-backdrop" id="modal-token">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Novo token de API</span>
+      <button class="modal-close" onclick="closeModal('modal-token')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Nome do token</label>
+        <input class="form-input" type="text" id="token-name" placeholder="ex: CI/CD Pipeline">
+      </div>
+      <div id="token-result" style="display:none;">
+        <div class="form-row">
+          <label>Token gerado — copie agora, não será exibido novamente</label>
+          <input class="form-input" type="text" id="token-value" readonly>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-token')">Fechar</button>
+      <button class="btn btn--primary" id="btn-create-token" onclick="createToken()">Criar token</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Tag Modal -->
+<div class="modal-backdrop" id="modal-tag">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Nova etiqueta</span>
+      <button class="modal-close" onclick="closeModal('modal-tag')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Nome</label>
+        <input class="form-input" type="text" id="tag-name" placeholder="ex: Produção">
+      </div>
+      <div class="form-row">
+        <label>Cor</label>
+        <input class="form-input" type="color" id="tag-color" value="#3b82f6">
+      </div>
+      <div class="form-row">
+        <label>Descrição (opcional)</label>
+        <input class="form-input" type="text" id="tag-desc" placeholder="Descreva o uso desta etiqueta">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-tag')">Cancelar</button>
+      <button class="btn btn--primary" onclick="createTag()">Criar etiqueta</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <!-- Top bar -->
+  <header class="topbar">
+    <a class="topbar__brand" href="/dashboard.html">
+      <img src="/logo-icon.svg" alt="">
+      ArxisVR
+    </a>
+    <div class="topbar__mid">
+      <div class="topbar__breadcrumb">
+        <a href="/dashboard.html" style="color:var(--c-text2)">Dashboard</a>
+        <span class="topbar__breadcrumb-sep">/</span>
+        <strong id="tb-section">Conta</strong>
+      </div>
+    </div>
+    <div class="topbar__end">
+      <a class="topbar__link" href="https://docs.arxisvr.com" target="_blank">
+        <span class="ico i-life" style="width:14px;height:14px;"></span>
+        Suporte
+      </a>
+      <div style="position:relative;">
+        <div class="topbar__avatar" id="btn-avatar">A</div>
+        <div class="dropdown" id="dropdown">
+          <div class="dropdown__user">
+            <div class="dropdown__name" id="dd-name">—</div>
+            <div class="dropdown__email" id="dd-email">—</div>
+          </div>
+          <button class="dropdown__item" id="dd-admin" style="display:none;" onclick="location.href='/admin.html'">
+            🛡️ Painel Admin
+          </button>
+          <div class="dropdown__sep"></div>
+          <button class="dropdown__item dropdown__item--danger" id="btn-logout">🚪 Sair</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar__toggle-bar">
+      <button type="button" class="sidebar__toggle" id="btn-sidebar-toggle" title="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+    </div>
+    <div class="sidebar__search">
+      <span class="ico i-search" style="width:13px;height:13px;flex-shrink:0;"></span>
+      <span>Pesquisa...</span>
+    </div>
+    <div class="sidebar__section">
+      <a class="sidebar__item" href="/dashboard.html">
+        <span class="sidebar__ico i-home"></span> Página inicial
+      </a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Workspace</div>
+      <a class="sidebar__item" href="/app.html">
+        <span class="sidebar__ico i-box"></span> Viewer 3D
+      </a>
+      <a class="sidebar__item" href="/app.html#bim4d">
+        <span class="sidebar__ico i-cal"></span> Planejamento 4D
+      </a>
+      <a class="sidebar__item" href="/app.html#meetings">
+        <span class="sidebar__ico i-users"></span> Reuniões XR
+      </a>
+    </div>
+    <div class="sidebar__section">
+      <div class="sidebar__label">Ferramentas</div>
+      <a class="sidebar__item" href="/app.html#cost">
+        <span class="sidebar__ico i-dollar"></span> Orçamento 5D
+      </a>
+      <a class="sidebar__item" href="/app.html#query">
+        <span class="sidebar__ico i-search"></span> Consulta BIM
+      </a>
+    </div>
+    <div class="sidebar__sep"></div>
+    <div class="sidebar__section">
+      <button type="button" class="sidebar__item sidebar__accordion open" id="btn-manage-account">
+        <span class="sidebar__ico i-settings"></span> Gerenciar conta
+        <span class="sidebar__item-arrow sidebar__accordion-arrow ico i-chevron" style="width:12px;height:12px;transform:rotate(90deg);"></span>
+      </button>
+      <div class="sidebar__subitems open" id="manage-account-items">
+        <a class="sidebar__subitem" href="/account.html#members"       data-panel="members">Membros</a>
+        <a class="sidebar__subitem" href="/account.html#billing"       data-panel="billing">Plano &amp; Cobrança</a>
+        <a class="sidebar__subitem" href="/account.html#tokens"        data-panel="tokens">Tokens de API</a>
+        <a class="sidebar__subitem" href="/account.html#oauth"         data-panel="oauth">Clientes OAuth</a>
+        <a class="sidebar__subitem" href="/account.html#audit"         data-panel="audit">Logs de auditoria</a>
+        <a class="sidebar__subitem" href="/account.html#notifications" data-panel="notifications">Notificações</a>
+        <a class="sidebar__subitem" href="/account.html#settings"      data-panel="settings">Configurações</a>
+        <a class="sidebar__subitem" href="/account.html#tags"          data-panel="tags">Etiquetas de recursos</a>
+      </div>
+    </div>
+    <div class="sidebar__section" style="margin-top:auto;">
+      <a class="sidebar__item" id="sb-logout">
+        <span class="sidebar__ico i-logout"></span> Sair
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ══ MEMBERS ══ -->
+    <div class="page" id="page-members">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="page-title">Membros</div>
+          <button class="btn btn--primary" onclick="openModal('modal-invite')">+ Convidar membro</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Membros do workspace</div>
+              <div class="card__sub">Gerencie quem tem acesso ao seu workspace</div>
+            </div>
+          </div>
+          <table class="tbl" id="tbl-members">
+            <thead><tr>
+              <th>Usuário</th><th>Função</th><th>Status</th><th>Entrou em</th><th></th>
+            </tr></thead>
+            <tbody id="tbody-members">
+              <tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" id="card-invites" style="display:none;">
+          <div class="card__head"><div class="card__title">Convites pendentes</div></div>
+          <table class="tbl">
+            <thead><tr><th>E-mail</th><th>Função</th><th>Enviado</th><th></th></tr></thead>
+            <tbody id="tbody-invites"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BILLING ══ -->
+    <div class="page" id="page-billing">
+      <div class="page-header">
+        <div class="page-title">Plano &amp; Cobrança</div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Plano atual</div>
+              <div class="card__sub" id="billing-sub-text">Carregando...</div>
+            </div>
+            <button class="btn" id="btn-manage-billing" onclick="openBillingPortal()">Gerenciar no Stripe</button>
+          </div>
+          <div class="card__body" id="billing-current-body">
+            <div style="color:var(--c-text3);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__head"><div class="card__title">Planos disponíveis</div></div>
+          <div class="card__body">
+            <div class="plan-cards" id="plan-cards">
+              <div style="color:var(--c-text3);font-size:12px;">Carregando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__head"><div class="card__title">Histórico de faturas</div></div>
+          <table class="tbl">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbody-invoices">
+              <tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TOKENS ══ -->
+    <div class="page" id="page-tokens">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="page-title">Tokens de API</div>
+          <button class="btn btn--primary" onclick="openModal('modal-token')">+ Novo token</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Tokens ativos</div>
+              <div class="card__sub">Tokens permitem acesso programático à API do ArxisVR</div>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Nome</th><th>Prefixo</th><th>Criado em</th><th>Último uso</th><th></th></tr></thead>
+            <tbody id="tbody-tokens">
+              <tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OAUTH ══ -->
+    <div class="page" id="page-oauth">
+      <div class="page-header">
+        <div class="page-title">Clientes OAuth</div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Aplicações OAuth registradas</div>
+              <div class="card__sub">Integre aplicações de terceiros usando OAuth 2.0</div>
+            </div>
+          </div>
+          <div class="card__body" id="oauth-body">
+            <div class="empty">
+              <span class="empty-icon">🔐</span>
+              <h3>Nenhum cliente OAuth</h3>
+              <p>Registre aplicações para integrar via OAuth 2.0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AUDIT ══ -->
+    <div class="page" id="page-audit">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="page-title">Logs de auditoria</div>
+          <div style="display:flex;gap:8px;">
+            <select class="form-input" id="audit-filter-action" style="width:160px;height:30px;padding:0 8px;font-size:12px;" onchange="loadAudit()">
+              <option value="">Todas as ações</option>
+              <option value="login">Login</option>
+              <option value="logout">Logout</option>
+              <option value="create">Criação</option>
+              <option value="update">Atualização</option>
+              <option value="delete">Exclusão</option>
+            </select>
+            <input class="form-input" type="date" id="audit-filter-date" style="width:140px;height:30px;padding:0 8px;font-size:12px;" onchange="loadAudit()">
+          </div>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <table class="tbl">
+            <thead><tr><th>Ação</th><th>Usuário</th><th>Recurso</th><th>IP</th><th>Data/hora</th></tr></thead>
+            <tbody id="tbody-audit">
+              <tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICATIONS ══ -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <div class="page-title">Notificações</div>
+        <div class="page-tabs">
+          <button class="page-tab active" data-tab="notif-list" onclick="switchTab(this,'notif')">Notificações</button>
+          <button class="page-tab" data-tab="notif-prefs" onclick="switchTab(this,'notif')">Preferências</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div id="notif-list">
+          <div class="card">
+            <div class="card__head">
+              <div class="card__title">Recentes</div>
+              <button class="btn btn--sm" onclick="markAllRead()">Marcar todas como lidas</button>
+            </div>
+            <div id="notif-list-body">
+              <div style="text-align:center;color:var(--c-text3);font-size:12px;padding:28px;">Carregando...</div>
+            </div>
+          </div>
+        </div>
+        <div id="notif-prefs" style="display:none;">
+          <div class="card">
+            <div class="card__head"><div class="card__title">Preferências de e-mail</div></div>
+            <div class="card__body" id="notif-prefs-body">
+              <div style="color:var(--c-text3);font-size:12px;">Carregando...</div>
+            </div>
+            <div class="card__footer">
+              <button class="btn btn--primary" onclick="saveNotifPrefs()">Salvar preferências</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Configurações</div>
+        <div class="page-tabs">
+          <button class="page-tab active" data-tab="set-profile" onclick="switchTab(this,'set')">Perfil</button>
+          <button class="page-tab" data-tab="set-security" onclick="switchTab(this,'set')">Segurança</button>
+          <button class="page-tab" data-tab="set-sessions" onclick="switchTab(this,'set')">Sessões ativas</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <!-- Profile tab -->
+        <div id="set-profile">
+          <div class="card">
+            <div class="card__head"><div class="card__title">Informações do perfil</div></div>
+            <div class="card__body">
+              <div class="form-grid-2">
+                <div class="form-row">
+                  <label>Nome completo</label>
+                  <input class="form-input" type="text" id="set-name" placeholder="Seu nome">
+                </div>
+                <div class="form-row">
+                  <label>E-mail</label>
+                  <input class="form-input" type="email" id="set-email" placeholder="seu@email.com">
+                </div>
+              </div>
+            </div>
+            <div class="card__footer">
+              <button class="btn btn--primary" onclick="saveProfile()">Salvar alterações</button>
+            </div>
+          </div>
+        </div>
+        <!-- Security tab -->
+        <div id="set-security" style="display:none;">
+          <div class="card">
+            <div class="card__head"><div class="card__title">Alterar senha</div></div>
+            <div class="card__body">
+              <div class="form-row">
+                <label>Senha atual</label>
+                <input class="form-input" type="password" id="set-pass-current" placeholder="••••••••">
+              </div>
+              <div class="form-row">
+                <label>Nova senha</label>
+                <input class="form-input" type="password" id="set-pass-new" placeholder="Mínimo 8 caracteres">
+              </div>
+              <div class="form-row">
+                <label>Confirmar nova senha</label>
+                <input class="form-input" type="password" id="set-pass-confirm" placeholder="Repita a nova senha">
+              </div>
+            </div>
+            <div class="card__footer">
+              <button class="btn btn--primary" onclick="changePassword()">Atualizar senha</button>
+            </div>
+          </div>
+        </div>
+        <!-- Sessions tab -->
+        <div id="set-sessions" style="display:none;">
+          <div class="card">
+            <div class="card__head">
+              <div class="card__title">Sessões ativas</div>
+              <button class="btn btn--danger btn--sm" onclick="revokeAllSessions()">Encerrar todas</button>
+            </div>
+            <div class="card__body" id="sessions-body">
+              <div style="color:var(--c-text3);font-size:12px;">Carregando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAGS ══ -->
+    <div class="page" id="page-tags">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="page-title">Etiquetas de recursos</div>
+          <button class="btn btn--primary" onclick="openModal('modal-tag')">+ Nova etiqueta</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Etiquetas</div>
+              <div class="card__sub">Organize recursos com etiquetas personalizadas</div>
+            </div>
+          </div>
+          <div id="tags-body">
+            <div style="text-align:center;color:var(--c-text3);font-size:12px;padding:28px;">Carregando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+(function() {
+  const TOKEN = localStorage.getItem('arxisvr_token');
+  if (!TOKEN) { location.href = '/login.html'; return; }
+
+  const BASE = '/api/v1';
+
+  async function api(path, opts = {}) {
+    const r = await fetch(BASE + path, {
+      ...opts,
+      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json', ...(opts.headers||{}) },
+    });
+    if (r.status === 401) { localStorage.clear(); location.href = '/login.html'; return null; }
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || r.statusText); }
+    return r.json();
+  }
+
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'show ' + type;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.className = '', 3000);
+  }
+
+  window.openModal  = id => document.getElementById(id).classList.add('open');
+  window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+  // ── Auth / user hydration ──
+  function hydrate() {
+    try {
+      const u = JSON.parse(localStorage.getItem('arxisvr_user') || 'null');
+      if (!u) return;
+      const first = (u.name || u.email || 'U').charAt(0).toUpperCase();
+      document.getElementById('btn-avatar').textContent = first;
+      document.getElementById('dd-name').textContent  = u.name  || u.email || '—';
+      document.getElementById('dd-email').textContent = u.email || '';
+      document.getElementById('set-name').value  = u.name  || '';
+      document.getElementById('set-email').value = u.email || '';
+      const isAdmin = u.role === 'admin' || u.role === 'owner';
+      document.getElementById('dd-admin').style.display = isAdmin ? 'flex' : 'none';
+    } catch {}
+  }
+  hydrate();
+
+  const avatar   = document.getElementById('btn-avatar');
+  const dropdown = document.getElementById('dropdown');
+  avatar.addEventListener('click', e => { e.stopPropagation(); dropdown.classList.toggle('open'); });
+  document.addEventListener('click', () => dropdown.classList.remove('open'));
+  dropdown.addEventListener('click', e => e.stopPropagation());
+
+  function logout() { localStorage.clear(); location.href = '/login.html'; }
+  document.getElementById('btn-logout').addEventListener('click', logout);
+  document.getElementById('sb-logout').addEventListener('click', logout);
+
+  // ── Sidebar accordion ──
+  const btnManage   = document.getElementById('btn-manage-account');
+  const manageItems = document.getElementById('manage-account-items');
+  btnManage.addEventListener('click', () => {
+    const open = manageItems.classList.toggle('open');
+    btnManage.classList.toggle('open', open);
+  });
+
+  // ── Hash-based routing ──
+  const PANELS = ['members','billing','tokens','oauth','audit','notifications','settings','tags'];
+  const TITLES = {
+    members:'Membros', billing:'Plano & Cobrança', tokens:'Tokens de API',
+    oauth:'Clientes OAuth', audit:'Logs de auditoria', notifications:'Notificações',
+    settings:'Configurações', tags:'Etiquetas de recursos'
+  };
+
+  function showPanel(name) {
+    if (!PANELS.includes(name)) name = 'members';
+    PANELS.forEach(p => {
+      document.getElementById('page-' + p).classList.toggle('active', p === name);
+    });
+    document.querySelectorAll('.sidebar__subitem').forEach(a => {
+      a.classList.toggle('active', a.dataset.panel === name);
+    });
+    document.getElementById('tb-section').textContent = TITLES[name] || 'Conta';
+    if (!_loaded[name]) { _loaded[name] = true; LOADERS[name](); }
+  }
+
+  const _loaded = {};
+
+  function onHashChange() {
+    const hash = location.hash.replace('#','') || 'members';
+    showPanel(hash);
+  }
+  window.addEventListener('hashchange', onHashChange);
+
+  // ── Tab switcher ──
+  window.switchTab = function(btn, group) {
+    const tabId = btn.dataset.tab;
+    btn.closest('.page').querySelectorAll('.page-tab').forEach(t => t.classList.toggle('active', t === btn));
+    btn.closest('.page').querySelectorAll('[id^="' + group + '-"]').forEach(el => {
+      el.style.display = el.id === tabId ? '' : 'none';
+    });
+    if (tabId === 'set-sessions' && !_loaded['sessions']) { _loaded['sessions'] = true; loadSessions(); }
+    if (tabId === 'notif-prefs' && !_loaded['notifPrefs']) { _loaded['notifPrefs'] = true; loadNotifPrefs(); }
+  };
+
+  // ════════════════════════════════════════════
+  // LOADERS — defined before first onHashChange() call (functions are hoisted)
+  // ════════════════════════════════════════════
+  const LOADERS = {
+    members:       loadMembers,
+    billing:       loadBilling,
+    tokens:        loadTokens,
+    oauth:         loadOAuth,
+    audit:         loadAudit,
+    notifications: loadNotifications,
+    settings:      loadSettings,
+    tags:          loadTags,
+  };
+
+  onHashChange();
+  document.getElementById('app').classList.add('ready');
+  document.getElementById('loading').style.display = 'none';
+
+  // ── MEMBERS ──
+  async function loadMembers() {
+    try {
+      const ws = await api('/workspaces');
+      const workspaceId = ws?.[0]?.id || ws?.id;
+      if (!workspaceId) { renderMembersEmpty('Nenhum workspace encontrado'); return; }
+
+      const [members, invites] = await Promise.all([
+        api('/workspaces/' + workspaceId + '/members').catch(() => []),
+        api('/invites').catch(() => []),
+      ]);
+
+      const list = Array.isArray(members) ? members : (members?.members || members?.data || []);
+      const invList = Array.isArray(invites) ? invites : (invites?.invites || invites?.data || []);
+
+      const tbody = document.getElementById('tbody-members');
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Nenhum membro encontrado</td></tr>'; }
+      else tbody.innerHTML = list.map(m => `
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:8px;">
+            <div class="avatar avatar-sm">${(m.name||m.email||'?').charAt(0).toUpperCase()}</div>
+            <div><div class="tbl-name">${esc(m.name||m.email||'—')}</div><div class="tbl-meta">${esc(m.email||'')}</div></div>
+          </div></td>
+          <td><span class="badge ${roleBadge(m.role)}">${esc(m.role||'member')}</span></td>
+          <td><span class="badge badge-green">Ativo</span></td>
+          <td class="tbl-meta">${fmtDate(m.createdAt||m.joinedAt)}</td>
+          <td><div class="tbl-actions">
+            <button class="btn btn--sm btn--danger" onclick="removeMember('${esc(m.id||m.userId)}','${workspaceId}')">Remover</button>
+          </div></td>
+        </tr>`).join('');
+
+      if (invList.length) {
+        document.getElementById('card-invites').style.display = '';
+        document.getElementById('tbody-invites').innerHTML = invList.map(inv => `
+          <tr>
+            <td class="tbl-name">${esc(inv.email)}</td>
+            <td><span class="badge ${roleBadge(inv.role)}">${esc(inv.role||'member')}</span></td>
+            <td class="tbl-meta">${fmtDate(inv.createdAt)}</td>
+            <td><div class="tbl-actions">
+              <button class="btn btn--sm btn--danger" onclick="cancelInvite('${esc(inv.id)}')">Cancelar</button>
+            </div></td>
+          </tr>`).join('');
+      }
+    } catch(e) { renderMembersEmpty('Erro ao carregar membros: ' + e.message); }
+  }
+  function renderMembersEmpty(msg) {
+    document.getElementById('tbody-members').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">${esc(msg)}</td></tr>`;
+  }
+
+  window.sendInvite = async function() {
+    const email = document.getElementById('invite-email').value.trim();
+    const role  = document.getElementById('invite-role').value;
+    if (!email) { toast('Informe o e-mail', 'error'); return; }
+    try {
+      const ws = await api('/workspaces');
+      const workspaceId = ws?.[0]?.id || ws?.id;
+      await api('/workspaces/' + workspaceId + '/invites', { method: 'POST', body: JSON.stringify({ email, role }) });
+      closeModal('modal-invite');
+      document.getElementById('invite-email').value = '';
+      toast('Convite enviado!', 'success');
+      _loaded.members = false; loadMembers();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.removeMember = async function(userId, workspaceId) {
+    if (!confirm('Remover este membro?')) return;
+    try {
+      await api('/workspaces/' + workspaceId + '/members/' + userId, { method: 'DELETE' });
+      toast('Membro removido', 'success');
+      _loaded.members = false; loadMembers();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.cancelInvite = async function(inviteId) {
+    if (!confirm('Cancelar este convite?')) return;
+    try {
+      await api('/invites/' + inviteId, { method: 'DELETE' });
+      toast('Convite cancelado', 'success');
+      _loaded.members = false; loadMembers();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── BILLING ──
+  async function loadBilling() {
+    try {
+      const [sub, plans, invoices] = await Promise.all([
+        api('/billing/current-subscription').catch(() => null),
+        api('/billing/plans').catch(() => []),
+        api('/billing/invoices').catch(() => api('/billing/history').catch(() => [])),
+      ]);
+
+      if (sub) {
+        document.getElementById('billing-sub-text').textContent =
+          'Próxima cobrança: ' + (sub.nextBillingDate ? fmtDate(sub.nextBillingDate) : '—');
+        document.getElementById('billing-current-body').innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <div><div style="font-size:11px;color:var(--c-text3);margin-bottom:4px;">PLANO</div><div style="font-size:15px;font-weight:600;">${esc(sub.planName||sub.plan||'—')}</div></div>
+            <div><div style="font-size:11px;color:var(--c-text3);margin-bottom:4px;">VALOR</div><div style="font-size:15px;font-weight:600;">R$${((sub.amount||0)/100).toFixed(2)}/mês</div></div>
+            <div><div style="font-size:11px;color:var(--c-text3);margin-bottom:4px;">STATUS</div><span class="badge badge-green">${esc(sub.status||'ativo')}</span></div>
+          </div>`;
+      }
+
+      const planList = Array.isArray(plans) ? plans : (plans?.plans || plans?.data || []);
+      if (planList.length) {
+        document.getElementById('plan-cards').innerHTML = planList.map(p => `
+          <div class="plan-card ${sub?.planId === p.id ? 'current' : ''}">
+            ${sub?.planId === p.id ? '<span class="plan-badge badge badge-blue">Atual</span>' : ''}
+            <div class="plan-card__name">${esc(p.name)}</div>
+            <div class="plan-card__price">R$${((p.price||0)/100).toFixed(0)}<span>/mês</span></div>
+            <div class="plan-card__features">${(p.features||[]).slice(0,4).map(f=>`<div class="plan-card__feat">${esc(f)}</div>`).join('')}</div>
+            ${sub?.planId !== p.id ? `<button class="btn btn--sm btn--primary" style="width:100%;justify-content:center;" onclick="openBillingPortal()">Mudar para este</button>` : ''}
+          </div>`).join('');
+      }
+
+      const invList = Array.isArray(invoices) ? invoices : (invoices?.invoices || invoices?.data || []);
+      document.getElementById('tbody-invoices').innerHTML = !invList.length
+        ? '<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Nenhuma fatura</td></tr>'
+        : invList.map(inv => `<tr>
+            <td class="tbl-meta">${fmtDate(inv.date||inv.createdAt)}</td>
+            <td class="tbl-name">${esc(inv.description||inv.planName||'Assinatura')}</td>
+            <td>R$${((inv.amount||0)/100).toFixed(2)}</td>
+            <td><span class="badge ${inv.status==='paid'?'badge-green':'badge-yellow'}">${esc(inv.status||'—')}</span></td>
+            <td>${inv.pdfUrl ? `<a href="${esc(inv.pdfUrl)}" target="_blank" class="btn btn--sm">PDF</a>` : ''}</td>
+          </tr>`).join('');
+    } catch(e) { toast('Erro ao carregar cobrança: ' + e.message, 'error'); }
+  }
+
+  window.openBillingPortal = async function() {
+    try {
+      const r = await api('/billing/create-portal', { method: 'POST', body: JSON.stringify({ returnUrl: location.href }) });
+      if (r?.url) window.open(r.url, '_blank');
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── TOKENS ──
+  async function loadTokens() {
+    try {
+      const data = await api('/auth/api-tokens');
+      const list = Array.isArray(data) ? data : (data?.tokens || data?.data || []);
+      document.getElementById('tbody-tokens').innerHTML = !list.length
+        ? '<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Nenhum token criado</td></tr>'
+        : list.map(t => `<tr>
+            <td class="tbl-name">${esc(t.name||'—')}</td>
+            <td><code style="font-size:11px;color:var(--c-text3);">${esc(t.prefix||t.id?.slice(0,8)||'—')}...</code></td>
+            <td class="tbl-meta">${fmtDate(t.createdAt)}</td>
+            <td class="tbl-meta">${t.lastUsedAt ? fmtDate(t.lastUsedAt) : 'Nunca'}</td>
+            <td><div class="tbl-actions">
+              <button class="btn btn--sm btn--danger" onclick="revokeToken('${esc(t.id)}')">Revogar</button>
+            </div></td>
+          </tr>`).join('');
+    } catch(e) {
+      document.getElementById('tbody-tokens').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Erro ao carregar tokens</td></tr>`;
+    }
+  }
+
+  window.createToken = async function() {
+    const name = document.getElementById('token-name').value.trim();
+    if (!name) { toast('Informe um nome', 'error'); return; }
+    try {
+      const r = await api('/auth/api-tokens', { method: 'POST', body: JSON.stringify({ name }) });
+      const tokenVal = r?.token || r?.value || r?.apiToken || '';
+      if (tokenVal) {
+        document.getElementById('token-result').style.display = '';
+        document.getElementById('token-value').value = tokenVal;
+        document.getElementById('btn-create-token').style.display = 'none';
+        toast('Token criado! Copie agora.', 'success');
+        _loaded.tokens = false; loadTokens();
+      }
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.revokeToken = async function(id) {
+    if (!confirm('Revogar este token?')) return;
+    try {
+      await api('/auth/api-tokens/' + id, { method: 'DELETE' });
+      toast('Token revogado', 'success');
+      _loaded.tokens = false; loadTokens();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── OAUTH ──
+  function loadOAuth() {
+    // OAuth client management — show placeholder; implement when backend exposes endpoint
+    document.getElementById('oauth-body').innerHTML = `<div class="empty">
+      <span class="empty-icon">🔐</span>
+      <h3>Nenhum cliente OAuth registrado</h3>
+      <p>Entre em contato com o suporte para registrar uma integração OAuth</p>
+    </div>`;
+  }
+
+  // ── AUDIT ──
+  async function loadAudit() {
+    const action = document.getElementById('audit-filter-action').value;
+    const date   = document.getElementById('audit-filter-date').value;
+    const params = new URLSearchParams();
+    if (action) params.set('action', action);
+    if (date)   params.set('startDate', date);
+    params.set('limit', '50');
+    try {
+      const data = await api('/admin/audit?' + params);
+      const list = Array.isArray(data) ? data : (data?.logs || data?.data || []);
+      document.getElementById('tbody-audit').innerHTML = !list.length
+        ? '<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Nenhum log encontrado</td></tr>'
+        : list.map(l => `<tr>
+            <td><span class="badge badge-grey">${esc(l.action||l.event||'—')}</span></td>
+            <td class="tbl-meta">${esc(l.userEmail||l.user?.email||l.userId||'—')}</td>
+            <td class="tbl-meta">${esc(l.resource||l.resourceType||'—')}</td>
+            <td class="tbl-meta">${esc(l.ip||l.ipAddress||'—')}</td>
+            <td class="tbl-meta">${fmtDateTime(l.createdAt||l.timestamp)}</td>
+          </tr>`).join('');
+    } catch(e) {
+      document.getElementById('tbody-audit').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text3);padding:28px;">Sem permissão ou erro ao carregar logs</td></tr>`;
+    }
+  }
+  window.loadAudit = loadAudit;
+
+  // ── NOTIFICATIONS ──
+  async function loadNotifications() {
+    try {
+      const data = await api('/notifications/');
+      const list = Array.isArray(data) ? data : (data?.notifications || data?.data || []);
+      const body = document.getElementById('notif-list-body');
+      if (!list.length) {
+        body.innerHTML = '<div class="empty"><span class="empty-icon">🔔</span><h3>Sem notificações</h3><p>Você está em dia!</p></div>';
+        return;
+      }
+      body.innerHTML = list.map(n => `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--c-border);${n.read?'':'background:rgba(59,130,246,0.04);'}">
+          <div style="width:8px;height:8px;border-radius:50%;background:${n.read?'var(--c-text3)':'var(--c-blue)'};flex-shrink:0;margin-top:5px;"></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:${n.read?'400':'500'};color:var(--c-text);">${esc(n.title||n.message||'Notificação')}</div>
+            ${n.body||n.content ? `<div style="font-size:12px;color:var(--c-text2);margin-top:2px;">${esc(n.body||n.content)}</div>` : ''}
+            <div style="font-size:11px;color:var(--c-text3);margin-top:4px;">${fmtDateTime(n.createdAt)}</div>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('notif-list-body').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><h3>Erro</h3><p>' + esc(e.message) + '</p></div>';
+    }
+  }
+
+  async function loadNotifPrefs() {
+    try {
+      const prefs = await api('/notifications/preferences');
+      const body = document.getElementById('notif-prefs-body');
+      const items = Array.isArray(prefs) ? prefs : (prefs?.preferences || [
+        { key: 'email_invites', label: 'Convites de workspace', description: 'Quando alguém te convidar para um workspace', value: true },
+        { key: 'email_mentions', label: 'Menções', description: 'Quando alguém te mencionar num comentário', value: true },
+        { key: 'email_updates', label: 'Atualizações de produto', description: 'Novidades e lançamentos do ArxisVR', value: false },
+        { key: 'email_billing', label: 'Alertas de cobrança', description: 'Faturas, renovações e mudanças de plano', value: true },
+      ]);
+      body.innerHTML = items.map(it => `
+        <div class="notif-row">
+          <div>
+            <div class="notif-label">${esc(it.label||it.key)}</div>
+            ${it.description ? `<div class="notif-desc">${esc(it.description)}</div>` : ''}
+          </div>
+          <button class="toggle ${it.value||it.enabled?'on':''}" data-key="${esc(it.key)}" onclick="this.classList.toggle('on')"></button>
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('notif-prefs-body').innerHTML = '<div style="color:var(--c-text3);font-size:12px;">Erro ao carregar preferências</div>';
+    }
+  }
+
+  window.markAllRead = async function() {
+    try {
+      await api('/notifications/mark-all-read', { method: 'POST', body: '{}' });
+      toast('Todas marcadas como lidas', 'success');
+      _loaded.notifications = false; loadNotifications();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.saveNotifPrefs = async function() {
+    const toggles = document.querySelectorAll('#notif-prefs-body .toggle');
+    const prefs = {};
+    toggles.forEach(t => { prefs[t.dataset.key] = t.classList.contains('on'); });
+    try {
+      await api('/notifications/preferences', { method: 'PUT', body: JSON.stringify({ preferences: prefs }) });
+      toast('Preferências salvas', 'success');
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── SETTINGS ──
+  async function loadSettings() {
+    try {
+      const me = await api('/auth/me');
+      if (me) {
+        document.getElementById('set-name').value  = me.name  || '';
+        document.getElementById('set-email').value = me.email || '';
+        try {
+          const u = JSON.parse(localStorage.getItem('arxisvr_user') || 'null') || {};
+          localStorage.setItem('arxisvr_user', JSON.stringify({ ...u, ...me }));
+        } catch {}
+      }
+    } catch(e) { /* use cached local data */ }
+  }
+
+  window.saveProfile = async function() {
+    const name  = document.getElementById('set-name').value.trim();
+    const email = document.getElementById('set-email').value.trim();
+    try {
+      const r = await api('/auth/me', { method: 'PUT', body: JSON.stringify({ name, email }) });
+      if (r) {
+        try {
+          const u = JSON.parse(localStorage.getItem('arxisvr_user') || '{}');
+          localStorage.setItem('arxisvr_user', JSON.stringify({ ...u, ...r }));
+        } catch {}
+        hydrate();
+      }
+      toast('Perfil atualizado', 'success');
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.changePassword = async function() {
+    const current = document.getElementById('set-pass-current').value;
+    const next    = document.getElementById('set-pass-new').value;
+    const confirm = document.getElementById('set-pass-confirm').value;
+    if (!current || !next) { toast('Preencha todos os campos', 'error'); return; }
+    if (next !== confirm)  { toast('As senhas não coincidem', 'error'); return; }
+    if (next.length < 8)   { toast('Mínimo 8 caracteres', 'error'); return; }
+    try {
+      await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: current, newPassword: next }) });
+      toast('Senha atualizada', 'success');
+      document.getElementById('set-pass-current').value = '';
+      document.getElementById('set-pass-new').value = '';
+      document.getElementById('set-pass-confirm').value = '';
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  async function loadSessions() {
+    try {
+      const data = await api('/auth/sessions');
+      const list = Array.isArray(data) ? data : (data?.sessions || data?.data || []);
+      const body = document.getElementById('sessions-body');
+      if (!list.length) { body.innerHTML = '<div style="color:var(--c-text3);font-size:12px;text-align:center;padding:20px;">Nenhuma sessão ativa</div>'; return; }
+      body.innerHTML = list.map(s => `
+        <div class="session-row">
+          <div class="session-icon">${s.device?.includes('Mobile')||s.userAgent?.includes('Mobile') ? '📱' : '💻'}</div>
+          <div class="session-info">
+            <div class="session-device">${esc(s.device||s.userAgent?.split(' ')[0]||'Dispositivo desconhecido')}</div>
+            <div class="session-meta">${esc(s.ip||'IP desconhecido')} · ${fmtDateTime(s.createdAt||s.lastActiveAt)}</div>
+          </div>
+          ${s.current ? '<span class="badge badge-green">Atual</span>' : `<button class="btn btn--sm btn--danger" onclick="revokeSession('${esc(s.id)}')">Encerrar</button>`}
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('sessions-body').innerHTML = '<div style="color:var(--c-text3);font-size:12px;text-align:center;padding:20px;">Erro ao carregar sessões</div>';
+    }
+  }
+
+  window.revokeSession = async function(id) {
+    if (!confirm('Encerrar esta sessão?')) return;
+    try {
+      await api('/auth/sessions/' + id, { method: 'DELETE' });
+      toast('Sessão encerrada', 'success');
+      _loaded.sessions = false; loadSessions();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.revokeAllSessions = async function() {
+    if (!confirm('Encerrar todas as outras sessões?')) return;
+    try {
+      await api('/auth/sessions', { method: 'DELETE' });
+      toast('Sessões encerradas', 'success');
+      _loaded.sessions = false; loadSessions();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── TAGS ──
+  async function loadTags() {
+    try {
+      const data = await api('/workspaces/tags').catch(() => api('/tags'));
+      const list = Array.isArray(data) ? data : (data?.tags || data?.data || []);
+      const body = document.getElementById('tags-body');
+      if (!list.length) {
+        body.innerHTML = '<div class="empty"><span class="empty-icon">🏷️</span><h3>Sem etiquetas</h3><p>Crie etiquetas para organizar seus recursos</p></div>';
+        return;
+      }
+      body.innerHTML = list.map(t => `
+        <div class="tag-row">
+          <div class="tag-swatch" style="background:${esc(t.color||'#666')};"></div>
+          <div class="tag-name">${esc(t.name||'—')}</div>
+          ${t.description ? `<div class="tag-desc">${esc(t.description)}</div>` : ''}
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <button class="btn btn--sm btn--danger" onclick="deleteTag('${esc(t.id)}')">Remover</button>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('tags-body').innerHTML = '<div class="empty"><span class="empty-icon">⚠️</span><h3>Erro ao carregar</h3></div>';
+    }
+  }
+
+  window.createTag = async function() {
+    const name  = document.getElementById('tag-name').value.trim();
+    const color = document.getElementById('tag-color').value;
+    const desc  = document.getElementById('tag-desc').value.trim();
+    if (!name) { toast('Informe um nome', 'error'); return; }
+    try {
+      await api('/workspaces/tags', { method: 'POST', body: JSON.stringify({ name, color, description: desc }) })
+        .catch(() => api('/tags', { method: 'POST', body: JSON.stringify({ name, color, description: desc }) }));
+      closeModal('modal-tag');
+      document.getElementById('tag-name').value = '';
+      document.getElementById('tag-desc').value = '';
+      toast('Etiqueta criada', 'success');
+      _loaded.tags = false; loadTags();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  window.deleteTag = async function(id) {
+    if (!confirm('Remover esta etiqueta?')) return;
+    try {
+      await api('/workspaces/tags/' + id, { method: 'DELETE' })
+        .catch(() => api('/tags/' + id, { method: 'DELETE' }));
+      toast('Etiqueta removida', 'success');
+      _loaded.tags = false; loadTags();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  };
+
+  // ── Helpers ──
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return d; } }
+  function fmtDateTime(d) { if (!d) return '—'; try { return new Date(d).toLocaleString('pt-BR'); } catch { return d; } }
+  function roleBadge(r) {
+    return { owner:'badge-purple', admin:'badge-blue', member:'badge-grey', viewer:'badge-grey' }[r] || 'badge-grey';
+  }
+
+})();
+</script>
+</body>
+</html>

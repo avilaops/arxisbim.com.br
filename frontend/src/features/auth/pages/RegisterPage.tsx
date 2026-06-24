@@ -56,7 +56,7 @@ export default function RegisterPage() {
       }
 
       // Fallback: se por algum motivo já tiver token, vai para app
-      window.location.href = '/app.html';
+      window.location.href = '/dashboard.html';
     } catch (err: any) {
       setError(err?.message || 'Não foi possível criar a conta.');
     } finally {

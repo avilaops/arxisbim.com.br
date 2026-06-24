@@ -8,7 +8,6 @@ import { typeColorizer } from '../../viewer/TypeColorizer';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
 import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
-import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import { AuthModal } from '../../app/components/AuthModal.js';
 import { WorkspacePanel } from '../../app/components/WorkspacePanel.js';
 import { AdminPanel } from '../../app/components/AdminPanel.js';
@@ -76,14 +75,8 @@ const hasAuthToken = () => Boolean(localStorage.getItem('arxisvr_token'));
  */
 function enforceAuthOrRedirect(): boolean {
   if (isAuthenticated()) return true;
-  const search = window.location.search;
-  const sessionParam = new URLSearchParams(search).get('session');
-  if (sessionParam) {
-    const next = encodeURIComponent('/app.html' + search);
-    window.location.replace('/login.html?next=' + next);
-  } else {
-    window.location.replace('/index.html');
-  }
+  const next = encodeURIComponent('/app.html' + window.location.search + window.location.hash);
+  window.location.replace('/login.html?next=' + next);
   return false;
 }
 
@@ -207,18 +200,7 @@ async function init() {
     ctaContainer.appendChild(meetingsBtn2);
   }
 
-  // Initialize Tenant/Project Selector — uma falha no fetch de tenants NÃO pode
-  // abortar a inicialização do app (ex.: convidado sem acesso a tenants ainda
-  // precisa entrar na reunião). Isolado em try/catch.
-  const tenantSelector = new TenantProjectSelector();
-  try {
-    await Promise.race([
-      tenantSelector.init(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('tenant init timeout')), 8000)),
-    ]);
-  } catch (err) {
-    console.warn('[ArxisVR] Seletor de tenant indisponível (seguindo sem ele):', err);
-  }
+
 
   // Listen for project changes
   window.addEventListener('project-changed', async (e: any) => {

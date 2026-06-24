@@ -554,11 +554,19 @@ function renderPagination(containerId, { page, pages, total, limit }, onPageChan
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTH
 // ─────────────────────────────────────────────────────────────────────────────
+const SUPER_ADMIN_EMAILS = ['nicolas@avila.inc'];
+function isAdminUser(u) {
+  if (!u) return false;
+  return u.role === 'admin' || u.role === 'owner' ||
+    (u.permissions || []).includes('admin') ||
+    SUPER_ADMIN_EMAILS.includes((u.email || '').toLowerCase());
+}
+
 async function tryAutoLogin() {
   if (!TOKEN) return false;
   try {
     const data = await api('/api/v1/auth/me');
-    if (data.id && (data.role === 'admin' || data.role === 'owner')) {
+    if (data.id && isAdminUser(data)) {
       currentUser = data;
       return true;
     }
@@ -592,7 +600,7 @@ document.getElementById('btn-login').addEventListener('click', async () => {
   try {
     const data = await api('/api/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password, tenantId }) });
     if (!data.token) throw new Error(data.error || 'Login falhou.');
-    if (data.user?.role !== 'admin' && data.user?.role !== 'owner') throw new Error('Acesso restrito a administradores.');
+    if (!isAdminUser(data.user)) throw new Error('Acesso restrito a administradores.');
     TOKEN = data.token;
     currentUser = data.user;
     localStorage.setItem('arxisvr_admin_token', TOKEN);

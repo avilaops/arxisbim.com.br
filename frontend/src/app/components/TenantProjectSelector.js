@@ -33,7 +33,7 @@ class TenantProjectSelector {
     this.render();
 
     try {
-      this.tenants = await tenantService.getTenants();
+      this.tenants = await tenantService.getWorkspaces();
     } catch (err) {
       this.error = 'Failed to load tenants';
       console.error('Failed to load tenants:', err);
