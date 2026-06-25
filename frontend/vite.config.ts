@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   root: __dirname,
@@ -75,6 +75,10 @@ export default defineConfig({
     alias: [
       { find: '@', replacement: resolve(__dirname, 'src') },
       {
+        find: 'react-router-dom',
+        replacement: resolve(__dirname, 'src/shims/react-router-dom.ts'),
+      },
+      {
         find: /^three\/examples\/jsm\/utils\/BufferGeometryUtils(\.js)?$/,
         replacement: resolve(__dirname, 'src/shims/three-BufferGeometryUtils.js'),
       },
@@ -88,66 +92,51 @@ export default defineConfig({
     target: 'esnext',
     rollupOptions: {
       input: {
-        index: resolve(__dirname, 'index.html'),
-        app: resolve(__dirname, 'app.html'),
-        login: resolve(__dirname, 'login.html'),
-        register: resolve(__dirname, 'register.html'),
-        verifyEmail: resolve(__dirname, 'verify-email.html'),
-        acceptInvite: resolve(__dirname, 'accept-invite.html'),
-        forgotPassword: resolve(__dirname, 'forgot-password.html'),
-        resetPassword: resolve(__dirname, 'reset-password.html'),
-        dashboard: resolve(__dirname, 'dashboard.html'),
-        arCalibration: resolve(__dirname, 'ar-calibration.html'),
-        oauthCallback: resolve(__dirname, 'oauth-callback.html'),
-        join: resolve(__dirname, 'join.html'),
-        shared: resolve(__dirname, 'shared.html'),
-        privacy: resolve(__dirname, 'privacy.html'),
-        terms: resolve(__dirname, 'terms.html'),
-        lgpd: resolve(__dirname, 'lgpd.html'),
-        cookies: resolve(__dirname, 'cookies.html'),
-        admin: resolve(__dirname, 'admin.html'),
-        account: resolve(__dirname, 'account.html'),
+        main: resolve(__dirname, 'index.html'),
       },
       output: {
         manualChunks: (id) => {
           if (id.includes('web-ifc-three')) {
-            return 'web-ifc';
+            return 'web-ifc'
           }
           if (id.includes('node_modules/three') && !id.includes('addons')) {
-            return 'three-vendor';
+            return 'three-vendor'
           }
           if (id.includes('three/addons')) {
-            return 'three-addons';
+            return 'three-addons'
           }
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
+            return 'react-vendor'
           }
           if (id.includes('node_modules')) {
-            return 'vendor';
+            return 'vendor'
           }
           if (id.includes('/viewer/')) {
-            return 'viewer';
+            return 'viewer'
           }
           if (id.includes('/panels/')) {
-            return 'panels';
+            return 'panels'
           }
           if (id.includes('/features/bim-4d')) {
-            return 'feature-bim-4d';
+            return 'feature-bim-4d'
           }
           if (id.includes('/features/virtual-meetings')) {
-            return 'feature-virtual-meetings';
+            return 'feature-virtual-meetings'
           }
           if (id.includes('/features/')) {
-            return 'features';
+            return 'features'
           }
           if (id.includes('/app/') && !id.includes('/app/entrypoints/')) {
-            return 'app-core';
+            return 'app-core'
           }
           if (id.includes('/engine/')) {
-            return 'engine';
+            return 'engine'
           }
           if (id.includes('/commands/')) {
-            return 'commands';
+            return 'commands'
+          }
+          if (id.includes('/pages/')) {
+            return 'pages'
           }
         },
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -172,4 +161,4 @@ export default defineConfig({
       },
     },
   },
-});
+})

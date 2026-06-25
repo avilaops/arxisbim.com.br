@@ -1,27 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const redirectedRef = useRef(false)
 
   useEffect(() => {
+    if (redirectedRef.current) return
     const checkAuth = () => {
       try {
         const userData = localStorage.getItem('arxisvr_user')
         if (!userData) {
-          window.location.href = '/login'
+          redirectedRef.current = true
+          navigate('/login', { replace: true })
           return
         }
-        setUser(JSON.parse(userData))
+        const parsed = JSON.parse(userData)
+        if (!parsed || !parsed.email) {
+          localStorage.removeItem('arxisvr_user')
+          redirectedRef.current = true
+          navigate('/login', { replace: true })
+          return
+        }
+        setUser(parsed)
         setLoading(false)
       } catch {
-        window.location.href = '/login'
+        localStorage.removeItem('arxisvr_user')
+        redirectedRef.current = true
+        navigate('/login', { replace: true })
       }
     }
 
     checkAuth()
-  }, [])
+  }, [navigate])
 
   if (loading) {
     return (
