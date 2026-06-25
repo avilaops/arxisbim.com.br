@@ -21,24 +21,40 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Mock login — em produção, chamar API
       if (!email || !password) {
         setError('Email e senha são obrigatórios')
         setLoading(false)
         return
       }
 
-      // Simular login
-      await new Promise((r) => setTimeout(r, 800))
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-      const mockUser = {
-        id: '1',
-        name: email.split('@')[0],
-        email,
-        role: 'member',
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        if (response.status === 403 && data.error === 'EMAIL_NOT_VERIFIED') {
+          setError('Verifique seu e-mail antes de fazer login.')
+        } else if (response.status === 429) {
+          setError('Muitas tentativas. Aguarde alguns minutos.')
+        } else {
+          setError(data.error || 'Email ou senha incorretos')
+        }
+        setLoading(false)
+        return
       }
 
-      localStorage.setItem('arxisvr_user', JSON.stringify(mockUser))
+      const result = await response.json()
+
+      // Save JWT tokens (matching keys from core/auth/session.ts)
+      localStorage.setItem('arxisvr_token', result.token)
+      if (result.refreshToken) {
+        localStorage.setItem('arxisvr_refresh_token', result.refreshToken)
+      }
+      localStorage.setItem('arxisvr_user', JSON.stringify(result.user))
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer login')

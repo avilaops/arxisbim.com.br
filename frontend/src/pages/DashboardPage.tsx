@@ -1,43 +1,149 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
+import { dashboardService, type DashboardData } from '@/services/dashboard.service'
+
+// ── Action label translation map ────────────────────────────
+const ACTION_LABELS: Record<string, string> = {
+  'POST:/api/v1/projects': 'Projeto criado',
+  'PUT:/api/v1/projects/:id': 'Projeto atualizado',
+  'DELETE:/api/v1/projects/:id': 'Projeto removido',
+  'POST:/api/v1/ifc-models': 'Modelo enviado',
+  'POST:/api/v1/ifc-models/:id/upload': 'Modelo enviado',
+  'DELETE:/api/v1/ifc-models/:id': 'Modelo removido',
+  'POST:/api/v1/meetings': 'Reunião XR criada',
+  'POST:/api/v1/meetings/:id/join': 'Participou de reunião XR',
+  'POST:/api/v1/auth/login': 'Login realizado',
+  'POST:/api/v1/auth/register': 'Conta criada',
+  'POST:/api/v1/api-tokens': 'Token API criado',
+  'DELETE:/api/v1/api-tokens/:id': 'Token API revogado',
+  'POST:/api/v1/budgets': 'Orçamento criado',
+  'PUT:/api/v1/budgets/:id': 'Orçamento atualizado',
+  'POST:/api/v1/schedules': 'Cronograma criado',
+  'PUT:/api/v1/schedules/:id': 'Cronograma atualizado',
+}
+
+function translateAction(action: string): string {
+  // Direct match
+  if (ACTION_LABELS[action]) return ACTION_LABELS[action]
+  // Normalize dynamic segments: /api/v1/projects/uuid → /api/v1/projects/:id
+  const normalized = action.replace(
+    /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+    '/:id',
+  )
+  if (ACTION_LABELS[normalized]) return ACTION_LABELS[normalized]
+  // Fallback: extract method + last meaningful path segment
+  const match = action.match(/^(POST|PUT|PATCH|DELETE|GET):.*\/([a-z0-9-]+)\/?(:id)?$/i)
+  if (match) {
+    const verb = { POST: 'Criado', PUT: 'Atualizado', PATCH: 'Atualizado', DELETE: 'Removido', GET: 'Consultado' }[match[1]] || ''
+    return `${match[2].replace(/-/g, ' ')} ${verb}`.trim()
+  }
+  return action
+}
+
+// ── Relative time ───────────────────────────────────────────
+function timeAgo(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'agora'
+  if (minutes < 60) return `${minutes}min atrás`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h atrás`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d atrás`
+  const weeks = Math.floor(days / 7)
+  if (weeks < 4) return `${weeks} sem. atrás`
+  return new Date(isoDate).toLocaleDateString('pt-BR')
+}
+
+// ── Status label + color ────────────────────────────────────
+function statusLabel(status: string): { label: string; color: string } {
+  const map: Record<string, { label: string; color: string }> = {
+    active: { label: 'Ativo', color: '#22c55e' },
+    draft: { label: 'Rascunho', color: '#f59e0b' },
+    in_progress: { label: 'Em andamento', color: '#3b82f6' },
+    under_review: { label: 'Em revisão', color: '#a855f7' },
+    completed: { label: 'Finalizado', color: '#6b7280' },
+    archived: { label: 'Arquivado', color: '#6b7280' },
+  }
+  return map[status] || { label: status, color: '#6b7280' }
+}
+
+// ── Skeleton pulse ──────────────────────────────────────────
+const pulseKeyframes = `
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.15; }
+}
+`
+
+function Skeleton({ width, height, borderRadius = 6 }: { width: string | number; height: string | number; borderRadius?: number }) {
+  return (
+    <div
+      style={{
+        width,
+        height,
+        borderRadius,
+        background: 'rgba(255,255,255,0.06)',
+        animation: 'skeletonPulse 1.5s ease-in-out infinite',
+      }}
+    />
+  )
+}
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const [user, setUser] = useState<any>(null)
+  const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const redirectedRef = useRef(false)
 
+  // Auth check
   useEffect(() => {
     if (redirectedRef.current) return
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem('arxisvr_user')
-        if (!userData) {
-          redirectedRef.current = true
-          navigate('/login', { replace: true })
-          return
-        }
-        const parsed = JSON.parse(userData)
-        if (!parsed || !parsed.email) {
-          localStorage.removeItem('arxisvr_user')
-          redirectedRef.current = true
-          navigate('/login', { replace: true })
-          return
-        }
-        setUser(parsed)
-        setLoading(false)
-      } catch {
+    try {
+      const userData = localStorage.getItem('arxisvr_user')
+      if (!userData) {
+        redirectedRef.current = true
+        navigate('/login', { replace: true })
+        return
+      }
+      const parsed = JSON.parse(userData)
+      if (!parsed || !parsed.email) {
         localStorage.removeItem('arxisvr_user')
         redirectedRef.current = true
         navigate('/login', { replace: true })
+        return
       }
+      setUser(parsed)
+    } catch {
+      localStorage.removeItem('arxisvr_user')
+      redirectedRef.current = true
+      navigate('/login', { replace: true })
     }
-
-    checkAuth()
   }, [navigate])
 
-  if (loading) {
+  // Fetch dashboard data
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await dashboardService.get()
+      setData(result)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (user) fetchDashboard()
+  }, [user, fetchDashboard])
+
+  if (!user) {
     return (
       <div id="loading" style={{ position: 'fixed', inset: 0, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', zIndex: 9999 }}>
         <div
@@ -56,8 +162,18 @@ export default function DashboardPage() {
     )
   }
 
+  // ── Analytics cards data ────────────────────────────────────
+  const cards = data
+    ? [
+        { title: 'Projetos ativos', value: data.activeProjects },
+        { title: 'Modelos processados', value: data.processedModels },
+        { title: 'Reuniões XR', value: data.xrMeetings },
+      ]
+    : null
+
   return (
     <AppShell>
+      <style>{pulseKeyframes}</style>
       <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         {/* Page header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
@@ -93,51 +209,96 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Analytics cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-          {[
-            { title: 'Projetos ativos', value: '5', trend: '+2 esta semana' },
-            { title: 'Modelos processados', value: '24', trend: '+4 esta semana' },
-            { title: 'Reuniões XR', value: '12', trend: '+1 hoje' },
-          ].map((card, idx) => (
-            <div
-              key={idx}
+        {/* Error state */}
+        {error && (
+          <div
+            style={{
+              background: 'rgba(255,60,60,0.06)',
+              border: '1px solid rgba(255,60,60,0.18)',
+              borderRadius: 'var(--r)',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ color: '#ff6b6b', opacity: 0.8 }}><AlertTriangle size={24} strokeWidth={1.5} /></div>
+            <p style={{ fontSize: '13px', color: '#ff6b6b', margin: 0 }}>
+              {error}
+            </p>
+            <button
+              onClick={fetchDashboard}
               style={{
-                background: 'var(--c-surface2)',
-                border: '1px solid var(--c-border)',
+                padding: '6px 16px',
                 borderRadius: 'var(--r)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                transition: 'border-color .12s',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#fff',
+                background: 'var(--c-blue)',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
-                  {card.title}
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
+        {/* Analytics cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          {loading
+            ? [0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: 'var(--c-surface2)',
+                    border: '1px solid var(--c-border)',
+                    borderRadius: 'var(--r)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <Skeleton width={100} height={14} />
+                  <Skeleton width={40} height={24} />
                 </div>
-                <div style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', background: 'rgba(59,130,246,0.15)' }}>
-                  📊
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px', color: 'var(--c-text)' }}>
-                    {card.value}
+              ))
+            : cards?.map((card, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: 'var(--c-surface2)',
+                    border: '1px solid var(--c-border)',
+                    borderRadius: 'var(--r)',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    transition: 'border-color .12s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
+                      {card.title}
+                    </div>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', background: 'rgba(59,130,246,0.15)' }}>
+                      <BarChart2 size={12} strokeWidth={2} />
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
-                    Total
+                  <div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px', color: 'var(--c-text)' }}>
+                      {card.value}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
+                      Total
+                    </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 600, padding: '0 5px', borderRadius: '999px', background: 'rgba(34,197,94,0.12)', color: '#22c55e' }}>
-                    ↑ {card.trend}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+              ))}
         </div>
 
         {/* Recent projects */}
@@ -155,9 +316,11 @@ export default function DashboardPage() {
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
                 Projetos recentes
               </div>
-              <span style={{ fontSize: '11px', color: 'var(--c-text3)', background: 'rgba(255,255,255,0.06)', padding: '0 6px', borderRadius: '999px', marginLeft: '6px', lineHeight: '18px' }}>
-                5
-              </span>
+              {data && (
+                <span style={{ fontSize: '11px', color: 'var(--c-text3)', background: 'rgba(255,255,255,0.06)', padding: '0 6px', borderRadius: '999px', marginLeft: '6px', lineHeight: '18px' }}>
+                  {data.recentProjects.length}
+                </span>
+              )}
             </div>
             <a
               href="#"
@@ -179,68 +342,102 @@ export default function DashboardPage() {
           </div>
 
           <div>
-            {[
-              { name: 'Residencial Heitor', lastModified: '2 horas atrás', status: 'Ativo' },
-              { name: 'Edifício VZZ-086', lastModified: '1 dia atrás', status: 'Ativo' },
-              { name: 'Industrial Sampa', lastModified: '3 dias atrás', status: 'Pausado' },
-              { name: 'Projeto Alpha', lastModified: '1 semana atrás', status: 'Ativo' },
-              { name: 'Projeto Beta', lastModified: '2 semanas atrás', status: 'Finalizado' },
-            ].map((project, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 14px',
-                  borderBottom: idx < 4 ? '1px solid var(--c-border)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'background .1s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-              >
+            {loading ? (
+              // Skeleton rows
+              [0, 1, 2].map((i) => (
                 <div
+                  key={i}
                   style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '4px',
-                    background: 'var(--c-surface3)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '13px',
-                    flexShrink: 0,
+                    gap: '10px',
+                    padding: '10px 14px',
+                    borderBottom: i < 2 ? '1px solid var(--c-border)' : 'none',
                   }}
                 >
-                  📦
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '12.5px', fontWeight: 500, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {project.name}
+                  <Skeleton width={28} height={28} borderRadius={4} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <Skeleton width={160} height={13} />
+                    <Skeleton width={80} height={11} />
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
-                    {project.lastModified}
-                  </div>
+                  <Skeleton width={50} height={13} />
                 </div>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text2)' }}>
-                    {project.status}
+              ))
+            ) : data && data.recentProjects.length > 0 ? (
+              data.recentProjects.map((project, idx) => {
+                const st = statusLabel(project.status)
+                return (
+                  <div
+                    key={project.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 14px',
+                      borderBottom: idx < data.recentProjects.length - 1 ? '1px solid var(--c-border)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'background .1s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                  >
+                    <div
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '4px',
+                        background: 'var(--c-surface3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        flexShrink: 0,
+                        color: 'var(--c-text2)',
+                      }}
+                    >
+                      <Box size={14} strokeWidth={1.5} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: 500, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {project.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
+                        {timeAgo(project.updatedAt)}
+                      </div>
+                    </div>
+                    <div style={{ flexShrink: 0 }}>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: st.color }}>
+                        {st.label}
+                      </div>
+                    </div>
                   </div>
+                )
+              })
+            ) : (
+              // Empty state
+              <div style={{ padding: '28px 14px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', opacity: 0.35 }}>
+                  <Inbox size={24} strokeWidth={1.5} />
                 </div>
+                <p style={{ margin: '0 0 12px', color: 'var(--c-text3)' }}>Nenhum projeto ainda.</p>
+                <button
+                  style={{
+                    padding: '6px 16px',
+                    borderRadius: 'var(--r)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#fff',
+                    background: 'var(--c-blue)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  Criar primeiro projeto
+                </button>
               </div>
-            ))}
+            )}
           </div>
-
-          {/* Empty state fallback */}
-          {false && (
-            <div style={{ padding: '28px 14px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '12px' }}>
-              <div style={{ fontSize: '24px', display: 'block', marginBottom: '8px', opacity: 0.35 }}>
-                📭
-              </div>
-              Nenhum projeto ainda. <a href="#" style={{ color: 'var(--c-blue)' }}>Criar novo</a>
-            </div>
-          )}
         </div>
 
         {/* Activity log */}
@@ -259,21 +456,34 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px' }}>
-            <div>
-              {[
-                { action: 'Modelo processado', who: 'Você', time: '2h atrás' },
-                { action: 'Reunião XR iniciada', who: 'Você e 3 outros', time: '1d atrás' },
-                { action: 'Projeto criado', who: 'Você', time: '3d atrás' },
-              ].map((log, idx) => (
+          <div>
+            {loading ? (
+              [0, 1, 2].map((i) => (
                 <div
-                  key={idx}
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '9px 14px',
+                    borderBottom: i < 2 ? '1px solid var(--c-border)' : 'none',
+                  }}
+                >
+                  <Skeleton width={140} height={13} />
+                  <div style={{ flex: 1 }} />
+                  <Skeleton width={60} height={11} />
+                </div>
+              ))
+            ) : data && data.recentActivities.length > 0 ? (
+              data.recentActivities.map((activity, idx) => (
+                <div
+                  key={activity.id}
                   style={{
                     display: 'flex',
                     alignItems: 'baseline',
                     gap: '10px',
                     padding: '9px 14px',
-                    borderBottom: idx < 2 ? '1px solid var(--c-border)' : 'none',
+                    borderBottom: idx < data.recentActivities.length - 1 ? '1px solid var(--c-border)' : 'none',
                     fontSize: '12px',
                     cursor: 'default',
                     transition: 'background .1s',
@@ -282,17 +492,21 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                 >
                   <span style={{ fontWeight: 500, color: 'var(--c-text)', flexShrink: 0, minWidth: '140px' }}>
-                    {log.action}
+                    {translateAction(activity.action)}
                   </span>
-                  <span style={{ color: 'var(--c-text2)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {log.who}
-                  </span>
-                  <span style={{ color: 'var(--c-text3)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                    {log.time}
+                  <span style={{ color: 'var(--c-text3)', flexShrink: 0, whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+                    {timeAgo(activity.timestamp)}
                   </span>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div style={{ padding: '20px 14px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px', opacity: 0.35 }}>
+                  <ClipboardList size={20} strokeWidth={1.5} />
+                </div>
+                Nenhuma atividade registrada ainda.
+              </div>
+            )}
           </div>
         </div>
       </div>

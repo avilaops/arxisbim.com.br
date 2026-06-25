@@ -33,20 +33,33 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div
       id="app"
-      className={`app ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-      style={{
-        display: 'grid',
-        height: '100vh',
-        gridTemplateColumns: sidebarCollapsed ? '48px 1fr' : '220px 1fr',
-        gridTemplateRows: '48px 1fr',
-        transition: 'grid-template-columns .2s ease',
-      }}
+      className={`app-layout ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`}
     >
-      <Topbar />
+      {/* Mobile backdrop */}
+      <div 
+        className="sidebar-backdrop" 
+        onClick={() => setSidebarCollapsed(true)}
+      />
+
       <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-      <main className="main" style={{ overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <div className="content">{children}</div>
-      </main>
+
+      <div className="main-content">
+        {/* Temporary safety toggle button */}
+        <div style={{ background: '#2563eb', color: '#fff', padding: '6px 12px', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Modo de segurança da Sidebar ativo</span>
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            style={{ padding: '4px 8px', background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+          >
+            {sidebarCollapsed ? 'Abrir menu' : 'Recolher menu'}
+          </button>
+        </div>
+
+        <Topbar />
+        <main className="main" style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div className="content" style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>{children}</div>
+        </main>
+      </div>
     </div>
   )
 }

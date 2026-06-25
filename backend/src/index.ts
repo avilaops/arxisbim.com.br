@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import { authRoutes } from './core/auth/auth.routes.js';
 import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
+import { dashboardRoutes } from './routes/v1/dashboard.routes.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
 import { workspaceRoutes } from './modules/workspaces/workspaces.routes.js';
@@ -621,6 +622,7 @@ await server.register(taskElementLinksRoutes, { prefix: '/api/v1' });
 await server.register(timelineSimulationsRoutes, { prefix: '/api/v1' });
 await server.register(notificationsRoutes, { prefix: '/api/v1' });
 await server.register(tenantRoutes, { prefix: '/api/v1' });
+await server.register(dashboardRoutes, { prefix: '/api/v1' });
 await server.register(companyRoutes, { prefix: '/api/v1' });
 await server.register(ifcModelRoutes, { prefix: '/api/v1' });
 await server.register(workspaceRoutes, { prefix: '/api/v1' });
@@ -769,3 +771,5 @@ try {
   server.log.error(err);
   process.exit(1);
 }
+
+

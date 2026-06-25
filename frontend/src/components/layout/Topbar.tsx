@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { HelpCircle } from 'lucide-react'
 import UserMenu from './UserMenu'
 
 interface User {
@@ -23,38 +24,17 @@ export default function Topbar() {
     <header
       className="topbar"
       style={{
-        gridColumn: '1 / -1',
+        height: '48px',
         background: 'var(--c-surface)',
         borderBottom: '1px solid var(--c-border)',
         display: 'flex',
         alignItems: 'center',
-        padding: '0 20px 0 0',
+        padding: '0 20px',
         gap: '0',
         zIndex: 100,
       }}
     >
-      <a
-        className="topbar__brand"
-        href="/dashboard"
-        style={{
-          width: 'var(--sidebar-w)',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          padding: '0 16px',
-          borderRight: '1px solid var(--c-border)',
-          flexShrink: 0,
-          fontSize: '14px',
-          fontWeight: 600,
-          letterSpacing: '-0.2px',
-        }}
-      >
-        <img src="/logo-icon.svg" alt="" style={{ width: '22px', height: '22px' }} />
-        ArxisVR
-      </a>
-
-      <div className="topbar__mid" style={{ flex: 1, display: 'flex', alignItems: 'center', paddingLeft: '20px', gap: '16px' }}>
+      <div className="topbar__mid" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div
           className="topbar__breadcrumb"
           style={{
@@ -87,7 +67,7 @@ export default function Topbar() {
             transition: 'background .12s, color .12s',
           }}
         >
-          <span style={{ width: '14px', height: '14px' }}>⊕</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}><HelpCircle size={14} strokeWidth={1.5} /></span>
           Suporte
         </a>
         <UserMenu user={user} />

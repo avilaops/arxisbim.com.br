@@ -75,10 +75,6 @@ export default defineConfig({
     alias: [
       { find: '@', replacement: resolve(__dirname, 'src') },
       {
-        find: 'react-router-dom',
-        replacement: resolve(__dirname, 'src/shims/react-router-dom.ts'),
-      },
-      {
         find: /^three\/examples\/jsm\/utils\/BufferGeometryUtils(\.js)?$/,
         replacement: resolve(__dirname, 'src/shims/three-BufferGeometryUtils.js'),
       },

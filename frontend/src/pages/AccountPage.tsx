@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
+import ApiTokensPage from './account/ApiTokensPage'
+import ApiDocumentationPage from './account/ApiDocumentationPage'
 
 export default function AccountPage() {
   const navigate = useNavigate()
@@ -81,10 +83,11 @@ export default function AccountPage() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Tab id="members" label="Membros" />
           <Tab id="billing" label="Plano & Cobrança" />
           <Tab id="tokens" label="Tokens de API" />
+          <Tab id="docs" label="Documentação API" />
           <Tab id="audit" label="Logs de auditoria" />
           <Tab id="settings" label="Configurações" />
         </div>
@@ -239,41 +242,9 @@ export default function AccountPage() {
           </div>
         )}
 
-        {activeTab === 'tokens' && (
-          <div
-            style={{
-              background: 'var(--c-surface2)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 'var(--r)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
-                Tokens de API
-              </h3>
-              <button
-                style={{
-                  padding: '6px 12px',
-                  background: 'var(--c-blue)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 'var(--r)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                + Novo token
-              </button>
-            </div>
-            <div style={{ padding: '28px 14px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '12px' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔑</div>
-              Nenhum token criado. <br /> Clique em "Novo token" para gerar um.
-            </div>
-          </div>
-        )}
+        {activeTab === 'tokens' && <ApiTokensPage />}
+
+        {activeTab === 'docs' && <ApiDocumentationPage />}
 
         {activeTab === 'audit' && (
           <div

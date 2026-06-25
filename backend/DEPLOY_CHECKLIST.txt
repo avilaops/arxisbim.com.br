@@ -1,0 +1,147 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         ArxisVR API Token System - Deploy Checklist           ║
+║                      Version 1.0.0 Final                      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+PRÉ-DEPLOY (Execute Localmente)
+═══════════════════════════════════════════════════════════════
+
+[_] 1. Gerar pepper seguro
+    node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+    Copiar output
+
+[_] 2. Configurar .env
+    echo "API_TOKEN_PEPPER=<pepper_gerado>" >> backend/.env
+
+[_] 3. Executar setup automático
+    bash backend/setup.sh
+
+[_] 4. Verificar pré-deploy
+    bash backend/verify-production.sh
+    Resultado: ✅ Todos os checks passaram
+
+[_] 5. Build
+    npm run build
+
+[_] 6. Migrations
+    npm run migrate
+
+[_] 7. Testar localmente
+    npm run dev
+    - Acessar http://localhost:5173/account
+    - Criar um token test
+    - Testar curl com o token
+
+
+PRODUÇÃO
+═══════════════════════════════════════════════════════════════
+
+[_] 1. Configurar secrets no deployment provider:
+    - GitHub Secrets: API_TOKEN_PEPPER
+    - Render: Environment Variables
+    - Vercel: Environment Variables
+    Importante: NUNCA commitar .env!
+
+[_] 2. Database setup
+    - Criar banco de dados postgresql
+    - Configurar CONNECTION_URL
+    - Executar migrations: npm run migrate
+
+[_] 3. Deploy backend
+    npm run build
+    npm run start
+
+[_] 4. Deploy frontend
+    npm run build
+    Deploy dist/ para CDN (Cloudflare Pages, Vercel, etc)
+
+[_] 5. Testar produção
+    curl https://api.arxisvr.com/api/v1/projects \
+      -H "Authorization: Bearer arx_test_YOUR_TOKEN"
+    Resultado esperado: 200 OK ou 401/403 (conforme escopo)
+
+[_] 6. Monitorar logs
+    - Backend: journalctl, docker logs, Render logs
+    - Frontend: console do navegador
+    - Database: query logs para failed_auth
+
+
+VALIDAÇÕES PÓS-DEPLOY
+═══════════════════════════════════════════════════════════════
+
+[_] API está respondendo: GET https://api.arxisvr.com/health
+
+[_] Autenticação funciona:
+    curl https://api.arxisvr.com/api/v1/projects \
+      -H "Authorization: Bearer arx_test_TOKEN"
+    Resultado: 200 (com dados)
+
+[_] Escopo é validado:
+    curl -X POST https://api.arxisvr.com/api/v1/projects \
+      -H "Authorization: Bearer arx_test_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"test"}'
+    Resultado: 403 (escopo insuficiente)
+
+[_] Token inválido é rejeitado:
+    curl https://api.arxisvr.com/api/v1/projects \
+      -H "Authorization: Bearer invalid"
+    Resultado: 401
+
+[_] Revogação funciona:
+    - Revogar token na UI
+    - Tentar usar: deve retornar 401
+
+[_] Isolamento de tenant:
+    - Token do Tenant A só vê projetos do Tenant A
+    - Token do Tenant B só vê projetos do Tenant B
+
+[_] Auditoria funciona:
+    SELECT * FROM api_token_audit_logs
+    Nunca há plainToken
+    Tem tokenId, userId, action, created_at
+
+
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+Erro: "API_TOKEN_PEPPER não configurado"
+→ Adicione ao .env: API_TOKEN_PEPPER=<valor>
+
+Erro: "API_TOKEN_PEPPER muito curto"
+→ Regenere com: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+
+Erro: "401 Invalid token format"
+→ Token não começa com arx_live_ ou arx_test_
+
+Erro: "403 Forbidden - Required scopes"
+→ Criar novo token com escopos necessários
+
+Erro: "Database connection failed"
+→ Verificar DATABASE_URL em .env e conexão PostgreSQL
+
+
+STATUS FINAL
+═══════════════════════════════════════════════════════════════
+
+✅ HMAC-SHA-256 implementado
+✅ Pepper obrigatório (>= 32 chars)
+✅ Validação no startup
+✅ Token mostrado UMA VEZ
+✅ Prefixo mascarado na tabela
+✅ Revogação soft-delete
+✅ Auditoria sem expor tokens
+✅ Isolamento por tenant
+✅ Escopos granulares
+✅ Rate limit 300 req/min
+✅ Documentação completa
+✅ Setup script automático
+✅ Pre-deploy verification
+
+🚀 READY FOR PRODUCTION!
+
+═══════════════════════════════════════════════════════════════
+Última atualização: 2024-06-25
+Versão: 1.0.0 Final
+Contato: api@arxisvr.com
+═══════════════════════════════════════════════════════════════
