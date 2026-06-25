@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 
 export interface User {
   id: string
@@ -16,9 +17,16 @@ export function useAuth() {
     try {
       const userData = localStorage.getItem('arxisvr_user')
       if (userData) {
-        setUser(JSON.parse(userData))
+        const parsed = JSON.parse(userData) as User
+        setUser(parsed)
+        Sentry.setUser({ id: parsed.id })
+        Sentry.setTag('user_role', parsed.role)
+      } else {
+        Sentry.setUser(null)
       }
-    } catch {}
+    } catch {
+      Sentry.setUser(null)
+    }
     setLoading(false)
   }, [])
 
@@ -52,6 +60,7 @@ export function useAdmin() {
 }
 
 export function logout() {
+  Sentry.setUser(null)
   localStorage.removeItem('arxisvr_user')
   localStorage.removeItem('arxisvr_sidebar_collapsed')
   localStorage.removeItem('arxisvr_manage_open')

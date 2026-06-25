@@ -36,6 +36,13 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Sentry: DSN é segredo operacional. Release usa RENDER_GIT_COMMIT automático.
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: "0.2"
       # VITE_* removidas — frontend agora é buildado pelo Cloudflare Pages
       # URLs do próprio serviço — usadas para construir redirect URIs do OAuth
       - key: BACKEND_URL

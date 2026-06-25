@@ -1,6 +1,3 @@
-import { setupObservability } from './shared/observability/index.js';
-setupObservability();
-
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import { reconcileSchema } from './core/db/schema-reconciler.js';
@@ -14,6 +11,7 @@ import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { authRoutes } from './core/auth/auth.routes.js';
 import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
@@ -73,6 +71,9 @@ import { createUsageReconcileWorker } from './modules/billing/usage-reconcile.wo
 import { observabilityService, logger, fastifyCombinedStream } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { captureRequestException, shutdownObservability } from './shared/observability/index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // =====================================
 // ENVIRONMENT VALIDATION (ZERO fallbacks hardcoded)
@@ -506,6 +507,8 @@ server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply
 server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: FastifyReply) => {
   const tenantId = request.headers['x-tenant-id'] as string || request.user?.tenantId;
   const user = request.user;
+  const statusCode = Number((error as Error & { statusCode?: number }).statusCode || 500);
+  const routePattern = (request.routeOptions?.url as string | undefined) || request.url.split('?')[0];
 
   // Log estruturado do erro (sempre)
   logger.error('Unhandled error', error, {
@@ -513,6 +516,15 @@ server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: Fast
     url: request.url,
     userId: user?.userId,
     tenantId: tenantId || 'no-tenant',
+  });
+
+  captureRequestException(error, {
+    method: request.method,
+    route: routePattern,
+    statusCode,
+    requestId: request.id,
+    userId: user?.userId,
+    tenantId,
   });
 
   // Salvar erro no banco (apenas se houver tenant)
@@ -533,9 +545,11 @@ server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: Fast
   }
 
   // Retornar erro genérico ao cliente
-  return reply.status(500).send({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred',
+  return reply.status(statusCode).send({
+    error: statusCode >= 500 ? 'Internal Server Error' : 'Request Error',
+    message: process.env.NODE_ENV === 'development' || statusCode < 500
+      ? error.message
+      : 'An unexpected error occurred',
   });
 });
 
@@ -686,6 +700,7 @@ signals.forEach((signal: NodeJS.Signals) => {
       emailQueueWorker.stop();
       await server.close();
       await sql.end();
+      await shutdownObservability();
       server.log.info('Server closed successfully');
       process.exit(0);
     } catch (err) {
@@ -769,6 +784,12 @@ try {
   server.log.info(`�📡 API v1: http://${HOST}:${PORT}/api/v1`);
 } catch (err) {
   server.log.error(err);
+  captureRequestException(err, {
+    method: 'STARTUP',
+    route: 'server.boot',
+    statusCode: 500,
+  });
+  await shutdownObservability();
   process.exit(1);
 }
 

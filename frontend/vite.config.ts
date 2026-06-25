@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 export default defineConfig({
   root: __dirname,
@@ -70,6 +71,22 @@ export default defineConfig({
         ],
       },
     }),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            org: 'avilaops',
+            project: 'arxisvr',
+            telemetry: false,
+            release: {
+              name: process.env.VITE_SENTRY_RELEASE,
+            },
+            sourcemaps: {
+              filesToDeleteAfterUpload: ['./dist/**/*.map'],
+            },
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: [
@@ -85,6 +102,7 @@ export default defineConfig({
     emptyOutDir: true,
     chunkSizeWarningLimit: 3000,
     minify: 'esbuild',
+    sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
     target: 'esnext',
     rollupOptions: {
       input: {

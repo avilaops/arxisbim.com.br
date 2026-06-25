@@ -11,10 +11,10 @@
     },
     "type": "module",
     "scripts": {
-        "dev": "tsx watch --import ./src/env.ts src/index.ts",
+        "dev": "tsx watch --import ./src/env.ts --import ./src/instrument.ts src/index.ts",
         "build": "node build.mjs",
         "build:tsc": "tsc",
-        "start": "node dist/index.js",
+        "start": "node --import ./dist/instrument.js dist/index.js",
         "type-check": "tsc --noEmit",
         "audit:routes": "node scripts/audit/run.mjs",
         "audit:routes:ci": "node scripts/audit/run.mjs --strict",
