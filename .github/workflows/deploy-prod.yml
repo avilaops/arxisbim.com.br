@@ -62,6 +62,7 @@ jobs:
 
       - name: Upload backend source maps to Sentry
         if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+        continue-on-error: true
         working-directory: frontend
         env:
           SENTRY_ORG: avilaops
