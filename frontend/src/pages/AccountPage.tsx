@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
-import ApiTokensPage from './account/ApiTokensPage'
+import ApiTokensPage from './account/ApiTokenspage'
 import ApiDocumentationPage from './account/ApiDocumentationPage'
 
 export default function AccountPage() {
