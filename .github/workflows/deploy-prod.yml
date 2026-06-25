@@ -37,7 +37,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Use Node.js 24
         uses: actions/setup-node@v4
@@ -125,7 +125,7 @@ jobs:
       PROD_SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
