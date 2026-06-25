@@ -35,10 +35,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: backend
@@ -54,11 +50,11 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build frontend (vite)
         working-directory: frontend
-        run: npm run build
+        run: yarn build
 
       - name: Install signaling-server dependencies
         working-directory: signaling-server
@@ -78,7 +74,7 @@ jobs:
           PORT: '3001'
           NODE_ENV: test
         run: |
-          timeout 60s node dist/index.js > backend.log 2>&1 &
+          timeout 60s node --import ./dist/instrument.js dist/index.js > backend.log 2>&1 &
           PID=$!
           echo "Backend started with PID $PID"
           ok=0
