@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import { dashboardService, type DashboardData } from '@/services/dashboard.service'
+import '@/styles/viewer.css'
 
 // ── Action label translation map ────────────────────────────
 const ACTION_LABELS: Record<string, string> = {
@@ -98,6 +99,12 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [allProjectsOpen, setAllProjectsOpen] = useState(false)
+  const [projectName, setProjectName] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [allProjects, setAllProjects] = useState<DashboardData['recentProjects']>([])
+  const [allProjectsLoading, setAllProjectsLoading] = useState(false)
   const redirectedRef = useRef(false)
 
   // Auth check
@@ -143,6 +150,62 @@ export default function DashboardPage() {
     if (user) fetchDashboard()
   }, [user, fetchDashboard])
 
+  const apiOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/api\/v1\/?$/, '')
+
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
+  })
+
+  const openProject = (projectId: string) => {
+    localStorage.setItem('arxisvr_project_id', projectId)
+    navigate('/app')
+  }
+
+  const createProject = async () => {
+    const name = projectName.trim()
+    if (name.length < 2) return
+
+    setCreating(true)
+    setError(null)
+    try {
+      const response = await fetch(`${apiOrigin}/api/v1/projects`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ name }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || result.message || 'Falha ao criar projeto')
+
+      localStorage.setItem('arxisvr_project_id', result.id)
+      setCreateOpen(false)
+      setProjectName('')
+      await fetchDashboard()
+      navigate('/app')
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'Falha ao criar projeto')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const showAllProjects = async () => {
+    setAllProjectsOpen(true)
+    setAllProjectsLoading(true)
+    try {
+      const response = await fetch(`${apiOrigin}/api/v1/projects?pageSize=100`, {
+        headers: authHeaders(),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Falha ao carregar projetos')
+      setAllProjects(result.items || [])
+    } catch (listError) {
+      setError(listError instanceof Error ? listError.message : 'Falha ao carregar projetos')
+    } finally {
+      setAllProjectsLoading(false)
+    }
+  }
+
   if (!user) {
     return (
       <div id="loading" style={{ position: 'fixed', inset: 0, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', zIndex: 9999 }}>
@@ -187,6 +250,7 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
+              onClick={() => setCreateOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -322,8 +386,9 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <a
-              href="#"
+            <button
+              type="button"
+              onClick={() => void showAllProjects()}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -334,11 +399,12 @@ export default function DashboardPage() {
                 borderRadius: 'var(--r)',
                 border: '1px solid rgba(59,130,246,0.25)',
                 transition: 'background .12s',
-                textDecoration: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
               }}
             >
               Ver tudo →
-            </a>
+            </button>
           </div>
 
           <div>
@@ -369,6 +435,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={project.id}
+                    onClick={() => openProject(project.id)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -421,6 +488,7 @@ export default function DashboardPage() {
                 </div>
                 <p style={{ margin: '0 0 12px', color: 'var(--c-text3)' }}>Nenhum projeto ainda.</p>
                 <button
+                  onClick={() => setCreateOpen(true)}
                   style={{
                     padding: '6px 16px',
                     borderRadius: 'var(--r)',
@@ -509,6 +577,81 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {createOpen && (
+          <div className="viewer-modal-backdrop">
+            <section className="viewer-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
+              <div className="viewer-modal__header">
+                <div>
+                  <span className="viewer-panel__eyebrow">Workspace</span>
+                  <h2 id="dashboard-create-title">Novo projeto</h2>
+                </div>
+                <button className="viewer-panel__close viewer-modal__close" type="button" onClick={() => setCreateOpen(false)} aria-label="Fechar">×</button>
+              </div>
+              <div className="viewer-modal__body">
+                <label htmlFor="dashboard-project-name">Nome do projeto</label>
+                <input
+                  id="dashboard-project-name"
+                  value={projectName}
+                  onChange={(event) => setProjectName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') void createProject()
+                  }}
+                  placeholder="Ex.: Edifício comercial"
+                  autoFocus
+                />
+              </div>
+              <div className="viewer-modal__footer">
+                <button className="viewer-secondary-button" type="button" onClick={() => setCreateOpen(false)}>Cancelar</button>
+                <button className="viewer-upload-button" type="button" onClick={() => void createProject()} disabled={creating || projectName.trim().length < 2}>
+                  {creating ? 'Criando…' : 'Criar projeto'}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {allProjectsOpen && (
+          <div className="viewer-modal-backdrop">
+            <section className="viewer-modal dashboard-projects-modal" role="dialog" aria-modal="true" aria-labelledby="all-projects-title">
+              <div className="viewer-modal__header">
+                <div>
+                  <span className="viewer-panel__eyebrow">Workspace</span>
+                  <h2 id="all-projects-title">Todos os projetos</h2>
+                </div>
+                <button className="viewer-panel__close viewer-modal__close" type="button" onClick={() => setAllProjectsOpen(false)} aria-label="Fechar">×</button>
+              </div>
+              <div className="dashboard-projects-list">
+                {allProjectsLoading ? (
+                  <p>Carregando projetos…</p>
+                ) : allProjects.length ? (
+                  allProjects.map((project) => {
+                    const st = statusLabel(project.status)
+                    return (
+                      <button type="button" key={project.id} onClick={() => openProject(project.id)}>
+                        <span>
+                          <strong>{project.name}</strong>
+                          <small>Atualizado {timeAgo(project.updatedAt)}</small>
+                        </span>
+                        <em style={{ color: st.color }}>{st.label}</em>
+                      </button>
+                    )
+                  })
+                ) : (
+                  <p>Nenhum projeto disponível.</p>
+                )}
+              </div>
+              <div className="viewer-modal__footer">
+                <button className="viewer-upload-button" type="button" onClick={() => {
+                  setAllProjectsOpen(false)
+                  setCreateOpen(true)
+                }}>
+                  Novo projeto
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </AppShell>
   )

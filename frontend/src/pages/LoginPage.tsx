@@ -10,8 +10,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     const user = localStorage.getItem('arxisvr_user')
-    if (user) {
+    const token = localStorage.getItem('arxisvr_token')
+    if (user && token) {
       navigate('/dashboard')
+    } else if (user || token) {
+      localStorage.removeItem('arxisvr_user')
+      localStorage.removeItem('arxisvr_token')
+      localStorage.removeItem('arxisvr_refresh_token')
     }
   }, [navigate])
 

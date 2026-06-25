@@ -32,6 +32,9 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   function handleLogout() {
     localStorage.removeItem('arxisvr_user')
+    localStorage.removeItem('arxisvr_token')
+    localStorage.removeItem('arxisvr_refresh_token')
+    localStorage.removeItem('arxisvr_project_id')
     localStorage.removeItem('arxisvr_sidebar_collapsed')
     localStorage.removeItem('arxisvr_manage_open')
     window.location.href = '/login'

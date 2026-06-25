@@ -6,7 +6,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import DashboardPage from './pages/DashboardPage'
-import AppPage from './pages/AppPage'
+import Viewer3DPage from './pages/Viewer3DPage'
 import AccountPage from './pages/AccountPage'
 import AdminPage from './pages/AdminPage'
 import PrivacyPage from './pages/PrivacyPage'
@@ -50,7 +50,7 @@ export default function App() {
 
         {/* Protected Pages */}
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/app" element={<AppPage />} />
+        <Route path="/app" element={<Viewer3DPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/admin" element={<AdminPage />} />
 
