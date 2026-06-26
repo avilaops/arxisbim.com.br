@@ -7,12 +7,44 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    name: Build & smoke test
+  frontend:
+    name: Frontend — lint, type-check & build
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-    
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: yarn lint
+
+      - name: Type-check frontend
+        working-directory: frontend
+        run: yarn type-check
+
+      - name: Build frontend (vite)
+        working-directory: frontend
+        run: yarn build
+
+  backend:
+    name: Backend — type-check, tests & build
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
     services:
       postgres:
         image: postgres:16
@@ -27,7 +59,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,30 +72,17 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Build backend (esbuild)
-        working-directory: backend
-        run: npm run build
-
       - name: Type-check backend
-        continue-on-error: true
         working-directory: backend
         run: npm run type-check
 
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: yarn install --frozen-lockfile
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
 
-      - name: Build frontend (vite)
-        working-directory: frontend
-        run: yarn build
-
-      - name: Install signaling-server dependencies
-        working-directory: signaling-server
-        run: npm install --omit=dev --no-audit --no-fund
-
-      - name: Sanity check signaling-server entrypoint
-        working-directory: signaling-server
-        run: node --check server.js
+      - name: Build backend (esbuild)
+        working-directory: backend
+        run: npm run build
 
       - name: Smoke test — backend sobe e responde /health/live
         working-directory: backend
@@ -102,3 +121,25 @@ jobs:
             echo "❌ backend não respondeu a tempo (80 segundos)"
             exit 1
           fi
+
+  signaling:
+    name: Signaling server — sanity check
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install signaling-server dependencies
+        working-directory: signaling-server
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Sanity check signaling-server entrypoint
+        working-directory: signaling-server
+        run: node --check server.js
