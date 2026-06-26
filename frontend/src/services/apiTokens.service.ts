@@ -1,4 +1,5 @@
 import type { ApiToken, ApiTokenScope } from '@/types/apiToken';
+import { buildApiV1Url } from '@/config/apiBaseUrl';
 
 export interface CreateApiTokenInput {
   name: string;
@@ -7,11 +8,9 @@ export interface CreateApiTokenInput {
   expiresAt?: string | null;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
-
 export const apiTokensService = {
   async list(): Promise<ApiToken[]> {
-    const response = await fetch(`${API_BASE}/api-tokens`, {
+    const response = await fetch(buildApiV1Url('/api-tokens'), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
       },
@@ -21,7 +20,7 @@ export const apiTokensService = {
   },
 
   async create(input: CreateApiTokenInput) {
-    const response = await fetch(`${API_BASE}/api-tokens`, {
+    const response = await fetch(buildApiV1Url('/api-tokens'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,7 +33,7 @@ export const apiTokensService = {
   },
 
   async revoke(tokenId: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/api-tokens/${tokenId}`, {
+    const response = await fetch(buildApiV1Url(`/api-tokens/${tokenId}`), {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,

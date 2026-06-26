@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -32,8 +33,7 @@ export default function LoginPage() {
         return
       }
 
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(buildApiV1Url('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

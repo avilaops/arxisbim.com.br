@@ -470,9 +470,11 @@ footer {
     font-size: 12px;
   }
 
-  justify-content: space-between;
-  height: 68px;
-  padding: 0 20px;
+  .nav-inner {
+    justify-content: space-between;
+    height: 68px;
+    padding: 0 20px;
+  }
 }
 
 .brand {

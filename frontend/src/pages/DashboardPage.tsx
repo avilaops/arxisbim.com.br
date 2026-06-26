@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import { dashboardService, type DashboardData } from '@/services/dashboard.service'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
 
 // ── Action label translation map ────────────────────────────
@@ -150,8 +151,6 @@ export default function DashboardPage() {
     if (user) fetchDashboard()
   }, [user, fetchDashboard])
 
-  const apiOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/api\/v1\/?$/, '')
-
   const authHeaders = () => ({
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
@@ -169,7 +168,7 @@ export default function DashboardPage() {
     setCreating(true)
     setError(null)
     try {
-      const response = await fetch(`${apiOrigin}/api/v1/projects`, {
+      const response = await fetch(buildApiV1Url('/projects'), {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ name }),
@@ -193,7 +192,7 @@ export default function DashboardPage() {
     setAllProjectsOpen(true)
     setAllProjectsLoading(true)
     try {
-      const response = await fetch(`${apiOrigin}/api/v1/projects?pageSize=100`, {
+      const response = await fetch(buildApiV1Url('/projects?pageSize=100'), {
         headers: authHeaders(),
       })
       const result = await response.json().catch(() => ({}))

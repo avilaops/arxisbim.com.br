@@ -1,7 +1,18 @@
 import { db } from '../../shared/database/index.js';
 import { sql } from 'drizzle-orm';
 import { generateApiToken, hashApiToken, getTokenPrefix, isValidApiTokenFormat } from './utils/generateApiToken.js';
-import type { ApiTokenScope } from '../../../frontend/src/types/apiToken';
+
+type ApiTokenScope =
+  | 'projects:read'
+  | 'projects:write'
+  | 'models:read'
+  | 'models:write'
+  | 'planning:read'
+  | 'planning:write'
+  | 'budgets:read'
+  | 'budgets:write'
+  | 'scenarios:read'
+  | 'scenarios:write';
 
 interface CreateTokenInput {
   tenantId: string;
@@ -74,7 +85,7 @@ export class ApiTokensService {
         revoked_at
     `);
 
-    const token = this.formatToken(row as ApiTokenRow);
+    const token = this.formatToken(row as unknown as ApiTokenRow);
 
     // Audit log: registrar criação (sem token plaintext)
     await this.logAuditAction(input.tenantId, (row as any).id, 'created', tokenPrefix, input.createdById);
@@ -106,7 +117,7 @@ export class ApiTokensService {
       ORDER BY created_at DESC
     `);
 
-    return (rows as ApiTokenRow[]).map((row) => this.formatToken(row));
+    return (rows as unknown as ApiTokenRow[]).map((row) => this.formatToken(row));
   }
 
   /**

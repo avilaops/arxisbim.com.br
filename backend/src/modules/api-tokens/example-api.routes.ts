@@ -134,7 +134,7 @@ export async function exampleApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
 
       // Fetch models for this tenant
-      const models = [];
+      const models: unknown[] = [];
 
       return reply.send(models);
     },
@@ -156,7 +156,7 @@ export async function exampleApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
 
       // Fetch planning data for this tenant
-      const planning = [];
+      const planning: unknown[] = [];
 
       return reply.send(planning);
     },
@@ -178,7 +178,7 @@ export async function exampleApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
 
       // Fetch budgets for this tenant
-      const budgets = [];
+      const budgets: unknown[] = [];
 
       return reply.send(budgets);
     },

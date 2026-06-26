@@ -4,6 +4,7 @@ import ViewerToolbar from '@/components/viewer/ViewerToolbar'
 import ProjectModelsPanel from '@/components/viewer/ProjectModelsPanel'
 import ViewerCanvas from '@/components/viewer/ViewerCanvas'
 import ViewerPropertiesPanel from '@/components/viewer/ViewerPropertiesPanel'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
 
 export interface ViewerProject {
@@ -18,8 +19,6 @@ export interface ViewerModel {
   fileSize?: number | null
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const token = localStorage.getItem('arxisvr_token')
   if (!token) throw new Error('Sessão expirada. Entre novamente para enviar modelos.')
@@ -27,7 +26,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers)
   headers.set('Authorization', `Bearer ${token}`)
 
-  const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
+  const response = await fetch(buildApiV1Url(path), { ...init, headers })
   if (!response.ok) {
     const data = await response.json().catch(() => null)
     const planMessage =
@@ -83,7 +82,7 @@ export default function Viewer3DPage() {
     }
 
     try {
-      const result = await apiRequest<ViewerModel[]>(`/api/v1/ifc/project/${projectId}`)
+      const result = await apiRequest<ViewerModel[]>(`/ifc/project/${projectId}`)
       setModels(result)
       setSelectedModelId((current) =>
         result.some((model) => model.id === current) ? current : '',
@@ -104,7 +103,7 @@ export default function Viewer3DPage() {
         const result = await apiRequest<{
           items: ViewerProject[]
           total: number
-        }>('/api/v1/projects?pageSize=100')
+        }>('/projects?pageSize=100')
         if (cancelled) return
 
         const availableProjects = result.items || []
@@ -179,7 +178,7 @@ export default function Viewer3DPage() {
       formData.append('file', file)
 
       setUploadProgress(35)
-      const uploadedModel = await apiRequest<ViewerModel>('/api/v1/ifc/upload', {
+      const uploadedModel = await apiRequest<ViewerModel>('/ifc/upload', {
         method: 'POST',
         body: formData,
       })
@@ -210,7 +209,7 @@ export default function Viewer3DPage() {
     setMessage(null)
 
     try {
-      const createdProject = await apiRequest<ViewerProject>('/api/v1/projects', {
+      const createdProject = await apiRequest<ViewerProject>('/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),

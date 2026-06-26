@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -41,17 +42,34 @@ export default function RegisterPage() {
         return
       }
 
-      // Simular registro
-      await new Promise((r) => setTimeout(r, 1200))
+      const response = await fetch(buildApiV1Url('/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
 
-      const newUser = {
-        id: '1',
-        name,
-        email,
-        role: 'member',
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setError(result.error || result.message || 'Erro ao criar conta')
+        setLoading(false)
+        return
       }
 
-      localStorage.setItem('arxisvr_user', JSON.stringify(newUser))
+      if (result.token) {
+        localStorage.setItem('arxisvr_token', result.token)
+      }
+      if (result.refreshToken) {
+        localStorage.setItem('arxisvr_refresh_token', result.refreshToken)
+      }
+      if (result.user && result.token) {
+        localStorage.setItem('arxisvr_user', JSON.stringify(result.user))
+      }
+
+      if (result.requiresEmailVerification && !result.token) {
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`)
+        return
+      }
+
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta')

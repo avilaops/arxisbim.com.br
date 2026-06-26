@@ -4,14 +4,7 @@
  * Supports authentication, error handling, retries, and interceptors
  */
 
-// Type declaration for Vite environment variables
-interface ImportMetaEnv {
-  VITE_API_BASE_URL?: string;
-}
-
-interface ImportMeta {
-  env: ImportMetaEnv;
-}
+import { buildApiV1Url, resolveApiBaseUrl } from '../config/apiBaseUrl';
 
 export interface ApiRequestOptions {
   headers?: Record<string, string>;
@@ -63,7 +56,7 @@ class ApiClient {
     defaultHeaders?: Record<string, string>;
     timeout?: number;
   } = {}) {
-    this.baseURL = config.baseURL || import.meta.env.VITE_API_BASE_URL || '/api';
+    this.baseURL = config.baseURL || resolveApiBaseUrl();
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...config.defaultHeaders,
@@ -114,7 +107,7 @@ class ApiClient {
    * Build URL with query parameters
    */
   private buildUrl(url: string, params?: Record<string, any>): string {
-    const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+    const fullUrl = url.startsWith('http') ? url : buildApiV1Url(url);
     
     if (!params) return fullUrl;
 
@@ -410,7 +403,7 @@ class ApiClient {
       });
 
       // Configure and send request
-      const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+      const fullUrl = url.startsWith('http') ? url : buildApiV1Url(url);
       xhr.open('POST', fullUrl);
 
       // Add headers
@@ -496,7 +489,7 @@ class ApiClient {
 
 // Create default API client instance
 export const api = new ApiClient({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: resolveApiBaseUrl(),
   timeout: 30000,
 });
 

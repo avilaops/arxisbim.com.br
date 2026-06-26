@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { getApiTokensService } from '../modules/api-tokens/api-tokens.service.js';
-import { isValidApiTokenFormat, hashApiToken } from '../modules/api-tokens/utils/generateApiToken.js';
+import { getApiTokensService } from '../../modules/api-tokens/api-tokens.service.js';
+import { isValidApiTokenFormat, hashApiToken } from '../../modules/api-tokens/utils/generateApiToken.js';
 
 /**
  * Middleware: autentica requisições usando API Token
