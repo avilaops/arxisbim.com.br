@@ -1,0 +1,184 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [staging]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'documentation/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & verify before deploy
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Build backend (esbuild)
+        working-directory: backend
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Build frontend (vite)
+        working-directory: frontend
+        run: yarn build
+
+      - name: Upload backend source maps to Sentry
+        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+        continue-on-error: true
+        working-directory: frontend
+        env:
+          SENTRY_ORG: avilaops
+          SENTRY_PROJECT: arxisvr
+          SENTRY_RELEASE: arxisvr-backend@${{ github.sha }}
+        run: |
+          yarn sentry-cli sourcemaps inject ../backend/dist
+          yarn sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ../backend/dist
+
+      - name: Install signaling-server dependencies
+        working-directory: signaling-server
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Verify signaling-server entrypoint loads
+        working-directory: signaling-server
+        run: node --check server.js
+
+      - name: Smoke test — backend sobe e responde /health/live
+        working-directory: backend
+        env:
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          JWT_SECRET: ci-smoke-secret-not-for-prod
+          JWT_REFRESH_SECRET: ci-refresh-secret-not-for-prod
+          HOST: 127.0.0.1
+          PORT: '3001'
+          NODE_ENV: test
+        run: |
+          timeout 60s node --import ./dist/instrument.js dist/index.js > backend.log 2>&1 &
+          PID=$!
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:3001/health/live >/dev/null 2>&1; then
+              echo "✅ backend respondeu em /health/live após ${i} tentativas"
+              ok=1
+              break
+            fi
+            if ! kill -0 $PID 2>/dev/null; then
+              echo "❌ backend crashou! Logs:"
+              cat backend.log
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "=== Backend logs ==="
+          cat backend.log 2>/dev/null || true
+          echo "==================="
+          kill $PID 2>/dev/null || true
+          wait $PID 2>/dev/null || true
+          if [ "$ok" -ne 1 ]; then
+            echo "❌ backend não respondeu a tempo"
+            exit 1
+          fi
+
+  deploy:
+    name: Deploy to Staging Server
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      STAGING_SERVER_HOST: ${{ secrets.STAGING_SERVER_HOST }}
+      STAGING_SERVER_USER: ${{ secrets.STAGING_SERVER_USER }}
+      STAGING_SERVER_SSH_KEY: ${{ secrets.STAGING_SERVER_SSH_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check deployment secrets
+        id: secrets
+        shell: bash
+        run: |
+          if [ -z "$STAGING_SERVER_HOST" ] || [ -z "$STAGING_SERVER_USER" ] || [ -z "$STAGING_SERVER_SSH_KEY" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Staging SSH secrets are not configured; skipping deploy."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Staging SSH secrets are configured."
+          fi
+
+      - name: Deploy via SSH
+        id: deploy
+        if: steps.secrets.outputs.configured == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.STAGING_SERVER_HOST }}
+          username: ${{ env.STAGING_SERVER_USER }}
+          key: ${{ env.STAGING_SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            export ARXISVR_REPO_URL="https://github.com/${{ github.repository }}.git"
+            export DEPLOY_BRANCH="${{ github.ref_name }}"
+            BOOTSTRAP_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/scripts/bootstrap-deploy.sh"
+
+            if [ -f /opt/arxisvr/scripts/bootstrap-deploy.sh ]; then
+              bash /opt/arxisvr/scripts/bootstrap-deploy.sh
+            elif command -v curl >/dev/null 2>&1; then
+              curl -fsSL "$BOOTSTRAP_URL" | bash
+            elif command -v wget >/dev/null 2>&1; then
+              wget -qO- "$BOOTSTRAP_URL" | bash
+            else
+              echo "curl or wget is required for first-time bootstrap"
+              exit 1
+            fi
+
+      - name: Deployment summary
+        if: success() && steps.secrets.outputs.configured == 'true'
+        run: |
+          echo "✅ ArxisVR deployed successfully to staging."
+          echo "Server: ${{ env.STAGING_SERVER_HOST }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+
+      - name: Deployment failure details
+        if: failure() && steps.secrets.outputs.configured == 'true'
+        run: |
+          echo "❌ ArxisVR staging deployment failed."
+          echo "Check workflow logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
