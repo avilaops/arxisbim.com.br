@@ -56,6 +56,8 @@ import { registerCostCalculationRoutes } from './modules/costs/cost-calculation.
 import { registerSINAPIImportRoutes, registerSINAPISearchRoutes } from './modules/sinapi/index.js';
 import { registerStreamingRoutes } from './modules/streaming/streaming.routes.js';
 import { streamingOrchestrator } from './modules/streaming/streaming-orchestrator.service.js';
+import { apiTokensRoutes } from './modules/api-tokens/api-tokens.routes.js';
+import { ApiTokensService, setApiTokensService } from './modules/api-tokens/api-tokens.service.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
@@ -99,6 +101,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const BILLING_RETRY_WORKER_ENABLED = process.env.BILLING_RETRY_WORKER_ENABLED !== 'false';
 const BILLING_RETRY_INTERVAL_MS = Math.max(15_000, Number(process.env.BILLING_RETRY_INTERVAL_MS || 60_000));
 const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BILLING_RETRY_BATCH_SIZE || 20)));
+setApiTokensService(new ApiTokensService());
 
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
@@ -632,6 +635,7 @@ server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: Fastif
 
 await server.register(authRoutes, { prefix: '/api/v1/auth' });
 await server.register(adminRoutes, { prefix: '/api/v1/admin' });
+await server.register(apiTokensRoutes, { prefix: '/api/v1' });
 await server.register(taskElementLinksRoutes, { prefix: '/api/v1' });
 await server.register(timelineSimulationsRoutes, { prefix: '/api/v1' });
 await server.register(notificationsRoutes, { prefix: '/api/v1' });
