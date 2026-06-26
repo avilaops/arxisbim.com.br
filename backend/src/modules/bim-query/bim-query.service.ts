@@ -98,7 +98,7 @@ export class BIMQueryService {
     }
 
     // Query no banco
-    let dbQuery = db.select().from(modelElements).where(and(...conditions));
+    let dbQuery: any = db.select().from(modelElements).where(and(...conditions));
 
     // Ordenação
     if (query.orderBy && query.orderBy.length > 0) {
@@ -126,7 +126,7 @@ export class BIMQueryService {
     }
 
     // Paginação
-    let finalQuery: typeof dbQuery = dbQuery;
+    let finalQuery: any = dbQuery;
     if (query.limit) {
       finalQuery = finalQuery.limit(query.limit) as typeof dbQuery;
       if (query.offset) {
@@ -137,7 +137,7 @@ export class BIMQueryService {
     const rows = await finalQuery;
 
     // Converter para BIMElement
-    const elements: BIMElement[] = rows.map((row) => {
+    const elements: BIMElement[] = rows.map((row: any) => {
       const geo = row.geometry as { boundingBox?: { min: number[]; max: number[] }; vertices?: number } | null;
       return {
         expressId: row.expressId,

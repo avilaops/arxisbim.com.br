@@ -98,15 +98,13 @@ export class HTTPClient {
       url = endpoint;
     } else {
       let normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      const normalizedBaseURL = this.baseURL.replace(/\/api\/v1$/i, '');
 
-      // Alguns entrypoints usam VITE_API_URL apontando para http://host/api/v1,
-      // enquanto os services já declaram endpoints versionados (/api/v1/*).
-      // Evita gerar /api/v1/api/v1/* sem abrir mão do versionamento explícito.
-      if (this.baseURL.endsWith('/api/v1') && normalizedEndpoint.startsWith('/api/v1/')) {
-        normalizedEndpoint = normalizedEndpoint.slice('/api/v1'.length);
+      if (!normalizedEndpoint.startsWith('/api/v1/')) {
+        normalizedEndpoint = `/api/v1${normalizedEndpoint}`;
       }
 
-      url = `${this.baseURL}${normalizedEndpoint}`;
+      url = `${normalizedBaseURL}${normalizedEndpoint}`;
     }
 
     if (!params || Object.keys(params).length === 0) {

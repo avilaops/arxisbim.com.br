@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Box, Loader2, Upload } from 'lucide-react'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 interface ViewerCanvasProps {
   onUpload: () => void
@@ -72,12 +73,8 @@ export default function ViewerCanvas({
         const token = localStorage.getItem('arxisvr_token')
         if (!token) throw new Error('Sessão expirada. Entre novamente para abrir o modelo.')
 
-        const apiOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(
-          /\/api\/v1\/?$/,
-          '',
-        )
         setLoadProgress(15)
-        const response = await fetch(`${apiOrigin}/api/v1/ifc/${modelId}/download`, {
+        const response = await fetch(buildApiV1Url(`/ifc/${modelId}/download`), {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!response.ok) {

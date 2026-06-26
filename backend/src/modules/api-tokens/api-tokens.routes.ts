@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { apiTokensService } from './api-tokens.service.js';
+import { getApiTokensService } from './api-tokens.service.js';
 import { requireRole } from '../../core/auth/middleware.js';
 
 const createTokenSchema = z.object({
@@ -22,6 +22,7 @@ const createTokenSchema = z.object({
 });
 
 export async function apiTokensRoutes(fastify: FastifyInstance) {
+  const apiTokensService = getApiTokensService();
   /**
    * GET /api/v1/api-tokens
    * Listar tokens do tenant (apenas owner/admin)
@@ -123,7 +124,7 @@ export async function apiTokensRoutes(fastify: FastifyInstance) {
         if (error instanceof z.ZodError) {
           return reply.status(400).send({ 
             error: 'Validation failed', 
-            details: error.errors 
+            details: error.issues 
           });
         }
         return reply.status(500).send({ error: error.message || 'Failed to create token' });

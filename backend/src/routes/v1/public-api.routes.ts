@@ -50,7 +50,7 @@ export async function publicApiRoutes(fastify: FastifyInstance) {
       
       // TODO: Implement actual project fetching
       // SELECT * FROM projects WHERE tenant_id = tenantId
-      const projects = [];
+      const projects: unknown[] = [];
       
       return reply.send(projects);
     },
@@ -123,7 +123,7 @@ export async function publicApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
       
       // TODO: Implement actual models fetching
-      const models = [];
+      const models: unknown[] = [];
       
       return reply.send(models);
     },
@@ -166,7 +166,7 @@ export async function publicApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
       
       // TODO: Implement actual planning data fetching
-      const planning = [];
+      const planning: unknown[] = [];
       
       return reply.send(planning);
     },
@@ -209,7 +209,7 @@ export async function publicApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
       
       // TODO: Implement actual budgets fetching
-      const budgets = [];
+      const budgets: unknown[] = [];
       
       return reply.send(budgets);
     },
@@ -252,7 +252,7 @@ export async function publicApiRoutes(fastify: FastifyInstance) {
       const { tenantId } = (request as any).apiToken;
       
       // TODO: Implement actual scenarios fetching
-      const scenarios = [];
+      const scenarios: unknown[] = [];
       
       return reply.send(scenarios);
     },

@@ -1,4 +1,4 @@
-import { ApiTokensService } from './modules/api-tokens/api-tokens.service.js';
+import { ApiTokensService } from '../../modules/api-tokens/api-tokens.service.js';
 
 /**
  * Valida que o API_TOKEN_PEPPER está configurado e com comprimento seguro

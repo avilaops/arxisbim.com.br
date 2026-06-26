@@ -1,3 +1,5 @@
+import { buildApiV1Url } from '@/config/apiBaseUrl';
+
 export interface DashboardData {
   activeProjects: number;
   processedModels: number;
@@ -18,12 +20,9 @@ export interface DashboardData {
   }>;
 }
 
-const API_ORIGIN = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/api\/v1\/?$/, '');
-const API_BASE = `${API_ORIGIN}/api/v1`;
-
 export const dashboardService = {
   async get(): Promise<DashboardData> {
-    const response = await fetch(`${API_BASE}/dashboard`, {
+    const response = await fetch(buildApiV1Url('/dashboard'), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
       },
