@@ -1,181 +1,102 @@
 /**
  * Service Worker para Arxisvr PWA
- * Suporte offline e cache de recursos
+ * Suporte offline e cache de recursos estáticos (SPA React).
+ * Rotas legadas .html foram removidas — o app vive em / (index.html).
  */
 
-const CACHE_NAME = 'arxisvr-v1';
-const STATIC_CACHE = 'arxisvr-static-v1';
-const DYNAMIC_CACHE = 'arxisvr-dynamic-v1';
+const STATIC_CACHE = 'arxisvr-static-v2';
+const DYNAMIC_CACHE = 'arxisvr-dynamic-v2';
 
-// Recursos estáticos para cache imediato
 const STATIC_ASSETS = [
   '/',
-  '/app.html',
-  '/dashboard.html',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
 ];
 
-// Instalação do service worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker');
-
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
   );
-
   self.skipWaiting();
 });
 
-// Ativação do service worker
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker');
-
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
         cacheNames
-          .filter((cacheName) => {
-            return (
-              cacheName !== STATIC_CACHE &&
-              cacheName !== DYNAMIC_CACHE
-            );
-          })
-          .map((cacheName) => {
-            console.log('[SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          })
-      );
-    })
+          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+          .map((name) => caches.delete(name))
+      )
+    )
   );
-
   self.clients.claim();
 });
 
-// Interceptação de requisições
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Ignorar requisições para APIs e websockets
-  if (
-    url.pathname.startsWith('/api/') ||
-    url.protocol === 'ws:' ||
-    url.protocol === 'wss:'
-  ) {
+  // Nunca interceptar requisições de API ou WebSocket
+  if (url.pathname.startsWith('/api/') || url.protocol === 'ws:' || url.protocol === 'wss:') {
     return;
   }
 
-  // Estratégia: Cache First para estáticos, Network First para dinâmicos
-  if (STATIC_ASSETS.some(asset => url.pathname === asset || url.pathname.endsWith(asset))) {
-    event.respondWith(cacheFirst(event.request));
-  } else {
-    event.respondWith(networkFirst(event.request));
+  // Navegação SPA: Network First com fallback para index.html cacheado
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    );
+    return;
   }
+
+  // Assets estáticos: Cache First
+  if (STATIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
+
+  // Demais recursos: Network First
+  event.respondWith(networkFirst(event.request));
 });
 
-// Cache First: tenta cache primeiro, depois rede
 async function cacheFirst(request) {
-  const cachedResponse = await caches.match(request);
-
-  if (cachedResponse) {
-    console.log('[SW] Cache hit:', request.url);
-    return cachedResponse;
-  }
-
+  const cached = await caches.match(request);
+  if (cached) return cached;
   try {
-    const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
+    const response = await fetch(request);
+    if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, response.clone());
     }
-
-    return networkResponse;
-  } catch (error) {
-    console.error('[SW] Network failed:', error);
-    return new Response('Offline - Recurso não disponível', {
-      status: 503,
-      statusText: 'Service Unavailable',
-    });
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
   }
 }
 
-// Network First: tenta rede primeiro, depois cache
 async function networkFirst(request) {
   try {
-    const networkResponse = await fetch(request);
-
-    if (networkResponse.ok) {
+    const response = await fetch(request);
+    if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, response.clone());
     }
-
-    return networkResponse;
-  } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url);
-    const cachedResponse = await caches.match(request);
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    return new Response('Offline - Recurso não disponível', {
-      status: 503,
-      statusText: 'Service Unavailable',
-    });
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
   }
 }
 
-// Sincronização em background
-self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync:', event.tag);
-
-  if (event.tag === 'sync-data') {
-    event.waitUntil(syncData());
-  }
-});
-
-// Sincronização de dados
-async function syncData() {
-  try {
-    // Em produção, sincronizar dados pendentes com o servidor
-    console.log('[SW] Syncing data...');
-  } catch (error) {
-    console.error('[SW] Sync failed:', error);
-  }
-}
-
-// Push notifications
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push received');
-
   const options = {
     body: event.data ? event.data.text() : 'Nova notificação',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1,
-    },
+    icon: '/logo.svg',
+    badge: '/logo.svg',
   };
-
-  event.waitUntil(
-    self.registration.showNotification('Arxisvr', options)
-  );
+  event.waitUntil(self.registration.showNotification('ArxisVR', options));
 });
 
-// Clique em notificação
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked');
-
   event.notification.close();
-
-  event.waitUntil(
-    clients.openWindow('/')
-  );
+  event.waitUntil(clients.openWindow('/'));
 });
