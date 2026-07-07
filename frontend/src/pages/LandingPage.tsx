@@ -399,6 +399,11 @@ export default function LandingPage() {
                     Planos
                   </a>
                 </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <a href="/validador" style={{ color: 'var(--text-secondary)', fontSize: '14px', textDecoration: 'none', fontWeight: 500 }}>
+                    Validador IFC (Grátis)
+                  </a>
+                </li>
                 <li>
                   <a href="/login" style={{ color: 'var(--text-secondary)', fontSize: '14px', textDecoration: 'none' }}>
                     Entrar

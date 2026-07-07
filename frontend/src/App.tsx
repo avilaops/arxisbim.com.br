@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ValidadorPage from './pages/ValidadorPage'
 import DashboardPage from './pages/DashboardPage'
 import Viewer3DPage from './pages/Viewer3DPage'
 import AccountPage from './pages/AccountPage'
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/validador" element={<ValidadorPage />} />
 
         {/* Legal Pages */}
         <Route path="/privacy" element={<PrivacyPage />} />

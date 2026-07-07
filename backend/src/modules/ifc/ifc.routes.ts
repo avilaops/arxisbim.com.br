@@ -35,6 +35,19 @@ export async function ifcRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * Public IFC validation and lead capture
+   * POST /public/ifc-check
+   */
+  fastify.post('/public/ifc-check', {
+    schema: {
+      description: 'Public endpoint to check IFC quality and capture lead info',
+      tags: ['ifc', 'public'],
+      consumes: ['multipart/form-data'],
+    },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => ifcController.checkPublicIfc(request, reply),
+  });
+
+  /**
    * Get IFC models by project
    * GET /project/:projectId
    */
