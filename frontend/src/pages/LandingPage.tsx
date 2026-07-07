@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import SEO from '../components/SEO'
 
 export default function LandingPage() {
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
@@ -16,6 +17,12 @@ export default function LandingPage() {
 
   return (
     <>
+      <SEO
+        title="ArxisVR — Plataforma BIM com IA e Realidade Estendida no Navegador"
+        description="Visualize modelos IFC em escala 1:1, simule cronogramas 4D, estime custos 5D e revise clashes com inteligência artificial e realidade virtual/aumentada (WebXR) direto no navegador."
+        keywords="plataforma BIM, visualizador IFC online, simulação 4D de obras, estimativa de custos 5D, orçamento BIM, realidade virtual construção civil, realidade aumentada engenharia, WebXR VR AR, compatibilização de projetos BIM, Copilot de IA engenharia, AEC software, PropTech"
+        path="/"
+      />
       {/* Navigation */}
       <header
         className="nav"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
+import SEO from '../components/SEO'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -75,6 +76,12 @@ export default function LoginPage() {
         background: 'linear-gradient(135deg, #0a0a0a 0%, #111111 100%)',
       }}
     >
+      <SEO
+        title="Entrar no ArxisVR — Acesso à Plataforma BIM"
+        description="Acesse sua conta no ArxisVR para visualizar modelos IFC 3D, coordenar clashes, e gerenciar projetos de engenharia e arquitetura no navegador."
+        keywords="entrar arxisvr, login bim, acesso visualizador ifc"
+        path="/login"
+      />
       {/* Left side - Branding */}
       <div
         style={{

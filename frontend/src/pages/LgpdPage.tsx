@@ -1,3 +1,5 @@
+import SEO from '../components/SEO'
+
 export default function LgpdPage() {
   return (
     <div
@@ -8,6 +10,11 @@ export default function LgpdPage() {
         padding: '40px 20px',
       }}
     >
+      <SEO
+        title="LGPD e Proteção de Dados — ArxisVR"
+        description="Saiba como o ArxisVR está em conformidade com a LGPD (Lei Geral de Proteção de Dados) para garantir o tratamento seguro dos seus dados."
+        path="/lgpd"
+      />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
           href="/"

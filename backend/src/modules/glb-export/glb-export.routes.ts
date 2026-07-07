@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { GLBExportService } from './glb-export.service.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import type { GLBExportOptions, GLBExportRequest } from './glb-export.types.js';
+import { getStorage } from '../../core/storage/index.js';
+import { buildGlbKey } from '../ifc/ifc-geometry-pipeline.service.js';
 
 const GLBExportOptionsSchema = z.object({
   dracoCompression: z.boolean().optional(),
@@ -103,6 +105,25 @@ export async function glbExportRoutes(server: FastifyInstance) {
     async (request, reply) => {
       const { projectId, modelId } = request.params;
       const validated = ExportRequestSchema.parse(request.body);
+
+      // Check if pre-compiled GLB exists in storage first!
+      const user = (request as any).user;
+      if (user && user.tenantId) {
+        const glbKey = buildGlbKey(user.tenantId, modelId);
+        const storage = getStorage();
+        try {
+          if (await storage.exists(glbKey)) {
+            const buffer = await storage.download(glbKey);
+            return reply
+              .header('Content-Type', 'model/gltf-binary')
+              .header('Content-Disposition', `attachment; filename="${modelId}.glb"`)
+              .header('Content-Length', buffer.length)
+              .send(buffer);
+          }
+        } catch (err) {
+          request.log.error(err, 'Failed to check or download GLB cache from storage');
+        }
+      }
 
       const result = await GLBExportService.exportModel({
         projectId,

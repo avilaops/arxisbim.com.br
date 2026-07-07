@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
+import SEO from '../components/SEO'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -85,6 +86,12 @@ export default function RegisterPage() {
         background: 'linear-gradient(135deg, #0a0a0a 0%, #111111 100%)',
       }}
     >
+      <SEO
+        title="Criar Conta Grátis no ArxisVR — Comece em Minutos"
+        description="Cadastre-se gratuitamente no ArxisVR. Carregue seus modelos IFC, crie cronogramas 4D e experimente realidade virtual em seus projetos."
+        keywords="cadastrar arxisvr, criar conta bim, conta gratis visualizador ifc"
+        path="/register"
+      />
       {/* Left side - Branding */}
       <div
         style={{

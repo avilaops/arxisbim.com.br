@@ -195,7 +195,6 @@ export class AuthService {
     // Email é único globalmente — tenantId opcional. Se omitido, busca só por email.
     const whereClauses = [
       eq(users.email, validated.email),
-      eq(users.isActive, true),
     ];
     if (validated.tenantId) {
       whereClauses.push(eq(users.tenantId, validated.tenantId));
@@ -250,6 +249,10 @@ export class AuthService {
       const err: any = new Error('Verifique seu email antes de fazer login. Confira sua caixa de entrada.');
       err.code = 'EMAIL_NOT_VERIFIED';
       throw err;
+    }
+
+    if (!user.isActive) {
+      throw new Error('Usuário inativo');
     }
 
     // Verificar se o tenant está ativo
@@ -383,6 +386,8 @@ export class AuthService {
 
       if (!tenant.isActive) throw new Error('Tenant inativo');
 
+      const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+
       const [user] = await tx
         .insert(users)
         .values({
@@ -393,8 +398,8 @@ export class AuthService {
           companyId: validated.companyId || null,
           role: 'user',
           permissions: [],
-          emailVerified: false,
-          isActive: false,
+          emailVerified: !requireEmailVerification,
+          isActive: !requireEmailVerification,
         })
         .returning();
 

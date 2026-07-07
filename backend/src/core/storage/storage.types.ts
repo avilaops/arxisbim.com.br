@@ -27,8 +27,7 @@ import type { Readable } from 'node:stream';
  * For local storage, the key is resolved relative to UPLOAD_DIR.
  * For S3, the key is the object key inside S3_BUCKET.
  *
- * Backwards-compat: legacy absolute filesystem paths
- * (e.g. "D:\\AvilaOps\\...\\uploads\\ifc\\xyz.ifc") are still accepted
+ * Backwards-compat: legacy absolute filesystem paths are still accepted
  * by the local driver and resolved via path.basename().
  */
 export type StorageKey = string;

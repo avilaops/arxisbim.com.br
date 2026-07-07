@@ -1,3 +1,5 @@
+import SEO from '../components/SEO'
+
 export default function TermsPage() {
   return (
     <div
@@ -8,6 +10,11 @@ export default function TermsPage() {
         padding: '40px 20px',
       }}
     >
+      <SEO
+        title="Termos de Serviço — ArxisVR"
+        description="Consulte os Termos de Serviço do ArxisVR para conhecer as regras, obrigações e termos legais de uso da nossa plataforma BIM e de realidade virtual."
+        path="/terms"
+      />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
           href="/"

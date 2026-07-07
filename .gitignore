@@ -18,6 +18,9 @@ yarn-error.log
 *.swp
 *.swo
 scripts/
+!backend/scripts/
+backend/scripts/*
+!backend/scripts/verify-migrations.mjs
 !/scripts/
 /scripts/*
 !/scripts/link-local-deps.ps1

@@ -12,6 +12,9 @@ function safeAuthError(error: unknown): string {
   if (error instanceof Error) {
     const e = error as any;
     if (e.code && typeof e.code === 'string') return e.message;
+    if (/email já cadastrado|email already registered|already exists/i.test(e.message ?? '')) {
+      return 'Não foi possível concluir o cadastro';
+    }
     if (e.message?.startsWith('Failed query:')) return 'Internal server error';
     if (e.message && e.message.length < 120 && !e.message.includes('SELECT') && !e.message.includes('INSERT')) {
       return e.message;

@@ -1,3 +1,5 @@
+import SEO from '../components/SEO'
+
 export default function PrivacyPage() {
   return (
     <div
@@ -8,6 +10,11 @@ export default function PrivacyPage() {
         padding: '40px 20px',
       }}
     >
+      <SEO
+        title="Política de Privacidade — ArxisVR"
+        description="Leia a Política de Privacidade do ArxisVR para entender como coletamos, usamos e protegemos seus dados e informações cadastrais."
+        path="/privacy"
+      />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
           href="/"

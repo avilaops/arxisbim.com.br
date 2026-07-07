@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import { ifcModels, projects } from '../../shared/database/schema/projects.js';
+import { ifcModels, projects, modelElements } from '../../shared/database/schema/projects.js';
 import { sessions, participants } from '../../shared/database/schema/sessions.js';
 import { db } from '../../shared/database/db.js';
 import { eq, desc, and, or } from 'drizzle-orm';
@@ -7,6 +7,7 @@ import { storage as storageService } from '../../core/storage/index.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { z } from 'zod';
 import { recordUpload } from '../../core/observability/metrics.js';
+import { ifcProcessingQueue } from '../../modules/ifc/ifc-queue.service.js';
 
 const updateIfcModelSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -59,6 +60,23 @@ async function canReadModel(
 export async function ifcModelRoutes(fastify: FastifyInstance) {
   // Todas as rotas de modelo exigem autenticação.
   const auth = { preHandler: authenticateRequest };
+
+  // Listar todos os modelos do tenant do usuário.
+  fastify.get('/ifc-models', auth, async (request, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ error: 'Unauthorized' });
+    try {
+      const models = await db
+        .select()
+        .from(ifcModels)
+        .where(eq(ifcModels.tenantId, user.tenantId))
+        .orderBy(desc(ifcModels.uploadedAt));
+      return reply.send(models);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to fetch IFC models' });
+    }
+  });
 
   // Listar modelos de um projeto (somente o próprio tenant).
   fastify.get('/projects/:projectId/ifc-models', auth, async (request, reply) => {
@@ -117,15 +135,17 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
       const data = await request.file();
       if (!data) return reply.status(400).send({ error: 'No file uploaded' });
 
-      const file = data.file;
       const filename = data.filename;
 
       if (!filename.toLowerCase().endsWith('.ifc')) {
         return reply.status(400).send({ error: 'Only IFC files are allowed' });
       }
 
+      const fileBuffer = await data.toBuffer();
       const storageKey = `tenants/${project[0].tenantId}/${projectId}/${filename}`;
-      const { size: fileSizeBytes } = await storageService.upload(storageKey, file);
+      const { size: fileSizeBytes } = await storageService.upload(storageKey, fileBuffer, {
+        contentType: 'application/x-step'
+      });
       const fileUrl = `/api/v1/storage/${storageKey}`;
 
       const [newModel] = await db.insert(ifcModels).values({
@@ -138,9 +158,23 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
         ifcType: 'IFC2X3',
         discipline: 'architecture',
         phase: 'new',
+        metadata: {
+          status: 'queued',
+          error: null,
+        } as any,
       }).returning();
 
       recordUpload(true, { tenantId: project[0].tenantId, kind: 'ifc' });
+
+      // Enfileira o processamento em background usando a fila existente
+      await ifcProcessingQueue.addJob(
+        'geometry',
+        newModel.id,
+        projectId,
+        project[0].tenantId,
+        'high'
+      );
+
       return reply.status(201).send(newModel);
     } catch (error) {
       fastify.log.error(error);
