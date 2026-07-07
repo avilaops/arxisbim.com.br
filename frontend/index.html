@@ -27,6 +27,16 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="/track.js" defer></script>
+  <script>
+    // GitHub Pages SPA fallback resolver
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const redirectPath = params.get('path');
+      if (redirectPath) {
+        window.history.replaceState(null, null, redirectPath + window.location.hash);
+      }
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>
