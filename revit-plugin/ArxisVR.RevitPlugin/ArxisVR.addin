@@ -1,25 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
-  <AddIn Type="Command">
-    <Name>ArxisVR Export Command</Name>
+  <AddIn Type="Application">
+    <Name>ArxisVR</Name>
     <Assembly>ArxisVR.RevitPlugin.dll</Assembly>
     <AddInId>8C6BE2B5-9F7D-4B8C-9A6F-3D8E9F2C5D7E</AddInId>
-    <FullClassName>ArxisVR.RevitPlugin.Commands.ExportCommand</FullClassName>
-    <Text>Export to ArxisVR</Text>
-    <Description>Export your Revit model to ArxisVR platform for analysis and collaboration. Transform your BIM model into cost and schedule decisions in under 2 minutes.</Description>
-    <VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
-    <LargeImage>pack://application:,,,/ArxisVR.RevitPlugin;component/Resources/export_large_32x32.png</LargeImage>
-    <Image>pack://application:,,,/ArxisVR.RevitPlugin;component/Resources/export_16x16.png</Image>
-  </AddIn>
-
-  <AddIn Type="Command">
-    <Name>ArxisVR Validate Command</Name>
-    <Assembly>ArxisVR.RevitPlugin.dll</Assembly>
-    <AddInId>9D7CF3C6-0G8E-5C9D-0B7G-4E9F0G3D6E8F</AddInId>
-    <FullClassName>ArxisVR.RevitPlugin.Commands.ValidateCommand</FullClassName>
-    <Text>Validate IFC</Text>
-    <Description>Validate your IFC file before export. Catch issues early: duplicate GUIDs, orphan elements, missing properties, and more.</Description>
-    <VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
-    <Image>pack://application:,,,/ArxisVR.RevitPlugin;component/Resources/validate_16x16.png</Image>
+    <FullClassName>ArxisVR.RevitPlugin.ArxisVRApplication</FullClassName>
+    <VendorId>AVILAOPS</VendorId>
+    <VendorDescription>AvilaOps — arxisvr.avilaops.com</VendorDescription>
   </AddIn>
 </RevitAddIns>
