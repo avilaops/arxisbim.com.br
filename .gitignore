@@ -61,5 +61,7 @@ uploads/
 *.pdf
 *.rvt
 docs/
+# Exceção: documentação do plugin Revit é versionada.
+!revit-plugin/docs/
 .skills/
 backend/scripts/_backup_*
