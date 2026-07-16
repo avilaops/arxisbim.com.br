@@ -61,7 +61,7 @@ public class ArxisVRClient : IDisposable
                     form.Add(new StringContent(config.IncludeMEP.ToString()), "includeMEP");
 
                     // Upload
-                    var url = $"{_apiBaseUrl}/api/v1/exports";
+                    var url = $"{_apiBaseUrl}/api/v1/plugin/exports";
                     var response = await _httpClient.PostAsync(url, form);
 
                     if (!response.IsSuccessStatusCode)
@@ -96,7 +96,7 @@ public class ArxisVRClient : IDisposable
     {
         try
         {
-            var url = $"{_apiBaseUrl}/api/v1/exports/{exportId}";
+            var url = $"{_apiBaseUrl}/api/v1/plugin/exports/{exportId}";
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
