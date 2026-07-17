@@ -18,6 +18,9 @@ Write-Host "==> Building ($Configuration)..." -ForegroundColor Cyan
 dotnet build "$root\ArxisVR.RevitPlugin.slnx" --configuration $Configuration
 if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
+# Assinar a DLL (certificado dev local; ver sign-local.ps1)
+& "$root\sign-local.ps1" -Configuration $Configuration
+
 $binDir = Join-Path $root "ArxisVR.RevitPlugin\bin\$Configuration"
 $addinsDir = Join-Path $env:APPDATA "Autodesk\Revit\Addins\$RevitVersion"
 $targetDir = Join-Path $addinsDir 'ArxisVR'
