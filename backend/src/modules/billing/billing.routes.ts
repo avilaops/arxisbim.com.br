@@ -3,9 +3,14 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 import { observabilityService } from '../../core/observability/service.js';
 import { BillingService } from './billing.service.js';
 import { billingWebhookSchema, changePlanSchema, createCheckoutSchema, createPortalSchema } from './billing.schemas.js';
+import { parseMercadoPagoNotification } from './providers/mercadopago-billing.provider.js';
 import { db } from '../../shared/database/db.js';
 import { failedWebhooks } from '../../shared/database/schema/billing.js';
 import { randomUUID } from 'node:crypto';
+
+function headerValue(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+}
 
 export async function billingRoutes(fastify: FastifyInstance) {
   const ensureBillingManager = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -21,7 +26,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
   };
 
   fastify.get('/plans', async (_request: FastifyRequest, reply: FastifyReply) => {
-    return reply.code(200).send({ plans: BillingService.listPlans() });
+    return reply.code(200).send({ plans: BillingService.listPlans(), provider: BillingService.providerName() });
   });
 
   const getCurrentSubscriptionHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -151,6 +156,72 @@ export async function billingRoutes(fastify: FastifyInstance) {
     }
   });
 
+  /**
+   * Relê no provedor o que este workspace tem lá (cadastro de cartão
+   * pendente, assinatura, cobranças). O front chama ao voltar da página do
+   * cartão — assim o plano ativa na hora, sem depender da notificação.
+   */
+  fastify.post('/sync', {
+    preHandler: authenticateRequest,
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user!;
+
+    try {
+      const result = await BillingService.syncTenantSubscription(user.tenantId);
+      const billing = await BillingService.getCurrent(user.tenantId);
+      return reply.code(200).send({ ...result, billing });
+    } catch (error: any) {
+      fastify.log.error({ err: error }, 'Error syncing billing with provider');
+      return reply.code(502).send({
+        error: 'Provider error',
+        message: error?.message || 'Failed to sync subscription with provider',
+      });
+    }
+  });
+
+  const subscriptionActionHandler = (action: 'pause' | 'resume' | 'cancel') => async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user!;
+
+    try {
+      const billing = action === 'pause'
+        ? await BillingService.pauseSubscription(user.tenantId)
+        : action === 'resume'
+          ? await BillingService.resumeSubscription(user.tenantId)
+          : await BillingService.cancelSubscription(user.tenantId);
+
+      await observabilityService.logAudit({
+        tenantId: user.tenantId,
+        userId: user.userId,
+        action: `billing.subscription.${action}`,
+        resource: 'billing.subscription',
+        metadata: {
+          provider: billing.subscription.provider,
+          status: billing.subscription.status,
+        },
+      });
+
+      return reply.code(200).send(billing);
+    } catch (error: any) {
+      fastify.log.error({ err: error }, `Error on subscription ${action}`);
+      return reply.code(400).send({
+        error: 'Subscription action failed',
+        message: error?.message || `Failed to ${action} subscription`,
+      });
+    }
+  };
+
+  fastify.post('/subscription/pause', {
+    preHandler: [authenticateRequest, ensureBillingManager],
+  }, subscriptionActionHandler('pause'));
+
+  fastify.post('/subscription/resume', {
+    preHandler: [authenticateRequest, ensureBillingManager],
+  }, subscriptionActionHandler('resume'));
+
+  fastify.post('/subscription/cancel', {
+    preHandler: [authenticateRequest, ensureBillingManager],
+  }, subscriptionActionHandler('cancel'));
+
   fastify.post('/change-plan', {
     preHandler: authenticateRequest,
   }, async (request: FastifyRequest, reply: FastifyReply) => {
@@ -212,7 +283,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
   const getFailedEventsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user!;
     const limit = parseLimit((request.query as any)?.limit);
-    const events = await BillingService.listFailedStripeEvents(user.tenantId, limit);
+    const events = await BillingService.listFailedProviderEvents(user.tenantId, limit);
     return reply.code(200).send({ events });
   };
 
@@ -228,7 +299,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const result = await BillingService.reprocessStripeEvent(eventId, user.tenantId);
+      const result = await BillingService.reprocessProviderEvent(eventId, user.tenantId);
       return reply.code(200).send(result);
     } catch (error: any) {
       return reply.code(400).send({
@@ -241,7 +312,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
   const retryDueHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user!;
     const limit = parseLimit((request.query as any)?.limit);
-    const result = await BillingService.processDueStripeRetries(user.tenantId, limit);
+    const result = await BillingService.processDueProviderRetries(user.tenantId, limit);
     return reply.code(200).send(result);
   };
 
@@ -287,27 +358,44 @@ export async function billingRoutes(fastify: FastifyInstance) {
     preHandler: [authenticateRequest, ensureBillingManager],
   }, reconcileUsageHandler);
 
-  fastify.post('/webhook', {
-    config: {
-      rawBody: true,
-    },
-  } as any, async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const stripeSignature = request.headers['stripe-signature'];
+  /**
+   * Webhook de cobrança.
+   *
+   * Dois formatos chegam aqui:
+   * - Notificação do Mercado Pago (tópico + data.id, assinada em `x-signature`).
+   *   Pública de propósito — quem chama é o MP. A autenticidade é provada pela
+   *   assinatura HMAC; sem ela, qualquer um postaria "pagamento aprovado".
+   *   Responde 200 mesmo quando o processamento falha: o evento já está no
+   *   jornal com retry agendado, e o MP reenviaria por horas se visse erro.
+   * - Webhook genérico interno (`event`, `eventId`...), usado pelo provider
+   *   interno de aprovação manual.
+   */
+  fastify.post('/webhook', async (request: FastifyRequest, reply: FastifyReply) => {
+    const query = (request.query ?? {}) as Record<string, string | undefined>;
+    const body = (request.body ?? {}) as Record<string, any>;
+    const notification = parseMercadoPagoNotification(body, query);
+    const xSignature = headerValue(request.headers['x-signature'] as string | string[] | undefined);
 
-      if (stripeSignature && typeof stripeSignature === 'string') {
-        const rawBody = (request as any).rawBody as string | undefined;
-        if (!rawBody) {
-          return reply.code(400).send({
-            error: 'Webhook error',
-            message: 'Raw body is required for Stripe signature verification',
-          });
-        }
+    if (notification && (xSignature || !body.event)) {
+      const valid = BillingService.verifyProviderNotification({
+        xSignature,
+        xRequestId: headerValue(request.headers['x-request-id'] as string | string[] | undefined),
+        dataId: notification.dataId,
+      });
 
-        const result = await BillingService.handleStripeWebhook(rawBody, stripeSignature);
-        return reply.code(200).send(result);
+      if (!valid) {
+        fastify.log.warn({ topic: notification.topic, dataId: notification.dataId }, 'Provider notification with invalid signature');
+        return reply.code(401).send({
+          error: 'Unauthorized',
+          message: 'Invalid notification signature',
+        });
       }
 
+      const result = await BillingService.handleProviderWebhook(notification);
+      return reply.code(200).send(result);
+    }
+
+    try {
       const validation = billingWebhookSchema.safeParse(request.body);
 
       if (!validation.success) {

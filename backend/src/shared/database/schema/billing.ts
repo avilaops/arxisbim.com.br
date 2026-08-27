@@ -135,14 +135,14 @@ export const billingPayments = pgTable('billing_payments', {
 }));
 
 // =====================================
-// STRIPE_EVENTS (idempotency + audit)
+// BILLING_PROVIDER_EVENTS (jornal do provedor de cobrança: idempotência + auditoria)
 // =====================================
-export const stripeEvents = pgTable('stripe_events', {
+export const billingProviderEvents = pgTable('billing_provider_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   eventId: varchar('event_id', { length: 255 }).notNull(),
   eventType: varchar('event_type', { length: 255 }).notNull(),
   tenantId: varchar('tenant_id', { length: 255 }).references(() => tenants.tenantId, { onDelete: 'set null' }),
-  provider: varchar('provider', { length: 50 }).default('stripe').notNull(),
+  provider: varchar('provider', { length: 50 }).default('mercadopago').notNull(),
   status: varchar('status', { length: 50 }).default('received').notNull(),
   processedAt: timestamp('processed_at'),
   failedAt: timestamp('failed_at'),
@@ -153,12 +153,12 @@ export const stripeEvents = pgTable('stripe_events', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
-  eventIdUniqueIdx: uniqueIndex('stripe_events_event_id_unique_idx').on(table.eventId),
-  tenantIdIdx: index('stripe_events_tenant_id_idx').on(table.tenantId),
-  eventTypeIdx: index('stripe_events_event_type_idx').on(table.eventType),
-  statusIdx: index('stripe_events_status_idx').on(table.status),
-  processedAtIdx: index('stripe_events_processed_at_idx').on(table.processedAt),
-  nextRetryAtIdx: index('stripe_events_next_retry_at_idx').on(table.nextRetryAt),
+  eventIdUniqueIdx: uniqueIndex('billing_provider_events_event_id_unique_idx').on(table.eventId),
+  tenantIdIdx: index('billing_provider_events_tenant_id_idx').on(table.tenantId),
+  eventTypeIdx: index('billing_provider_events_event_type_idx').on(table.eventType),
+  statusIdx: index('billing_provider_events_status_idx').on(table.status),
+  processedAtIdx: index('billing_provider_events_processed_at_idx').on(table.processedAt),
+  nextRetryAtIdx: index('billing_provider_events_next_retry_at_idx').on(table.nextRetryAt),
 }));
 
 // =====================================

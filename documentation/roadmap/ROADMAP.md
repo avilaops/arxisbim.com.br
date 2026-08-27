@@ -78,7 +78,7 @@ S29–S32  Cenários + Release → ★ S30
 - Soft-delete preserva histórico
 
 ### S04 · Billing e planos
-- Checkout Stripe funciona em test mode
+- Assinatura no Mercado Pago funciona com credencial de teste
 - Webhook ativa plano no banco
 - Upload bloqueado se limite de modelos atingido
 - Downgrade preserva dados, bloqueia novas entradas

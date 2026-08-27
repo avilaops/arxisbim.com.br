@@ -74,8 +74,10 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `R2_BUCKET_NAME` | Bucket de modelos IFC |
 | `GOOGLE_CLIENT_ID` | OAuth Google |
 | `GITHUB_CLIENT_ID` | OAuth GitHub |
-| `STRIPE_SECRET_KEY` | Billing |
-| `STRIPE_WEBHOOK_SECRET` | Billing webhooks |
+| `BILLING_PROVIDER` | `mercadopago` (padrão) ou `internal` (aprovação manual, sem cobrança) |
+| `MP_ACCESS_TOKEN` | Billing — access token da conta Mercado Pago da Avila Ops (assinaturas / preapproval) |
+| `MP_WEBHOOK_SECRET` | Billing — segredo da assinatura `x-signature` das notificações do Mercado Pago |
+| `BILLING_PROVIDER_SYNC_INTERVAL_MS` | Billing — cadência da sincronização com o Mercado Pago (padrão 6h; a notificação do MP não é garantida) |
 
 > **CRÍTICO Render:** `PUT /env-vars` substitui TODAS as variáveis. Sempre enviar a lista completa.
 

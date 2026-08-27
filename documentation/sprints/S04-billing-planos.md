@@ -9,9 +9,9 @@
 
 ## Objetivo
 
-Planos Stripe funcionais com limites reais aplicados. Feature gating por plano sem hard-code espalhado pelo código.
+Planos cobrados pelo Mercado Pago (assinatura recorrente) com limites reais aplicados. Feature gating por plano sem hard-code espalhado pelo código.
 
-> **Nota para o agente:** Este sprint **não implementa pagamentos; implementa autorização comercial.** Stripe é apenas a fonte de verdade da assinatura. O produto deve depender exclusivamente do sistema interno de limites e entitlements — nunca consultar `plan` diretamente numa feature.
+> **Nota para o agente:** Este sprint **não implementa pagamentos; implementa autorização comercial.** O Mercado Pago é apenas a fonte de verdade da assinatura. O produto deve depender exclusivamente do sistema interno de limites e entitlements — nunca consultar `plan` diretamente numa feature.
 
 ---
 
@@ -35,7 +35,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 O sistema de feature gating escolhido aqui determina o quanto custa adicionar um novo limite no futuro (ex.: máximo de cenários por plano em S12, máximo de modelos federados em S29). Se cada feature verifica o plano diretamente, mudar um limite exige busca em todos os controllers. Um sistema central de limites resolve isso em um lugar.
 
-Stripe webhooks mal projetados causam estados inconsistentes (assinatura ativa no Stripe, plano free no banco) que são difíceis de corrigir em produção.
+Webhooks de cobrança mal projetados causam estados inconsistentes (assinatura ativa no Mercado Pago, plano free no banco) que são difíceis de corrigir em produção.
 
 ---
 
@@ -45,15 +45,15 @@ Stripe webhooks mal projetados causam estados inconsistentes (assinatura ativa n
 |---|---|---|
 | Camada de autorização | Produto consulta **entitlements**, nunca `plan` | Plano só define entitlements iniciais; suporta add-ons futuros |
 | Limites centralizados | `plan_limits.ts` com objeto de configuração por plano | Mudar limite = mudar em 1 lugar |
-| Idempotência de webhook | `stripe_event_id` único no banco | Reprocessar webhook não duplica upgrade |
-| Webhook dead-letter | Falhas persistidas em `failed_webhooks` | Nunca perder evento Stripe, mesmo sem retry sofisticado |
+| Idempotência de webhook | id da notificação único em `billing_provider_events` | Reprocessar webhook não duplica upgrade |
+| Webhook dead-letter | Falhas persistidas em `failed_webhooks` | Nunca perder notificação do Mercado Pago, mesmo sem retry sofisticado |
 | Estado de assinatura | `subscription_status` explícito | Diferencia `trialing` de `active` mesmo com limites iguais |
 | Trial | 14 dias com plano Pro, status `trialing` | Converte sem fricção de cartão |
 | Medição de uso | Tabela `tenant_usage` com contadores | Evita `COUNT` gigante a cada verificação de limite |
 | Resposta de limite | `403` com payload estruturado, **não 402** | 402 é tratado de forma inconsistente por SDKs e proxies |
 | Downgrade | Preserva dados, bloqueia criação nova | Nunca deletar dado de cliente |
 | Verificação de limite | Middleware `checkPlanLimit('models')` no route | Reutilizável em qualquer resource |
-| Portal de billing | Stripe Customer Portal | Não reimplementar gestão de assinatura |
+| Gestão da assinatura | Tela própria (pausar, retomar, cancelar) sobre a API de preapproval | O Mercado Pago não tem portal do cliente |
 
 ---
 
@@ -128,7 +128,7 @@ tenant_usage (
 -- Estado de assinatura explícito
 -- subscription_status: trialing | active | past_due | canceled | expired
 
--- Eventos Stripe que falharam ao processar (dead-letter)
+-- Notificações do Mercado Pago que falharam ao processar (dead-letter)
 failed_webhooks (
   id         UUID PK,
   event_id   VARCHAR(255),
@@ -178,11 +178,11 @@ backend/src/shared/middleware/
   check-plan-limit.ts   ← middleware reutilizável por resource
 
 backend/db/schema/
-  billing.ts            ← subscriptions, stripe_events, failed_webhooks
+  billing.ts            ← subscriptions, billing_provider_events, failed_webhooks
   entitlements.ts       ← tenant_entitlements, tenant_usage
 
 frontend/src/
-  billing/checkout.ts   ← redirect para Stripe Checkout
+  billing/checkout.ts   ← redirect para o cadastro do cartão no Mercado Pago (init_point)
   billing/success.ts    ← página de confirmação pós-upgrade
 ```
 
@@ -193,7 +193,7 @@ frontend/src/
 | Risco | Mitigação |
 |---|---|
 | Webhook chega antes do redirect (race condition) | Página de sucesso polling até plano atualizar |
-| Stripe indisponível bloqueia criação de checkout | Tratar erro graciosamente, retry automático |
+| Mercado Pago indisponível bloqueia criação de checkout | Tratar erro graciosamente, retry automático |
 | Limite de `Infinity` causando bug em comparações | Helper `isWithinLimit(current, limit)` trata Infinity |
 
 ---
@@ -203,7 +203,7 @@ frontend/src/
 - [x] Limite atingido retorna `403` com payload `{ code, resource, limit, current }` (não 402)
 - [x] Criação de projeto bloqueada quando limite de projetos atingido
 - [x] Verificação de limite lê `tenant_usage`, não faz `COUNT` na hora
-- [ ] Checkout Stripe em test mode completa e webhook atualiza plano no banco
+- [ ] Assinatura no Mercado Pago (credencial de teste) autoriza e notificação atualiza plano no banco
 - [ ] Produto consulta entitlements, nunca `plan` diretamente (sem `if (plan === ...)` em features)
 - [ ] Upgrade reflete novos limites imediatamente
 - [ ] Downgrade reflete novos limites imediatamente; dados existentes preservados

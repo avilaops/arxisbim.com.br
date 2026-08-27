@@ -81,7 +81,7 @@ Qualquer campo sensível deve ser removido **antes** de chegar ao log:
 - `Cookie`
 - senha / password
 - access token / refresh token / JWT
-- Stripe secret
+- Access token do Mercado Pago
 - Database URL
 - Storage keys / presigned URLs
 
