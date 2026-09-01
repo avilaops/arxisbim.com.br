@@ -41,17 +41,10 @@ do Let's Encrypt não fecha.
 
 ## Subir uma versão nova
 
-Backend:
-
 ```bash
-./deploy/deploy.sh
-```
-
-Frontend (build local, envia só o `dist`):
-
-```bash
-npm --prefix frontend run build
-tar -C frontend -czf - dist | ssh -i ~/.ssh/hetzner_avilaops root@23.88.60.193   'cd /opt/arxisvr/web && rm -rf dist && tar -xzf -'
+./deploy/deploy.sh          # backend e frontend
+./deploy/deploy.sh api      # só o backend
+./deploy/deploy.sh web      # só o site
 ```
 
 Não precisa reiniciar o `arxisvr-web`: o `dist` é montado como volume e o Caddy
