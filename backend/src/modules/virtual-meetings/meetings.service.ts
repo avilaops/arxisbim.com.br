@@ -9,7 +9,9 @@ import {
   meetingCollaborationSnapshots,
   meetingCollaborationUpdates
 } from '../../shared/database/schema/virtual-meetings.js';
+import { projects } from '../../shared/database/schema/projects.js';
 import { NotificationService } from '../notifications/notifications.service.js';
+import { MeetingEvents, MeetingEventsService } from './meeting-events.service.js';
 import type { 
   CreateMeetingInput, 
   JoinMeetingInput,
@@ -79,7 +81,33 @@ export class MeetingsService {
       );
     }
 
+    MeetingEventsService.emitDetached(MeetingEvents.ROOM_CREATED, room.id, tenantId, {
+      meetingCode,
+      roomUrl,
+      projectId: input.projectId,
+      hostUserId: input.hostUserId ?? null,
+    });
+
     return room;
+  }
+
+  /**
+   * Tenant dono da sala, via projeto.
+   *
+   * Só `createRoom` recebe o tenant de quem chamou; entrar, sair e encerrar
+   * vêm do gateway ou de um id de participante e não têm essa informação.
+   * Sem resolver aqui, o evento sairia com `tenantId` vazio e a contagem de
+   * minutos não saberia de quem cobrar.
+   */
+  private async tenantDaSala(roomId: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ tenantId: projects.tenantId })
+      .from(virtualMeetingRooms)
+      .innerJoin(projects, eq(projects.id, virtualMeetingRooms.projectId))
+      .where(eq(virtualMeetingRooms.id, roomId))
+      .limit(1);
+
+    return row?.tenantId ?? null;
   }
 
   async getRoom(roomId: string) {
@@ -125,6 +153,17 @@ export class MeetingsService {
       })
       .returning();
 
+    MeetingEventsService.emitDetached(
+      MeetingEvents.PARTICIPANT_JOINED,
+      input.roomId,
+      await this.tenantDaSala(input.roomId),
+      {
+        participantId: participant.id,
+        userId: input.userId,
+        userName: input.userName,
+      },
+    );
+
     return participant;
   }
 
@@ -147,13 +186,30 @@ export class MeetingsService {
   }
 
   async leaveRoom(participantId: string) {
-    await this.db
+    // `returning()` em vez de update cego: o evento precisa da sala e de quem
+    // saiu, e essa é a única chance de saber (o registro some da lista de
+    // conectados logo em seguida).
+    const [participant] = await this.db
       .update(meetingParticipants)
-      .set({ 
+      .set({
         isConnected: false,
         leftAt: new Date()
       })
-      .where(eq(meetingParticipants.id, participantId));
+      .where(eq(meetingParticipants.id, participantId))
+      .returning();
+
+    if (!participant) return;
+
+    MeetingEventsService.emitDetached(MeetingEvents.PARTICIPANT_LEFT, participant.roomId, await this.tenantDaSala(participant.roomId), {
+      participantId,
+      userId: participant.userId,
+      userName: participant.userName,
+      joinedAt: participant.joinedAt?.toISOString() ?? null,
+      leftAt: participant.leftAt?.toISOString() ?? null,
+      duracaoSegundos: participant.joinedAt && participant.leftAt
+        ? Math.max(0, Math.round((participant.leftAt.getTime() - participant.joinedAt.getTime()) / 1000))
+        : null,
+    });
   }
 
   async getParticipants(roomId: string) {
@@ -331,5 +387,37 @@ export class MeetingsService {
         leftAt: new Date()
       })
       .where(eq(meetingParticipants.roomId, roomId));
+
+    // Fechamento é o evento que interessa ao n8n: é aqui que dá para mandar o
+    // resumo, registrar no CRM e contar minutos. Por isso ele carrega quem
+    // participou e quanto tempo a sala durou, em vez de só o id.
+    const [room] = await this.db
+      .select()
+      .from(virtualMeetingRooms)
+      .where(eq(virtualMeetingRooms.id, roomId))
+      .limit(1);
+
+    const participantes = await this.db
+      .select()
+      .from(meetingParticipants)
+      .where(eq(meetingParticipants.roomId, roomId));
+
+    const inicio = room?.createdAt ?? null;
+    const fim = room?.closedAt ?? new Date();
+
+    MeetingEventsService.emitDetached(MeetingEvents.ROOM_ENDED, roomId, await this.tenantDaSala(roomId), {
+      meetingCode: room?.meetingCode ?? null,
+      projectId: room?.projectId ?? null,
+      criadaEm: inicio?.toISOString() ?? null,
+      encerradaEm: fim.toISOString(),
+      duracaoSegundos: inicio ? Math.max(0, Math.round((fim.getTime() - inicio.getTime()) / 1000)) : null,
+      totalParticipantes: participantes.length,
+      participantes: participantes.map((p) => ({
+        userId: p.userId,
+        userName: p.userName,
+        joinedAt: p.joinedAt?.toISOString() ?? null,
+        leftAt: p.leftAt?.toISOString() ?? null,
+      })),
+    });
   }
 }
