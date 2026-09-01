@@ -11,15 +11,16 @@ Motivo: decidir por onde retomar o ArxisVR depois de uma parada.
 
 ## Veredito em uma linha
 
-O produto **não estava no ar**. Existe muito software pronto e testado no
-repositório, mas o que o mundo enxerga hoje é uma landing page congelada em
-**07/06/2026**, 199 commits atrás. A API já voltou; o frontend ainda não.
+O produto **não estava no ar**, e agora está. Havia muito software pronto e
+testado no repositório enquanto o mundo via uma landing page congelada em
+**07/06/2026**, 199 commits atrás, sem API atrás dela. API, site e a tela de
+cobrança subiram no mesmo dia.
 
 ## Estado real da infraestrutura
 
 | Camada | Onde está | Estado |
 |---|---|---|
-| Frontend | Cloudflare Pages `arxisvr-frontend.pages.dev`, DNS proxied | **No ar, mas congelado.** Último deploy 07/06/2026, commit `156c4b02` |
+| Frontend | ~~Cloudflare Pages~~ → container `arxisvr-web` no orquestrador | **Resolvido em 01/09.** Estava congelado no commit `156c4b02` de 07/06/2026, 199 commits atrás |
 | API | ~~CNAME para `arxisvr.onrender.com`~~ → A para `23.88.60.193`, dns-only | **Resolvido em 01/09.** O serviço do Render tinha sido apagado; a API agora roda no servidor orquestrador |
 | Banco | ~~Render managed Postgres~~ → container `arxisvr-db` | **Perdido e recriado vazio.** Não havia dump em `/opt/backups` nem em lugar nenhum, e o Neon do `.env` está comentado desde antes |
 | Storage | Cloudflare R2 (`STORAGE_DRIVER=r2` no antigo `render.yaml`) | **Trocado por driver local.** As chaves do R2 não estão em nenhum `.env` e o bucket não foi localizado |
@@ -34,11 +35,13 @@ for Cloudflare Pages auto-deploy`, o próprio commit `156c4b02`). A conta da avi
 GitHub está bloqueada por billing e nenhum Actions roda. O deploy parou no mesmo commit
 que o criou e ninguém percebeu, porque o site continuou respondendo 200.
 
-Consequência prática, verificada com `curl` no ar agora:
+Consequência prática, medida com `curl` antes de arrumar:
 
-- `/validador` responde **404**. O lead magnet do validador IFC existe no código e nunca foi publicado.
-- `/sitemap.xml` e `/robots.txt` respondem **404**. O trabalho de SEO está no git e invisível para o Google.
-- `/login` e `/app` respondem 200 e são inúteis: apontam para `api.arxisvr.avilaops.com`, que está morta.
+- `/validador` respondia **404**. O lead magnet do validador IFC existia no código e nunca foi publicado.
+- `/sitemap.xml` e `/robots.txt` respondiam **404**. O SEO estava no git e invisível para o Google.
+- `/login` e `/app` respondiam 200 e eram inúteis: apontavam para a API morta.
+
+Os três respondem **200** desde 01/09/2026.
 
 ## Inventário do que existe
 
@@ -60,9 +63,17 @@ A migração para o Mercado Pago (commit `67705f9`, 27/08) está completa e test
 jornal de eventos em `billing_provider_events`, worker de sincronização a cada 6 h,
 pausar/retomar/cancelar sem portal do provedor, 43 testes.
 
-Falta uma coisa só: o webhook do Mercado Pago aponta para host morto. O destino correto
-é `POST /api/v1/billing/webhook`, e ele só pode ser cadastrado depois que a API tiver
-um endereço vivo. O provedor precisa de `MP_ACCESS_TOKEN` e `MP_WEBHOOK_SECRET`.
+Faltavam duas coisas, e a segunda não estava no radar:
+
+1. O webhook apontava para host morto. O destino certo é
+   `POST /api/v1/billing/webhook`. Em 01/09 o ArxisVR ganhou **aplicação própria**
+   no Mercado Pago (`8686023099189017`), o que resolve a limitação de uma URL de
+   notificação por aplicação: antes ele dividia a `avilaops-cliente` com lojas,
+   mail e app, e por isso não podia ter webhook seu.
+2. **Não existia tela para assinar.** A aba "Plano & Cobrança" desenhava
+   "Free / Ativo / 3 de 3 projetos / 2.1 de 5 GB" escrito à mão, e a de Membros
+   inventava "Maria Santos" e "Carlos Oliveira". O backend estava pronto e
+   ninguém conseguia pagar. Refeitas em 01/09 lendo a API.
 
 Planos hoje: Free, Starter R$ 87, Professional R$ 237, Enterprise R$ 597 (mensal, BRL).
 
@@ -99,8 +110,8 @@ Ordenado por dependência. Os itens marcados foram executados em 01/09/2026.
 | 3 | Imagem Docker do backend (não existia Dockerfile) | 3 h a 4 h | **Feito.** `backend/Dockerfile` em duas etapas, build no servidor |
 | 4 | Rota no Caddy e DNS saindo do Render | 30 min | **Feito.** A para `23.88.60.193`, certificado emitido |
 | 5 | Storage: R2 ou volume local | 1 h | **Feito por ora.** Driver local em volume; R2 fica para quando as chaves aparecerem |
-| 6 | Cadastrar o webhook do Mercado Pago e testar ponta a ponta | 1 h | **Pendente.** Depende do painel do MP, que é onde o segredo é gerado |
-| 7 | Tirar o frontend do Cloudflare Pages e servir do orquestrador | 2 h a 3 h | **Pendente.** É o que ainda deixa 199 commits invisíveis |
+| 6 | Cadastrar o webhook do Mercado Pago e testar ponta a ponta | 1 h | **Quase.** Aplicação própria criada e credenciais instaladas; falta colar a URL no painel e trazer o segredo. Já não bloqueia a venda |
+| 7 | Tirar o frontend do Cloudflare Pages e servir do orquestrador | 2 h a 3 h | **Feito.** Container `arxisvr-web`, DNS no orquestrador, `/validador` e o sitemap no ar |
 | 8 | Matar o Worker de keepalive e o `render.yaml` | 15 min | **Feito.** Worker apagado na Cloudflare, `render.yaml` e `infra/keepalive-worker/` fora do repo, keep-alive interno removido do `index.ts` |
 
 ## Dívida técnica catalogada
@@ -133,34 +144,55 @@ Executado em 01/09/2026, depois da decisão de abandonar o Render.
 - **Render apagado do repositório**: `render.yaml`, `infra/keepalive-worker/` e o
   keep-alive interno do `index.ts` (que existia só porque o free tier hibernava).
 - **Worker `arxisvr-keepalive` apagado** da conta Cloudflare.
+- **Site no ar com o build atual**: container `arxisvr-web` (Caddy servindo o
+  `dist`, com fallback de SPA), `arxisvr.avilaops.com` saiu do Cloudflare Pages e
+  virou A para o orquestrador. `/validador`, `/sitemap.xml` e `/robots.txt`
+  passaram de **404 para 200** depois de quase três meses.
+- **Tela de cobrança de verdade**: a aba Billing e a de Membros deixaram de
+  desenhar dados escritos à mão e passaram a ler a API. Dá para assinar, pausar,
+  retomar, cancelar e convidar. Provado em produção com conta real: checkout
+  devolveu um preapproval do Mercado Pago de R$ 87,00 e o `/billing/sync` leu a
+  assinatura de volta (dados de teste apagados depois).
+- **Aplicação própria no Mercado Pago** (`8686023099189017`), credenciais no
+  `.env.production` local e no servidor.
+- **Três defeitos corrigidos no caminho**: vazamento de `password_hash` e
+  `two_factor_secret` em `GET /tenants/:id/users`; o provedor de cobrança exigindo
+  `MP_WEBHOOK_SECRET` para abrir checkout (sem webhook não se vendia nada); e todo
+  link de e-mail apontando para `.html` do app antigo, o que quebrava recuperação
+  de senha e convite.
 - **Novidades no repositório**: `backend/Dockerfile`, `backend/.dockerignore`,
-  `deploy/docker-compose.yml`, `deploy/deploy.sh`, `deploy/README.md`.
+  `deploy/docker-compose.yml`, `deploy/deploy.sh`, `deploy/web.Caddyfile`,
+  `deploy/README.md`, `frontend/.env.production`, e as telas
+  `pages/account/BillingPage.tsx` e `pages/account/MembersPage.tsx`.
 
 ### O que ficou pendente disso
 
 - `MP_WEBHOOK_SECRET` está vazio no `.env` do servidor. O segredo é gerado no painel do
   Mercado Pago quando a URL do webhook é cadastrada, então só dá para fechar por lá.
-- O volume `arxisvr_uploads` e o banco `arxisvr` **não entram na rotina de backup**, que
-  cobre uma lista explícita de bancos no servidor de produção.
+- Backup do banco e do volume: **decidido não fazer**. Produto sem venda não
+  justifica rotina de backup; quando houver cliente pagante, entra na lista.
 - Um erro no boot: `Failed to record metric ... metrics_tenant_id_fkey`. A métrica de
   inicialização tenta gravar com um `tenant_id` que não existe em banco novo. Não derruba
   nada, mas suja o log.
 
 ## Recomendação
 
-O que sobrou é o frontend, e é o que mais dói. 199 commits continuam invisíveis,
-inclusive as duas peças que existem justamente para gerar demanda: o validador IFC
-gratuito e o SEO. Com a API viva, publicar o frontend atualizado deixou de ser
-"mais uma tarefa" e virou o único passo entre o produto e o mundo.
+O ArxisVR voltou a existir: site atual no ar, API viva e um caminho de pagamento
+que funciona ponta a ponta. O que falta não é mais infraestrutura.
 
 Ordem daqui:
 
-1. **Publicar o frontend atualizado**, servido do orquestrador em vez do Cloudflare
-   Pages. O validador vai ao ar, o sitemap vai ao ar, a landing para de ser de junho.
-2. **Fechar o billing** cadastrando o webhook no painel do Mercado Pago.
-3. **Colocar o banco e o volume do ArxisVR na rotina de backup.**
-4. **Só então voltar ao roadmap.** A sprint seguinte na sequência é a S14, classificação
-   de tipos, dentro da fase de Metadados BIM.
+1. **Colar a URL do webhook no painel do Mercado Pago** e trazer o segredo. É o
+   último passo manual, e já não bloqueia a venda: a sincronização cobre.
+2. **Varrer o resto das telas atrás de dado falso.** Billing e Membros eram os
+   piores, mas a mesma mão desenhou outras: as abas de auditoria e configurações
+   do `/account` ainda não foram conferidas. Vale a mesma régua da casa: tela que
+   finge vir do banco reprova.
+3. **Voltar ao roadmap** na S14, classificação de tipos, dentro de Metadados BIM.
+
+O que continua fora de escopo por decisão: **backup**. Produto sem venda não
+justifica rotina; quando houver o primeiro cliente pagante, entra na lista junto
+com o volume dos IFCs.
 
 ## Como isso foi apurado
 
