@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { requireSuperAdmin } from '../../core/admin/super-admin.middleware.js';
 import { observabilityService } from '../../core/observability/service.js';
 import { BillingService } from './billing.service.js';
 import { billingWebhookSchema, changePlanSchema, createCheckoutSchema, createPortalSchema } from './billing.schemas.js';
@@ -222,8 +223,18 @@ export async function billingRoutes(fastify: FastifyInstance) {
     preHandler: [authenticateRequest, ensureBillingManager],
   }, subscriptionActionHandler('cancel'));
 
+  /**
+   * Troca o plano SEM passar pelo provedor, ou seja, sem ninguém pagar.
+   *
+   * Estava atrás de `canManageBilling`, que aprova owner e admin do próprio
+   * tenant. Como todo mundo que se cadastra vira owner do tenant que acabou de
+   * criar, qualquer cliente conseguia se dar o Enterprise de graça mandando
+   * `{"plan":"enterprise"}`. Quem assina de verdade usa `/checkout`; esta rota
+   * é ferramenta da plataforma (cortesia, migração, suporte) e por isso agora
+   * exige super-admin, o gate que só libera os e-mails de SUPER_ADMIN_EMAILS.
+   */
   fastify.post('/change-plan', {
-    preHandler: authenticateRequest,
+    preHandler: [authenticateRequest, requireSuperAdmin],
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user!;
     const validation = changePlanSchema.safeParse(request.body);
@@ -236,19 +247,15 @@ export async function billingRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const canManageBilling = await BillingService.canManageBilling(user.tenantId, user.userId);
-
-      if (!canManageBilling) {
-        return reply.code(403).send({
-          error: 'Forbidden',
-          message: 'Only tenant owners/admins can change billing plans directly',
-        });
-      }
-
-      const subscription = await BillingService.changePlan(user.tenantId, validation.data);
+      // O super-admin age sobre o tenant que informar; sem isso a rota só
+      // conseguiria mexer no workspace pessoal dele.
+      const alvo = (request.body as { tenantId?: string })?.tenantId || user.tenantId;
+      const subscription = await BillingService.changePlan(alvo, validation.data);
 
       await observabilityService.logAudit({
-        tenantId: user.tenantId,
+        // Registra no tenant que MUDOU, não no de quem mexeu, senão a troca
+        // some do histórico de quem foi afetado.
+        tenantId: alvo,
         userId: user.userId,
         action: 'billing.subscription.changed',
         resource: 'billing.subscription',
@@ -256,6 +263,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
           plan: validation.data.plan,
           billingCycle: validation.data.billingCycle,
           status: validation.data.status,
+          alteradoPor: user.email,
         },
       });
 
