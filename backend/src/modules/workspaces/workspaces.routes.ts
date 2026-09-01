@@ -87,7 +87,7 @@ export async function workspaceRoutes(fastify: FastifyInstance) {
     });
 
     const [ws] = await db.select({ name: tenants.name }).from(tenants).where(eq(tenants.tenantId, tenantId)).limit(1);
-    const acceptUrl = `${FRONTEND_URL}/accept-invite.html?token=${token}`;
+    const acceptUrl = `${FRONTEND_URL}/accept-invite?token=${token}`;
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:auto">
         <h2>Você foi convidado para o workspace <strong>${ws?.name || tenantId}</strong></h2>

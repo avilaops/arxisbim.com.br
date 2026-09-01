@@ -86,9 +86,15 @@ function getProvider(): BillingProvider | null {
   if (providerSingleton) return providerSingleton;
 
   const accessToken = process.env.MP_ACCESS_TOKEN;
-  const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+  // O segredo do webhook só existe depois de cadastrar a URL no painel do MP, e
+  // serve para UMA coisa: conferir a assinatura da notificação que chega. Exigir
+  // ele aqui derrubava também o que não depende dele (abrir assinatura, ler
+  // cobranças, sincronizar), ou seja, sem o segredo não se vendia nada. Quando
+  // faltar, `verifyMercadoPagoSignature` recusa toda notificação — que é o
+  // comportamento seguro — e o estado continua chegando pela sincronização.
+  const webhookSecret = process.env.MP_WEBHOOK_SECRET ?? '';
 
-  if (!accessToken || !webhookSecret) {
+  if (!accessToken) {
     return null;
   }
 
@@ -99,7 +105,7 @@ function getProvider(): BillingProvider | null {
 function requireProvider(): BillingProvider {
   const provider = getProvider();
   if (!provider) {
-    throw new Error('Provedor de cobrança configurado mas MP_ACCESS_TOKEN/MP_WEBHOOK_SECRET estão ausentes');
+    throw new Error('Provedor de cobrança configurado mas MP_ACCESS_TOKEN está ausente');
   }
   return provider;
 }
@@ -439,8 +445,8 @@ export class BillingService {
     const amountCents = getPlanAmountCents(plan, billingCycle);
     const provider = getConfiguredProvider();
     const appUrl = getAppBaseUrl();
-    const successUrl = input.successUrl ?? `${appUrl}/app.html?billing=success`;
-    const cancelUrl = input.cancelUrl ?? `${appUrl}/app.html?billing=cancel`;
+    const successUrl = input.successUrl ?? `${appUrl}/account?tab=billing&billing=success`;
+    const cancelUrl = input.cancelUrl ?? `${appUrl}/account?tab=billing&billing=cancel`;
 
     const [currentSubscription] = await db
       .select()
@@ -450,7 +456,7 @@ export class BillingService {
 
     let expiresAt = addDays(new Date(), 1);
     let providerSessionId: string | null = null;
-    let checkoutUrl: string | null = `${appUrl}/app.html?billingCheckout=pending&plan=${plan}&cycle=${billingCycle}`;
+    let checkoutUrl: string | null = `${appUrl}/account?tab=billing&billingCheckout=pending&plan=${plan}&cycle=${billingCycle}`;
     let providerCustomerId = currentSubscription?.providerCustomerId ?? null;
     let providerMode = provider === 'internal' ? 'manual-approval' : `${provider}-subscription`;
 
@@ -557,7 +563,7 @@ export class BillingService {
    */
   static async createPortalSession(tenantId: string, _userId: string, input: CreatePortalInput) {
     const appUrl = getAppBaseUrl();
-    const returnUrl = input.returnUrl ?? `${appUrl}/app.html?billing=overview`;
+    const returnUrl = input.returnUrl ?? `${appUrl}/account?tab=billing`;
 
     const [subscription] = await db
       .select()
@@ -577,7 +583,7 @@ export class BillingService {
 
     return {
       provider: subscription.provider,
-      portalUrl: `${appUrl}/app.html?billing=manage`,
+      portalUrl: `${appUrl}/account?tab=billing`,
       mode: 'internal_portal',
       returnUrl,
       pendingCheckoutUrl: pending?.checkoutUrl ?? null,
@@ -1617,7 +1623,7 @@ export class BillingService {
         <div style="font-family:sans-serif;max-width:480px;margin:auto">
           <h2>Olá${r.name ? ' ' + r.name : ''},</h2>
           ${body}
-          <p><a href="${appUrl}/app.html?billing=overview" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Ver assinatura</a></p>
+          <p><a href="${appUrl}/account?tab=billing" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Ver assinatura</a></p>
         </div>`;
       await emailService.sendCustomEmail(r.email, subject, html, tenantId).catch(() => {});
     }

@@ -42,9 +42,23 @@ services:
       # primeiro deploy.
       - uploads:/app/uploads
 
+  web:
+    image: caddy:2-alpine
+    container_name: arxisvr-web
+    restart: unless-stopped
+    volumes:
+      # O build sai da máquina do dev (213 mil linhas não cabem confortavelmente
+      # em 3,7 GB de RAM); aqui só entra o `dist` pronto, montado como leitura.
+      - ./web/dist:/srv:ro
+      - ./web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - web-data:/data
+      - web-config:/config
+
 volumes:
   db-data:
   uploads:
+  web-data:
+  web-config:
 
 networks:
   default:

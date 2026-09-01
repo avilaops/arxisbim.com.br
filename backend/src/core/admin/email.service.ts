@@ -106,8 +106,8 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
   <tr><td style="padding:20px 40px;border-top:1px solid rgba(0,0,0,0.06);background:#F9F9F9;">
     <p style="font-size:12px;color:#aeaeb2;margin:0;line-height:1.6;">
       ArxisVR by AvilaOps · Plataforma BIM com IA e Realidade Estendida<br>
-      <a href="https://arxisvr.avilaops.com/lgpd.html" style="color:#aeaeb2;">Cancelar inscrição</a> ·
-      <a href="https://arxisvr.avilaops.com/privacy.html" style="color:#aeaeb2;">Política de Privacidade</a>
+      <a href="https://arxisvr.avilaops.com/lgpd" style="color:#aeaeb2;">Cancelar inscrição</a> ·
+      <a href="https://arxisvr.avilaops.com/privacy" style="color:#aeaeb2;">Política de Privacidade</a>
     </p>
   </td></tr>
 
@@ -136,7 +136,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
   <li style="margin-bottom:8px;">⏱️ Simular o cronograma 4D vinculado ao modelo</li>
   <li style="margin-bottom:8px;">🥽 Entrar em VR/AR no navegador, sem instalação</li>
 </ul>`,
-          cta: { label: 'Abrir a plataforma →', url: `${appUrl}/app.html` },
+          cta: { label: 'Abrir a plataforma →', url: `${appUrl}/app` },
         }),
       };
 
@@ -149,7 +149,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
           body: `<p>Seu acesso ao plano gratuito do ArxisVR termina em <strong>3 dias</strong>.</p>
 <p>Para continuar com BIM 4D/5D, VR/AR e projetos ilimitados, faça upgrade para o plano <strong>Professional por R$ 499/mês</strong>.</p>
 <p>Seus projetos e modelos IFC serão preservados.</p>`,
-          cta: { label: 'Fazer upgrade agora', url: `${appUrl}/register.html#pricing` },
+          cta: { label: 'Fazer upgrade agora', url: `${appUrl}/register#pricing` },
         }),
       };
 
@@ -180,7 +180,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
           subject: 'Nova funcionalidade',
           body: `<p>Temos uma novidade para você no <strong>ArxisVR</strong>!</p>
 <p>Continue acompanhando as atualizações da plataforma — estamos sempre melhorando para você.</p>`,
-          cta: { label: 'Ver o que há de novo', url: `${appUrl}/app.html` },
+          cta: { label: 'Ver o que há de novo', url: `${appUrl}/app` },
         }),
       };
 
@@ -192,7 +192,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
           subject: 'Reativação',
           body: `<p>Percebemos que você não acessa o ArxisVR há alguns dias.</p>
 <p>Seus projetos e modelos IFC estão todos lá, esperando por você. Que tal continuar de onde parou?</p>`,
-          cta: { label: 'Voltar ao ArxisVR', url: `${appUrl}/app.html` },
+          cta: { label: 'Voltar ao ArxisVR', url: `${appUrl}/app` },
         }),
       };
 
@@ -203,7 +203,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
           name: recipientName,
           subject: 'Mensagem ArxisVR',
           body: `<p>Obrigado por usar o ArxisVR!</p>`,
-          cta: { label: 'Acessar plataforma', url: `${appUrl}/app.html` },
+          cta: { label: 'Acessar plataforma', url: `${appUrl}/app` },
         }),
       };
   }

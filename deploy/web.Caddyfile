@@ -1,0 +1,29 @@
+# Caddy interno do container `arxisvr-web`: serve o build estático do frontend.
+# Quem termina TLS é o Caddy do stack /opt/observabilidade, que faz
+# reverse_proxy para cá. Por isso aqui é HTTP puro na 80.
+:80 {
+	root * /srv
+	encode gzip zstd
+
+	# SPA: as rotas (/validador, /login, /account...) só existem no React Router,
+	# então qualquer caminho que não seja arquivo real cai no index.html. Sem
+	# isto, abrir /validador direto ou recarregar a página dá 404.
+	try_files {path} /index.html
+	file_server
+
+	# O bundle tem hash no nome, então pode ser cacheado para sempre. O
+	# index.html e o service worker não: são o ponto de entrada que precisa
+	# enxergar a versão nova no primeiro acesso depois do deploy.
+	@imutavel path /assets/*
+	header @imutavel Cache-Control "public, max-age=31536000, immutable"
+
+	@semCache {
+		path /index.html /sw.js /workbox-*.js /manifest.webmanifest
+	}
+	header @semCache Cache-Control "no-cache"
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

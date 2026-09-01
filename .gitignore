@@ -10,6 +10,8 @@ yarn-error.log
 .env.local
 .env.*
 !.env.example
+# Sem segredo: so VITE_* que ja vao no bundle publico.
+!frontend/.env.production
 
 # IDE
 .vscode/
