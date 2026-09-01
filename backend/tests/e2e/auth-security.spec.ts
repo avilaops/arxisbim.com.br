@@ -342,7 +342,10 @@ describe('Auth Security Tests (S-series)', () => {
   });
 
   // ── /auth/2fa/verify-login rejects invalid challenge ──────────────────
-  it('B2: verify-login with invalid challengeToken returns 401', async () => {
+  // O timeout nao e folga a toa: o handler faz `await import('./totp.service.js')`
+  // e esta e a primeira vez que esse modulo carrega. Com o suite inteiro rodando
+  // em paralelo, a transformacao desse import sozinha passa dos 5s padrao.
+  it('B2: verify-login with invalid challengeToken returns 401', { timeout: 30000 }, async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/2fa/verify-login',
