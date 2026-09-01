@@ -1,8 +1,8 @@
-# SPRINT-10-RESULT · Viewer — Filtros e Visibilidade
+# SPRINT-10-RESULT · Viewer: Filtros e Visibilidade
 
 > Artefato pós-execução. Evidência coletada na sessão.
 
-**Sprint:** S10 · Viewer — Filtros e Visibilidade
+**Sprint:** S10 · Viewer, Filtros e Visibilidade
 **Status:** Núcleo serializável/desacoplado fechado e testado. UI (FilterPanel) + aplicação de `mesh.visible`/clipping no canvas = camada browser.
 **Data:** 2026-06-13
 **Commit:** `d89f862`
@@ -13,12 +13,12 @@ Visibilidade como **estado serializável e reproduzível** (base p/ cenários S1
 
 ## Arquivos (frontend/src/viewer)
 
-- `VisibilityState.ts` — DTO `VisibilityState` versionado; grupos/floors/hiddenElements/clippingPlane; `isVisibilityState`, `defaultVisibilityState`.
-- `DisciplineTaxonomy.ts` — tipo IFC → disciplina via **config injetável** (não hard-coded); `makeDisciplineResolver`.
-- `VisibilityManager.ts` — `isVisible(expressID)` puro; toggle por grupo/floor; hide/show; `getState`/`setState`; `onApply(id,visible)` p/ render layer. Só expressID/groupKey.
-- `ClippingPlane.ts` — `THREE.Plane` + serialização normal+constant.
+- `VisibilityState.ts` - DTO `VisibilityState` versionado; grupos/floors/hiddenElements/clippingPlane; `isVisibilityState`, `defaultVisibilityState`.
+- `DisciplineTaxonomy.ts` - tipo IFC → disciplina via **config injetável** (não hard-coded); `makeDisciplineResolver`.
+- `VisibilityManager.ts` - `isVisible(expressID)` puro; toggle por grupo/floor; hide/show; `getState`/`setState`; `onApply(id,visible)` p/ render layer. Só expressID/groupKey.
+- `ClippingPlane.ts` - `THREE.Plane` + serialização normal+constant.
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|
@@ -38,5 +38,5 @@ Visibilidade como **estado serializável e reproduzível** (base p/ cenários S1
 ## Aberto
 
 - `FilterPanel` (UI) + aplicar `mesh.visible` e `renderer.clippingPlanes` no scene = camada de render (browser/GPU). `onApply(id,visible)` é o encaixe.
-- Wiring no `ViewerFacade` (get/setVisibilityState) quando S12 precisar — requer storeyId por elemento (do IFCStructure S07) plumbado ao frontend.
+- Wiring no `ViewerFacade` (get/setVisibilityState) quando S12 precisar, requer storeyId por elemento (do IFCStructure S07) plumbado ao frontend.
 - Backend: **nada tocado** (puro frontend). v1/drizzle/zod/migrations intactos (130/130).

@@ -5,6 +5,7 @@ import { leads } from '../../shared/database/schema/leads.js';
 import { emailService } from '../../core/email/email.service.js';
 import type { UploadIfcMetadataInput, UpdateIfcMetadataInput } from './ifc.schemas.js';
 import { IfcProcessingService } from './ifc-processing.service.js';
+import { assertIfcSchemaSupported } from './ifc-schema-support.js';
 import { IfcValidationService } from './ifc-validation.service.js';
 import { webhookService } from './webhook.service.js';
 import { cacheService, CacheService } from './cache.service.js';
@@ -59,6 +60,9 @@ export class IfcService {
     if (!validation.valid) {
       throw new Error(`Invalid IFC file: ${validation.errors.join(', ')}`);
     }
+
+    // Rejeita esquemas fora do suporte do pipeline (IFC2X2 e anteriores) — 422
+    assertIfcSchemaSupported(fileBuffer);
 
     // Extract metadata from IFC file
     const extractedMetadata = await this.processingService.extractMetadata(fileBuffer);

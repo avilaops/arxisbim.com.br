@@ -11,13 +11,13 @@
 
 Cálculo de custo em modelo de 50.000 elementos em < 10s. Cache que não fica stale. Viewer sem regressão de FPS durante cálculo em background.
 
-> **Nota para o agente:** Este sprint **não adiciona feature visível** — adiciona a fundação de performance que faz S24, S26 e S30 funcionarem em modelos reais (30k–150k elementos). A regra inviolável herdada do S22: cache **nunca stale** — a chave inclui versão (`scenario_id + cost_table_version_hash`) e qualquer mutação invalida explicitamente.
+> **Nota para o agente:** Este sprint **não adiciona feature visível**, adiciona a fundação de performance que faz S24, S26 e S30 funcionarem em modelos reais (30k–150k elementos). A regra inviolável herdada do S22: cache **nunca stale**, a chave inclui versão (`scenario_id + cost_table_version_hash`) e qualquer mutação invalida explicitamente.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Novas features de custo (apenas otimiza o que existe no S22)
 - Painel/heatmap (S24 consome esta performance)
@@ -46,9 +46,9 @@ Ao invés de recalcular todos os elementos:
 
 ### 2. Cache em camadas
 ```
-L1: In-memory (Map) por request — evita query repetida no mesmo request
-L2: Redis com TTL 1h — compartilhado entre usuários do mesmo tenant
-L3: Postgres view materializada — fallback sem Redis
+L1: In-memory (Map) por request, evita query repetida no mesmo request
+L2: Redis com TTL 1h, compartilhado entre usuários do mesmo tenant
+L3: Postgres view materializada, fallback sem Redis
 Cache key: scenario_id + cost_table_version_hash
 ```
 

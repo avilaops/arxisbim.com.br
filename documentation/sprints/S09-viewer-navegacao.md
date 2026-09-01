@@ -1,4 +1,4 @@
-# S09 · Viewer — Navegação e Câmera
+# S09 · Viewer: Navegação e Câmera
 
 **Fase:** IFC Core  
 **Status:** Pendente  
@@ -17,7 +17,7 @@ Navegação 3D profissional: orbit, pan, zoom, seleção de elemento com highlig
 
 ## Fora de Escopo
 
-O objetivo é: navegar → selecionar → salvar estado → restaurar estado. Pertencem a sprints futuros — **não implementar aqui**:
+O objetivo é: navegar → selecionar → salvar estado → restaurar estado. Pertencem a sprints futuros, **não implementar aqui**:
 
 - Medições
 - Comentários (S16)
@@ -32,7 +32,7 @@ O objetivo é: navegar → selecionar → salvar estado → restaurar estado. Pe
 
 ## Por que importa a longo prazo
 
-O sistema de câmera criado aqui é a base do Presentation Studio (S31). Câmeras salvas em S12 (cenários), percursos em S31, e animação 4D em S27 — todos dependem de um modelo de câmera serializável desde o início.
+O sistema de câmera criado aqui é a base do Presentation Studio (S31). Câmeras salvas em S12 (cenários), percursos em S31, e animação 4D em S27, todos dependem de um modelo de câmera serializável desde o início.
 
 Se a câmera for implementada como estado não-serializável (ex.: referência direta ao objeto Three.js `PerspectiveCamera`), todos os sprints que precisam salvar/restaurar câmera terão que ser refeitos.
 
@@ -69,7 +69,7 @@ interface CameraState {
   focusExpressID?: number          // restaura "vista da fachada" mesmo se coords absolutas mudarem entre versões
 }
 
-// Estado de visualização do viewer (prepara S12/S18/S31 — não persistir ainda)
+// Estado de visualização do viewer (prepara S12/S18/S31, não persistir ainda)
 interface ViewerState {
   camera: CameraState
   selectedExpressId?: number
@@ -108,7 +108,7 @@ viewer.selection.onSelect(callback: (id: number | null) => void): void
 viewer.selection.onHover(callback: (id: number | null) => void): void
 ```
 
-> Toda a API troca apenas `expressID` e `CameraState` — nunca tipos do Three.js. Consumers não importam Three.js.
+> Toda a API troca apenas `expressID` e `CameraState` - nunca tipos do Three.js. Consumers não importam Three.js.
 
 ---
 

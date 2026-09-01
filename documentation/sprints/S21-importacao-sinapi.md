@@ -11,18 +11,18 @@
 
 Ingestão da base SINAPI (planilha mensal da CEF) por estado e mês, com busca por código ou descrição em < 500ms.
 
-> **Nota para o agente:** SINAPI é o **maior diferencial competitivo no Brasil** (referência obrigatória em obra pública). O ponto não-negociável é o **versionamento por (UF, mês)**: um projeto licitado em jan/2026 deve continuar usando a tabela de jan/2026 para sempre. SINAPI é dado de referência imutável — nunca editável pelo usuário.
+> **Nota para o agente:** SINAPI é o **maior diferencial competitivo no Brasil** (referência obrigatória em obra pública). O ponto não-negociável é o **versionamento por (UF, mês)**: um projeto licitado em jan/2026 deve continuar usando a tabela de jan/2026 para sempre. SINAPI é dado de referência imutável, nunca editável pelo usuário.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Cálculo de custo (S22)
 - BDI / encargos sociais detalhados
 - Composição de preços unitários (subitens da composição SINAPI)
-- Outras bases (SICRO, ORSE) — schema deve permitir, mas não importar agora
+- Outras bases (SICRO, ORSE), schema deve permitir, mas não importar agora
 - Atualização automática via scraping da CEF
 
 ---

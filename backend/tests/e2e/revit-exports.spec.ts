@@ -56,6 +56,10 @@ const IFC_SAMPLE = Buffer.from(
   "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n",
 );
 
+const IFC_2X2_SAMPLE = Buffer.from(
+  "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC2X2_FINAL'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n",
+);
+
 /**
  * Insere um API token direto no banco (bypass do formatToken do service,
  * que assume Date em row.created_at — sob este driver vem string).
@@ -113,7 +117,7 @@ describe('S-Plugin: Revit exports API', () => {
     await app.close();
   });
 
-  function postExport(fields: Record<string, string>, opts?: { token?: string; filename?: string }) {
+  function postExport(fields: Record<string, string>, opts?: { token?: string; filename?: string; content?: Buffer }) {
     const boundary = `----plugin${Date.now()}`;
     return app.inject({
       method: 'POST',
@@ -122,7 +126,7 @@ describe('S-Plugin: Revit exports API', () => {
         authorization: `Bearer ${opts?.token ?? plainToken}`,
         'content-type': `multipart/form-data; boundary=${boundary}`,
       },
-      payload: multipartBody(boundary, { name: opts?.filename ?? 'torre.ifc', content: IFC_SAMPLE }, fields),
+      payload: multipartBody(boundary, { name: opts?.filename ?? 'torre.ifc', content: opts?.content ?? IFC_SAMPLE }, fields),
     });
   }
 
@@ -178,5 +182,13 @@ describe('S-Plugin: Revit exports API', () => {
   it('C07: projectName ausente → 400', async () => {
     const res = await postExport({});
     expect(res.statusCode).toBe(400);
+  });
+
+  it('C08: IFC com esquema não suportado (IFC2X2) → 422 com mensagem acionável', async () => {
+    const res = await postExport({ projectName: 'Torre 2x2' }, { content: IFC_2X2_SAMPLE });
+    expect(res.statusCode).toBe(422);
+    const body = JSON.parse(res.body);
+    expect(body.error).toMatch(/IFC2X2_FINAL/);
+    expect(body.error).toMatch(/Reexporte/i);
   });
 });

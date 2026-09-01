@@ -18,7 +18,7 @@ auto-pingar. Este Worker roda na rede do Cloudflare, fora do Render.
 ## Deploy
 
 Precisa de um token Cloudflare com permissão **Workers Scripts: Edit**
-(o token de R2 do projeto NÃO serve — é só R2).
+(o token de R2 do projeto NÃO serve, é só R2).
 
 ```bash
 cd infra/keepalive-worker
@@ -36,4 +36,4 @@ wrangler deploy
 - Logs: `wrangler tail` mostra cada disparo do cron com o status de cada alvo.
 
 ## Alvos pingados
-- `https://api.arxisvr.avilaops.com/health` (backend — também serve o WebSocket)
+- `https://api.arxisvr.avilaops.com/health` (backend, também serve o WebSocket)

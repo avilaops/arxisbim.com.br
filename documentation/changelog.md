@@ -1,4 +1,4 @@
-# Changelog — ArxisVR
+# Changelog: ArxisVR
 
 Registro de decisões relevantes e mudanças de direção.
 Uma entrada por decisão. Atualizar este arquivo quando uma decisão anterior for substituída.

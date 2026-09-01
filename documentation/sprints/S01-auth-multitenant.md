@@ -2,7 +2,7 @@
 
 **Fase:** Fundação SaaS  
 **Status:** Pendente  
-**Bloqueia:** S02, S03, S04, S05 — toda a fundação depende de identidade funcional
+**Bloqueia:** S02, S03, S04, S05, toda a fundação depende de identidade funcional
 
 ---
 
@@ -14,7 +14,7 @@ Estabelecer identidade, sessões e isolamento de workspace. Nenhuma feature de p
 
 ## Fora de Escopo
 
-Os itens abaixo são de sprints futuros. **Devem ser ignorados neste sprint** — não implementar, não criar abstração antecipada além da já especificada, não gastar contexto neles:
+Os itens abaixo são de sprints futuros. **Devem ser ignorados neste sprint**, não implementar, não criar abstração antecipada além da já especificada, não gastar contexto neles:
 
 - SSO (Google, Microsoft, GitHub) e OAuth Providers
 - MFA / 2FA
@@ -53,7 +53,7 @@ Não existe tenant pré-provisionado. Todo `register` é a criação simultânea
 
 O padrão de multi-tenancy escolhido aqui se propaga por todos os 32 sprints. Uma decisão errada em isolamento (ex.: filtrar por `tenantId` na aplicação em vez do banco) vaza dados entre clientes anos depois. O modelo JWT escolhido aqui determina como cenários, modelos e permissões são assinados em S12, S17, S29.
 
-A estratégia de refresh token (rotação com reuse detection) precisa existir desde o início — adicionar depois exige migrar sessões ativas em produção.
+A estratégia de refresh token (rotação com reuse detection) precisa existir desde o início, adicionar depois exige migrar sessões ativas em produção.
 
 ---
 

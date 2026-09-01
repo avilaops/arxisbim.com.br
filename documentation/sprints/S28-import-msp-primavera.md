@@ -11,13 +11,13 @@
 
 Parser de `.mpp` (MS Project) e `.xer`/`.xml` (Primavera P6) que mapeia atividades, predecessores e datas para o schema interno. Import via upload com relatório de erros linha a linha.
 
-> **Nota para o agente:** 100% dos cronogramas de obra no Brasil estão em MS Project ou Primavera. Sem import nativo, o usuário re-digita — fator de abandono imediato. O ponto crítico é o **mapeamento de predecessores** (FS/FF/SS/SF + lag) e **detecção de ciclo**. Reusa o motor de seleção do S15 para mapear atividades a conjuntos de elementos. Import pesado roda no pipeline do S11, nunca síncrono.
+> **Nota para o agente:** 100% dos cronogramas de obra no Brasil estão em MS Project ou Primavera. Sem import nativo, o usuário re-digita, fator de abandono imediato. O ponto crítico é o **mapeamento de predecessores** (FS/FF/SS/SF + lag) e **detecção de ciclo**. Reusa o motor de seleção do S15 para mapear atividades a conjuntos de elementos. Import pesado roda no pipeline do S11, nunca síncrono.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Branching de cenários a partir do cronograma importado (S29)
 - Comparação financeira (S30)
@@ -29,9 +29,9 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 ## Por que importa a longo prazo
 
-100% dos cronogramas de obra no Brasil existem em MS Project ou Primavera. Sem import nativo, o usuário precisa re-digitar ou converter para CSV — fator de abandono imediato.
+100% dos cronogramas de obra no Brasil existem em MS Project ou Primavera. Sem import nativo, o usuário precisa re-digitar ou converter para CSV, fator de abandono imediato.
 
-O mapeamento de predecessores é a parte crítica: MS Project usa vínculos FS/FF/SS/SF com lag em dias. Primavera P6 usa XER (ASCII proprietário) com estrutura diferente. Ambos podem ter ciclos (atividade A depende de B que depende de A) — o import precisa detectar e rejeitar ciclos com mensagem clara.
+O mapeamento de predecessores é a parte crítica: MS Project usa vínculos FS/FF/SS/SF com lag em dias. Primavera P6 usa XER (ASCII proprietário) com estrutura diferente. Ambos podem ter ciclos (atividade A depende de B que depende de A), o import precisa detectar e rejeitar ciclos com mensagem clara.
 
 ---
 

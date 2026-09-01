@@ -15,6 +15,7 @@ import { files } from '../../shared/database/schema/files.js';
 import { storage } from '../../core/storage/index.js';
 import { incrementStorageBytes } from '../../core/billing/usage-tracker.js';
 import { validateFileType, buildFileKey } from '../files/files.service.js';
+import { assertIfcSchemaSupported } from '../ifc/ifc-schema-support.js';
 import { ProjectsService } from '../projects/projects.service.js';
 import { ModelsService } from '../models/models.service.js';
 
@@ -118,6 +119,14 @@ export class RevitExportsService {
    */
   async createExport(input: CreateExportInput): Promise<ExportStatusResult> {
     const { tenantId, projectName, description, filename, buffer } = input;
+
+    // Guard de esquema antes de criar projeto/arquivo: o plugin exporta IFC4,
+    // mas um arquivo adulterado/errado falharia só no pipeline (status failed
+    // sem causa clara). Lança 422 com mensagem acionável. Só para .ifc (STEP):
+    // .ifczip é container ZIP e extensão inválida continua no 400 do file type.
+    if (filename.toLowerCase().endsWith('.ifc')) {
+      assertIfcSchemaSupported(buffer);
+    }
 
     const project = await this.findOrCreateProject(tenantId, projectName, description);
     const { fileId, storageKey, sha256 } = await this.storeIfc(tenantId, project.id, filename, buffer);

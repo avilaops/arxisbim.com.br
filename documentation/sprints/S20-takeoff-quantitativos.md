@@ -11,13 +11,13 @@
 
 Extrair automaticamente área, volume, comprimento e contagem de cada elemento IFC e vincular ao schema de custos do S19.
 
-> **Nota para o agente:** A **precisão do takeoff é a confiança no produto** — engenheiros validarão contra planilhas manuais. Cada quantidade deve carregar sua **fonte** (Qto_ Pset / Pset proprietário / cálculo geométrico) e um indicador de confiança, para que o cliente saiba o que é medido e o que é estimado. Nunca zerar silenciosamente um elemento sem quantidade.
+> **Nota para o agente:** A **precisão do takeoff é a confiança no produto**, engenheiros validarão contra planilhas manuais. Cada quantidade deve carregar sua **fonte** (Qto_ Pset / Pset proprietário / cálculo geométrico) e um indicador de confiança, para que o cliente saiba o que é medido e o que é estimado. Nunca zerar silenciosamente um elemento sem quantidade.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Cálculo de custo (S22 multiplica quantidade × preço)
 - Importação SINAPI (S21)
@@ -38,9 +38,9 @@ O desafio técnico está na normalização: diferentes ferramentas BIM exportam 
 ## Hierarquia de fonte de quantidade
 
 ```
-1. Qto_*BaseQuantities (IFC standard) — mais confiável
+1. Qto_*BaseQuantities (IFC standard), mais confiável
 2. BaseQuantities Pset proprietário (Revit, ArchiCAD)
-3. Cálculo geométrico direto (fallback — calcular de vértices)
+3. Cálculo geométrico direto (fallback, calcular de vértices)
 ```
 
 ---

@@ -1,8 +1,8 @@
-# SPRINT-08-RESULT · Parser IFC — Geometria
+# SPRINT-08-RESULT · Parser IFC: Geometria
 
 > Artefato de memória pós-execução. Evidência verificável coletada na sessão de fechamento.
 
-**Sprint:** S08 · Parser IFC — Geometria
+**Sprint:** S08 · Parser IFC, Geometria
 **Status:** Núcleo + contrato + ponte de identidade fechados e testados. Critérios de GPU/visual ficam para verificação no S09 (viewer).
 **Data de fechamento:** 2026-06-13
 **Commits:** `c446035` (backend), `6181c19` (frontend)
@@ -16,17 +16,17 @@ Extrair geometria real de cada IfcProduct → GLB (cache de render) → ponte co
 ## Arquivos
 
 **Backend**
-- `ifc-geometry.dto.ts` — **novo.** `MeshReference` + `GeometryManifest` versionado; `BoundingSphere`.
-- `ifc-geometry.builder.ts` — **novo.** Puros: `boundingSphereFromPoints`, `sphereFromBounds`, `instanceKey` (geom+material), `writeGlb` (glTF 2.0 binário à mão, sem dep; expressID/globalId nos `extras`).
-- `ifc-geometry.worker.ts` — **novo.** web-ifc em worker_threads: vértices+índices → world (metros) → GLB + manifest + instancedGroups + bounds/sphere do modelo.
-- `ifc-geometry-pipeline.service.ts` — **novo.** Spawna worker, salva GLB no storage (cache regenerável), logs S06, handlers error/exit/timeout.
+- `ifc-geometry.dto.ts` - **novo.** `MeshReference` + `GeometryManifest` versionado; `BoundingSphere`.
+- `ifc-geometry.builder.ts` - **novo.** Puros: `boundingSphereFromPoints`, `sphereFromBounds`, `instanceKey` (geom+material), `writeGlb` (glTF 2.0 binário à mão, sem dep; expressID/globalId nos `extras`).
+- `ifc-geometry.worker.ts` - **novo.** web-ifc em worker_threads: vértices+índices → world (metros) → GLB + manifest + instancedGroups + bounds/sphere do modelo.
+- `ifc-geometry-pipeline.service.ts` - **novo.** Spawna worker, salva GLB no storage (cache regenerável), logs S06, handlers error/exit/timeout.
 
 **Frontend**
-- `viewer/MeshReference.ts` — tipos espelho do contrato.
-- `viewer/ElementIndex.ts` — `Map<expressID, MeshReference>`; `resolveExpressID` sobe a hierarquia (clique→id); `byType` (base S10). Sem Three.js, sem BIM.
-- `viewer/ModelLoader.ts` — GLTFLoader carrega GLB, popula `userData.expressID`. **ZERO lógica BIM** (só Three + manifest).
+- `viewer/MeshReference.ts` - tipos espelho do contrato.
+- `viewer/ElementIndex.ts` - `Map<expressID, MeshReference>`; `resolveExpressID` sobe a hierarquia (clique→id); `byType` (base S10). Sem Three.js, sem BIM.
+- `viewer/ModelLoader.ts` - GLTFLoader carrega GLB, popula `userData.expressID`. **ZERO lógica BIM** (só Three + manifest).
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|
@@ -53,7 +53,7 @@ building-arch (IFC4X3)      12 meshes · 0 instanced groups · GLB  61KB ·  30m
 
 ## Aberto
 
-- Critérios de GPU/visual (FPS, 1º frame, "nada sumido") — exigem browser+GPU. Verificação natural no **S09** (viewer/navegação), onde o canvas real existe.
-- Wiring do `instancedGroups` no `InstanceManager` existente — render real = S09.
+- Critérios de GPU/visual (FPS, 1º frame, "nada sumido"), exigem browser+GPU. Verificação natural no **S09** (viewer/navegação), onde o canvas real existe.
+- Wiring do `instancedGroups` no `InstanceManager` existente, render real = S09.
 - Pool de workers (Init WASM frio por parse) compartilhado com geometria = **S11**.
-- GLB hoje só POSITION (sem normais/índice comprimido). Normais/Draco quando o viewer exigir — pipeline já preparado (não tomou decisão incompatível).
+- GLB hoje só POSITION (sem normais/índice comprimido). Normais/Draco quando o viewer exigir, pipeline já preparado (não tomou decisão incompatível).

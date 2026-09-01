@@ -40,7 +40,7 @@ Export Revit models to ArxisVR platform in under 2 minutes.
    Copy-Item "ArxisVR.RevitPlugin\ArxisVR.addin" -Destination $revitAddIns
    ```
 
-5. **Restart Revit** — plugin will appear in ribbon
+5. **Restart Revit**, plugin will appear in ribbon
 
 ---
 

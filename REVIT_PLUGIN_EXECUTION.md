@@ -1,4 +1,4 @@
-# Execução — Plugin Revit para ArxisVR
+# Execução: Plugin Revit para ArxisVR
 
 **Escopo:** MVP Completo (P1.1 + P1.2 + P1.3)  
 **Timeline:** 6 semanas (agressiva)  
@@ -17,7 +17,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ## 📋 Backlog Executivo (Sprints)
 
-### Sprint 0 — Setup (Dias 1–3)
+### Sprint 0: Setup (Dias 1–3)
 
 **Objetivo:** Ambiente dev 100% funcional
 
@@ -33,7 +33,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ---
 
-### Sprint 1 — UI + Export Core (Semana 1–2)
+### Sprint 1: UI + Export Core (Semana 1–2)
 
 **Objetivo:** Ribbon + Dialog + primeiro export funcional
 
@@ -61,7 +61,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ---
 
-### Sprint 2 — Validador Local (Semana 3)
+### Sprint 2: Validador Local (Semana 3)
 
 **Objetivo:** Validação IFC antes de upload (backend + UI)
 
@@ -90,7 +90,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ---
 
-### Sprint 3 — Asset Manager MVP (Semana 4)
+### Sprint 3: Asset Manager MVP (Semana 4)
 
 **Objetivo:** Biblioteca de componentes básica
 
@@ -121,7 +121,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ---
 
-### Sprint 4 — Sync Bidirectional (Semana 5)
+### Sprint 4: Sync Bidirectional (Semana 5)
 
 **Objetivo:** Mudanças ArxisVR → Revit (custos, cronograma)
 
@@ -143,7 +143,7 @@ Lançar plugin Revit 2024+ que permite exportar modelo → ArxisVR em **< 2 minu
 
 ---
 
-### Sprint 5 — Testes + Polish + Docs (Semana 6)
+### Sprint 5: Testes + Polish + Docs (Semana 6)
 
 **Objetivo:** Qualidade, preparação para launch
 

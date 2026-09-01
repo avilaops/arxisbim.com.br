@@ -11,13 +11,13 @@
 
 Sequência de slides configuráveis com câmera salva, visibilidade, anotações e comparação financeira. Export de apresentação como vídeo MP4 ou sequência de imagens. Compartilhamento por link sem login.
 
-> **Nota para o agente:** Este é o **output do produto** — onde todo o trabalho desde o S01 vira algo enviável ao dono da obra. Cada slide é um snapshot determinístico e replayável, reusando `CameraState` (S09), `VisibilityState` (S10) e `scenario_state` (S12). O link público **reusa o mecanismo de `shared_links` do S17** (token opaco, sem IDs internos), não inventa um novo. Não duplicar o viewer público.
+> **Nota para o agente:** Este é o **output do produto**, onde todo o trabalho desde o S01 vira algo enviável ao dono da obra. Cada slide é um snapshot determinístico e replayável, reusando `CameraState` (S09), `VisibilityState` (S10) e `scenario_state` (S12). O link público **reusa o mecanismo de `shared_links` do S17** (token opaco, sem IDs internos), não inventa um novo. Não duplicar o viewer público.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a estágios futuros — **não implementar aqui**:
+Pertencem a estágios futuros, **não implementar aqui**:
 
 - Digital Twin / dados de execução (S32+)
 - Edição colaborativa simultânea de apresentação

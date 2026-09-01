@@ -1,4 +1,4 @@
-# CI/CD e Operações — ArxisVR
+# CI/CD e Operações: ArxisVR
 
 **Última atualização:** 11/06/2026
 
@@ -117,12 +117,12 @@ jobs:
         working-directory: backend
       - run: npm run type-check
         working-directory: backend
-        # SEM continue-on-error — type errors devem quebrar CI
+        # SEM continue-on-error, type errors devem quebrar CI
 ```
 
 ---
 
-## Render — variáveis de ambiente
+## Render: variáveis de ambiente
 
 **CRÍTICO:** `PUT /v1/services/{id}/env-vars` **substitui todas as variáveis**.
 Sempre enviar a lista completa ao atualizar qualquer variável.
@@ -137,5 +137,5 @@ Deploy automático em push na `main`. Verificar health check após cada push.
 - Não pular Fase 1.5 → drift de Node aparece semanas depois
 - Não criar `Dockerfile` na raiz do monorepo (um por package)
 - Não migrar para pnpm junto com mudança de CI
-- Não escrever "ambiente idêntico" em doc — dev nunca é igual ao CI
+- Não escrever "ambiente idêntico" em doc, dev nunca é igual ao CI
 - Não rodar smoke contra container sem antes validar em dev

@@ -1,6 +1,6 @@
 # ArxisVR
 
-Plataforma de decisão baseada em modelos BIM — IFC nativo, cenários 4D/5D, SINAPI integrado.
+Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINAPI integrado.
 
 **Produção:** [arxisvr.avilaops.com](https://arxisvr.avilaops.com) · API: `api.arxisvr.avilaops.com`
 
@@ -14,14 +14,14 @@ Frontend: Vite MPA + Three.js + IFC
 
         │ HTTPS / WSS
 
-api.arxisvr.avilaops.com   (Render — Fastify)
+api.arxisvr.avilaops.com   (Render, Fastify)
 Backend: auth · tenants · BIM · observability
 WebSocket (signaling/realtime: rooms, avatar_update, chat) no mesmo serviço
 PostgreSQL (Render managed) · R2 Storage
 ```
 
 > Só existem 2 serviços em produção: o frontend (GitHub Pages) e o backend
-> (Render). NÃO há serviço de signaling separado — o WebSocket é servido pelo
+> (Render). NÃO há serviço de signaling separado, o WebSocket é servido pelo
 > backend. O diretório `signaling-server/` é apenas dev local (porta 3002).
 
 > **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
@@ -75,9 +75,9 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `GOOGLE_CLIENT_ID` | OAuth Google |
 | `GITHUB_CLIENT_ID` | OAuth GitHub |
 | `BILLING_PROVIDER` | `mercadopago` (padrão) ou `internal` (aprovação manual, sem cobrança) |
-| `MP_ACCESS_TOKEN` | Billing — access token da conta Mercado Pago da Avila Ops (assinaturas / preapproval) |
-| `MP_WEBHOOK_SECRET` | Billing — segredo da assinatura `x-signature` das notificações do Mercado Pago |
-| `BILLING_PROVIDER_SYNC_INTERVAL_MS` | Billing — cadência da sincronização com o Mercado Pago (padrão 6h; a notificação do MP não é garantida) |
+| `MP_ACCESS_TOKEN` | Billing, access token da conta Mercado Pago da Avila Ops (assinaturas / preapproval) |
+| `MP_WEBHOOK_SECRET` | Billing, segredo da assinatura `x-signature` das notificações do Mercado Pago |
+| `BILLING_PROVIDER_SYNC_INTERVAL_MS` | Billing, cadência da sincronização com o Mercado Pago (padrão 6h; a notificação do MP não é garantida) |
 
 > **CRÍTICO Render:** `PUT /env-vars` substitui TODAS as variáveis. Sempre enviar a lista completa.
 
@@ -89,7 +89,7 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 |---|---|---|
 | Frontend | Push em `main` em `frontend/**` | GitHub Actions → GitHub Pages |
 | Backend | Push em `main` | Render auto-deploy |
-| Signaling | Manual | Render — sempre ligado |
+| Signaling | Manual | Render, sempre ligado |
 
 Signaling no plano free dorme após 15 min inativo. Frontend envia ping a cada 25s.
 
@@ -114,7 +114,7 @@ Segurança: rate limit 10 req/min · bcrypt rounds 12 · JWT access 15min + refr
 
 ---
 
-## Multiplayer (WebSocket — signaling-server)
+## Multiplayer (WebSocket: signaling-server)
 
 | Client → Server | Campos |
 |---|---|
@@ -142,7 +142,7 @@ curl https://api.arxisvr.avilaops.com/health
 # 2. Último deploy frontend
 # → github.com/AvilaOps/arxisvr/actions
 
-# (O WebSocket/signaling é o próprio backend — coberto pelo check 1.
+# (O WebSocket/signaling é o próprio backend: coberto pelo check 1.
 #  Keep-alive externo: Cloudflare Worker arxisvr-keepalive, cron */10.)
 ```
 

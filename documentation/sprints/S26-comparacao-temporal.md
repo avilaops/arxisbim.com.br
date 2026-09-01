@@ -13,13 +13,13 @@
 
 Slider de data que anima a construção. Split-view A|B mostra diferença de prazo. Data de conclusão calculada por cenário. Atraso em cascata para sucessoras.
 
-> **Nota para o agente:** Primeiro momento de **4D real** — não animação bonita, mas ferramenta de decisão de cronograma. Reusa o `SplitView` do S18 (não reescrever). O algoritmo correto de propagação é CPM (topological sort + forward pass), nunca recálculo ingênuo a cada mudança — isso não escala para 500 atividades. Datas pré-computadas no backend.
+> **Nota para o agente:** Primeiro momento de **4D real**, não animação bonita, mas ferramenta de decisão de cronograma. Reusa o `SplitView` do S18 (não reescrever). O algoritmo correto de propagação é CPM (topological sort + forward pass), nunca recálculo ingênuo a cada mudança, isso não escala para 500 atividades. Datas pré-computadas no backend.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Animação contínua play/pause completa (S27)
 - Import MS Project / Primavera (S28)
@@ -99,7 +99,7 @@ frontend/src/
 
 ## Telemetria de produto
 
-Marco crítico — medir adoção: `timeline_comparison_opened`, `timeline_scrubbed`, `delta_days_viewed`.
+Marco crítico, medir adoção: `timeline_comparison_opened`, `timeline_scrubbed`, `delta_days_viewed`.
 
 ## Definição de validado
 

@@ -11,13 +11,13 @@
 
 Planos cobrados pelo Mercado Pago (assinatura recorrente) com limites reais aplicados. Feature gating por plano sem hard-code espalhado pelo código.
 
-> **Nota para o agente:** Este sprint **não implementa pagamentos; implementa autorização comercial.** O Mercado Pago é apenas a fonte de verdade da assinatura. O produto deve depender exclusivamente do sistema interno de limites e entitlements — nunca consultar `plan` diretamente numa feature.
+> **Nota para o agente:** Este sprint **não implementa pagamentos; implementa autorização comercial.** O Mercado Pago é apenas a fonte de verdade da assinatura. O produto deve depender exclusivamente do sistema interno de limites e entitlements, nunca consultar `plan` diretamente numa feature.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Cobrança por uso (usage-based billing)
 - Cupons / descontos
@@ -97,7 +97,7 @@ export const PLAN_LIMITS = {
 }
 ```
 
-> Os valores de `PLAN_LIMITS` são apenas o **seed inicial de entitlements** de cada plano. O produto nunca lê este objeto direto — lê os entitlements efetivos do tenant (`can_create_project`, `max_storage_gb`, etc.), que começam iguais ao plano mas podem ser sobrescritos por add-ons no futuro.
+> Os valores de `PLAN_LIMITS` são apenas o **seed inicial de entitlements** de cada plano. O produto nunca lê este objeto direto, lê os entitlements efetivos do tenant (`can_create_project`, `max_storage_gb`, etc.), que começam iguais ao plano mas podem ser sobrescritos por add-ons no futuro.
 
 ---
 
@@ -115,7 +115,7 @@ tenant_entitlements (
   updated_at  TIMESTAMP
 )
 
--- Contadores de uso — evita COUNT a cada checkPlanLimit
+-- Contadores de uso, evita COUNT a cada checkPlanLimit
 tenant_usage (
   tenant_id        UUID PK FK tenants,
   projects_count   INT DEFAULT 0,
@@ -142,7 +142,7 @@ failed_webhooks (
 ### Resposta padrão de limite atingido
 
 ```json
-// HTTP 403 — NÃO 402
+// HTTP 403, NÃO 402
 {
   "code": "PLAN_LIMIT_REACHED",
   "resource": "storage",
@@ -153,7 +153,7 @@ failed_webhooks (
 
 ---
 
-## Compatibilidade futura — billing híbrido
+## Compatibilidade futura: billing híbrido
 
 O sistema deve permitir, sem reescrita do schema, billing híbrido:
 
@@ -217,16 +217,16 @@ frontend/src/
 ## Implementação (entregue 2026-06-11)
 
 ### Arquivos criados:
-- `backend/migrations/036_tenant_usage_failed_webhooks.sql` — tabelas tenant_usage e failed_webhooks
-- `backend/src/core/billing/usage-tracker.ts` — helpers para incrementar contadores (projects, storage, users, scenarios)
-- `backend/tests/e2e/billing-limits.spec.ts` — testes de enforçamento de limites (3/3 ✓)
+- `backend/migrations/036_tenant_usage_failed_webhooks.sql` - tabelas tenant_usage e failed_webhooks
+- `backend/src/core/billing/usage-tracker.ts` - helpers para incrementar contadores (projects, storage, users, scenarios)
+- `backend/tests/e2e/billing-limits.spec.ts` - testes de enforçamento de limites (3/3 ✓)
 
 ### Arquivos modificados:
-- `backend/src/core/billing/plan-limits.ts` — statusCode 402→403, resposta estruturada {code, resource, limit, current}, lê tenant_usage em vez de COUNT
-- `backend/src/modules/billing/billing.service.ts` — inicializa tenant_usage em initializeTenantFreeTier()
-- `backend/src/modules/projects/projects.service.ts` — incrementa projects_count ao criar projeto
-- `backend/src/modules/projects/projects.controller.ts` — retorna payload estruturado em PlanLimitError
-- `backend/src/shared/database/schema/billing.ts` — adiciona tenantUsage e failedWebhooks
+- `backend/src/core/billing/plan-limits.ts` - statusCode 402→403, resposta estruturada {code, resource, limit, current}, lê tenant_usage em vez de COUNT
+- `backend/src/modules/billing/billing.service.ts` - inicializa tenant_usage em initializeTenantFreeTier()
+- `backend/src/modules/projects/projects.service.ts` - incrementa projects_count ao criar projeto
+- `backend/src/modules/projects/projects.controller.ts` - retorna payload estruturado em PlanLimitError
+- `backend/src/shared/database/schema/billing.ts` - adiciona tenantUsage e failedWebhooks
 
 ### Testes (2026-06-11):
 - ✅ 11/11 S03 (projects-models) passam

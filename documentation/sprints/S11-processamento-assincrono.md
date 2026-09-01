@@ -17,9 +17,9 @@ Pipeline de background para processar IFC: upload → fila → parse → geometr
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
-- Cálculo de quantitativos / custos (S20, S22) — apenas reusam este pipeline depois
+- Cálculo de quantitativos / custos (S20, S22), apenas reusam este pipeline depois
 - Importação de cronograma (S28)
 - Comparação de cenários (S18, S30)
 - Priorização de fila por plano / billing
@@ -40,7 +40,7 @@ Os logs estruturados com etapas de parse definidos aqui são o que vai economiza
 | Decisão | Escolha | Razão |
 |---|---|---|
 | Fila | BullMQ + Redis | Retry automático, visibilidade de jobs, persistência entre restarts |
-| Workers | Processos separados (não threads) | Isolamento de memória — crash do worker não derruba API |
+| Workers | Processos separados (não threads) | Isolamento de memória, crash do worker não derruba API |
 | Etapas do pipeline | `download → parse_structure → parse_geometry → serialize_glb → upload_glb → update_db` | Granularidade para diagnóstico |
 | Status do modelo vs etapa | `ModelStatus` (draft/queued/processing/ready/failed) separado de `ProcessingStage` | Estado de negócio ≠ estado técnico do pipeline |
 | Histórico de etapas | Tabela `model_processing_runs` persiste cada etapa | Diagnosticar ticket de cliente meses depois sem caçar logs |
@@ -75,7 +75,7 @@ type ModelStatus = 'draft' | 'queued' | 'processing' | 'ready' | 'failed'
 
 ## Histórico de processamento (persistido)
 
-Cada execução de etapa grava uma linha — fonte de diagnóstico durável, não apenas log:
+Cada execução de etapa grava uma linha, fonte de diagnóstico durável, não apenas log:
 
 ```sql
 model_processing_runs (

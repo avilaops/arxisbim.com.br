@@ -3,7 +3,7 @@
 **Fase:** Metadados BIM  
 **Status:** Concluído  
 **Depende de:** S09 (seleção de elemento), S01 (autenticação para @menção)  
-**Bloqueia:** S17 (compartilhamento — viewer público pode mostrar comentários)
+**Bloqueia:** S17 (compartilhamento, viewer público pode mostrar comentários)
 
 ---
 
@@ -11,13 +11,13 @@
 
 Comentários ancorados a elementos IFC específicos, com thread de replies e notificação por email.
 
-> **Nota para o agente:** O valor de longo prazo aqui não é o comentário em si — é a **âncora resiliente a reimport**. Um comentário que vira órfão quando o modelo é reimportado destrói a confiança no fluxo de revisão. A estratégia de ancoragem em camadas (GlobalId → expressID → posição 3D) é o núcleo do sprint, não a UI do thread.
+> **Nota para o agente:** O valor de longo prazo aqui não é o comentário em si, é a **âncora resiliente a reimport**. Um comentário que vira órfão quando o modelo é reimportado destrói a confiança no fluxo de revisão. A estratégia de ancoragem em camadas (GlobalId → expressID → posição 3D) é o núcleo do sprint, não a UI do thread.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Compartilhamento / viewer público (S17 apenas lê comentários)
 - Comentários em cenários ou comparações (S18+)
@@ -31,7 +31,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 Comentários são o primeiro mecanismo de colaboração assíncrona do produto. Em fluxos de revisão de projeto (arquiteto → engenheiro → cliente), o ciclo inteiro acontece via comentários em elementos específicos.
 
-O desafio de longo prazo: `GlobalId` de um elemento pode mudar se o modelo for reimportado com ajustes. Comentários ancorados a `GlobalId` ficam órfãos. A solução é vincular o comentário ao `GlobalId` + fallback para `expressID` + fallback para posição 3D do elemento — três camadas de âncora para sobreviver a reimports.
+O desafio de longo prazo: `GlobalId` de um elemento pode mudar se o modelo for reimportado com ajustes. Comentários ancorados a `GlobalId` ficam órfãos. A solução é vincular o comentário ao `GlobalId` + fallback para `expressID` + fallback para posição 3D do elemento, três camadas de âncora para sobreviver a reimports.
 
 ---
 

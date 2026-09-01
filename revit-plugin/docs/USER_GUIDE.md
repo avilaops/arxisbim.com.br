@@ -1,4 +1,4 @@
-# ArxisVR Plugin para Revit — Guia do Usuário
+# ArxisVR Plugin para Revit: Guia do Usuário
 
 Exporte seu modelo Revit para o ArxisVR em menos de 2 minutos.
 
@@ -12,7 +12,7 @@ Exporte seu modelo Revit para o ArxisVR em menos de 2 minutos.
 
 ### Passos
 1. Baixe o plugin (Autodesk App Store ou GitHub Releases)
-2. Execute o instalador — ou, em dev, rode `install-local.ps1`
+2. Execute o instalador, ou, em dev, rode `install-local.ps1`
 3. Reinicie o Revit
 4. A aba **ArxisVR** aparece no ribbon
 
@@ -22,12 +22,12 @@ Exporte seu modelo Revit para o ArxisVR em menos de 2 minutos.
 
 1. No ArxisVR web: **Conta → API Tokens → Criar token**
    - Escopos necessários: `models:read` + `models:write`
-   - Copie o token (`arx_live_...`) — ele só aparece uma vez
+   - Copie o token (`arx_live_...`), ele só aparece uma vez
 2. No Revit: **ArxisVR → Settings**
    - Cole o token no campo *API Key*
    - Clique **Salvar**
 
-> A key é criptografada com DPAPI e fica vinculada ao seu usuário Windows —
+> A key é criptografada com DPAPI e fica vinculada ao seu usuário Windows
 > nunca é gravada em texto puro.
 
 ---
@@ -41,7 +41,7 @@ Exporte seu modelo Revit para o ArxisVR em menos de 2 minutos.
 | Campo | O que faz |
 |---|---|
 | **Nome do projeto** | Nome no ArxisVR. Re-exportar com o mesmo nome cria uma **nova versão** do mesmo modelo (histórico preservado) |
-| **Disciplinas** | Estrutura / Arquitetura / MEP — o que entra no IFC |
+| **Disciplinas** | Estrutura / Arquitetura / MEP, o que entra no IFC |
 | **Nível de detalhe** | LOD 200 (leve) → LOD 400 (máximo). Padrão: LOD 300 |
 | **Validar antes do upload** | Roda checagens rápidas antes de enviar (recomendado) |
 
@@ -64,7 +64,7 @@ Acompanhe o status no dashboard do ArxisVR.
 | Elementos de modelo | Modelo vazio gera IFC vazio |
 | Níveis definidos | Sem níveis, a hierarquia IFC fica sem pavimentos |
 
-A validação não bloqueia o export — ela orienta.
+A validação não bloqueia o export, ela orienta.
 
 ---
 
@@ -79,7 +79,7 @@ Torre Alpha
 └── v3  (17/07 10:15)  processing  ← export mais recente
 ```
 
-No ArxisVR você compara versões lado a lado (S18 — comparação visual).
+No ArxisVR você compara versões lado a lado (S18, comparação visual).
 
 ---
 

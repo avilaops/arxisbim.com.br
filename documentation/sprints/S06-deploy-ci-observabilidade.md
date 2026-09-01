@@ -17,7 +17,7 @@ Pipeline de deploy estável, logs estruturados, alertas de erro e rollback testa
 
 ## Fora de Escopo
 
-Observabilidade **suficiente**, não plataforma DevOps corporativa. Pertencem a estágios futuros — **não implementar aqui**:
+Observabilidade **suficiente**, não plataforma DevOps corporativa. Pertencem a estágios futuros, **não implementar aqui**:
 
 - Datadog / New Relic
 - OpenTelemetry completo
@@ -32,7 +32,7 @@ Observabilidade **suficiente**, não plataforma DevOps corporativa. Pertencem a 
 
 Observabilidade instalada desde o início é o que separa um produto que evolui com confiança de um que tem medo de cada deploy. Logs estruturados (JSON) desde o S06 permitem busca e alertas nos sprints seguintes sem retrofitting.
 
-O padrão de tracing escolhido aqui (correlation ID nos logs) permite rastrear uma requisição de upload do S11, um cálculo de custo do S22, ou uma animação 4D do S27 — todos usando o mesmo padrão de log.
+O padrão de tracing escolhido aqui (correlation ID nos logs) permite rastrear uma requisição de upload do S11, um cálculo de custo do S22, ou uma animação 4D do S27, todos usando o mesmo padrão de log.
 
 ---
 
@@ -57,7 +57,7 @@ O padrão de tracing escolhido aqui (correlation ID nos logs) permite rastrear u
 Todo evento relevante deve logar:
 - `req_id`: ID único da requisição
 - `trace_id`: rastreia a operação completa (inicia igual ao `req_id`)
-- `tenant_id`: **obrigatório em toda operação autenticada** — log sem `tenant_id` em contexto autenticado é considerado incompleto
+- `tenant_id`: **obrigatório em toda operação autenticada**, log sem `tenant_id` em contexto autenticado é considerado incompleto
 - `duration_ms`: tempo de execução
 - `status`: resultado da operação
 - Erros: `stack` completo em `debug`, mensagem sanitizada em `error`
@@ -73,7 +73,7 @@ Todo job preserva o `origin_req_id` do request que o originou.
 
 ---
 
-## Redact — campos sempre removidos antes do log
+## Redact: campos sempre removidos antes do log
 
 Qualquer campo sensível deve ser removido **antes** de chegar ao log:
 
@@ -89,7 +89,7 @@ Qualquer campo sensível deve ser removido **antes** de chegar ao log:
 
 ## Métricas operacionais mínimas
 
-Não exigem Prometheus — podem ser emitidas como log estruturado, mas devem existir:
+Não exigem Prometheus, podem ser emitidas como log estruturado, mas devem existir:
 
 - `requests_total`
 - `requests_duration_ms`
@@ -99,7 +99,7 @@ Não exigem Prometheus — podem ser emitidas como log estruturado, mas devem ex
 
 ---
 
-## Error budget — metas operacionais iniciais
+## Error budget: metas operacionais iniciais
 
 - Disponibilidade: **99,5%**
 - Erros 5xx: **< 1%**

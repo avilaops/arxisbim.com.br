@@ -1,4 +1,4 @@
-# Estratégia de Prospecção de Clientes Automatizada — ArxisVR
+# Estratégia de Prospecção de Clientes Automatizada: ArxisVR
 
 Esta documentação descreve quem é nosso público-alvo, como podemos alcançá-los de forma preditiva e escalável, e a arquitetura técnica de uma ferramenta "Isca Digital" de produto (PLG) para capturar leads de forma 100% automatizada.
 
@@ -50,7 +50,7 @@ A melhor forma de prospecção passiva e automatizada é oferecer valor técnico
 
 ### Fluxo do Usuário (Isca Digital)
 1. O lead acessa a página pública `https://arxisvr.avilaops.com/validador`.
-2. A tela exibe uma área de Drag & Drop simples: *"Validador de Modelos IFC Gratuito — Descubra a qualidade do seu arquivo BIM em segundos"*.
+2. A tela exibe uma área de Drag & Drop simples: *"Validador de Modelos IFC Gratuito, Descubra a qualidade do seu arquivo BIM em segundos"*.
 3. O lead arrasta o arquivo IFC.
 4. O sistema solicita: *"Para onde devemos enviar o relatório completo de qualidade do modelo?"* (Campos: Nome, E-mail Corporativo, Empresa).
 5. O sistema faz o upload e chama a API `/api/v1/ifc/validate` de forma anônima.

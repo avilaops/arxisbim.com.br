@@ -1,4 +1,4 @@
-# S10 · Viewer — Filtros e Visibilidade
+# S10 · Viewer: Filtros e Visibilidade
 
 **Fase:** IFC Core  
 **Status:** Pendente  
@@ -11,13 +11,13 @@
 
 Toggle de visibilidade por disciplina, por pavimento e por tipo de elemento. Corte transversal navegável.
 
-> **Nota para o agente:** Este sprint **não existe para esconder objetos.** Ele existe para transformar configuração visual em estado serializável e reproduzível — a base para cenários (S12) salvarem "o que está visível", não só "de onde se olha". Toda decisão deve favorecer serialização, granularidade e independência do motor gráfico antes de favorecer conveniência de implementação.
+> **Nota para o agente:** Este sprint **não existe para esconder objetos.** Ele existe para transformar configuração visual em estado serializável e reproduzível, a base para cenários (S12) salvarem "o que está visível", não só "de onde se olha". Toda decisão deve favorecer serialização, granularidade e independência do motor gráfico antes de favorecer conveniência de implementação.
 
 ---
 
 ## Fora de Escopo
 
-O objetivo é: filtrar → cortar → salvar estado → restaurar estado. Pertencem a sprints futuros — **não implementar aqui**:
+O objetivo é: filtrar → cortar → salvar estado → restaurar estado. Pertencem a sprints futuros, **não implementar aqui**:
 
 - Comparação de cenários (S18)
 - Persistência de visibilidade no servidor / colaboração (estado é local à sessão)

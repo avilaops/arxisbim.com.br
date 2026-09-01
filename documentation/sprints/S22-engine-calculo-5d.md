@@ -11,18 +11,18 @@
 
 Calcular custo total do projeto por cenário a partir de `quantidade × preço_unitário` por elemento, com breakdown por hierarquia IFC.
 
-> **Nota para o agente:** A engine é o **coração do 5D** — precisa ser incremental, auditável e scenario-aware. O risco máximo é **drift silencioso**: preço muda e o número exibido fica errado sem ninguém saber. Por isso: calcular on-demand ou invalidar cache explicitamente, nunca persistir resultado sem versão. Todo cálculo monetário em Decimal, jamais FLOAT.
+> **Nota para o agente:** A engine é o **coração do 5D**, precisa ser incremental, auditável e scenario-aware. O risco máximo é **drift silencioso**: preço muda e o número exibido fica errado sem ninguém saber. Por isso: calcular on-demand ou invalidar cache explicitamente, nunca persistir resultado sem versão. Todo cálculo monetário em Decimal, jamais FLOAT.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Otimização de performance / cache em larga escala (S23)
 - Painel/heatmap de custo (S24)
 - Comparação financeira entre cenários (S30)
-- Curva S detalhada (depende de schedule — S25+)
+- Curva S detalhada (depende de schedule, S25+)
 - BDI configurável por composição
 
 ---
@@ -31,7 +31,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 A engine de cálculo é o coração do 5D. Ela precisa ser incremental (recalcular apenas o que mudou), auditável (memória de cálculo completa) e scenario-aware (Cenário A e B têm resultados independentes).
 
-O maior risco de longo prazo é o drift entre o banco e o resultado calculado: se um preço SINAPI muda mas o cálculo não recalcula, o cliente vê números errados sem saber. A solução é calcular on-demand ou invalidar cache explicitamente — nunca persistir resultado calculado sem versionamento.
+O maior risco de longo prazo é o drift entre o banco e o resultado calculado: se um preço SINAPI muda mas o cálculo não recalcula, o cliente vê números errados sem saber. A solução é calcular on-demand ou invalidar cache explicitamente, nunca persistir resultado calculado sem versionamento.
 
 ---
 

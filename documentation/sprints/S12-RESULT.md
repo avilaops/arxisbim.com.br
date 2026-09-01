@@ -13,11 +13,11 @@
 
 ## Arquivos
 
-- `migrations/041_scenarios_s12_state.sql` + `schema/scenarios.ts` — **alterado.** Adiciona `scenario_state`/`state_version`/`model_version_id`/`parent_id`/`is_base_scenario`/`sort_order`/`deleted_at`; camera/player/config legados → nullable (coexistência).
-- `modules/scenario/scenario-snapshot.service.ts` — **novo.** capture/restore/validate/migrate/clone do envelope opaco. Única abstração que entende o formato (S18/S24/S28/S30 reusam).
-- `modules/scenario/scenarios-v12.service.ts` — **novo.** create/clone/saveState/loadState; repo/limite/telemetria injetados.
+- `migrations/041_scenarios_s12_state.sql` + `schema/scenarios.ts` - **alterado.** Adiciona `scenario_state`/`state_version`/`model_version_id`/`parent_id`/`is_base_scenario`/`sort_order`/`deleted_at`; camera/player/config legados → nullable (coexistência).
+- `modules/scenario/scenario-snapshot.service.ts` - **novo.** capture/restore/validate/migrate/clone do envelope opaco. Única abstração que entende o formato (S18/S24/S28/S30 reusam).
+- `modules/scenario/scenarios-v12.service.ts` - **novo.** create/clone/saveState/loadState; repo/limite/telemetria injetados.
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|

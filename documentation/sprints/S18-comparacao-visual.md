@@ -19,9 +19,9 @@ Split-view A|B com câmera sincronizada. Diferenças entre cenários destacadas.
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
-- Comparação de custo (S24, S30) — reusa este SplitView
+- Comparação de custo (S24, S30), reusa este SplitView
 - Comparação temporal / 4D (S26)
 - Comparação de mais de 2 cenários simultâneos
 - Branching/merge de cenários (S29)
@@ -31,12 +31,12 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 ## Por que importa a longo prazo
 
-O split-view criado aqui é a UI central do produto para tomada de decisão. S24 (custos), S26 (prazo) e S30 (financeiro) todos vivem dentro ou ao lado do split-view. A arquitetura escolhida aqui — dois WebGL contexts vs um com viewport split — tem implicações de performance para todos os sprints futuros.
+O split-view criado aqui é a UI central do produto para tomada de decisão. S24 (custos), S26 (prazo) e S30 (financeiro) todos vivem dentro ou ao lado do split-view. A arquitetura escolhida aqui, dois WebGL contexts vs um com viewport split, tem implicações de performance para todos os sprints futuros.
 
 **Dois WebGL contexts:** mais isolado, mais simples, mais memória  
 **Um context com viewport split:** mais eficiente, mais complexo, compartilha geometria
 
-Para modelos grandes (500 MB), um context é obrigatório — dois contexts duplicariam o uso de memória GPU. A decisão correta é um context com viewports.
+Para modelos grandes (500 MB), um context é obrigatório, dois contexts duplicariam o uso de memória GPU. A decisão correta é um context com viewports.
 
 ---
 
@@ -100,7 +100,7 @@ frontend/src/
 
 ## Telemetria de produto
 
-Marco crítico — precisa medir adoção: `comparison_opened`, `comparison_camera_unlocked`, `comparison_exported`, com `tenant_id`, `project_id`, `scenario_a`, `scenario_b`.
+Marco crítico, precisa medir adoção: `comparison_opened`, `comparison_camera_unlocked`, `comparison_exported`, com `tenant_id`, `project_id`, `scenario_a`, `scenario_b`.
 
 ## Definição de validado
 

@@ -5,7 +5,7 @@
 **Depende de:** S09 (câmera serializável), S10 (visibilidade serializável), S11 (modelo `ready`)  
 **Bloqueia:** S18 (comparação visual), S27 (animação por cenário), S29 (branching)
 
-**Marco crítico:** Valida a hipótese central — "Usuários querem comparar alternativas?"
+**Marco crítico:** Valida a hipótese central, "Usuários querem comparar alternativas?"
 
 ---
 
@@ -41,11 +41,11 @@ Project
       └── Cenário Conservador
 ```
 
-`Scenario` referencia `ModelVersion` (não `Project` direto) — isso simplifica comparação (S18) e branching (S29), que operam sobre cenários do mesmo modelo.
+`Scenario` referencia `ModelVersion` (não `Project` direto), isso simplifica comparação (S18) e branching (S29), que operam sobre cenários do mesmo modelo.
 
 ---
 
-## Modelo de dados — Scenario
+## Modelo de dados: Scenario
 
 ```sql
 scenarios (
@@ -56,7 +56,7 @@ scenarios (
   description TEXT,
   model_version_id  UUID FK model_versions NOT NULL,
 
-  -- Estado serializável ÚNICO — cresce sem migration
+  -- Estado serializável ÚNICO, cresce sem migration
   scenario_state JSONB NOT NULL DEFAULT '{}',
   state_version  INT  NOT NULL DEFAULT 1,    -- permite migrar formatos antigos
 
@@ -107,7 +107,7 @@ Dashboard de projeto → "Cenários" → Lista vazia
 | Cenário base | `is_base_scenario = true` para o modelo original | Sempre há um ponto de referência |
 | Clone | Copia estado do cenário base, não do último cenário | Consistência |
 | Limite por plano | Starter: 2 · Pro: 10 · Business: ∞ | Via `checkPlanLimit('scenarios')` do S04 |
-| Alternância | Troca de cenário ≤ 1s | Apenas restaura estado — não recarrega GLB |
+| Alternância | Troca de cenário ≤ 1s | Apenas restaura estado, não recarrega GLB |
 | Persistência imediata | Auto-save do estado ao clicar em "Salvar" | Não exigir save manual |
 | Captura/restauração | `ScenarioSnapshotService` com `capture()/restore()/validate()/migrate()` | Viewer não persiste direto; S18/S24/S28/S30 reusam a mesma abstração |
 
@@ -136,7 +136,7 @@ frontend/src/
 
 ## Telemetria de produto
 
-Este sprint valida uma hipótese de negócio — portanto **precisa ser medido**. Eventos com `tenant_id`, `project_id`, `scenario_id`, `duration_ms`:
+Este sprint valida uma hipótese de negócio, portanto **precisa ser medido**. Eventos com `tenant_id`, `project_id`, `scenario_id`, `duration_ms`:
 
 - `scenario_created`
 - `scenario_cloned`
@@ -153,7 +153,7 @@ Permite responder: quantos usuários criam cenários? quantos criam mais de um? 
 - **Validado tecnicamente** quando um usuário consegue criar, salvar e alternar entre dois cenários.
 - **Validado comercialmente** quando usuários reais criam voluntariamente **mais de um cenário** no mesmo projeto **sem serem instruídos**.
 
-Entregar a feature ≠ comprovar a hipótese. O sprint pode estar tecnicamente concluído e a hipótese de produto ainda não comprovada — a telemetria acima é o que distingue os dois.
+Entregar a feature ≠ comprovar a hipótese. O sprint pode estar tecnicamente concluído e a hipótese de produto ainda não comprovada, a telemetria acima é o que distingue os dois.
 
 ---
 

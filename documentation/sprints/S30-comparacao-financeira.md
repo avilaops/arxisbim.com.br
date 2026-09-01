@@ -13,13 +13,13 @@
 
 Split-view com custo total, breakdown por categoria e curva S lado a lado para dois cenários. Export de relatório comparativo em PDF. Recomendação automática baseada em custo × prazo.
 
-> **Nota para o agente:** Aqui **fecha o loop completo do produto**: IFC → cenário → custo → comparação → decisão. Tudo desde o S01 converge. Reusa `SplitView` (S18) e o painel de custos (S24) sem duplicar. A recomendação deve ser **transparente** (algoritmo explicável, nunca caixa-preta de ML). O PDF não é opcional — é exigência de documentação de decisão em licitação pública (Lei 14.133/2021).
+> **Nota para o agente:** Aqui **fecha o loop completo do produto**: IFC → cenário → custo → comparação → decisão. Tudo desde o S01 converge. Reusa `SplitView` (S18) e o painel de custos (S24) sem duplicar. A recomendação deve ser **transparente** (algoritmo explicável, nunca caixa-preta de ML). O PDF não é opcional, é exigência de documentação de decisão em licitação pública (Lei 14.133/2021).
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Presentation Studio (S31)
 - Recomendação por ML / otimização multiobjetivo
@@ -135,12 +135,12 @@ frontend/src/scenarios/
 
 ## Telemetria de produto
 
-Marco crítico final — medir o valor central do produto: `financial_comparison_opened`, `recommendation_viewed`, `comparison_pdf_exported`, `recommendation_weights_adjusted`.
+Marco crítico final, medir o valor central do produto: `financial_comparison_opened`, `recommendation_viewed`, `comparison_pdf_exported`, `recommendation_weights_adjusted`.
 
 ## Definição de validado
 
 - **Tecnicamente** quando o relatório compara custo e prazo de dois cenários e gera PDF.
-- **Comercialmente** quando um usuário usa a comparação financeira para decidir qual cenário levar à obra — a hipótese central do ArxisVR comprovada.
+- **Comercialmente** quando um usuário usa a comparação financeira para decidir qual cenário levar à obra, a hipótese central do ArxisVR comprovada.
 
 ---
 

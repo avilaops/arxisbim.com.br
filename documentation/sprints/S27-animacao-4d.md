@@ -11,13 +11,13 @@
 
 Animação contínua da construção com play/pause/speed, cores por estado (não iniciado / ativo / concluído / removido), e câmera segue atividade ativa.
 
-> **Nota para o agente:** Esta é a animação que **vende contra Navisworks** (pago, desktop, pesado) — rodando no browser. A prioridade técnica é não bloquear o render thread: estados pré-computados em Web Worker, render thread só aplica cores. Reusa `CameraState` (S09) e `SplitView` (S18). Tempo de carregamento e fluidez importam mais que efeito visual.
+> **Nota para o agente:** Esta é a animação que **vende contra Navisworks** (pago, desktop, pesado), rodando no browser. A prioridade técnica é não bloquear o render thread: estados pré-computados em Web Worker, render thread só aplica cores. Reusa `CameraState` (S09) e `SplitView` (S18). Tempo de carregamento e fluidez importam mais que efeito visual.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Import MS Project / Primavera (S28)
 - Branching de cenários (S29)
@@ -51,7 +51,7 @@ A implementação precisa de um loop de animação que não bloqueie o render th
 ## Pipeline de pré-computação
 
 ```typescript
-// Web Worker — roda antes de iniciar animação
+// Web Worker, roda antes de iniciar animação
 function precomputeFrames(activities: Activity[], fps: number): StatesByFrame {
   const startDate = minDate(activities.map(a => a.planned_start))
   const endDate   = maxDate(activities.map(a => a.planned_end))

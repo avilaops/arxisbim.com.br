@@ -13,13 +13,13 @@ Transformar dados embutidos no IFC em camada consultável e quantificável (font
 
 ## Arquivos
 
-- `schema/element-properties.ts` + `migrations/042_element_properties.sql` — **novo.** `properties` JSONB (GIN) + `area_m2`/`volume_m3`/`length_m` indexados; índices por (model, type) e (model, storey).
-- `modules/ifc/ifc-properties.dto.ts` — **novo.** `ElementProperties`, `PropertySet`.
-- `modules/ifc/ifc-properties.builder.ts` — **novo.** Puros: `normalizeValue` (null-safe), `lengthScale`, `extractQuantities` (Qto_* → SI), `normalizePropertySets`.
-- `modules/ifc/ifc-properties.extractor.ts` — **novo.** web-ifc `getPropertySets` por elemento (IfcPropertySet + IfcElementQuantity), unidade autoria → SI.
-- `modules/ifc/ifc-properties-store.service.ts` — **novo.** Batch insert 1000/transação, idempotente.
+- `schema/element-properties.ts` + `migrations/042_element_properties.sql` - **novo.** `properties` JSONB (GIN) + `area_m2`/`volume_m3`/`length_m` indexados; índices por (model, type) e (model, storey).
+- `modules/ifc/ifc-properties.dto.ts` - **novo.** `ElementProperties`, `PropertySet`.
+- `modules/ifc/ifc-properties.builder.ts` - **novo.** Puros: `normalizeValue` (null-safe), `lengthScale`, `extractQuantities` (Qto_* → SI), `normalizePropertySets`.
+- `modules/ifc/ifc-properties.extractor.ts` - **novo.** web-ifc `getPropertySets` por elemento (IfcPropertySet + IfcElementQuantity), unidade autoria → SI.
+- `modules/ifc/ifc-properties-store.service.ts` - **novo.** Batch insert 1000/transação, idempotente.
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|

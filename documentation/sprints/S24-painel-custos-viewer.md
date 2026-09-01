@@ -11,13 +11,13 @@
 
 Heatmap de custo por elemento no viewer, painel de breakdown com hierarquia, ficha de custo por elemento ao clicar.
 
-> **Nota para o agente:** Este é o **momento "uau" da demo** — onde o produto deixa de parecer um viewer IFC comum. Mas a prioridade arquitetural é projetar o painel de breakdown de forma que o S30 (comparação financeira) renderize **dois painéis lado a lado sem duplicar código**. Componentize pensando no split-view do S18.
+> **Nota para o agente:** Este é o **momento "uau" da demo**, onde o produto deixa de parecer um viewer IFC comum. Mas a prioridade arquitetural é projetar o painel de breakdown de forma que o S30 (comparação financeira) renderize **dois painéis lado a lado sem duplicar código**. Componentize pensando no split-view do S18.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Comparação financeira A|B (S30 reusa este painel)
 - Timeline 4D / curva S animada (S26, S27)
@@ -28,7 +28,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 ## Por que importa a longo prazo
 
-Este é o primeiro sprint onde o produto se torna visualmente diferente de um viewer IFC comum. O heatmap de custo — onde a cor de cada elemento representa seu custo relativo — é a visualização que engenheiros de custo nunca viram num viewer BIM. É o momento de "uau" da demo.
+Este é o primeiro sprint onde o produto se torna visualmente diferente de um viewer IFC comum. O heatmap de custo, onde a cor de cada elemento representa seu custo relativo, é a visualização que engenheiros de custo nunca viram num viewer BIM. É o momento de "uau" da demo.
 
 O painel de breakdown precisa ser projetado de forma que o S30 (comparação financeira) possa renderizar dois painéis lado a lado sem duplicar o código.
 
@@ -38,7 +38,7 @@ O painel de breakdown precisa ser projetado de forma que o S30 (comparação fin
 
 | Decisão | Escolha | Razão |
 |---|---|---|
-| Escala de cor do heatmap | Verde (barato) → Amarelo → Vermelho (caro) | Intuitivo — vermelho = atenção |
+| Escala de cor do heatmap | Verde (barato) → Amarelo → Vermelho (caro) | Intuitivo, vermelho = atenção |
 | Normalização | Por tipo de elemento (paredes comparadas com paredes) | Comparar pilar com janela seria distorcido |
 | Painel lateral | Árvore: Projeto → Pavimento → Tipo → Elemento | Drill-down natural |
 | Ficha de elemento | Quantidade + Preço unitário + Total + Fonte (SINAPI/customizado) | Auditabilidade |
@@ -46,7 +46,7 @@ O painel de breakdown precisa ser projetado de forma que o S30 (comparação fin
 
 ---
 
-## Heatmap — implementação
+## Heatmap: implementação
 
 ```typescript
 // No CostHeatmap.ts

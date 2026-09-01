@@ -36,8 +36,8 @@ Docs lidos. Executando tarefas iniciais agora.
 ### Planner Response
 
 2 serviços encontrados:
-- **arxisvr** (backend Node.js) — `srv-d8c2tegjo6nc73eg6arg` — not_suspended ✅
-- **arxisvr-signaling** (Docker) — `srv-d8i6v6btqb8s73arlgcg` — not_suspended ✅
+- **arxisvr** (backend Node.js), `srv-d8c2tegjo6nc73eg6arg` - not_suspended ✅
+- **arxisvr-signaling** (Docker), `srv-d8i6v6btqb8s73arlgcg` - not_suspended ✅
 
 Agora puxo logs + deploys de ambos, e Sentry issues em paralelo.
 
@@ -57,7 +57,7 @@ Bom. Agora puxo logs recentes do backend (serviço principal) pra verificar erro
 
 ### Planner Response
 
-Logs endpoint 404 — Render API v1 não tem `/logs` direto assim. Vou usar o deploy logs endpoint ao invés.
+Logs endpoint 404, Render API v1 não tem `/logs` direto assim. Vou usar o deploy logs endpoint ao invés.
 
 *User accepted the command `$key = (Get-Content .env.production | Select-String "RENDER_API_KEY").ToString().Split("=",2)[1].Trim(); $headers = @{ Authorization = "Bearer $key"; Accept = "application/json" }; Invoke-RestMethod -Uri "https://api.render.com/v1/services/srv-d8c2tegjo6nc73eg6arg/deploys/dep-d8ps39n7f7vs73dh6pcg/logs" -Headers $headers | ConvertTo-Json -Depth 3`*
 
@@ -95,7 +95,7 @@ Diagnóstico completo. Aqui o resumo:
 
 ---
 
-## 📊 Status da Sessão — 18/Jun/2026 07:22 BRT
+## 📊 Status da Sessão: 18/Jun/2026 07:22 BRT
 
 ### ✅ Serviços Render
 | Serviço | Status | Último Deploy | Commit |
@@ -114,14 +114,14 @@ Diagnóstico completo. Aqui o resumo:
 | Sev | Código | Endpoint | Data |
 |-----|--------|----------|------|
 | **critical** | 500 | `POST /api/v1/ifc/upload` | 15/Jun 10:55 |
-| **critical** | — | `Invalid IFC file: Missing DATA section` | 15/Jun 10:55 |
+| **critical** | - | `Invalid IFC file: Missing DATA section` | 15/Jun 10:55 |
 | error | 403 | `GET /projects/.../ifc-models` | 16/Jun 17:38 |
 | error | 404 | `GET /projects/.../type-map` | 16/Jun 17:38 |
 | error | 403 | `GET /tenants` | 16/Jun 17:38 |
 | error | 400 | `GET /meta/me` e `/meta/token` | 15/Jun 17:04 |
 
 ### 📈 DB Produção
-- **40.588** metrics, **438** audit_logs, **5** users, **10** tenants — dados saudáveis.
+- **40.588** metrics, **438** audit_logs, **5** users, **10** tenants, dados saudáveis.
 
 ---
 
