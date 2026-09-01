@@ -9,20 +9,24 @@ Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINA
 ## Arquitetura
 
 ```
-arxisvr.avilaops.com       (GitHub Pages)
+arxisvr.avilaops.com       (Cloudflare Pages, a sair)
 Frontend: Vite MPA + Three.js + IFC
 
         │ HTTPS / WSS
 
-api.arxisvr.avilaops.com   (Render, Fastify)
+api.arxisvr.avilaops.com   (Hetzner, servidor orquestrador, Fastify)
 Backend: auth · tenants · BIM · observability
 WebSocket (signaling/realtime: rooms, avatar_update, chat) no mesmo serviço
-PostgreSQL (Render managed) · R2 Storage
+PostgreSQL (container arxisvr-db) · storage local em volume
 ```
 
-> Só existem 2 serviços em produção: o frontend (GitHub Pages) e o backend
-> (Render). NÃO há serviço de signaling separado, o WebSocket é servido pelo
-> backend. O diretório `signaling-server/` é apenas dev local (porta 3002).
+> Só existem 2 serviços em produção: o frontend e o backend. NÃO há serviço de
+> signaling separado, o WebSocket é servido pelo backend. O diretório
+> `signaling-server/` é apenas dev local (porta 3002).
+
+> **O Render acabou.** Desde 01/09/2026 a API roda no servidor orquestrador
+> (`23.88.60.193`, o mesmo do n8n e da observabilidade), em `/opt/arxisvr`,
+> atrás do Caddy do stack de observabilidade. Ver `deploy/`.
 
 > **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
 
@@ -60,7 +64,10 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `VITE_API_URL` | `https://api.arxisvr.avilaops.com` |
 | `VITE_WS_URL` | `wss://api.arxisvr.avilaops.com` |
 
-### Backend (Render)
+### Backend
+
+Em produção ficam em `/opt/arxisvr/.env` no servidor orquestrador (chmod 600),
+lidos pelo compose. Não há painel de provedor.
 
 | Var | Descrição |
 |---|---|
@@ -79,19 +86,19 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `MP_WEBHOOK_SECRET` | Billing, segredo da assinatura `x-signature` das notificações do Mercado Pago |
 | `BILLING_PROVIDER_SYNC_INTERVAL_MS` | Billing, cadência da sincronização com o Mercado Pago (padrão 6h; a notificação do MP não é garantida) |
 
-> **CRÍTICO Render:** `PUT /env-vars` substitui TODAS as variáveis. Sempre enviar a lista completa.
-
 ---
 
 ## Deploy
 
 | Serviço | Trigger | Como |
 |---|---|---|
-| Frontend | Push em `main` em `frontend/**` | GitHub Actions → GitHub Pages |
-| Backend | Push em `main` | Render auto-deploy |
-| Signaling | Manual | Render, sempre ligado |
+| Backend | Manual | `./deploy/deploy.sh` (tar por SSH, build no servidor, `docker compose up -d`) |
+| Frontend | Manual | Ainda no Cloudflare Pages, e o auto-deploy por GitHub Actions está parado desde 07/06/2026 porque a conta do GitHub está bloqueada por billing |
 
-Signaling no plano free dorme após 15 min inativo. Frontend envia ping a cada 25s.
+O backend vive em `/opt/arxisvr` no servidor orquestrador: `arxisvr-api` mais
+`arxisvr-db` (Postgres dedicado), sem porta publicada no host. Quem termina TLS
+é o Caddy do stack `/opt/observabilidade`, que entra na rede `arxisvr_default`.
+As migrations rodam sozinhas no boot.
 
 ---
 

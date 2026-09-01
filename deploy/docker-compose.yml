@@ -1,0 +1,51 @@
+# ArxisVR no servidor orquestrador (infra, 23.88.60.193 / 10.10.0.1).
+#
+# Vive em /opt/arxisvr. O Caddy que termina TLS é o do stack de
+# observabilidade (/opt/observabilidade), que entra aqui pela rede
+# `arxisvr_default` e fala com `api:3001` pelo nome do serviço. Por isso
+# nenhuma porta é publicada no host: quem entra é o Caddy, pela rede docker.
+#
+# O Postgres é dedicado ao ArxisVR em vez de dividir o do n8n: são 59
+# migrations e 70 tabelas, e misturar isso com o banco do orquestrador
+# transformaria qualquer restauração de um em risco para o outro.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: arxisvr-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arxisvr
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      POSTGRES_DB: arxisvr
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arxisvr -d arxisvr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: arxisvr-api:local
+    container_name: arxisvr-api
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Driver de storage local. Sem este volume os IFCs enviados somem no
+      # primeiro deploy.
+      - uploads:/app/uploads
+
+volumes:
+  db-data:
+  uploads:
+
+networks:
+  default:
+    name: arxisvr_default

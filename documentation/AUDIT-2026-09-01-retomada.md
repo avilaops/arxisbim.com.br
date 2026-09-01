@@ -4,23 +4,28 @@ Data: 01/09/2026. Escopo: repositório inteiro (`backend`, `frontend`, `revit-pl
 `signaling-server`, `infra`) mais a infraestrutura viva (Cloudflare, Render, Hetzner).
 Motivo: decidir por onde retomar o ArxisVR depois de uma parada.
 
+> **Atualizado no mesmo dia.** A auditoria abaixo é o retrato de antes. Ainda em
+> 01/09/2026, por decisão do Nicolas, o Render foi abandonado e a API subiu no
+> servidor orquestrador. O que mudou está marcado ao longo do texto e resumido
+> em "O que já foi feito hoje", no fim.
+
 ## Veredito em uma linha
 
-O produto **não está no ar**. Existe muito software pronto e testado no repositório,
-mas o que o mundo enxerga hoje é uma landing page congelada em **07/06/2026**, 199
-commits atrás, sem API atrás dela. Nada do que foi construído de junho para cá
-(IFC Core, viewer, validador, plugin Revit, billing no Mercado Pago) chegou ao ar.
+O produto **não estava no ar**. Existe muito software pronto e testado no
+repositório, mas o que o mundo enxerga hoje é uma landing page congelada em
+**07/06/2026**, 199 commits atrás. A API já voltou; o frontend ainda não.
 
 ## Estado real da infraestrutura
 
 | Camada | Onde está | Estado |
 |---|---|---|
 | Frontend | Cloudflare Pages `arxisvr-frontend.pages.dev`, DNS proxied | **No ar, mas congelado.** Último deploy 07/06/2026, commit `156c4b02` |
-| API | CNAME `api.arxisvr` para `arxisvr.onrender.com`, dns-only | **Morta.** Handshake TLS falha: o serviço do Render foi apagado |
-| Banco | Render managed Postgres | **Perdido.** Não existe no Hetzner, não existe dump em `/opt/backups`, o Neon do `.env` está comentado desde antes |
-| Storage | Cloudflare R2 (`STORAGE_DRIVER=r2` no `render.yaml`) | Bucket não verificado; as chaves R2 não estão em nenhum `.env` local |
-| Keepalive | Cloudflare Worker `arxisvr-keepalive`, cron a cada 10 min | **Zumbi.** Continua pingando o host morto do Render desde que ele caiu |
-| Hetzner | `178.105.82.48` | **Sem ArxisVR.** Nenhum container, nenhum banco, nenhum diretório em `/opt` |
+| API | ~~CNAME para `arxisvr.onrender.com`~~ → A para `23.88.60.193`, dns-only | **Resolvido em 01/09.** O serviço do Render tinha sido apagado; a API agora roda no servidor orquestrador |
+| Banco | ~~Render managed Postgres~~ → container `arxisvr-db` | **Perdido e recriado vazio.** Não havia dump em `/opt/backups` nem em lugar nenhum, e o Neon do `.env` está comentado desde antes |
+| Storage | Cloudflare R2 (`STORAGE_DRIVER=r2` no antigo `render.yaml`) | **Trocado por driver local.** As chaves do R2 não estão em nenhum `.env` e o bucket não foi localizado |
+| Keepalive | Cloudflare Worker `arxisvr-keepalive`, cron a cada 10 min | **Apagado em 01/09.** Pingava o host morto do Render desde que ele caiu |
+| Hetzner produção | `178.105.82.48` | Sem ArxisVR, e continua assim de propósito (ver abaixo) |
+| Hetzner orquestrador | `23.88.60.193` | **É aqui que o ArxisVR mora agora**, em `/opt/arxisvr` |
 
 ### Por que o frontend congelou
 
@@ -61,42 +66,42 @@ um endereço vivo. O provedor precisa de `MP_ACCESS_TOKEN` e `MP_WEBHOOK_SECRET`
 
 Planos hoje: Free, Starter R$ 87, Professional R$ 237, Enterprise R$ 597 (mensal, BRL).
 
-## A restrição que mais pesa: o servidor não cabe
+## Qual dos dois servidores, e por quê
 
-O Hetzner atual não tem folga para receber o ArxisVR do jeito que ele é:
+Correção de um erro da primeira versão desta auditoria: eu tinha olhado só o disco
+raiz do servidor de produção e concluído que faltava espaço. Não falta. O Docker mora
+num volume separado.
 
-```
-Disco:  38 G total, 30 G usados, 7,3 G livres  (81 %)
-        imagens Docker 21,8 G · volumes 14,5 G · build cache 7,8 G · /opt/backups 4,4 G
-RAM:    3,8 G total, 1,1 G disponível
-Swap:   4,0 G total, 2,6 G JÁ EM USO
-```
+| | Produção (`178.105.82.48`) | Orquestrador (`23.88.60.193`) |
+|---|---|---|
+| Disco raiz | 38 G, 7,3 G livres | 38 G, **22 G livres** |
+| Volume de dados | 79 G, 37 G livres (`/var/lib/docker`) | não tem, e não precisa |
+| RAM disponível | 1,0 G de 3,8 G | **1,9 G de 3,8 G** |
+| Swap em uso | **2,4 G de 4 G** | **nenhum swap, nenhum uso** |
+| Containers | 36 | 10 |
 
-A máquina já está engolindo swap com 37 containers. O pipeline de IFC do ArxisVR roda
-web-ifc (WASM) em `worker_threads` sobre arquivos de até 150 MB, e é justamente o tipo
-de carga que estoura RAM em picos. Subir ele aqui sem antes liberar espaço e memória
-é pedir para derrubar Brilhax, Odoo, Saúde Pet e o resto junto.
+Espaço nunca foi o problema: **memória** é. O de produção já opera em swap constante
+com Odoo, Brilhax, Saúde Pet, Medusa e mais trinta. O pipeline de IFC roda web-ifc
+(WASM) em `worker_threads` sobre arquivos de até 150 MB, exatamente a carga que
+estoura RAM em pico e derruba vizinho.
 
-Isso não bloqueia a retomada, mas muda o custo dela: ou limpa o servidor primeiro
-(build cache e imagens órfãs devolvem alguns GB), ou o ArxisVR ganha um servidor próprio.
+Por isso o ArxisVR foi para o **orquestrador**, que já hospeda o n8n e a
+observabilidade: metade dos containers, o dobro de RAM livre e zero swap.
 
 ## Custo de religar, parte por parte
 
-Ordenado por dependência. Cada linha só faz sentido depois da anterior.
+Ordenado por dependência. Os itens marcados foram executados em 01/09/2026.
 
-| # | O que | Esforço | Depende de |
+| # | O que | Esforço | Situação |
 |---|---|---|---|
-| 1 | Limpar o Hetzner (`docker builder prune`, imagens órfãs, backups velhos) ou contratar servidor próprio | 1 h, ou uma decisão de custo | Nada |
-| 2 | Banco `arxisvr` no Postgres do Hetzner e rodar as 59 migrations | 1 h | 1 |
-| 3 | Imagem Docker do backend (não existe Dockerfile), build local, `docker load`, container em porta livre | 3 h a 4 h | 1, 2 |
-| 4 | Rota no Caddy para `api.arxisvr.avilaops.com` e DNS saindo do Render | 30 min | 3 |
-| 5 | Storage: recuperar as chaves do R2 ou trocar para volume local | 1 h | 3 |
-| 6 | Cadastrar o webhook do Mercado Pago no host vivo e conferir uma assinatura ponta a ponta | 1 h | 4 |
-| 7 | Tirar o frontend do Cloudflare Pages e servir do Hetzner (política da casa: nada de Pages) | 2 h a 3 h | 1 |
-| 8 | Matar o Worker de keepalive e o `render.yaml` | 15 min | 4 |
-
-Somando: cerca de **dois dias de trabalho** para o produto voltar a existir de verdade,
-com o item 1 podendo virar uma conta mensal a mais em vez de uma hora de faxina.
+| 1 | Escolher o servidor (produção x orquestrador) | decisão | **Feito.** Orquestrador |
+| 2 | Banco `arxisvr` e rodar as 59 migrations | 1 h | **Feito.** Container `arxisvr-db`, 59 migrations, 84 tabelas |
+| 3 | Imagem Docker do backend (não existia Dockerfile) | 3 h a 4 h | **Feito.** `backend/Dockerfile` em duas etapas, build no servidor |
+| 4 | Rota no Caddy e DNS saindo do Render | 30 min | **Feito.** A para `23.88.60.193`, certificado emitido |
+| 5 | Storage: R2 ou volume local | 1 h | **Feito por ora.** Driver local em volume; R2 fica para quando as chaves aparecerem |
+| 6 | Cadastrar o webhook do Mercado Pago e testar ponta a ponta | 1 h | **Pendente.** Depende do painel do MP, que é onde o segredo é gerado |
+| 7 | Tirar o frontend do Cloudflare Pages e servir do orquestrador | 2 h a 3 h | **Pendente.** É o que ainda deixa 199 commits invisíveis |
+| 8 | Matar o Worker de keepalive e o `render.yaml` | 15 min | **Feito.** Worker apagado na Cloudflare, `render.yaml` e `infra/keepalive-worker/` fora do repo, keep-alive interno removido do `index.ts` |
 
 ## Dívida técnica catalogada
 
@@ -112,25 +117,50 @@ Nada aqui é bloqueante, tudo aqui cobra juros.
 | Copiloto de IA em modelo legado | `routes/v1/ai-copilot.ts` usa `open-mixtral-8x7b` da Mistral | Baixa. Modelo antigo, e destoa do resto da casa |
 | `www.arxisvr.avilaops.com` não existe no DNS | `render.yaml` define `FRONTEND_URL` para esse host | Baixa |
 
+## O que já foi feito hoje
+
+Executado em 01/09/2026, depois da decisão de abandonar o Render.
+
+- **API no ar** em `https://api.arxisvr.avilaops.com`, no servidor orquestrador.
+  `/health` responde `healthy` com `database: up`, `/api/v1/billing/plans` responde 200.
+- **Stack em `/opt/arxisvr`**: `arxisvr-api` (Fastify, 3001, sem porta no host) e
+  `arxisvr-db` (Postgres 16 dedicado), rede `arxisvr_default`, volume para os uploads.
+- **59 migrations aplicadas** num banco limpo, 84 tabelas.
+- **TLS pelo Caddy** do stack de observabilidade, que ganhou a rede externa e o bloco
+  do novo domínio. `obs.avilaops.com` e `n8n.avilaops.com` continuam respondendo.
+- **DNS**: `api.arxisvr.avilaops.com` deixou de ser CNAME para o Render e virou A para
+  `23.88.60.193`, dns-only para o desafio HTTP-01 fechar.
+- **Render apagado do repositório**: `render.yaml`, `infra/keepalive-worker/` e o
+  keep-alive interno do `index.ts` (que existia só porque o free tier hibernava).
+- **Worker `arxisvr-keepalive` apagado** da conta Cloudflare.
+- **Novidades no repositório**: `backend/Dockerfile`, `backend/.dockerignore`,
+  `deploy/docker-compose.yml`, `deploy/deploy.sh`, `deploy/README.md`.
+
+### O que ficou pendente disso
+
+- `MP_WEBHOOK_SECRET` está vazio no `.env` do servidor. O segredo é gerado no painel do
+  Mercado Pago quando a URL do webhook é cadastrada, então só dá para fechar por lá.
+- O volume `arxisvr_uploads` e o banco `arxisvr` **não entram na rotina de backup**, que
+  cobre uma lista explícita de bancos no servidor de produção.
+- Um erro no boot: `Failed to record metric ... metrics_tenant_id_fkey`. A métrica de
+  inicialização tenta gravar com um `tenant_id` que não existe em banco novo. Não derruba
+  nada, mas suja o log.
+
 ## Recomendação
 
-Religar antes de construir. O item mais caro do roadmap não é a próxima sprint: é o fato
-de que 199 commits de trabalho estão invisíveis, inclusive as duas peças que existem
-justamente para gerar demanda (o validador IFC gratuito e o SEO). Hoje o ArxisVR gasta
-domínio, Worker e atenção sem entregar nada a ninguém.
+O que sobrou é o frontend, e é o que mais dói. 199 commits continuam invisíveis,
+inclusive as duas peças que existem justamente para gerar demanda: o validador IFC
+gratuito e o SEO. Com a API viva, publicar o frontend atualizado deixou de ser
+"mais uma tarefa" e virou o único passo entre o produto e o mundo.
 
-A ordem que eu proponho:
+Ordem daqui:
 
-1. **Publicar o frontend atualizado** (itens 1 e 7). É a coisa mais barata que muda algo
-   visível: o validador vai ao ar, o sitemap vai ao ar, a landing para de ser de junho.
-2. **Ressuscitar a API** (itens 2 a 5). Sem isso login, upload e viewer continuam decorativos.
-3. **Fechar o billing** (item 6) e **limpar o zumbi** (item 8).
+1. **Publicar o frontend atualizado**, servido do orquestrador em vez do Cloudflare
+   Pages. O validador vai ao ar, o sitemap vai ao ar, a landing para de ser de junho.
+2. **Fechar o billing** cadastrando o webhook no painel do Mercado Pago.
+3. **Colocar o banco e o volume do ArxisVR na rotina de backup.**
 4. **Só então voltar ao roadmap.** A sprint seguinte na sequência é a S14, classificação
    de tipos, dentro da fase de Metadados BIM.
-
-Se a decisão for não religar agora, então a decisão honesta é desligar o resto também:
-apagar o Worker de keepalive, tirar o CNAME morto da API e assumir que o ArxisVR está
-em pausa. O estado atual, meio no ar e meio morto, é o pior dos dois.
 
 ## Como isso foi apurado
 
