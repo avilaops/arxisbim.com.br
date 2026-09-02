@@ -94,11 +94,16 @@ export enum EventType {
   UI_SHORTCUTS_OPEN = 'UI_SHORTCUTS_OPEN',
   
   // UI Events (aliases for backward compatibility)
+  // Valor repetido de propósito: são dois nomes para o mesmo evento, mantidos
+  // enquanto houver chamador usando a forma antiga. O ESLint trata valor
+  // duplicado em enum como erro porque costuma ser copiar e colar sem querer.
+  /* eslint-disable @typescript-eslint/no-duplicate-enum-values */
   ModalOpened = 'UI_MODAL_OPEN',
   ModalClosed = 'UI_MODAL_CLOSE',
   PanelOpened = 'UI_PANEL_OPENED',
   PanelClosed = 'UI_PANEL_CLOSED',
   ToolChanged = 'TOOL_CHANGED',
+  /* eslint-enable @typescript-eslint/no-duplicate-enum-values */
   
   // VR Editor Events
   VR_EDITOR_ENABLED = 'VR_EDITOR_ENABLED',

@@ -1,3 +1,7 @@
+// Storybook: `render` e uma funcao de story, e o Storybook a trata como
+// componente. O ESLint nao sabe disso e acusa os useState como hook fora de
+// componente. Nao ha bug aqui.
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from './Dialog';
 import { Button } from './Button';

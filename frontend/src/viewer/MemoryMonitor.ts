@@ -62,7 +62,7 @@ class MemoryMonitor {
     };
 
     let geometries = 0;
-    let textures = 0;
+    const textures = 0;
     let materials = 0;
 
     this.scene.traverse((object) => {

@@ -29,9 +29,9 @@ import { SINAPIImportPanel } from '../../app/components/SINAPIImportPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
-let inspectorController: any = null;
-let selectionService: any = null;
-let batchSelectionService: any = null;
+const inspectorController: any = null;
+const selectionService: any = null;
+const batchSelectionService: any = null;
 
 // Utility to defer non-critical work to reduce main-thread blocking
 function deferNonCritical(callback: () => void, timeout = 0) {
@@ -59,7 +59,7 @@ window.addEventListener('arxisvr:project-selected', (e: Event) => {
   const id = (e as CustomEvent).detail?.projectId;
   if (id) PROJECT_ID = id;
 });
-let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
+const TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 
 let viewerHost: ViewerHost | null = null;
 let ifcLoader: IFCSimpleLoader | null = null;

@@ -276,7 +276,7 @@ export class IssuesPanel {
   }
 
   private getFilteredIssues(): Issue[] {
-    let filtered = this.issues.filter(issue => {
+    const filtered = this.issues.filter(issue => {
       if (this.filterStatus !== 'all' && issue.status !== this.filterStatus) return false;
       if (this.filterPriority !== 'all' && issue.priority !== this.filterPriority) return false;
       return true;

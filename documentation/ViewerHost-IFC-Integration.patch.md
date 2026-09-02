@@ -1,3 +1,13 @@
+# Patch: integrar o modulo IFC no ViewerHost
+
+> Isto NAO e codigo compilavel. Sao trechos soltos para colar dentro de
+> `frontend/src/viewer/ViewerHost.ts`, escritos como se fossem um arquivo.
+> Vivia em `frontend/src/viewer/ViewerHost-IFC-Integration.patch.ts`, onde
+> ninguem importava, nao entrava no bundle e o ESLint quebrava com
+> "Parsing error: Declaration or statement expected" na linha 21.
+> Movido para ca em 01/09/2026, com a extensao que descreve o que ele e.
+
+```ts
 /**
  * ViewerHost IFC Integration Patch
  * 
@@ -384,3 +394,5 @@ async initialize() {
 }
 ```
 */
+
+```
