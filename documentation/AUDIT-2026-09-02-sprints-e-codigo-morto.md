@@ -115,5 +115,23 @@ Muito menor que no frontend, mas real, e **vai para produção dentro do `dist`*
    ligado, ou vira `arquivados/`. Hoje ele custa build, `npm ci`, tempo de type-check
    e, principalmente, engana quem lê o repo e conclui que a feature existe.
 3. **Corrigir o status dos sprints** a partir desta tabela, não da memória.
-4. **Apagar `modules/storage` e `modules/companies`** (removível hoje, sem risco).
+4. ~~**Apagar `modules/storage` e `modules/companies`**~~ — **feito** em
+   02/09/2026 (`20b18fc`). Nove arquivos removidos; o build caiu de 306 para
+   297 arquivos, exatamente os nove, e o type-check ficou com os mesmos 9 erros
+   pré-existentes, nenhum novo.
+
+---
+
+## 7. O que aconteceu depois desta auditoria (02/09/2026)
+
+- Os quatro marcos ★ foram **zerados** e os 47 sprints repassados: cada um
+  agora declara **Backend** e **Interface** em separado (`18dee67`).
+- Os dois módulos mortos do backend foram **removidos** (`20b18fc`).
+- A saída do Docker foi **medida e recusada**; produção segue em Docker, com
+  **Postgres 18.6** (`279d50d`, `43ba2b9`). Infra congelada.
+- O **S12 entrou em execução**, com plano em `S12-MATRIZ-INTEGRACAO.md`.
+- As **191 mil linhas órfãs do frontend continuam intactas**, à espera da
+  classificação. Duas peças já foram identificadas como aproveitáveis pelo
+  S12/S18 (`api/v1/services/scenarios.service.ts` e `viewer/CameraState.ts`),
+  o que confirma a decisão de não arquivar nada ainda.
 

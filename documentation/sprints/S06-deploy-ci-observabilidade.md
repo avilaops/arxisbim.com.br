@@ -4,6 +4,24 @@
 **Status:** 🟡 Parcial (chega em parte ao usuário)  
 **Backend:** sim · **Interface:** parcial  
 **Verificado em:** 02/09/2026 — Deploy e health no ar. CI nao roda: conta GitHub bloqueada.
+
+> **Infra congelada em 02/09/2026.** Produção em Docker no orquestrador
+> `23.88.60.193` (`arxisvr-api`, `arxisvr-db`, `arxisvr-web`), TLS pelo Caddy de
+> `/opt/observabilidade`. Banco em **Postgres 18.6** desde 02/09 (era 16), com o
+> volume do PG16 preservado em `arxisvr_db-data-pg16-rollback`.
+>
+> A saída do Docker (PM2 + Postgres no host + Node 24) foi medida e **recusada**:
+> não elimina o daemon, então o ganho de RAM é ~zero contra risco real numa
+> máquina com 1,4 GB livres e zero swap. Ver
+> `documentation/DECISAO-saida-do-docker.md`.
+>
+> **Armadilha do PG18:** a imagem 18+ espera o volume em `/var/lib/postgresql`,
+> não em `/var/lib/postgresql/data`. No caminho antigo o container reinicia em
+> loop. Rollback exige desfazer **a tag e o mount**.
+>
+> O item "deploy automático em push na main" continua **não atendido**: o deploy
+> é manual, por `./deploy/deploy.sh [api|web]`, porque a conta do GitHub está
+> bloqueada e nenhum Actions roda.
 **Depende de:** S01–S05  
 **Bloqueia:** Qualquer usuário real antes disso
 

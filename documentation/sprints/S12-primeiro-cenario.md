@@ -1,9 +1,28 @@
 # S12 ★ · Primeiro Cenário Salvo
 
 **Fase:** IFC Core  
-**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
-**Backend:** sim · **Interface:** nao  
-**Verificado em:** 02/09/2026 — MARCO. Nenhuma tela viva menciona cenario.
+**Status:** 🔵 **EM EXECUÇÃO** desde 02/09/2026 · ★ MARCO ZERADO (não atingido)  
+**Backend:** sim (não escrever nada novo) · **Interface:** em construção  
+**Verificado em:** 02/09/2026 — nenhuma tela viva menciona cenário.  
+**Plano:** `documentation/S12-MATRIZ-INTEGRACAO.md`
+
+> **Alvo do sprint, e nada além dele:**
+> `/app → criar cenário → salvar câmera/visibilidade → trocar A/B → recarregar → restaurar estado`
+>
+> Regras duras: **zero backend novo** e **zero S18/S29 de carona**.
+>
+> **Achado que mudou o plano (02/09):** o CRUD plano `/api/v1/scenarios`, apesar
+> do `scenarios-v12.service.ts` no nome, **não salva estado do viewer**. O
+> `PATCH` dele aceita um `config` fechado por zod (movementSpeed, minimap...) e
+> o `POST /scenarios/:id/update` é tick de game loop (`deltaTime`), não
+> "salvar". Quem aceita `camera`, `player` e `metadata` é o CRUD aninhado
+> `/api/v1/projects/:id/scenarios`. É ele que o S12 usa, só com
+> create/list/get/update.
+>
+> **Andamento:** `src/services/scenarios.service.ts` escrito e compilando (ainda
+> não provado contra a API). Próximo: a ponte no `ViewerCanvas`, onde câmera e
+> `OrbitControls` hoje vivem presos dentro de um `useEffect`, sem `ref` nem
+> `useImperativeHandle`. É a única parte invasiva.
 **Depende de:** S09 (câmera serializável), S10 (visibilidade serializável), S11 (modelo `ready`)  
 **Bloqueia:** S18 (comparação visual), S27 (animação por cenário), S29 (branching)
 

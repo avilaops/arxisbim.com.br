@@ -1,9 +1,18 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 02/09/2026 (marcos zerados por auditoria)
+**Última atualização:** 02/09/2026 (marcos zerados; infra congelada)
 **Versão:** 3.0, 32 sprints atômicos
 **Status:** Backend à frente da interface. Os 4 marcos ★ estão zerados: o que
 foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-morto.md`.
+
+**Foco único: S12 ★.** Nada de feature nova até ele estar demonstrável na
+aplicação publicada. Durante o S12 valem duas regras duras: **zero backend
+novo** e **zero S18/S29 entrando de carona**.
+
+**Infra congelada** (decisão de 02/09/2026). Produção roda em Docker no
+orquestrador `23.88.60.193`, com **Postgres 18.6**. A saída do Docker foi medida
+e recusada: `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de
+Postgres no host, nada de mexer no Caddy sem necessidade medida.
 
 ---
 
@@ -47,15 +56,24 @@ alcance da interface hoje.
 
 Todo sprint só é concluído quando:
 
-- [ ] **A funcionalidade é alcançável pela aplicação publicada.** Existe rota, a
-      tela chega nela, e o arquivo entra no bundle. Este critério é o primeiro
-      porque foi o único que faltava: em 02/09/2026 sete sprints tinham backend
-      pronto e nenhum deles chegava ao usuário.
+- [ ] **A funcionalidade é acionável por um fluxo que o usuário alcança.**
+      Este critério é o primeiro porque foi o único que faltava: em 02/09/2026
+      sete sprints tinham backend pronto e nenhum chegava ao usuário.
+      Entrar no bundle é **necessário, não suficiente**: dá para importar um
+      módulo em qualquer canto e ele passa a compilar sem que ninguém consiga
+      chegar nele. A prova é o caminho inteiro:
+
+      ```
+      rota/tela → ação do usuário → API → persistência → retorno visual
+      ```
+
 - [ ] Build passa
 - [ ] Lint passa
 - [ ] Testes passam
 - [ ] Sem regressões conhecidas em sprints anteriores
 - [ ] Demo de até 5 minutos disponível, feita na aplicação publicada
+- [ ] **Para sprint ★: teste em browser real**, na aplicação publicada, com
+      recarga de página. Teste de API não fecha um marco.
 
 ---
 

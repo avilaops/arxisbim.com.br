@@ -13,34 +13,58 @@ Modelo base → Criar Cenário → Alterar estado → Salvar → Alternar A/B �
 
 ## Backend: pronto (não escrever nada aqui)
 
-Registrado em `src/index.ts:673` (`scenarioRoutes`, prefixo `/api/v1`).
-Módulo `src/modules/scenario/` (20 arquivos), serviço `scenarios-v12.service.ts`.
+> **Corrigido em 02/09/2026.** A primeira versão desta matriz mandava usar o
+> CRUD plano `/api/v1/scenarios`. **Estava errado**, e o erro só apareceu ao ler
+> os schemas antes de escrever a UI. Pelo CRUD plano **não é possível salvar o
+> estado do viewer**. O texto abaixo é a versão conferida.
+
+### Há dois CRUDs de cenário, e só um serve
+
+Os dois estão registrados e atendem **a mesma tabela** `scenarios`:
+
+| | CRUD plano | CRUD aninhado |
+|---|---|---|
+| Módulo | `modules/scenario/` | `modules/scenarios/` |
+| Rota | `/api/v1/scenarios` | `/api/v1/projects/:projectId/scenarios` |
+| Registro | `src/index.ts:673` | `src/index.ts:686` |
+| Aceita câmera? | **não** | **sim** (`camera`, `player`, `metadata`) |
+| Serve ao S12? | **não** | **sim** |
+
+**Por que o plano não serve**, apesar do nome `scenarios-v12.service.ts`:
+
+- `PATCH /scenarios/:id` aceita `name`, `description` e `config`, e esse
+  `config` é **fechado por zod** (`scenarioConfigSchema`: `movementSpeed`,
+  `rotationSpeed`, `crouchMultiplier`, `minimapConfig`...). Não há campo para
+  câmera nem para visibilidade.
+- `POST /scenarios/:id/update`, apesar do nome, é **tick de game loop**: o body
+  é `{ deltaTime }` e o handler é `controller.updatePosition`. Não é "salvar".
+
+**Portanto o S12 usa o CRUD aninhado.** Isso **não** é puxar o S29 para dentro
+do sprint: usa-se só `create`, `list`, `get` e `update`. `fork`, `merge`,
+`diff`, `financial` e `pdf` continuam fora, e são S29/S30.
 
 | Precisa | Endpoint | Estado |
 |---|---|---|
-| criar | `POST /api/v1/scenarios` (body: `projectId`, `name`) | ✅ |
-| listar | `GET /api/v1/scenarios?projectId&limit&offset` | ✅ |
-| ler | `GET /api/v1/scenarios/:id` | ✅ |
-| salvar estado | `POST /api/v1/scenarios/:id/update` | ✅ |
-| renomear | `PATCH /api/v1/scenarios/:id` | ✅ |
-| apagar | `DELETE /api/v1/scenarios/:id` | ✅ |
+| criar | `POST /api/v1/projects/:projectId/scenarios` | ✅ |
+| listar | `GET /api/v1/projects/:projectId/scenarios` | ✅ |
+| ler | `GET /api/v1/projects/:projectId/scenarios/:scenarioId` | ✅ |
+| salvar estado | `PUT /api/v1/projects/:projectId/scenarios/:scenarioId` | ✅ |
+| apagar | `DELETE /api/v1/projects/:projectId/scenarios/:scenarioId` | ✅ |
 
-**Persistência:** tabela `scenarios`. O estado do viewer vai na **coluna**
-`scenarios.scenario_state` (jsonb), com `camera`, `player`, `config` e
-`state_version` ao lado. Atenção: `scenario_state` é coluna, **não** tabela.
+**Persistência:** tabela `scenarios`. As colunas `camera`, `player` e
+`metadata` são **jsonb livres**, então guardamos a câmera em `camera` e a
+visibilidade em `metadata.hidden`.
 
-### Cuidado: há dois CRUDs de cenário
+Duas pegadinhas do contrato:
 
-`modules/scenario/` (S12) e `modules/scenarios/` (S29–S30) estão os dois
-registrados e atendem **a mesma tabela** por caminhos diferentes:
+1. `create` **exige** `camera`, `player` e `config` (400 sem eles), mesmo que o
+   S12 não use `player` nem `config`. Vão preenchidos com o mínimo.
+2. O `update` é `PUT` e **sobrescreve** os campos que recebe: mandar só
+   `camera` apagaria o `name`. Manda-se o conjunto.
 
-- S12: `/api/v1/scenarios` — plano, sem projeto na URL.
-- S29: `/api/v1/projects/:projectId/scenarios` — aninhado, mais `fork`,
-  `merge`, `diff`, `financial`, `pdf`.
-
-**Para o S12, usar o plano** (`/api/v1/scenarios`). O aninhado é do S29/S30.
-Não são duplicata a remover: são camadas distintas, mas a coexistência
-confunde. Unificar é assunto do S29, não deste sprint.
+A coluna `scenarios.scenario_state` existe (jsonb, `not null default {}`) e o
+nome engana: é **coluna, não tabela**. Nenhum dos dois CRUDs a expõe por HTTP,
+então ela **não** é o caminho do S12.
 
 ---
 
@@ -74,7 +98,7 @@ A toolbar tem quatro botões: projetos, redefinir, tela cheia, informações.
 
 | Item | Estado | Onde entra |
 |---|---|---|
-| service de cenários | ☐ | `src/services/scenarios.service.ts`, no padrão dos vivos (`dashboard.service.ts`, 33 linhas: `fetch` + `buildApiV1Url` + Bearer do `localStorage`) |
+| service de cenários | ✅ **feito** | `src/services/scenarios.service.ts`, no padrão dos vivos (`fetch` + `buildApiV1Url` + Bearer do `localStorage`). Compila. Ainda **não** provado contra a API. |
 | botão "Criar cenário" | ☐ | `ViewerToolbar.tsx` |
 | lista/seletor de cenários | ☐ | painel novo, no molde de `ProjectModelsPanel` |
 | capturar estado do viewer | ☐ | `ViewerCanvas` precisa expor câmera + visibilidade |
@@ -105,3 +129,8 @@ O backend é 100% do que o S12 pede. O trabalho é de frontend e cabe em
 um arquivo de service, um painel, dois botões e a ponte de estado com o
 `ViewerCanvas`. O risco não está na API, está em `ViewerCanvas` expor (e
 reaplicar) câmera e visibilidade, que é o que hoje não existe no app vivo.
+
+**Confirmado ao abrir o arquivo (02/09):** em `ViewerCanvas.tsx` (303 linhas) a
+câmera, os `OrbitControls` e a cena são criados **dentro de um `useEffect`** e
+nada sai dele. Não há `ref`, `forwardRef` nem `useImperativeHandle`. A ponte é
+o próximo passo, e é a única parte invasiva do sprint.

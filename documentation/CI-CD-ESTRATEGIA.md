@@ -1,6 +1,18 @@
 # CI/CD e Operações: ArxisVR
 
-**Última atualização:** 11/06/2026
+**Última atualização:** 02/09/2026
+
+> **Nada disto roda hoje.** A conta do GitHub da organização está bloqueada por
+> billing, então **nenhum Actions executa** (a mensagem só aparece nas
+> annotations, por isso passou despercebido). Foi assim que o site ficou 199
+> commits congelado no Cloudflare Pages sem ninguém notar, já que ele seguia
+> respondendo 200.
+>
+> **Na prática, hoje:** deploy **manual** por `./deploy/deploy.sh [api|web]`,
+> em Docker no orquestrador `23.88.60.193`, com **Postgres 18.6**. Testes rodam
+> na máquina de quem desenvolve. Este documento descreve o desenho pretendido,
+> não o que acontece. Ver `documentation/DECISAO-saida-do-docker.md` e
+> `AUDIT-2026-09-01-retomada.md`.
 
 ---
 
@@ -97,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18.6
         env:
           POSTGRES_PASSWORD: postgres
         options: >-

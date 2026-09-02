@@ -28,6 +28,20 @@ PostgreSQL (container arxisvr-db) · storage local em volume
 > (`23.88.60.193`, o mesmo do n8n e da observabilidade), em `/opt/arxisvr`,
 > atrás do Caddy do stack de observabilidade. Ver `deploy/`.
 
+> **Infra congelada (02/09/2026).** Tudo em Docker, com **Postgres 18.6**. A
+> saída do Docker (PM2 + Postgres no host) foi medida e recusada: ela não
+> elimina o daemon, então o ganho de RAM é ~zero. Ver
+> `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de Postgres no
+> host, nada de mexer no Caddy sem necessidade medida.
+>
+> Deploy é **manual**: `./deploy/deploy.sh [api|web]`. Não há CI, porque a conta
+> do GitHub está bloqueada e nenhum Actions roda.
+
+> **Estado do produto (02/09/2026):** o backend está à frente da interface. Os
+> quatro marcos ★ estão **zerados**, e 819 dos 867 arquivos do frontend não
+> entram no build. Antes de continuar qualquer sprint, ler
+> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`. Foco único: **S12**.
+
 > **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
 
 ---

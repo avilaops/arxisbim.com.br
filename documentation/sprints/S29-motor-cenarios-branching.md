@@ -4,6 +4,19 @@
 **Status:** 🟠 Backend pronto, **não chega ao usuário**  
 **Backend:** sim · **Interface:** nao  
 **Verificado em:** 02/09/2026 — Branching no backend (estava marcado Pendente).
+
+> **O S12 passou a usar este CRUD (02/09/2026).** As rotas
+> `/api/v1/projects/:projectId/scenarios` (create/list/get/update/delete) são as
+> únicas que aceitam `camera`, `player` e `metadata`, então o primeiro marco
+> depende delas. O CRUD plano `/api/v1/scenarios` não salva estado do viewer.
+>
+> Consequência para este sprint: **não mudar o contrato dessas cinco rotas sem
+> olhar `src/services/scenarios.service.ts` do frontend.** `fork`, `merge`,
+> `diff`, `financial` e `pdf` continuam exclusivos daqui e ninguém os chama
+> ainda.
+>
+> A unificação dos dois CRUDs (`modules/scenario` x `modules/scenarios`, mesma
+> tabela `scenarios`) é assunto **deste** sprint, não do S12.
 **Depende de:** S12 (cenários base), S22 (custos por cenário), S26 (datas por cenário)  
 **Bloqueia:** S30 (comparação financeira usa branching)
 
