@@ -1,7 +1,9 @@
 # S13 · Extração de Propriedades IFC
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Painel de propriedades no viewer.
 **Depende de:** S07 (parser estrutura), S11 (pipeline assíncrono)  
 **Bloqueia:** S15 (busca BIM), S20 (quantitativos dependem de propriedades)
 

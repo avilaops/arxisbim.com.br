@@ -1,7 +1,9 @@
 # S27 · Animação 4D no Viewer
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — timeline-simulations no backend. Sem animacao na tela.
 **Depende de:** S26 (comparação temporal), S08 (viewer geometria)  
 **Bloqueia:** S29 (branching de cenários usa animação como preview)
 

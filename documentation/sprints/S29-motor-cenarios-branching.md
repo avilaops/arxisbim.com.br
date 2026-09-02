@@ -1,7 +1,9 @@
 # S29 · Motor de Cenários: Branching Completo
 
 **Fase:** Motor de Cenários  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Branching no backend (estava marcado Pendente).
 **Depende de:** S12 (cenários base), S22 (custos por cenário), S26 (datas por cenário)  
 **Bloqueia:** S30 (comparação financeira usa branching)
 

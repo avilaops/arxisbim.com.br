@@ -1,7 +1,9 @@
 # S15 · Busca BIM
 
 **Fase:** Metadados BIM  
-**Status:** Concluído  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Modulo bim-query completo. Sem campo de busca na UI.
 **Depende de:** S13 (propriedades no banco com índice GIN)  
 **Bloqueia:** S20 (takeoff precisa de filtro por tipo), S28 (mapeamento de atividades por código WBS)
 

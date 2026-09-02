@@ -1,7 +1,9 @@
 # S22 · Engine de Cálculo 5D
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Engine de calculo existe (estava marcado Pendente).
 **Depende de:** S19 (schema), S20 (quantitativos), S21 (preços SINAPI)  
 **Bloqueia:** S23 (performance), S24 (painel de custos), S30 (comparação financeira)
 

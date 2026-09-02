@@ -1,7 +1,9 @@
 # S05 · Frontend: Onboarding e Dashboard
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Dashboard e onboarding no ar.
 **Depende de:** S01 (auth), S03 (projetos), S04 (billing)  
 **Bloqueia:** S09 (viewer precisar de shell de navegação)
 

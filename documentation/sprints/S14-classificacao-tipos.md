@@ -1,7 +1,9 @@
 # S14 · Classificação e Tipos de Elementos
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Paleta e legenda por tipo nao chegam a tela.
 **Depende de:** S13 (propriedades extraídas)  
 **Bloqueia:** S10 (filtros por disciplina usam taxonomia), S20 (quantitativos agrupam por tipo)
 

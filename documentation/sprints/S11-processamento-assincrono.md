@@ -1,7 +1,9 @@
 # S11 · Processamento Assíncrono + Observabilidade IFC
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Upload assincrono com status.
 **Depende de:** S07 (parser estrutura), S08 (parser geometria), S06 (logs estruturados)  
 **Bloqueia:** S12 (cenário precisa de modelo `ready`)
 

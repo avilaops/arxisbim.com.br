@@ -1,7 +1,9 @@
 # S30 ★ · Primeira Comparação Financeira de Cenários
 
 **Fase:** Motor de Cenários  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — MARCO. scenario-pdf.service.ts existe; nada chega nele.
 **Depende de:** S24 (painel de custos), S26 (comparação temporal), S29 (branching)  
 **Bloqueia:** S31 (Presentation Studio usa comparação como slide principal)
 

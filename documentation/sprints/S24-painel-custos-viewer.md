@@ -1,7 +1,9 @@
 # S24 · Painel de Custos no Viewer
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** ☐ Não iniciado  
+**Backend:** nao · **Interface:** nao  
+**Verificado em:** 02/09/2026 — CostHeatmapSystem.ts orfao; heatmap ausente do bundle.
 **Depende de:** S22 (cálculo), S23 (performance), S18 (split-view)  
 **Bloqueia:** S30 (comparação financeira usa dados deste painel)
 

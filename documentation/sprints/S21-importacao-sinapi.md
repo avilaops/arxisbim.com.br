@@ -1,7 +1,9 @@
 # S21 · Importação de Tabela SINAPI
 
 **Fase:** 5D BIM  
-**Status:** ✅ ENTREGUE  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Importacao SINAPI por API. Sem tela.
 **Depende de:** S19 (schema de cost_tables e cost_items)  
 **Bloqueia:** S22 (engine usa preços SINAPI para calcular custo total)
 

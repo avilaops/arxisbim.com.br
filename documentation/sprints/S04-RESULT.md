@@ -1,5 +1,11 @@
 # SPRINT-04-RESULT · Billing & Planos
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **sim**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
+
 > Artefato de memória pós-execução. Evidência verificável de tudo abaixo foi coletada na sessão de fechamento.
 
 **Sprint:** S04 · Billing & Planos

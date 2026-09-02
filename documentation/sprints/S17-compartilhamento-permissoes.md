@@ -1,7 +1,9 @@
 # S17 · Compartilhamento e Permissões
 
 **Fase:** Metadados BIM  
-**Status:** Concluído  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — SharedPage viva, rota /shared.
 **Depende de:** S01 (RBAC base), S12 (cenário a ser compartilhado)  
 **Bloqueia:** S30 (PDF de comparação de cenários precisa de link público), S31 (Presentation Studio usa link público)
 

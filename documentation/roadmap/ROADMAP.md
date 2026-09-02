@@ -1,8 +1,9 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 11/06/2026
+**Última atualização:** 02/09/2026 (marcos zerados por auditoria)
 **Versão:** 3.0, 32 sprints atômicos
-**Status:** Fundação SaaS funcional · Iniciando IFC Core
+**Status:** Backend à frente da interface. Os 4 marcos ★ estão zerados: o que
+foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-morto.md`.
 
 ---
 
@@ -23,12 +24,22 @@ A cadeia de cenários é o ativo intransferível.
 
 ## Marcos Críticos: Não Movem
 
-| Marco | Sprint | Valida |
-|---|---|---|
-| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" |
-| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" |
-| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" |
-| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" |
+> **Todos os quatro marcos estão ZERADOS** (auditoria de 02/09/2026,
+> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`). Nenhum foi
+> atingido. Marco só cai quando o usuário consegue fazer aquilo na tela, e
+> hoje nenhum consegue: o backend existe, a interface não é alcançada pelo
+> build. Não remarque nenhum sem abrir a aplicação e fazer o fluxo.
+
+| Marco | Sprint | Valida | Estado | Por quê |
+|---|---|---|---|---|
+| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ☐ **não atingido** | Backend pronto (`modules/scenario`). Nenhuma tela viva menciona cenário: no bundle a palavra só aparece como rótulo de escopo de API token e texto de marketing. |
+| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ☐ **não atingido** | `comparison/ComparisonPage.ts` e `viewer/ComparisonExport.ts` existem e estão órfãos. `SplitView` não aparece no bundle. |
+| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** | Rota de backend existe (`scenario-comparison.routes.ts`). A UI (`src/timeline/`) está órfã. |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |
+
+**O viewer vivo** (`/app` → `Viewer3DPage`, 356 linhas) oferece quatro botões:
+projetos e modelos, redefinir visualização, tela cheia e informações. É todo o
+alcance da interface hoje.
 
 ---
 
@@ -36,11 +47,15 @@ A cadeia de cenários é o ativo intransferível.
 
 Todo sprint só é concluído quando:
 
+- [ ] **A funcionalidade é alcançável pela aplicação publicada.** Existe rota, a
+      tela chega nela, e o arquivo entra no bundle. Este critério é o primeiro
+      porque foi o único que faltava: em 02/09/2026 sete sprints tinham backend
+      pronto e nenhum deles chegava ao usuário.
 - [ ] Build passa
 - [ ] Lint passa
 - [ ] Testes passam
 - [ ] Sem regressões conhecidas em sprints anteriores
-- [ ] Demo de até 5 minutos disponível
+- [ ] Demo de até 5 minutos disponível, feita na aplicação publicada
 
 ---
 

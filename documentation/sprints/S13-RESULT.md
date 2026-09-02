@@ -1,5 +1,11 @@
 # SPRINT-13-RESULT · Extração de Propriedades IFC
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **sim**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
+
 > Artefato pós-execução.
 
 **Sprint:** S13 · Extração de Propriedades IFC

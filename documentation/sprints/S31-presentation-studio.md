@@ -1,7 +1,9 @@
 # S31 · Presentation Studio
 
 **Fase:** Apresentação e Entrega  
-**Status:** Pendente  
+**Status:** ☐ Não iniciado  
+**Backend:** nao · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Sem implementacao nos dois lados.
 **Depende de:** S30 (comparação financeira como slide principal), S27 (animação 4D para slides)  
 **Bloqueia:** S32 (release candidate inclui Presentation Studio)
 

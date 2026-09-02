@@ -1,7 +1,9 @@
 # S10 · Viewer: Filtros e Visibilidade
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Filtros por disciplina: FilterPanel orfao, nao entra no bundle.
 **Depende de:** S09 (viewer base), S07 (hierarquia espacial para filtro por pavimento)  
 **Bloqueia:** S12 (cenário salva estado de visibilidade)
 

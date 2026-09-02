@@ -1,7 +1,9 @@
 # S02 · Upload e Storage de Arquivos
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Upload usado pelo Dashboard.
 **Depende de:** S01 (tenant isolado para segregar arquivos)  
 **Bloqueia:** S03, S07 (modelos IFC precisam de storage antes de serem processados)
 

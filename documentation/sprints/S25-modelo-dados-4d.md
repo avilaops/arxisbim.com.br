@@ -1,7 +1,9 @@
 # S25 · Modelo de Dados 4D: Atividades
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Atividades 4D no backend (estava marcado Pendente).
 **Depende de:** S12 (cenário, schedules pertencem a um cenário), S07 (elementos IFC para vínculo)  
 **Bloqueia:** S26 (comparação temporal), S27 (animação), S28 (import de MSP)
 

@@ -1,5 +1,11 @@
 # SPRINT-10-RESULT · Viewer: Filtros e Visibilidade
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **nao**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
+
 > Artefato pós-execução. Evidência coletada na sessão.
 
 **Sprint:** S10 · Viewer, Filtros e Visibilidade

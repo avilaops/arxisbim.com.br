@@ -1,7 +1,9 @@
 # S01 · Auth e Multi-tenant Base
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Login, registro e workspaces funcionam nas telas vivas.
 **Bloqueia:** S02, S03, S04, S05, toda a fundação depende de identidade funcional
 
 ---

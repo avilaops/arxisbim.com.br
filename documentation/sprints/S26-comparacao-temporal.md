@@ -1,7 +1,9 @@
 # S26 ★ · Primeira Comparação Temporal de Cenários
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — MARCO. Rota existe; src/timeline/ orfao.
 **Depende de:** S25 (schedules), S18 (split-view)  
 **Bloqueia:** S27 (animação completa), S30 (comparação financeira usa duração por cenário)
 

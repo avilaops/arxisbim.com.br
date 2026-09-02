@@ -1,7 +1,9 @@
 # S18 ★ · Primeira Comparação Visual de Cenários
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Backend:** parcial · **Interface:** nao  
+**Verificado em:** 02/09/2026 — MARCO. ComparisonPage.ts e ComparisonExport.ts orfaos.
 **Depende de:** S12 (dois cenários com estados diferentes)  
 **Bloqueia:** S24 (painel de custos usa split-view), S26 (comparação temporal usa split-view)
 

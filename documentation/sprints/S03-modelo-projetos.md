@@ -1,7 +1,9 @@
 # S03 · Modelo de Dados: Projetos
 
 **Fase:** Fundação SaaS  
-**Status:** Em andamento (core entregue em 2026-06-11, migration 035, módulo models, testes 9/9)  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Projetos listados e criados no Dashboard.
 **Depende de:** S01 (tenant), S02 (storage)  
 **Bloqueia:** S05 (dashboard), S07 (IFC precisa de project + model IDs)
 

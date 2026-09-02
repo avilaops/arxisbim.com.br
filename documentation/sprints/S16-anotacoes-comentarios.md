@@ -1,7 +1,9 @@
 # S16 · Anotações e Comentários em Elementos
 
 **Fase:** Metadados BIM  
-**Status:** Concluído  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Comentarios no backend. Sem marcador nem thread na tela.
 **Depende de:** S09 (seleção de elemento), S01 (autenticação para @menção)  
 **Bloqueia:** S17 (compartilhamento, viewer público pode mostrar comentários)
 

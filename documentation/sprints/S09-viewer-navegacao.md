@@ -1,7 +1,9 @@
 # S09 · Viewer: Navegação e Câmera
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** 🟡 Parcial (chega em parte ao usuário)  
+**Backend:** sim · **Interface:** parcial  
+**Verificado em:** 02/09/2026 — Navegacao e selecao no ViewerCanvas. Presets de camera nao chegam.
 **Depende de:** S08 (geometria carregada no canvas)  
 **Bloqueia:** S10 (filtros), S12 (cenários salvam estado de câmera)
 

@@ -1,7 +1,9 @@
 # S23 · Performance e Cache 5D
 
 **Fase:** 5D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Cache existe (estava marcado Pendente).
 **Depende de:** S22 (engine de cálculo existente para otimizar)  
 **Bloqueia:** S24 (painel de custos precisa de performance aceitável para heatmap)
 

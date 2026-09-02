@@ -1,7 +1,9 @@
 # S28 · Importação MS Project / Primavera P6
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** parcial · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Import de arquivo generico. Sem .mpp nem mapeamento.
 **Depende de:** S25 (schema de atividades)  
 **Bloqueia:** S29 (branching usa cronogramas importados como base)
 

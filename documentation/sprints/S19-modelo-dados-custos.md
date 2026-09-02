@@ -1,7 +1,9 @@
 # S19 · Modelo de Dados de Custos
 
 **Fase:** 5D BIM  
-**Status:** ✅ ENTREGUE  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Modelo de custos no banco. Sem tela.
 **Depende de:** S12 (cenário, costs pertencem a um cenário)  
 **Bloqueia:** S20 (takeoff vincula a CostItem), S21 (SINAPI preenche CostTable), S22 (engine calcula sobre esse schema)
 

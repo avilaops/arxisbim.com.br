@@ -1,7 +1,9 @@
 # S20 · Takeoff Automático de Quantitativos
 
 **Fase:** 5D BIM  
-**Status:** ✅ ENTREGUE  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Takeoff calcula. Sem tela nem export XLSX alcancavel.
 **Depende de:** S13 (propriedades no banco), S14 (tipos mapeados), S19 (schema de costs)  
 **Bloqueia:** S22 (engine usa quantitativos para calcular custo)
 

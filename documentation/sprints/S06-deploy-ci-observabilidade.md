@@ -1,7 +1,9 @@
 # S06 · Deploy, CI e Observabilidade
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** 🟡 Parcial (chega em parte ao usuário)  
+**Backend:** sim · **Interface:** parcial  
+**Verificado em:** 02/09/2026 — Deploy e health no ar. CI nao roda: conta GitHub bloqueada.
 **Depende de:** S01–S05  
 **Bloqueia:** Qualquer usuário real antes disso
 

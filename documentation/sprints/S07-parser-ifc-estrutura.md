@@ -1,7 +1,9 @@
 # S07 · Parser IFC: Estrutura Base
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Parser usado pelo upload.
 **Depende de:** S02 (storage para ler arquivo), S03 (model_version ID)  
 **Bloqueia:** S08 (geometria), S11 (pipeline assíncrono), S13 (propriedades)
 

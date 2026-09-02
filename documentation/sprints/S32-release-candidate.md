@@ -1,7 +1,9 @@
 # S32 · Release Candidate: Hardening
 
 **Fase:** Apresentação e Entrega  
-**Status:** Pendente  
+**Status:** ☐ Não iniciado  
+**Backend:** nao · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Hardening nao iniciado.
 **Depende de:** S31 (feature completa), todos os sprints anteriores  
 **Bloqueia:** -
 

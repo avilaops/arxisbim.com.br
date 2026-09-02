@@ -1,5 +1,12 @@
 # SPRINT-12-RESULT · Primeiro Cenário Salvo ★
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **nao**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.  
+> ★ **MARCO ZERADO**: não atingido.
+
+
 > Artefato pós-execução. Marco crítico do roadmap.
 
 **Sprint:** S12 · Primeiro Cenário Salvo

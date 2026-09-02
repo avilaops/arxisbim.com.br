@@ -1,7 +1,9 @@
 # S12 ★ · Primeiro Cenário Salvo
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — MARCO. Nenhuma tela viva menciona cenario.
 **Depende de:** S09 (câmera serializável), S10 (visibilidade serializável), S11 (modelo `ready`)  
 **Bloqueia:** S18 (comparação visual), S27 (animação por cenário), S29 (branching)
 

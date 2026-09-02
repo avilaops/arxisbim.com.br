@@ -1,7 +1,9 @@
 # S08 · Parser IFC: Geometria
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Geometria renderiza no /app.
 **Depende de:** S07 (estrutura e IFCElement com expressIDs)  
 **Bloqueia:** S09 (viewer precisa de geometria para renderizar)
 

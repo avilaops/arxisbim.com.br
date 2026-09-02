@@ -1,7 +1,9 @@
 # S04 · Billing e Planos
 
 **Fase:** Fundação SaaS  
-**Status:** Em andamento (infraestrutura de limites entregue em 2026-06-11)  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Cobranca real refeita em 01/09/2026, lendo a API.
 **Depende de:** S01 (tenant), S03 (limites por recurso)  
 **Bloqueia:** S05 (checkout no onboarding)
 
