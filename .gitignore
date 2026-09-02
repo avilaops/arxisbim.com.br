@@ -67,3 +67,8 @@ docs/
 !revit-plugin/docs/
 .skills/
 backend/scripts/_backup_*
+
+# Scripts e configs de verificação local (migrations/PG18), não versionados
+.run-migrations.mjs
+.run-reconcile.mjs
+vitest.pg*.config.ts
