@@ -41,19 +41,31 @@ $passwordLiteral = Sql-Literal $dbPass
 $roleIdentifier = Sql-Identifier $dbUser
 $dbLiteral = Sql-Literal $dbName
 
-$env:PGPASSWORD = ''
-$check = & psql -w -h localhost -U postgres -d postgres -tAc 'select current_user;' 2>$null
+# Host e porta saem da própria DATABASE_URL. Antes isto era `-h localhost` fixo,
+# que na prática significava "porta 5432" — e a 5432 desta máquina é de OUTRO
+# projeto (container catalogo_pg). O banco do ArxisVR vive em outra porta, então
+# o script preparava/mediria o banco errado.
+$dbHost = $uri.Host
+$dbPort = if ($uri.Port -gt 0) { $uri.Port } else { 5432 }
+$adminArgs = @('-w', '-h', $dbHost, '-p', "$dbPort", '-U', 'postgres')
+
+$env:PGPASSWORD = $dbPass
+$check = & psql @adminArgs -d postgres -tAc 'select current_user;' 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $check) {
-  Write-Warning 'Não foi possível acessar Postgres local como postgres sem senha; pulando preparo automático.'
+  $env:PGPASSWORD = ''
+  $check = & psql @adminArgs -d postgres -tAc 'select current_user;' 2>$null
+}
+if ($LASTEXITCODE -ne 0 -or -not $check) {
+  Write-Warning "Não foi possível acessar o Postgres em ${dbHost}:${dbPort} como postgres; pulando preparo automático."
   return
 }
 
 $roleSql = "DO `$`$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = $roleLiteral) THEN CREATE ROLE $roleIdentifier LOGIN PASSWORD $passwordLiteral; ELSE ALTER ROLE $roleIdentifier WITH LOGIN PASSWORD $passwordLiteral; END IF; END `$`$;"
-& psql -w -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -c $roleSql | Out-Null
+& psql @adminArgs -d postgres -v ON_ERROR_STOP=1 -c $roleSql | Out-Null
 
-$dbExists = & psql -w -h localhost -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = $dbLiteral"
+$dbExists = & psql @adminArgs -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = $dbLiteral"
 if (-not $dbExists) {
-  & createdb -h localhost -U postgres -O $dbUser $dbName
+  & createdb -h $dbHost -p $dbPort -U postgres -O $dbUser $dbName
 }
 
 $schemaReady = & psql $databaseUrl -tAc "SELECT to_regclass('public.error_logs') IS NOT NULL AND to_regclass('public.projects') IS NOT NULL AND to_regclass('public.virtual_meeting_rooms') IS NOT NULL"
