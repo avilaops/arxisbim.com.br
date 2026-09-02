@@ -1,108 +1,115 @@
 #!/usr/bin/env bash
-# Bootstrap do servidor de produção do ArxisVR — SEM Docker para banco e Node.
-#
-#   PostgreSQL 18  → pacote nativo do PGDG, serviço systemd em 127.0.0.1:5432
-#   Node 24 + PM2  → nativos, sem container
-#   Caddy (web)    → único container que sobrou, subido pelo deploy/deploy.sh
-#
-# Idempotente: pode rodar de novo em servidor já configurado.
 set -euo pipefail
 
 APP_DIR="/opt/arxisvr"
 REPO_URL="${ARXISVR_REPO_URL:-https://github.com/avilaops/arxisvr.git}"
 BRANCH="${DEPLOY_BRANCH:-main}"
-PG_MAJOR=18
-PG_MIN_PATCH=6
 
-log()  { printf '\n[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
-fail() { printf '\n[ERRO] %s\n' "$*" >&2; exit 1; }
+log() {
+  printf '\n[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
+}
 
-[ "${EUID:-$(id -u)}" -eq 0 ] || fail "Rode como root ou com sudo"
+fail() {
+  printf '\n❌ %s\n' "$*" >&2
+  exit 1
+}
 
-log "Preparando servidor de produção do ArxisVR"
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+  fail "Run this script as root or with sudo"
+fi
 
-# --- pacotes base ---------------------------------------------------------
-apt-get update -qq
-for pkg in git curl ca-certificates gnupg lsb-release; do
-  command -v "${pkg%%-*}" >/dev/null 2>&1 || apt-get install -y "$pkg"
-done
+log "🏗️ Preparing ArxisVR production server"
 
-# --- Node 24 --------------------------------------------------------------
-# O frontend exige >=24 (vite 8 / rolldown) e o CI já roda em 24; o servidor
-# precisa acompanhar, agora que não há imagem fixando a versão.
-if ! command -v node >/dev/null 2>&1 || [ "$(node -v | sed 's/^v//' | cut -d. -f1)" -lt 24 ]; then
-  log "Instalando Node.js 24"
-  curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+if ! command -v node >/dev/null 2>&1 || [ "$(node -v | sed 's/^v//' | cut -d. -f1)" -lt 20 ]; then
+  log "📦 Installing Node.js 20"
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
 else
-  log "Node.js $(node -v) já instalado"
+  log "✅ Node.js $(node -v) already installed"
 fi
 
-command -v pm2 >/dev/null 2>&1 || { log "Instalando PM2"; npm install -g pm2; }
+if ! command -v git >/dev/null 2>&1; then
+  log "📦 Installing git"
+  apt-get update
+  apt-get install -y git
+fi
 
-# --- PostgreSQL 18 (nativo, via PGDG) -------------------------------------
-if ! command -v psql >/dev/null 2>&1 || [ "$(psql -V | awk '{print $3}' | cut -d. -f1)" -lt "$PG_MAJOR" ]; then
-  log "Instalando PostgreSQL $PG_MAJOR do repositório PGDG"
-  install -d /usr/share/postgresql-common/pgdg
-  curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-    -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
-  echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-    > /etc/apt/sources.list.d/pgdg.list
-  apt-get update -qq
-  apt-get install -y "postgresql-$PG_MAJOR"
+if ! command -v curl >/dev/null 2>&1; then
+  log "📦 Installing curl"
+  apt-get update
+  apt-get install -y curl
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  log "📦 Installing pnpm"
+  npm install -g pnpm
 else
-  log "PostgreSQL $(psql -V | awk '{print $3}') já instalado"
+  log "✅ pnpm $(pnpm -v) already installed"
 fi
 
-systemctl enable --now "postgresql@$PG_MAJOR-main" 2>/dev/null || systemctl enable --now postgresql
-
-PG_VER="$(psql -V | awk '{print $3}')"
-PG_PATCH="$(echo "$PG_VER" | cut -d. -f2)"
-if [ "$(echo "$PG_VER" | cut -d. -f1)" -eq "$PG_MAJOR" ] && [ "${PG_PATCH:-0}" -lt "$PG_MIN_PATCH" ]; then
-  log "AVISO: PostgreSQL $PG_VER está abaixo do alvo $PG_MAJOR.$PG_MIN_PATCH — rode 'apt-get upgrade postgresql-$PG_MAJOR'"
+if ! command -v pm2 >/dev/null 2>&1; then
+  log "📦 Installing PM2"
+  npm install -g pm2
 else
-  log "PostgreSQL $PG_VER ok"
+  log "✅ PM2 $(pm2 -v) already installed"
 fi
 
-# --- repositório e .env ---------------------------------------------------
 if [ ! -d "$APP_DIR/.git" ]; then
-  log "Clonando repositório em $APP_DIR"
+  log "📂 Cloning repository into $APP_DIR"
   mkdir -p "$(dirname "$APP_DIR")"
   git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
 else
-  log "Repositório já existe; sincronizando"
-  git -C "$APP_DIR" fetch origin "$BRANCH"
-  git -C "$APP_DIR" reset --hard "origin/$BRANCH"
+  log "📂 Repository already exists; synchronizing"
+  cd "$APP_DIR"
+  git fetch origin "$BRANCH"
+  git reset --hard "origin/$BRANCH"
 fi
 
 cd "$APP_DIR"
 mkdir -p logs
-[ -f .env ] || fail ".env não encontrado. Crie $APP_DIR/.env (com DATABASE_URL apontando para 127.0.0.1:5432) antes de seguir."
-chmod 600 .env
 
-# --- dependências e build -------------------------------------------------
-# npm em todos: o repo é npm-only (um package-lock.json por subprojeto).
-log "Instalando e construindo o backend"
-npm --prefix backend ci --include=dev
-npm --prefix backend run build
+if [ ! -f .env ]; then
+  if [ -f .env.production ]; then
+    cp .env.production .env
+    chmod 600 .env
+    log "Created .env from .env.production"
+  else
+    fail ".env not found. Create $APP_DIR/.env before running the production setup."
+  fi
+else
+  log "✅ .env already exists"
+fi
 
-log "Instalando o signaling-server"
-npm --prefix signaling-server ci --omit=dev --no-audit --no-fund
+log "📚 Installing backend dependencies"
+pnpm --dir backend install --frozen-lockfile
 
-# O frontend NÃO é construído aqui: 3,7 GB de RAM não dão conta. O `dist` sobe
-# pronto da máquina do dev via deploy/deploy.sh web.
+log "🏗️ Building backend (esbuild)"
+pnpm --dir backend run build
 
-# --- PM2 ------------------------------------------------------------------
-log "Subindo os processos no PM2"
-pm2 start ecosystem.config.js --update-env || pm2 reload ecosystem.config.js --update-env
+log "📚 Installing frontend dependencies"
+pnpm --dir frontend install --frozen-lockfile
+
+log "🏗️ Building frontend (vite)"
+pnpm --dir frontend run build
+
+log "📚 Installing signaling-server dependencies"
+(cd signaling-server && npm install --omit=dev --no-audit --no-fund)
+
+log "🚀 Starting PM2 apps"
+pm2 start ecosystem.config.js --update-env
 pm2 save
+
+log "⚙️ Configuring PM2 startup"
 pm2 startup systemd -u root --hp /root || true
 pm2 save
 
-log "Health checks"
+log "🏥 Running initial health checks"
 sleep 10
-curl -fsS http://127.0.0.1:3001/health >/dev/null && log "backend ok" || log "AVISO: backend não respondeu"
-curl -fsS http://127.0.0.1:3002/health >/dev/null && log "signaling ok" || log "AVISO: signaling não respondeu"
+curl -fsS http://127.0.0.1:3001/health >/dev/null && log "✅ Backend healthy" || log "⚠️ Backend health check failed"
+curl -fsS http://127.0.0.1:3002/health >/dev/null && log "✅ Signaling healthy" || log "⚠️ Signaling health check failed"
 
+log "📊 PM2 status"
 pm2 list
-log "Pronto. Falta: apontar o Caddy de /opt/observabilidade para 10.10.0.1:3001 (era api:3001)."
+
+log "✅ Server setup complete"
+log "Next: configure GitHub Actions secrets and Nginx reverse proxy."

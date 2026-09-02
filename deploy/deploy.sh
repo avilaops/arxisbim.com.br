@@ -1,87 +1,48 @@
 #!/usr/bin/env bash
-# Deploy do ArxisVR no servidor orquestrador.
+# Deploy do backend do ArxisVR no servidor orquestrador.
 #
-# Uso:  ./deploy/deploy.sh [api|web]     (sem argumento = os dois)
+# Manda o fonte por tar sobre SSH (a máquina não tem rsync), constrói a imagem
+# lá e sobe. Constrói no servidor de propósito: `bcrypt` é nativo e uma imagem
+# montada no Windows não serve para Linux.
+#
+# Uso:  ./deploy/deploy.sh
 # Requer: ~/.ssh/hetzner_avilaops e o /opt/arxisvr/.env já criado no servidor.
-#
-# Os dois lados sobem de jeitos diferentes de propósito:
-#   api  manda o fonte e instala/constrói LÁ, porque `bcrypt` é nativo e binário
-#        compilado no Windows não roda em Linux. Roda sob PM2, sem container.
-#   web  constrói AQUI e manda só o `dist`, porque 213 mil linhas de frontend não
-#        cabem confortavelmente nos 3,7 GB de RAM da máquina. Servido pelo único
-#        container que sobrou (Caddy).
-#
-# A máquina não tem rsync; tudo viaja como tar sobre SSH.
 set -euo pipefail
 
 HOST="${ARXISVR_HOST:-23.88.60.193}"
 KEY="${ARXISVR_SSH_KEY:-$HOME/.ssh/hetzner_avilaops}"
 REMOTE=/opt/arxisvr
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ALVO="${1:-tudo}"
 
 ssh_() { ssh -i "$KEY" -o StrictHostKeyChecking=no "root@$HOST" "$@"; }
 
-deploy_api() {
-  echo "==> [api] empacotando fonte do backend"
-  tar -C "$ROOT" -czf - \
-    --exclude=backend/node_modules \
-    --exclude=backend/dist \
-    --exclude=backend/coverage \
-    --exclude=backend/logs \
-    --exclude=backend/uploads \
-    --exclude='backend/.env*' \
-    backend signaling-server ecosystem.config.js \
-  | ssh_ "mkdir -p $REMOTE && tar -C $REMOTE -xzf -"
+echo "==> empacotando fonte do backend"
+tar -C "$ROOT" -czf - \
+  --exclude=backend/node_modules \
+  --exclude=backend/dist \
+  --exclude=backend/coverage \
+  --exclude=backend/logs \
+  --exclude=backend/uploads \
+  --exclude='backend/.env*' \
+  backend deploy/docker-compose.yml \
+| ssh_ "mkdir -p $REMOTE && tar -C $REMOTE -xzf - && mv -f $REMOTE/deploy/docker-compose.yml $REMOTE/docker-compose.yml && rmdir $REMOTE/deploy 2>/dev/null || true"
 
-  # `npm ci` LÁ: bcrypt compila contra o Node e a libc do servidor.
-  echo "==> [api] instalando dependências no servidor"
-  ssh_ "cd $REMOTE/backend && npm ci --include=dev"
+echo "==> build da imagem"
+ssh_ "cd $REMOTE && docker compose build api"
 
-  echo "==> [api] build (esbuild)"
-  ssh_ "cd $REMOTE/backend && npm run build"
+echo "==> subindo"
+ssh_ "cd $REMOTE && docker compose up -d"
 
-  echo "==> [api] recarregando no PM2"
-  ssh_ "mkdir -p $REMOTE/logs && cd $REMOTE && (pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js --update-env) && pm2 save"
+echo "==> esperando o /health responder"
+for i in $(seq 1 40); do
+  if ssh_ "docker exec arxisvr-api curl -fsS http://127.0.0.1:3001/health >/dev/null 2>&1"; then
+    echo "ok em ${i}0s"
+    ssh_ "docker exec arxisvr-api curl -s http://127.0.0.1:3001/health"
+    exit 0
+  fi
+  sleep 10
+done
 
-  echo "==> [api] esperando o /health"
-  for i in $(seq 1 40); do
-    if ssh_ "curl -fsS http://127.0.0.1:3001/health >/dev/null 2>&1"; then
-      echo "    ok"
-      return 0
-    fi
-    sleep 5
-  done
-  echo "[api] não respondeu. últimos logs:" >&2
-  ssh_ "pm2 logs arxisvr-backend --lines 60 --nostream" >&2
-  return 1
-}
-
-deploy_web() {
-  echo "==> [web] build do frontend"
-  npm --prefix "$ROOT/frontend" run build
-
-  echo "==> [web] enviando o dist"
-  # O dist é volume montado: o Caddy lê do disco a cada pedido, então não há
-  # container para reiniciar. index.html e service worker vão com no-cache para
-  # o navegador enxergar a versão nova.
-  tar -C "$ROOT/frontend" -czf - dist \
-  | ssh_ "mkdir -p $REMOTE/web && cd $REMOTE/web && rm -rf dist && tar -xzf -"
-
-  scp -i "$KEY" -o StrictHostKeyChecking=no "$ROOT/deploy/web.Caddyfile" "root@$HOST:$REMOTE/web/Caddyfile"
-  scp -i "$KEY" -o StrictHostKeyChecking=no "$ROOT/deploy/docker-compose.yml" "root@$HOST:$REMOTE/docker-compose.yml"
-  ssh_ "cd $REMOTE && docker compose up -d web"
-  echo "    ok"
-}
-
-case "$ALVO" in
-  api)   deploy_api ;;
-  web)   deploy_web ;;
-  tudo)  deploy_api; deploy_web ;;
-  *)     echo "uso: $0 [api|web]" >&2; exit 2 ;;
-esac
-
-echo
-echo "==> conferindo no ar"
-curl -s -o /dev/null -w "  api  %{http_code}\n" --max-time 20 https://api.arxisvr.avilaops.com/health
-curl -s -o /dev/null -w "  site %{http_code}\n" --max-time 20 https://arxisvr.avilaops.com/validador
+echo "não respondeu. últimos logs:" >&2
+ssh_ "docker logs --tail 60 arxisvr-api" >&2
+exit 1
