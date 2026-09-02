@@ -5,10 +5,11 @@
 # Requer: ~/.ssh/hetzner_avilaops e o /opt/arxisvr/.env já criado no servidor.
 #
 # Os dois lados sobem de jeitos diferentes de propósito:
-#   api  manda o fonte e constrói LÁ, porque `bcrypt` é nativo e imagem montada
-#        no Windows não roda em Linux.
+#   api  manda o fonte e instala/constrói LÁ, porque `bcrypt` é nativo e binário
+#        compilado no Windows não roda em Linux. Roda sob PM2, sem container.
 #   web  constrói AQUI e manda só o `dist`, porque 213 mil linhas de frontend não
-#        cabem confortavelmente nos 3,7 GB de RAM da máquina.
+#        cabem confortavelmente nos 3,7 GB de RAM da máquina. Servido pelo único
+#        container que sobrou (Caddy).
 #
 # A máquina não tem rsync; tudo viaja como tar sobre SSH.
 set -euo pipefail
@@ -30,25 +31,29 @@ deploy_api() {
     --exclude=backend/logs \
     --exclude=backend/uploads \
     --exclude='backend/.env*' \
-    backend deploy/docker-compose.yml \
-  | ssh_ "mkdir -p $REMOTE && tar -C $REMOTE -xzf - && mv -f $REMOTE/deploy/docker-compose.yml $REMOTE/docker-compose.yml && rmdir $REMOTE/deploy 2>/dev/null || true"
+    backend signaling-server ecosystem.config.js \
+  | ssh_ "mkdir -p $REMOTE && tar -C $REMOTE -xzf -"
 
-  echo "==> [api] build da imagem no servidor"
-  ssh_ "cd $REMOTE && docker compose build api"
+  # `npm ci` LÁ: bcrypt compila contra o Node e a libc do servidor.
+  echo "==> [api] instalando dependências no servidor"
+  ssh_ "cd $REMOTE/backend && npm ci --include=dev"
 
-  echo "==> [api] subindo"
-  ssh_ "cd $REMOTE && docker compose up -d api"
+  echo "==> [api] build (esbuild)"
+  ssh_ "cd $REMOTE/backend && npm run build"
+
+  echo "==> [api] recarregando no PM2"
+  ssh_ "mkdir -p $REMOTE/logs && cd $REMOTE && (pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js --update-env) && pm2 save"
 
   echo "==> [api] esperando o /health"
   for i in $(seq 1 40); do
-    if ssh_ "docker exec arxisvr-api curl -fsS http://127.0.0.1:3001/health >/dev/null 2>&1"; then
+    if ssh_ "curl -fsS http://127.0.0.1:3001/health >/dev/null 2>&1"; then
       echo "    ok"
       return 0
     fi
     sleep 5
   done
   echo "[api] não respondeu. últimos logs:" >&2
-  ssh_ "docker logs --tail 60 arxisvr-api" >&2
+  ssh_ "pm2 logs arxisvr-backend --lines 60 --nostream" >&2
   return 1
 }
 
@@ -64,6 +69,7 @@ deploy_web() {
   | ssh_ "mkdir -p $REMOTE/web && cd $REMOTE/web && rm -rf dist && tar -xzf -"
 
   scp -i "$KEY" -o StrictHostKeyChecking=no "$ROOT/deploy/web.Caddyfile" "root@$HOST:$REMOTE/web/Caddyfile"
+  scp -i "$KEY" -o StrictHostKeyChecking=no "$ROOT/deploy/docker-compose.yml" "root@$HOST:$REMOTE/docker-compose.yml"
   ssh_ "cd $REMOTE && docker compose up -d web"
   echo "    ok"
 }

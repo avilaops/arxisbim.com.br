@@ -1,47 +1,21 @@
 # ArxisVR no servidor orquestrador (infra, 23.88.60.193 / 10.10.0.1).
 #
-# Vive em /opt/arxisvr. O Caddy que termina TLS é o do stack de
-# observabilidade (/opt/observabilidade), que entra aqui pela rede
-# `arxisvr_default` e fala com `api:3001` pelo nome do serviço. Por isso
-# nenhuma porta é publicada no host: quem entra é o Caddy, pela rede docker.
+# Vive em /opt/arxisvr. Depois da saída do Docker, só o Caddy que serve o build
+# estático do frontend continua em container. O resto roda nativo no host:
 #
-# O Postgres é dedicado ao ArxisVR em vez de dividir o do n8n: são 59
-# migrations e 70 tabelas, e misturar isso com o banco do orquestrador
-# transformaria qualquer restauração de um em risco para o outro.
+#   - PostgreSQL 18.6  → serviço systemd, 127.0.0.1:5432
+#   - API + signaling  → PM2 (ver ecosystem.config.js)
+#
+# ATENÇÃO: o Caddy que termina TLS é o do stack /opt/observabilidade e ele fazia
+# `reverse_proxy api:3001` pelo nome do serviço docker. Esse nome deixou de
+# existir. Aquele Caddyfile precisa apontar para o host (10.10.0.1:3001) ANTES
+# de derrubar o container antigo, senão a API sai do ar.
+#
+# Os volumes `db-data` e `uploads` foram removidos daqui de propósito, mas NÃO
+# são apagados por isso: continuam no docker até alguém removê-los à mão. Só
+# remova depois de confirmar que os dados foram migrados para o host.
 
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: arxisvr-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: arxisvr
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
-      POSTGRES_DB: arxisvr
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arxisvr -d arxisvr"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: arxisvr-api:local
-    container_name: arxisvr-api
-    restart: unless-stopped
-    env_file: .env
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      # Driver de storage local. Sem este volume os IFCs enviados somem no
-      # primeiro deploy.
-      - uploads:/app/uploads
-
   web:
     image: caddy:2-alpine
     container_name: arxisvr-web
@@ -55,8 +29,6 @@ services:
       - web-config:/config
 
 volumes:
-  db-data:
-  uploads:
   web-data:
   web-config:
 
