@@ -84,6 +84,21 @@ export default function Viewer3DPage() {
   const selectedProject = projects.find((project) => project.id === selectedProjectId)
   const selectedModel = models.find((model) => model.id === selectedModelId)
 
+  const carregarCenarios = useCallback(async (projectId: string) => {
+    if (!projectId) {
+      setScenarios([])
+      return
+    }
+    setLoadingScenarios(true)
+    try {
+      setScenarios(await scenariosService.list(projectId))
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao carregar cenários.')
+    } finally {
+      setLoadingScenarios(false)
+    }
+  }, [])
+
   const loadModels = useCallback(async (projectId: string) => {
     if (!projectId) {
       setModels([])
@@ -148,21 +163,6 @@ export default function Viewer3DPage() {
   }, [loadModels, carregarCenarios])
 
   // --- S12: cenários -------------------------------------------------------
-
-  const carregarCenarios = useCallback(async (projectId: string) => {
-    if (!projectId) {
-      setScenarios([])
-      return
-    }
-    setLoadingScenarios(true)
-    try {
-      setScenarios(await scenariosService.list(projectId))
-    } catch (erro) {
-      setError(erro instanceof Error ? erro.message : 'Falha ao carregar cenários.')
-    } finally {
-      setLoadingScenarios(false)
-    }
-  }, [])
 
   /** Põe o viewer no estado guardado no cenário. */
   const aplicarCenario = (scenario: Scenario) => {
