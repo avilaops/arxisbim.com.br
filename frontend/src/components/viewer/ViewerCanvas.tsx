@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AlertTriangle, Box, Loader2, Upload } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
+import type { CameraState } from '@/services/scenarios.service'
 
 interface ViewerCanvasProps {
   onUpload: () => void
@@ -10,14 +11,56 @@ interface ViewerCanvasProps {
   modelName?: string
 }
 
-export default function ViewerCanvas({
+/**
+ * A ponte do S12 (ver `documentation/S12-MATRIZ-INTEGRACAO.md`).
+ *
+ * A cena, a câmera e os OrbitControls nascem e morrem dentro do `useEffect` que
+ * carrega o IFC, e é assim de propósito: o cleanup precisa alcançar tudo. Para
+ * que a tela consiga ler e reaplicar o estado sem quebrar esse ciclo de vida, o
+ * efeito publica os objetos vivos numa ref (`sceneRef`) e este handle apenas os
+ * consulta. Quando não há modelo aberto, a ref está vazia e os métodos avisam
+ * em vez de estourar.
+ */
+export interface ViewerHandle {
+  /** Câmera atual, ou null se ainda não há modelo aberto. */
+  capturarCamera: () => CameraState | null
+  /** expressIDs ocultos no momento. */
+  capturarOcultos: () => number[]
+  /** Reaplica a câmera. Devolve false se não havia cena. */
+  aplicarCamera: (camera: CameraState) => boolean
+  /** Reaplica a visibilidade: tudo visível, menos estes expressIDs. */
+  aplicarOcultos: (expressIds: number[]) => boolean
+  /** Há uma cena carregada agora? */
+  pronto: () => boolean
+}
+
+/**
+ * O que o `useEffect` publica para o handle consultar.
+ *
+ * A visibilidade é por **mesh do modelo**, identificada pelo `id` do objeto
+ * three. O viewer vivo ainda não tem seleção de elemento (não há raycaster nem
+ * clique no canvas), então o S12 guarda e restaura quais partes do modelo estão
+ * escondidas, não "o elemento que o usuário clicou". Quando a seleção existir
+ * (S13/S16 no app vivo), a mesma lista passa a ser de expressID sem mudar o
+ * formato salvo.
+ */
+interface CenaViva {
+  camera: any
+  controls: any
+  model: any
+  ocultos: Set<number>
+  aplicarVisibilidade: (ocultos: Set<number>) => void
+}
+
+const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function ViewerCanvas({
   onUpload,
   uploading,
   projectName,
   modelId,
   modelName,
-}: ViewerCanvasProps) {
+}: ViewerCanvasProps, ref) {
   const hostRef = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<CenaViva | null>(null)
   const [loadingModel, setLoadingModel] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -138,6 +181,23 @@ export default function ViewerCanvas({
         grid.position.y = box.min.y
         grid.scale.setScalar(Math.max(maxDimension / 100, 0.25))
 
+        // Publica a cena para o handle imperativo (S12). A partir daqui a tela
+        // consegue ler e reaplicar camera/visibilidade sem tocar no ciclo de
+        // vida do efeito.
+        const ocultosAtuais = new Set<number>()
+        const aplicarVisibilidade = (ocultos: Set<number>) => {
+          model.traverse((child: any) => {
+            if (child instanceof THREE.Mesh) child.visible = !ocultos.has(child.id)
+          })
+        }
+        sceneRef.current = {
+          camera,
+          controls,
+          model,
+          ocultos: ocultosAtuais,
+          aplicarVisibilidade,
+        }
+
         const pressedKeys = new Set<string>()
         const movementClock = new THREE.Clock()
         const movementSpeed = Math.max(maxDimension * 0.35, 2)
@@ -209,6 +269,9 @@ export default function ViewerCanvas({
         setLoadingModel(false)
 
         cleanup = () => {
+          // Primeiro solta a ref: o handle nao pode alcancar uma cena que esta
+          // sendo desmontada.
+          sceneRef.current = null
           cancelAnimationFrame(frameId)
           resizeObserver.disconnect()
           window.removeEventListener('keydown', onKeyDown)
@@ -240,6 +303,48 @@ export default function ViewerCanvas({
       cleanup()
     }
   }, [modelId, modelName])
+
+  useImperativeHandle(ref, (): ViewerHandle => ({
+    pronto: () => sceneRef.current !== null,
+
+    capturarCamera: () => {
+      const cena = sceneRef.current
+      if (!cena) return null
+      const p = cena.camera.position
+      const t = cena.controls.target
+      // Arredonda: seis casas bastam para reposicionar a camera e evitam que o
+      // jsonb do cenario guarde ruido de ponto flutuante.
+      const n = (v: number) => Math.round(v * 1e6) / 1e6
+      return {
+        position: { x: n(p.x), y: n(p.y), z: n(p.z) },
+        target: { x: n(t.x), y: n(t.y), z: n(t.z) },
+      }
+    },
+
+    capturarOcultos: () => {
+      const cena = sceneRef.current
+      return cena ? Array.from(cena.ocultos) : []
+    },
+
+    aplicarCamera: (camera) => {
+      const cena = sceneRef.current
+      if (!cena || !camera?.position || !camera?.target) return false
+      cena.camera.position.set(camera.position.x, camera.position.y, camera.position.z)
+      cena.controls.target.set(camera.target.x, camera.target.y, camera.target.z)
+      cena.camera.updateProjectionMatrix()
+      cena.controls.update()
+      return true
+    },
+
+    aplicarOcultos: (expressIds) => {
+      const cena = sceneRef.current
+      if (!cena) return false
+      cena.ocultos.clear()
+      for (const id of expressIds ?? []) cena.ocultos.add(id)
+      cena.aplicarVisibilidade(cena.ocultos)
+      return true
+    },
+  }), [])
 
   return (
     <main className="viewer-canvas">
@@ -300,4 +405,6 @@ export default function ViewerCanvas({
       )}
     </main>
   )
-}
+})
+
+export default ViewerCanvas

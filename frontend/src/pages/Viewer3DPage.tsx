@@ -2,7 +2,9 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
 import ViewerToolbar from '@/components/viewer/ViewerToolbar'
 import ProjectModelsPanel from '@/components/viewer/ProjectModelsPanel'
-import ViewerCanvas from '@/components/viewer/ViewerCanvas'
+import ViewerCanvas, { type ViewerHandle } from '@/components/viewer/ViewerCanvas'
+import ScenariosPanel from '@/components/viewer/ScenariosPanel'
+import { scenariosService, type Scenario } from '@/services/scenarios.service'
 import ViewerPropertiesPanel from '@/components/viewer/ViewerPropertiesPanel'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
@@ -68,6 +70,14 @@ export default function Viewer3DPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
+
+  // --- S12: cenários -------------------------------------------------------
+  const viewerRef = useRef<ViewerHandle>(null)
+  const [scenariosOpen, setScenariosOpen] = useState(false)
+  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [activeScenarioId, setActiveScenarioId] = useState('')
+  const [loadingScenarios, setLoadingScenarios] = useState(false)
+  const [savingScenario, setSavingScenario] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [creatingProject, setCreatingProject] = useState(false)
 
@@ -118,6 +128,9 @@ export default function Viewer3DPage() {
           setSelectedProjectId(initialProject.id)
           localStorage.setItem('arxisvr_project_id', initialProject.id)
           await loadModels(initialProject.id)
+          // S12: os cenários do projeto restaurado vêm junto, senão o painel
+          // abre vazio depois de um F5 e parece que nada foi salvo.
+          await carregarCenarios(initialProject.id)
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -132,7 +145,106 @@ export default function Viewer3DPage() {
     return () => {
       cancelled = true
     }
-  }, [loadModels])
+  }, [loadModels, carregarCenarios])
+
+  // --- S12: cenários -------------------------------------------------------
+
+  const carregarCenarios = useCallback(async (projectId: string) => {
+    if (!projectId) {
+      setScenarios([])
+      return
+    }
+    setLoadingScenarios(true)
+    try {
+      setScenarios(await scenariosService.list(projectId))
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao carregar cenários.')
+    } finally {
+      setLoadingScenarios(false)
+    }
+  }, [])
+
+  /** Põe o viewer no estado guardado no cenário. */
+  const aplicarCenario = (scenario: Scenario) => {
+    const viewer = viewerRef.current
+    if (!viewer?.pronto()) {
+      setError('Abra um modelo IFC antes de trocar de cenário.')
+      return
+    }
+    if (scenario.camera) viewer.aplicarCamera(scenario.camera)
+    viewer.aplicarOcultos(scenario.metadata?.hidden ?? [])
+    setActiveScenarioId(scenario.id)
+    setMessage(`Cenário "${scenario.name}" aplicado.`)
+  }
+
+  const selecionarCenario = async (scenarioId: string) => {
+    const local = scenarios.find((item) => item.id === scenarioId)
+    // Relê do servidor: a lista pode estar defasada se outra aba salvou.
+    try {
+      const atual = await scenariosService.getById(selectedProjectId, scenarioId)
+      aplicarCenario(atual)
+    } catch {
+      if (local) aplicarCenario(local)
+    }
+  }
+
+  const criarCenario = async (name: string) => {
+    if (!selectedProjectId) return
+    const viewer = viewerRef.current
+    setSavingScenario(true)
+    setError(null)
+    try {
+      const criado = await scenariosService.create(
+        selectedProjectId,
+        name,
+        viewer?.capturarCamera() ?? null,
+      )
+      setScenarios((atuais) => [...atuais, criado])
+      setActiveScenarioId(criado.id)
+      setMessage(`Cenário "${name}" criado com a posição atual.`)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao criar cenário.')
+    } finally {
+      setSavingScenario(false)
+    }
+  }
+
+  const salvarCenario = async () => {
+    const viewer = viewerRef.current
+    const ativo = scenarios.find((item) => item.id === activeScenarioId)
+    if (!ativo || !viewer?.pronto()) return
+
+    const camera = viewer.capturarCamera()
+    if (!camera) return
+
+    setSavingScenario(true)
+    setError(null)
+    try {
+      const salvo = await scenariosService.saveState(
+        selectedProjectId,
+        ativo.id,
+        ativo.name,
+        camera,
+        viewer.capturarOcultos(),
+      )
+      setScenarios((atuais) => atuais.map((item) => (item.id === salvo.id ? salvo : item)))
+      setMessage(`Cenário "${ativo.name}" salvo.`)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao salvar cenário.')
+    } finally {
+      setSavingScenario(false)
+    }
+  }
+
+  const apagarCenario = async (scenarioId: string) => {
+    try {
+      await scenariosService.remove(selectedProjectId, scenarioId)
+      setScenarios((atuais) => atuais.filter((item) => item.id !== scenarioId))
+      if (activeScenarioId === scenarioId) setActiveScenarioId('')
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao apagar cenário.')
+    }
+  }
 
   const selectProject = (projectId: string) => {
     setSelectedProjectId(projectId)
@@ -140,7 +252,9 @@ export default function Viewer3DPage() {
     setMessage(null)
     setError(null)
     localStorage.setItem('arxisvr_project_id', projectId)
+    setActiveScenarioId('')
     void loadModels(projectId)
+    void carregarCenarios(projectId)
   }
 
   const openFilePicker = () => {
@@ -246,6 +360,7 @@ export default function Viewer3DPage() {
           uploading={uploading}
           onToggleProjects={() => setProjectsOpen((open) => !open)}
           onToggleProperties={() => setPropertiesOpen((open) => !open)}
+          onToggleScenarios={() => setScenariosOpen((open) => !open)}
         />
 
         {(message || error || uploading) && (
@@ -281,6 +396,7 @@ export default function Viewer3DPage() {
             onCreateProject={() => setCreateProjectOpen(true)}
           />
           <ViewerCanvas
+            ref={viewerRef}
             onUpload={openFilePicker}
             uploading={uploading}
             projectName={selectedProject?.name}
@@ -290,6 +406,19 @@ export default function Viewer3DPage() {
           <ViewerPropertiesPanel
             open={propertiesOpen}
             onClose={() => setPropertiesOpen(false)}
+          />
+          <ScenariosPanel
+            open={scenariosOpen}
+            onClose={() => setScenariosOpen(false)}
+            scenarios={scenarios}
+            activeScenarioId={activeScenarioId}
+            loading={loadingScenarios}
+            saving={savingScenario}
+            viewerPronto={Boolean(selectedModel)}
+            onCreate={(name) => void criarCenario(name)}
+            onSelect={(id) => void selecionarCenario(id)}
+            onSave={() => void salvarCenario()}
+            onDelete={(id) => void apagarCenario(id)}
           />
         </div>
 

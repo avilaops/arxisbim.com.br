@@ -2,6 +2,7 @@ import {
   Box,
   FolderTree,
   Info,
+  Layers,
   Maximize2,
   RotateCcw,
   Upload,
@@ -12,6 +13,7 @@ interface ViewerToolbarProps {
   uploading: boolean
   onToggleProjects: () => void
   onToggleProperties: () => void
+  onToggleScenarios: () => void
 }
 
 export default function ViewerToolbar({
@@ -19,6 +21,7 @@ export default function ViewerToolbar({
   uploading,
   onToggleProjects,
   onToggleProperties,
+  onToggleScenarios,
 }: ViewerToolbarProps) {
   return (
     <header className="viewer-toolbar">
@@ -39,6 +42,15 @@ export default function ViewerToolbar({
           title="Projetos e modelos"
         >
           <FolderTree size={17} strokeWidth={1.45} />
+        </button>
+        <button
+          className="viewer-icon-button"
+          type="button"
+          onClick={onToggleScenarios}
+          aria-label="Abrir cenários"
+          title="Cenários"
+        >
+          <Layers size={17} strokeWidth={1.45} />
         </button>
         <button
           className="viewer-icon-button"
