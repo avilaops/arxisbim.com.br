@@ -30,6 +30,22 @@ O critério do marco é o fluxo inteiro, não a API:
 O passo 7 é o que impede a prova de se enganar: se a câmera não fosse capturada
 de verdade, A e B guardariam o mesmo valor e o teste passaria sem provar nada.
 
+## As capturas
+
+Em `documentation/provas/s12/`, na ordem em que o teste as tirou:
+
+| Arquivo | O que mostra |
+|---|---|
+| `01-viewer.png` | O IFC aberto no `/app`, com o modelo já renderizado. |
+| `02-painel.png` | O painel "Cenários" aberto pela toolbar, ainda vazio. |
+| `03-cenario-a.png` | Cenário A criado, em perspectiva. |
+| `04-cenario-b.png` | Cenário B criado **depois de orbitar**: a vista é de cima, e os dois cenários aparecem na lista. É a evidência visual de que A e B guardaram câmeras diferentes. |
+| `05-apos-reload.png` | Depois do F5: os dois cenários continuam listados. |
+| `06-troca-A.png` | Clicando em A: a tarja diz `Cenário "Cenario A" aplicado.` e a vista volta à perspectiva do 03. |
+
+Comparar `04` com `06` é a prova em uma imagem: mesma tela, mesmo modelo, e a
+câmera volta ao que estava salvo.
+
 Modelo usado: `ac20-fzk-haus_ifc4.ifc` (2,5 MB, referência buildingSMART).
 
 ## O que a prova pegou, e o bundle não
