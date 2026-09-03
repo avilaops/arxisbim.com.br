@@ -1,13 +1,14 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 02/09/2026 (marcos zerados; infra congelada)
+**Última atualização:** 03/09/2026 (S12 ★ atingido; infra congelada)
 **Versão:** 3.0, 32 sprints atômicos
 **Status:** Backend à frente da interface. Os 4 marcos ★ estão zerados: o que
 foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-morto.md`.
 
-**Foco único: S12 ★.** Nada de feature nova até ele estar demonstrável na
-aplicação publicada. Durante o S12 valem duas regras duras: **zero backend
-novo** e **zero S18/S29 entrando de carona**.
+**S12 ★ atingido em 03/09/2026**, o primeiro marco a cair. Provado em browser
+real na aplicação publicada, não em teste de API. Próximo alvo: **S18 ★**
+(comparação visual), que já tem `comparison/ComparisonPage.ts` órfão para
+aproveitar.
 
 **Infra congelada** (decisão de 02/09/2026). Produção roda em Docker no
 orquestrador `23.88.60.193`, com **Postgres 18.6**. A saída do Docker foi medida
@@ -33,7 +34,8 @@ A cadeia de cenários é o ativo intransferível.
 
 ## Marcos Críticos: Não Movem
 
-> **Todos os quatro marcos estão ZERADOS** (auditoria de 02/09/2026,
+> **Um dos quatro marcos caiu.** O S12 foi atingido em 03/09/2026, provado em
+> browser real. Os outros três seguem zerados (auditoria de 02/09/2026,
 > `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`). Nenhum foi
 > atingido. Marco só cai quando o usuário consegue fazer aquilo na tela, e
 > hoje nenhum consegue: o backend existe, a interface não é alcançada pelo
@@ -41,7 +43,7 @@ A cadeia de cenários é o ativo intransferível.
 
 | Marco | Sprint | Valida | Estado | Por quê |
 |---|---|---|---|---|
-| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ☐ **não atingido** | Backend pronto (`modules/scenario`). Nenhuma tela viva menciona cenário: no bundle a palavra só aparece como rótulo de escopo de API token e texto de marketing. |
+| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
 | ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ☐ **não atingido** | `comparison/ComparisonPage.ts` e `viewer/ComparisonExport.ts` existem e estão órfãos. `SplitView` não aparece no bundle. |
 | ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** | Rota de backend existe (`scenario-comparison.routes.ts`). A UI (`src/timeline/`) está órfã. |
 | ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |

@@ -1,8 +1,9 @@
 # S12 ★ · Primeiro Cenário Salvo
 
 **Fase:** IFC Core  
-**Status:** 🔵 **EM EXECUÇÃO** desde 02/09/2026 · ★ MARCO ZERADO (não atingido)  
-**Backend:** sim (não escrever nada novo) · **Interface:** em construção  
+**Status:** ✅ **CONCLUÍDO 03/09/2026** · ★ **MARCO ATINGIDO**  
+**Backend:** sim (nada novo foi escrito) · **Interface:** sim, publicada  
+**Prova:** `documentation/S12-PROVA-BROWSER.md` — 9/9 passos em browser real  
 **Verificado em:** 02/09/2026 — nenhuma tela viva menciona cenário.  
 **Plano:** `documentation/S12-MATRIZ-INTEGRACAO.md`
 
