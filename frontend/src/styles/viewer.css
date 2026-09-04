@@ -730,17 +730,24 @@
 
 /* ── S18: comparação visual de cenários ──────────────────────────────────── */
 
+/* `flex: 1` e nao `height: 100%`: o AppShell distribui altura por flex, entao
+   uma altura percentual aqui resolve para zero e o split fica invisivel. Foi o
+   que aconteceu na primeira prova do S18: os dois canvas existiam no DOM e a
+   area aparecia vazia. */
 .compare-page {
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
-  height: 100%;
+  overflow: hidden;
+  background: var(--c-bg);
 }
 
 .comparison-canvas {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 2px 1fr;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   background: #121416;
