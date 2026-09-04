@@ -45,9 +45,17 @@ export class CameraSync {
     this.controlsB.removeEventListener('change', this.onBChangeBind);
   }
 
-  public setLocked(locked: boolean): void {
+  /**
+   * `alinharAgora` decide se o lado B pula JA para a camera de A.
+   *
+   * Na montagem tem de ser `false`: cada cenario abre na sua propria camera, e
+   * copiar A sobre B ali apagaria o estado salvo do cenario B (foi o que
+   * aconteceu na primeira prova do S18, os dois lados abriam identicos). Quando
+   * o usuario fecha o cadeado depois, ai sim alinhar e o comportamento certo.
+   */
+  public setLocked(locked: boolean, alinharAgora = true): void {
     this.isLocked = locked;
-    if (locked) {
+    if (locked && alinharAgora) {
       this.sync(this.controlsA, this.controlsB);
     }
   }

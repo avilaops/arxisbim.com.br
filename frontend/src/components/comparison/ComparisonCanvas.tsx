@@ -37,7 +37,16 @@ export default function ComparisonCanvas({
   const [erro, setErro] = useState<string | null>(null)
 
   // O cadeado muda sem remontar a cena: só avisa o sync que já existe.
+  // A primeira execução é pulada de propósito: ela roda antes das cenas
+  // existirem e, quando elas chegam, alinharia B com A, apagando a câmera do
+  // cenário B. Quem define o estado inicial é o `setLocked(travado, false)`
+  // lá embaixo, na montagem.
+  const primeiraVez = useRef(true)
   useEffect(() => {
+    if (primeiraVez.current) {
+      primeiraVez.current = false
+      return
+    }
     syncRef.current?.setLocked(travado)
   }, [travado])
 
@@ -193,7 +202,9 @@ export default function ComparisonCanvas({
         }
 
         const sync = new CameraSync(ladoA.controls, ladoB.controls)
-        sync.setLocked(travado)
+        // `false` no segundo argumento: nao alinhar agora. Cada lado tem de
+        // abrir na camera do SEU cenario; alinhar aqui apagaria a de B.
+        sync.setLocked(travado, false)
         syncRef.current = sync
 
         setCarregando(false)
