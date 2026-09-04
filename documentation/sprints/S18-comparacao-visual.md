@@ -1,9 +1,18 @@
 # S18 ★ · Primeira Comparação Visual de Cenários
 
 **Fase:** 5D BIM  
-**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Status:** ✅ **CONCLUÍDO 04/09/2026** · ★ **MARCO ATINGIDO**  
 **Backend:** parcial · **Interface:** nao  
-**Verificado em:** 02/09/2026 — MARCO. ComparisonPage.ts e ComparisonExport.ts orfaos.
+**Verificado em:** 04/09/2026 — provado em browser real, 9/9 passos.  
+**Prova:** `documentation/S18-PROVA-BROWSER.md`
+
+> **Zero backend novo.** O `GET /scenarios/:idA/diff/:idB`, que o
+> PENDENCIAS.md apontava como "o backend do S18", devolve `schedule` e `cost`:
+> é 4D/5D (S26/S30), não visual. Não foi usado. A comparação lê o que o S12 já
+> salvou em `camera` e `metadata.hidden`.
+>
+> `CameraSync` veio do frontend órfão quase inteiro (68 linhas, sem DOM). É a
+> terceira peça órfã aproveitada em dois sprints.
 **Depende de:** S12 (dois cenários com estados diferentes)  
 **Bloqueia:** S24 (painel de custos usa split-view), S26 (comparação temporal usa split-view)
 
