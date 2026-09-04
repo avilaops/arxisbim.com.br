@@ -64,7 +64,10 @@ deploy_web() {
   | ssh_ "mkdir -p $REMOTE/web && cd $REMOTE/web && rm -rf dist && tar -xzf -"
 
   scp -i "$KEY" -o StrictHostKeyChecking=no "$ROOT/deploy/web.Caddyfile" "root@$HOST:$REMOTE/web/Caddyfile"
-  ssh_ "cd $REMOTE && docker compose up -d web"
+  # --force-recreate nao e zelo: sem ele o container que ja esta de pe mantem a
+  # referencia antiga do bind mount e serve 404 com o dist novo no lugar.
+  # Aconteceu tres vezes antes de virar regra.
+  ssh_ "cd $REMOTE && docker compose up -d --force-recreate web"
   echo "    ok"
 }
 
