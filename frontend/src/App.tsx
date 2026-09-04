@@ -8,6 +8,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import ValidadorPage from './pages/ValidadorPage'
 import DashboardPage from './pages/DashboardPage'
 import Viewer3DPage from './pages/Viewer3DPage'
+import ComparePage from './pages/ComparePage'
 import AccountPage from './pages/AccountPage'
 import AdminPage from './pages/AdminPage'
 import PrivacyPage from './pages/PrivacyPage'
@@ -53,6 +54,7 @@ export default function App() {
         {/* Protected Pages */}
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/app" element={<Viewer3DPage />} />
+        <Route path="/app/compare" element={<ComparePage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/admin" element={<AdminPage />} />
 

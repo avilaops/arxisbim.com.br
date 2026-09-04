@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Camera, Check, Layers, Plus, Save, Trash2, X } from 'lucide-react'
+import { Camera, Check, GitCompare, Layers, Plus, Save, Trash2, X } from 'lucide-react'
 import type { Scenario } from '@/services/scenarios.service'
 
 interface ScenariosPanelProps {
@@ -160,6 +160,14 @@ export default function ScenariosPanel({
               <Save size={17} strokeWidth={1.45} />
               <span>{saving ? 'Salvando…' : 'Salvar posição atual'}</span>
             </button>
+          )}
+
+          {/* S18: comparar só faz sentido com dois cenários. */}
+          {scenarios.length >= 2 && (
+            <a className="viewer-panel__link" href="/app/compare">
+              <GitCompare size={16} strokeWidth={1.45} />
+              <span>Comparar cenários</span>
+            </a>
           )}
         </div>
       </aside>
