@@ -56,13 +56,28 @@ são os mesmos `.html` do app antigo que quebravam recuperação de senha e conv
 
 Ou seja: correção correta em código que não roda. Decidir junto com 2.2.
 
-### 2.4 Nove erros de `type-check` no backend
+### 2.4 ~~Nove erros de `type-check` no backend~~ — RESOLVIDO 07/09/2026
 
-Em `core/storage/local-storage.service.ts` (3) e
-`modules/ifc/ifc-geometry-pipeline.helper.ts` (6). **Anteriores** a tudo que foi
-feito nesta semana. Não quebram nada hoje porque o build usa esbuild, que remove
-tipos sem checar — foi assim que passaram despercebidos. Dívida real, barata de
-pagar, sem urgência.
+Zerados em `21bd9f4`, com portão em `a3b1e1b`. **Nenhum era ruído de tipagem:
+dois eram defeito real.**
+
+- `StorageError` não aceitava `INVALID_ARGUMENT`, que é o código com que o
+  driver local recusa path traversal. O tipo previa só três códigos.
+- O pipeline de IFC gravava `status` e `error` **dentro do jsonb `metadata`**,
+  que não tem esses campos — enquanto a tabela `ifc_models` tem as colunas
+  `status`, `processing_error`, `processing_started_at` e
+  `processing_completed_at` desde a migration 053. O estado do processamento ia
+  para um lugar que ninguém lê (`grep -rn "metadata.status"` não acha um
+  consumidor), e as colunas que o resto do sistema consulta ficavam paradas.
+  `started_at` e `completed_at` **nunca** eram preenchidos.
+
+O resto era `.buffer` de `Buffer` do Node (tipado `ArrayBuffer |
+SharedArrayBuffer`) indo onde só cabe `ArrayBuffer`.
+
+**O portão, para não voltar:** `npm run conferir` no backend (type-check + build)
+e o `deploy.sh` conferindo tipos **antes de empacotar**. Provado com um erro
+introduzido de propósito: o deploy parou sem abrir SSH. Válvula de escape para
+incidente: `ARXISVR_SEM_CONFERIR=1`.
 
 ### 2.5 CI não roda
 
