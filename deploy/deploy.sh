@@ -22,6 +22,18 @@ ALVO="${1:-tudo}"
 ssh_() { ssh -i "$KEY" -o StrictHostKeyChecking=no "root@$HOST" "$@"; }
 
 deploy_api() {
+  # Portao: type-check ANTES de empacotar. O build e esbuild, que remove tipos
+  # sem checar, entao sem isto um erro de tipo viaja para producao sem ninguem
+  # ver. Foi assim que 9 erros ficaram meses invisiveis (commit 21bd9f4).
+  # Para pular num incidente: ARXISVR_SEM_CONFERIR=1 ./deploy/deploy.sh api
+  if [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
+    echo "==> [api] conferindo tipos antes de subir"
+    ( cd "$ROOT/backend" && npm run type-check ) || {
+      echo "[api] type-check falhou. Corrija antes de subir." >&2
+      return 1
+    }
+  fi
+
   echo "==> [api] empacotando fonte do backend"
   tar -C "$ROOT" -czf - \
     --exclude=backend/node_modules \
