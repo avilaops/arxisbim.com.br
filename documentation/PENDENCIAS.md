@@ -1,6 +1,7 @@
 # ArxisVR — o que falta executar
 
 **Levantado em:** 04/09/2026, conferindo servidor, repo e produção.
+**Atualizado em:** 07/09/2026 — type-check zerado e com portão (item 2.4).
 **Estado:** produção no ar (`/`, `/app`, API, todos 200). S12 ★ atingido.
 
 ---
@@ -113,6 +114,13 @@ Estão espalhadas pelos commits; ficam juntas aqui:
 
 ## 4. Recomendação
 
-**S18 ★.** É o próximo marco, tem backend pronto, tem peça órfã para aproveitar
-e agora tem cenário salvo de verdade para comparar. O resto é dívida sem
-urgência ou decisão de negócio (2.5) que não depende de código.
+**S18 ★.** É o próximo marco, tem peça órfã para aproveitar
+(`comparison/ComparisonPage.ts`, `ScenarioPicker.ts`) e cenário salvo de verdade
+para comparar. O resto é dívida sem urgência ou decisão de negócio (2.5).
+
+**Atenção, achado de 07/09:** o `GET /scenarios/:idA/diff/:idB` **não serve ao
+S18**. Ele devolve `{ schedule, cost }` — prazo e custo, que são S26 e S30. Não
+existe endpoint de diff **visual/geométrico**. Como os cenários já trazem
+`camera` e `metadata.hidden`, que é tudo o que o SplitView precisa, a comparação
+visual se faz **no cliente**. Escrever backend novo repetiria o erro que a
+auditoria apontou.
