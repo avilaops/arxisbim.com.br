@@ -101,10 +101,24 @@ export interface StorageService {
   presignPut(key: StorageKey, opts?: PresignOptions): Promise<string>;
 }
 
+/**
+ * Codigos de erro do storage.
+ *
+ * `INVALID_ARGUMENT` e o que o driver local usa para recusar path traversal e
+ * caminho absoluto. Ele ja era lancado desde sempre, mas faltava no tipo, o que
+ * dava 3 dos 9 erros de type-check que passaram meses invisiveis (o build usa
+ * esbuild, que remove tipos sem checar).
+ */
+export type StorageErrorCode =
+  | 'NOT_FOUND'
+  | 'ACCESS_DENIED'
+  | 'INVALID_ARGUMENT'
+  | 'UNKNOWN';
+
 export class StorageError extends Error {
   constructor(
     message: string,
-    public readonly code: 'NOT_FOUND' | 'ACCESS_DENIED' | 'UNKNOWN',
+    public readonly code: StorageErrorCode,
     public readonly cause?: unknown
   ) {
     super(message);
