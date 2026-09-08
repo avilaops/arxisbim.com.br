@@ -80,6 +80,12 @@ e o `deploy.sh` conferindo tipos **antes de empacotar**. Provado com um erro
 introduzido de propósito: o deploy parou sem abrir SSH. Válvula de escape para
 incidente: `ARXISVR_SEM_CONFERIR=1`.
 
+**Frontend, 08/09/2026:** `tsc` não rodava (`ignoreDeprecations` inválido) e o
+`include` cobria os ~800 órfãos (1.890 erros). Agora `npm run typecheck` cobre
+o grafo de `src/main.tsx` com **0 erros** e `deploy-aplicacoes.sh web` roda o
+type-check antes de empacotar, com a mesma válvula. Detalhe em
+`DEBITO-2026-09-08-app-autenticado.md`.
+
 ### 2.5 CI não roda
 
 A conta do GitHub está bloqueada por billing, então **nenhum Actions executa** e

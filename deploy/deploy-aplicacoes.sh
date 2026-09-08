@@ -65,6 +65,12 @@ deploy_api() {
 }
 
 deploy_web() {
+  # Portao: tipos do frontend antes de empacotar (mesma regra do backend).
+  # O tsconfig cobre o grafo de src/main.tsx, o que entra no bundle.
+  if [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
+    echo "==> [web] type-check (npm run typecheck)"
+    (cd "$ROOT/frontend" && npm run typecheck) || { echo "    tipos com erro: deploy parado antes de empacotar"; return 1; }
+  fi
   echo "==> [web] build local"
   # VITE_API_URL entra no bundle em tempo de build: sem isto o site publicado
   # aponta para localhost e nenhuma tela carrega dado.

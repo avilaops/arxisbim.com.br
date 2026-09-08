@@ -91,6 +91,11 @@ novo). Não é bug do produto; ficou registrado para quem for repetir.
 
 ## 9. Dívida encontrada
 
+> **Fechada em 08/09/2026** (mesma data, rodada seguinte): os seis itens abaixo
+> foram resolvidos em `DEBITO-2026-09-08-app-autenticado.md`, com prova em
+> produção. O item 5 virou funcionalidade no desktop (Redefinir e Tela cheia);
+> no mobile os botões seguem ausentes, como aprovado.
+
 1. **Busca da sidebar é decorativa** também no desktop: `<div>` sem input. Ou vira command palette ou sai.
 2. Status do projeto em inglês ("empty") no card de recentes.
 3. `.topbar` e `.sidebar` definidos duas vezes em `globals.css` (766/865): resto do bloco B duplicado.

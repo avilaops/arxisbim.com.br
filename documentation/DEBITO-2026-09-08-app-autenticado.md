@@ -183,7 +183,9 @@ aprovado; sem status em inglês; busca ausente; Cenários visível; painel de
 projetos clicável; ajuda touch com os 3 gestos e teclado escondido no touch;
 canvas ≥70%; Redefinir e Tela cheia no desktop.
 
-**Produção** (após deploy, `documentation/provas/debito/`): ver seção 10.
+**Produção** (bundle `pages-CNa54fjp.js`, token novo): 390×844, 430×932 e
+768×1024 com **37 verificações cada**, 1440×900 com **18**, zero falhas.
+Capturas em `documentation/provas/debito/`.
 
 **Testes unitários (`vitest`):** 610 testes, 24 falhas **pré-existentes**
 (medido com `git stash` antes das alterações: 24 falhas, 586 passando), todas
@@ -207,6 +209,9 @@ Nenhum teste cobre os arquivos alterados.
    classificação (roadmap).
 6. Testes unitários: 24 falhas em código órfão.
 7. Command palette: feature futura, se a busca fizer sentido no produto.
+8. Painel "Controles" do viewer desktop diz "disponíveis após carregar um
+   modelo" mesmo com o modelo aberto (visto no print de 1440): texto fixo,
+   nada por trás.
 
 ## 10. Evidência
 
