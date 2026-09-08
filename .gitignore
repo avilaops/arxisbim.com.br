@@ -72,3 +72,7 @@ backend/scripts/_backup_*
 .run-migrations.mjs
 .run-reconcile.mjs
 vitest.pg*.config.ts
+
+# Logs de sessao do Playwright CLI (Codex) e saidas soltas: nao versionar
+.playwright-cli/
+output/
