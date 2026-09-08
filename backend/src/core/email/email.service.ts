@@ -153,7 +153,7 @@ export class EmailService {
 </html>`;
 
     try {
-      await this.send(to, `Confirme seu email — ${this.appName}`, html, { emailType: 'email_verification', tenantId });
+      await this.send(to, `Confirme seu email - ${this.appName}`, html, { emailType: 'email_verification', tenantId });
       observabilityService.recordMetric('email.verification.sent', 1);
       console.log(`📧 Email de verificação enviado para ${to}`);
     } catch (error: any) {
@@ -202,7 +202,7 @@ export class EmailService {
 </html>`;
 
     try {
-      await this.send(to, `Redefinição de senha — ${this.appName}`, html, { emailType: 'password_reset', tenantId });
+      await this.send(to, `Redefinição de senha - ${this.appName}`, html, { emailType: 'password_reset', tenantId });
       observabilityService.recordMetric('email.password_reset.sent', 1);
       console.log(`📧 Email de reset de senha enviado para ${to}`);
     } catch (error: any) {

@@ -1,10 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
+/**
+ * Esta tela atende DOIS caminhos, e confundi-los era o defeito:
+ *
+ *   1. Logo apos o cadastro, o RegisterPage manda para `/verify-email?email=...`
+ *      SEM token, porque o token so existe dentro do e-mail. Aqui a tela deve
+ *      dizer "confira sua caixa de entrada", nao acusar erro.
+ *   2. Pelo link do e-mail, que traz `?token=...&tenant=...`. Ai sim verifica.
+ *
+ * Antes, a ausencia de token virava "Erro na verificacao / Token de verificacao
+ * nao encontrado" na cara de quem tinha acabado de se cadastrar, sugerindo que
+ * o cadastro falhou quando ele deu certo.
+ *
+ * A verificacao tambem era SIMULADA (`await new Promise` seguido de sucesso):
+ * qualquer token, ate invalido, dava "Email verificado!" sem nada acontecer no
+ * servidor. Agora chama POST /auth/verify-email de verdade.
+ *
+ * Nao ha botao de reenviar porque o backend ainda nao expoe rota para isso: as
+ * unicas rotas de verificacao sao GET e POST /auth/verify-email. Botao que
+ * chama endpoint inexistente e pior que botao ausente.
+ */
 export default function VerifyEmailPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'aguardando' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
 
   const token = searchParams.get('token')
@@ -12,26 +33,40 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const verify = async () => {
+      // Caminho 1: veio do cadastro, o e-mail ainda esta a caminho.
+      if (!token) {
+        setStatus('aguardando')
+        return
+      }
+
       try {
-        if (!token) {
+        const response = await fetch(buildApiV1Url('/auth/verify-email'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // O backend espera `verificationToken`, nao `token`.
+          body: JSON.stringify({ verificationToken: token }),
+        })
+        const data = await response.json().catch(() => null)
+
+        if (!response.ok) {
           setStatus('error')
-          setMessage('Token de verificação não encontrado')
+          setMessage(data?.message || data?.error || 'Não foi possível verificar este link.')
           return
         }
 
-        // Simular verificação
-        await new Promise((r) => setTimeout(r, 1500))
         setStatus('success')
-        setMessage('Email verificado com sucesso!')
+        setMessage(data?.message || 'Email verificado com sucesso!')
         setTimeout(() => navigate('/login'), 2000)
-      } catch (err: any) {
+      } catch {
         setStatus('error')
-        setMessage(err.message || 'Erro ao verificar email')
+        setMessage('Falha de conexão ao verificar o email.')
       }
     }
 
-    verify()
+    void verify()
   }, [token, navigate])
+
+
 
   return (
     <div
@@ -64,6 +99,37 @@ export default function VerifyEmailPage() {
             <p style={{ fontSize: '14px', color: 'var(--c-text2)' }}>
               {email ? `Verificando ${email}...` : 'Aguarde...'}
             </p>
+          </>
+        )}
+
+        {status === 'aguardando' && (
+          <>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📬</div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '8px' }}>
+              Confira seu e-mail
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--c-text2)', marginBottom: '24px' }}>
+              {message
+                ? message
+                : email
+                  ? `Enviamos um link de confirmação para ${email}. Abra o e-mail e clique no botão para ativar sua conta.`
+                  : 'Enviamos um link de confirmação. Abra o e-mail e clique no botão para ativar sua conta.'}
+            </p>
+            <a
+              href="/login"
+              style={{
+                display: 'inline-block',
+                padding: '8px 16px',
+                background: 'var(--c-blue)',
+                color: '#fff',
+                borderRadius: 'var(--r)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+              }}
+            >
+              Ir para o login
+            </a>
           </>
         )}
 

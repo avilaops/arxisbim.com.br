@@ -18,7 +18,7 @@ export default function LandingPage() {
   return (
     <>
       <SEO
-        title="ArxisVR — Plataforma BIM com IA e Realidade Estendida no Navegador"
+        title="ArxisVR - Plataforma BIM com IA e Realidade Estendida no Navegador"
         description="Visualize modelos IFC em escala 1:1, simule cronogramas 4D, estime custos 5D e revise clashes com inteligência artificial e realidade virtual/aumentada (WebXR) direto no navegador."
         keywords="plataforma BIM, visualizador IFC online, simulação 4D de obras, estimativa de custos 5D, orçamento BIM, realidade virtual construção civil, realidade aumentada engenharia, WebXR VR AR, compatibilização de projetos BIM, Copilot de IA engenharia, AEC software, PropTech"
         path="/"
@@ -45,7 +45,7 @@ export default function LandingPage() {
               gap: '10px',
               fontWeight: 700,
               fontSize: '20px',
-              color: '#000000',
+              color: 'var(--c-text)',
               letterSpacing: '-0.5px',
             }}
           >
@@ -144,10 +144,10 @@ export default function LandingPage() {
             gap: '8px',
           }}
         >
-          <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--text-primary)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
+          <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--c-text)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
             Recursos
           </a>
-          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--text-primary)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
+          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--c-text)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
             Planos
           </a>
         </nav>
@@ -186,7 +186,7 @@ export default function LandingPage() {
                 background: 'rgba(255,255,255,0.6)',
                 fontSize: '13px',
                 fontWeight: 500,
-                color: 'var(--text-primary)',
+                color: 'var(--c-text)',
                 marginBottom: '24px',
                 boxShadow: 'var(--shadow-sm)',
               }}
@@ -203,7 +203,7 @@ export default function LandingPage() {
                 letterSpacing: '-0.6px',
                 lineHeight: 1.1,
                 marginBottom: '20px',
-                color: '#000000',
+                color: 'var(--c-text)',
               }}
             >
               A plataforma BIM com <span style={{ background: 'linear-gradient(90deg, #007AFF 0%, #C4B5F4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Copilot de IA</span>
@@ -220,7 +220,7 @@ export default function LandingPage() {
                 lineHeight: 1.55,
               }}
             >
-              Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D, revise clashes e custos 5D, e visite o projeto em VR ou AR — tudo em uma única plataforma, sem instalação.
+              Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D, revise clashes e custos 5D, e visite o projeto em VR ou AR, tudo em uma única plataforma, sem instalação.
             </p>
 
             <div className="hero-cta" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
@@ -257,7 +257,10 @@ export default function LandingPage() {
                   borderRadius: '50px',
                   fontWeight: 600,
                   fontSize: '15px',
-                  color: 'var(--text-primary)',
+                  // Fundo branco: aqui o texto PRECISA ser escuro. A troca em
+                  // massa de #000000 por var(--c-text) pegou este botao junto e
+                  // deixou branco no branco.
+                  color: '#0a0a0a',
                   background: '#ffffff',
                   border: '1px solid var(--border-color)',
                   cursor: 'pointer',
@@ -301,7 +304,7 @@ export default function LandingPage() {
                 backdropFilter: 'blur(20px)',
               }}
             >
-              <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '12px', color: '#000000' }}>
+              <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--c-text)' }}>
                 Pronto para ver seu projeto em outra dimensão?
               </h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', fontSize: '15px' }}>
@@ -341,7 +344,8 @@ export default function LandingPage() {
                     borderRadius: '50px',
                     fontWeight: 600,
                     fontSize: '15px',
-                    color: 'var(--text-primary)',
+                    // Fundo branco: texto escuro (mesmo caso do botao do hero).
+                    color: '#0a0a0a',
                     background: '#ffffff',
                     border: '1px solid var(--border-color)',
                     cursor: 'pointer',
@@ -371,7 +375,7 @@ export default function LandingPage() {
                   gap: '10px',
                   fontWeight: 700,
                   fontSize: '20px',
-                  color: '#000000',
+                  color: 'var(--c-text)',
                   letterSpacing: '-0.5px',
                   textDecoration: 'none',
                   marginBottom: '14px',
