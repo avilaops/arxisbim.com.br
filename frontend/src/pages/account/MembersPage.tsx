@@ -28,6 +28,13 @@ function relativeDate(iso: string | null): string {
   return `${Math.floor(days / 365)} anos atrás`
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  owner: 'Dono',
+  admin: 'Admin',
+  member: 'Membro',
+  viewer: 'Visualizador',
+}
+
 export default function MembersPage({ tenantId }: { tenantId: string | null }) {
   const [members, setMembers] = useState<TenantMember[]>([])
   const [loading, setLoading] = useState(true)
@@ -191,8 +198,8 @@ export default function MembersPage({ tenantId }: { tenantId: string | null }) {
                 </div>
               </div>
               <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--c-text2)', textTransform: 'capitalize' }}>
-                  {member.role}
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--c-text2)' }}>
+                  {ROLE_LABEL[member.role] ?? member.role}
                 </div>
                 <div style={{ fontSize: '10px', color: 'var(--c-text3)' }}>
                   Último acesso {relativeDate(member.lastLoginAt)}

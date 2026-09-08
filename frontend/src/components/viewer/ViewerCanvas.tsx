@@ -32,6 +32,8 @@ export interface ViewerHandle {
   aplicarOcultos: (expressIds: number[]) => boolean
   /** Há uma cena carregada agora? */
   pronto: () => boolean
+  /** Volta ao enquadramento calculado quando o modelo abriu. */
+  redefinirVista: () => boolean
 }
 
 /**
@@ -48,6 +50,8 @@ interface CenaViva {
   camera: any
   controls: any
   model: any
+  /** Enquadramento inicial (o mesmo que o efeito calcula ao abrir o modelo). */
+  vistaInicial: CameraState
   ocultos: Set<number>
   aplicarVisibilidade: (ocultos: Set<number>) => void
 }
@@ -79,7 +83,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
     let cancelled = false
     let cleanup = () => {}
 
-    async function renderIfc() {
+    const renderIfc = async () => {
       setLoadingModel(true)
       setLoadProgress(5)
       setLoadError(null)
@@ -103,7 +107,6 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
         const renderer = new THREE.WebGLRenderer({ antialias: true })
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         renderer.setSize(width, height)
-        renderer.outputColorSpace = THREE.SRGBColorSpace
         renderer.shadowMap.enabled = true
         host.appendChild(renderer.domElement)
 
@@ -184,6 +187,9 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
         camera.updateProjectionMatrix()
         controls.target.copy(center)
         controls.update()
+        // O OrbitControls guarda este enquadramento; "Redefinir visualizacao"
+        // chama controls.reset() e volta exatamente para ca.
+        controls.saveState()
 
         grid.position.y = box.min.y
         grid.scale.setScalar(Math.max(maxDimension / 100, 0.25))
@@ -201,6 +207,10 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
           camera,
           controls,
           model,
+          vistaInicial: {
+            position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+            target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+          },
           ocultos: ocultosAtuais,
           aplicarVisibilidade,
         }
@@ -340,6 +350,22 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
       cena.controls.target.set(camera.target.x, camera.target.y, camera.target.z)
       cena.camera.updateProjectionMatrix()
       cena.controls.update()
+      return true
+    },
+
+    redefinirVista: () => {
+      const cena = sceneRef.current
+      if (!cena) return false
+      // Com damping ligado, o OrbitControls guarda um resto de inercia do
+      // arrasto anterior e o aplicaria nos frames seguintes ao reset. Um
+      // update() sem damping consome esse resto (ele zera os deltas), e so
+      // entao reset() volta ao enquadramento salvo com saveState() ao abrir.
+      const { controls } = cena
+      const damping = controls.enableDamping
+      controls.enableDamping = false
+      controls.update()
+      controls.reset()
+      controls.enableDamping = damping
       return true
     },
 

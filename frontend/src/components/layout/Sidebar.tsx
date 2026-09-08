@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   Home,
   Clock3,
@@ -47,8 +47,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
   const isDashboard = location.pathname === '/dashboard'
 
   const NavItem = ({ href, icon: Icon, label, active = false }: { href: string; icon: any; label: string; active?: boolean }) => (
-    <a
-      href={href}
+    <Link
+      to={href}
       className="sidebar-item"
       title={collapsed ? label : undefined}
       style={{
@@ -73,7 +73,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         <Icon size={17} strokeWidth={1.45} aria-hidden="true" />
       </span>
       <span className="sidebar-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
-    </a>
+    </Link>
   )
 
   return (
@@ -93,9 +93,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
     >
       {/* Brand */}
       <div className="sidebar-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '48px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
-        <a
+        <Link
           className="sidebar-brand"
-          href="/dashboard"
+          to="/dashboard"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -107,7 +107,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         >
           <img src="/logo-icon.svg" alt="" style={{ width: '22px', height: '22px' }} />
           <span className="brand-name">ArxisVR</span>
-        </a>
+        </Link>
         {/* So no mobile (CSS): o "Recolher menu" do rodape e semantica de
             desktop e ficava a 1.500px de distancia do polegar. */}
         <button
@@ -120,32 +120,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         </button>
       </div>
 
-      {/* Search */}
-      <div
-        className="sidebar-search"
-        style={{
-          margin: '10px 10px 4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'var(--c-surface2)',
-          border: '1px solid var(--c-border)',
-          borderRadius: 'var(--r)',
-          padding: '0 10px',
-          height: '30px',
-          color: 'var(--c-text3)',
-          fontSize: '12px',
-          cursor: 'text',
-          flexShrink: 0,
-          transition: 'border-color .12s',
-        }}
-      >
-        <span style={{ display: 'inline-flex', alignItems: 'center' }}><Search size={14} strokeWidth={1.5} /></span>
-        <span style={{ flex: 1, whiteSpace: 'nowrap' }}>Pesquisa...</span>
-        <kbd style={{ fontSize: '10px', padding: '1px 4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--c-border)', borderRadius: '3px', color: 'var(--c-text3)' }}>
-          Ctrl K
-        </kbd>
-      </div>
+      {/* A "busca" que ficava aqui era um <div> com "Ctrl K" sem input nem
+          handler. Saiu em 08/09/2026; command palette e feature futura. */}
 
       {/* Main nav */}
       <div style={{ padding: '12px 0 4px' }}>
@@ -228,8 +204,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
 
         {manageOpen && (
           <div className="sidebar-submenu" style={{ display: 'flex', flexDirection: 'column', background: 'var(--c-surface)', borderTop: '1px solid var(--c-border)', borderBottom: '1px solid var(--c-border)', padding: '4px 0' }}>
-            <a
-              href="/account#members"
+            <Link
+              to="/account?tab=members"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -250,9 +227,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
               }}
             >
               Membros
-            </a>
-            <a
-              href="/account#billing"
+            </Link>
+            <Link
+              to="/account?tab=billing"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -273,9 +251,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
               }}
             >
               Plano & Cobrança
-            </a>
-            <a
-              href="/account#tokens"
+            </Link>
+            <Link
+              to="/account?tab=tokens"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -296,7 +275,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
               }}
             >
               Tokens de API
-            </a>
+            </Link>
           </div>
         )}
       </div>

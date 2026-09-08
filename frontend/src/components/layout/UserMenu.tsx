@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, LogOut } from 'lucide-react'
 
 interface User {
@@ -12,6 +13,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -97,7 +99,7 @@ export default function UserMenu({ user }: UserMenuProps) {
         {isAdmin && (
           <>
             <button
-              onClick={() => (window.location.href = '/admin')}
+              onClick={() => { setIsOpen(false); navigate('/admin') }}
               style={{
                 display: 'flex',
                 alignItems: 'center',

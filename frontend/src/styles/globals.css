@@ -750,41 +750,9 @@ main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px))
   .lp-drawer__panel, .lp-drawer__backdrop { transition: none; }
 }
 
-/* Dashboard & App Layouts */
-.app {
-  display: grid;
-  height: 100vh;
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: 48px 1fr;
-  transition: grid-template-columns 0.2s ease;
-}
-
-.app.sidebar-collapsed {
-  grid-template-columns: 48px 1fr;
-}
-
-.topbar {
-  grid-column: 1 / -1;
-  background: var(--c-surface);
-  border-bottom: 1px solid var(--c-border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 16px;
-  z-index: 100;
-}
-
-.sidebar {
-  background: var(--c-surface);
-  border-right: 1px solid var(--c-border);
-  overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 12px;
-}
-
+/* Layout do app autenticado: .main/.content sao do AppShell; #loading das
+   paginas que checam sessao. Sidebar e topbar ficam mais abaixo, em uma so
+   definicao cada. */
 .main {
   overflow: auto;
   display: flex;
@@ -794,14 +762,6 @@ main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px))
 .content {
   flex: 1;
   overflow: auto;
-}
-
-/* Footer — landing dark */
-.lp-footer {
-  padding: 56px 0 32px;
-  border-top: 1px solid var(--lp-border);
-  background: var(--lp-bg);
-  color: var(--lp-text2);
 }
 
 /* Loading state */
@@ -815,17 +775,6 @@ main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px))
   justify-content: center;
   gap: 14px;
   z-index: 9999;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .app {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    display: none;
-  }
 }
 
 @media (max-width: 600px) {
@@ -849,111 +798,22 @@ main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px))
   }
 }
 
-/* Dashboard & App Layouts */
-.app {
-  display: grid;
-  height: 100vh;
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: 48px 1fr;
-  transition: grid-template-columns 0.2s ease;
-}
-
-.app.sidebar-collapsed {
-  grid-template-columns: 48px 1fr;
-}
-
-.topbar {
-  grid-column: 1 / -1;
-  background: var(--c-surface);
-  border-bottom: 1px solid var(--c-border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 16px;
-  z-index: 100;
-}
-
-.sidebar {
-  background: var(--c-surface);
-  border-right: 1px solid var(--c-border);
-  overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.main {
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  flex: 1;
-  overflow: auto;
-}
-
-/* Footer */
-footer {
-  padding: 56px 0 32px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 80px;
-}
-
-/* Loading state */
-#loading {
-  position: fixed;
-  inset: 0;
-  background: #0a0a0a;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  z-index: 9999;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .app {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    display: none;
-  }
-}
-
-@media (max-width: 600px) {
-  .h1 {
-    font-size: 28px;
-  }
-
-  .h2 {
-    font-size: 20px;
-  }
-
-  .btn {
-    padding: 10px 14px;
-    font-size: 12px;
-  }
-
-  .container {
-    padding: 0 12px;
-  }
-}
-
 /* Sidebar Responsive Fixes */
 .app-layout {
   min-height: 100vh;
 }
 
+/* Fonte unica da sidebar (08/09/2026: antes havia tres `.sidebar` no arquivo,
+   duas copias identicas de um layout em grid que nao existe mais e esta). */
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-expanded);
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  padding: 12px;
+  gap: 8px;
+  font-size: 12px;
   overflow: hidden;
   transition: width 180ms ease, transform 180ms ease;
   z-index: 60;
@@ -1002,7 +862,6 @@ footer {
 }
 
 .app-layout.sidebar-collapsed .sidebar-label,
-.app-layout.sidebar-collapsed .sidebar-search,
 .app-layout.sidebar-collapsed .sidebar-section-title,
 .app-layout.sidebar-collapsed .sidebar-submenu,
 .app-layout.sidebar-collapsed .brand-name {
@@ -1065,7 +924,17 @@ footer {
 .topbar__brand,
 .sidebar-close-mobile { display: none; }
 
-.topbar { height: 48px; padding: 0 20px; }
+/* Fonte unica do topbar (idem). */
+.topbar {
+  height: 48px;
+  padding: 0 20px;
+  gap: 16px;
+  display: flex;
+  align-items: center;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  z-index: 100;
+}
 
 .topbar__link {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1131,9 +1000,6 @@ html.app-nav-open { overflow: hidden; overscroll-behavior: none; }
     background: none; border: none; color: var(--c-text); border-radius: 10px;
   }
   .sidebar-close-mobile:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
-
-  /* a busca e decorativa (div sem input) e trazia "Ctrl K": some no touch */
-  .sidebar-search { display: none !important; }
 
   /* itens com area de toque de 44px */
   .sidebar-item {

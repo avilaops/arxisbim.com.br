@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { HelpCircle, Menu } from 'lucide-react'
 import UserMenu from './UserMenu'
 
@@ -52,10 +53,10 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
 
       {/* No mobile a marca vem para ca, porque a da sidebar fica escondida com
           o drawer fechado e o topo ficava so com o nome do usuario. */}
-      <a href="/dashboard" className="topbar__brand" aria-label="ArxisVR, página inicial">
+      <Link to="/dashboard" className="topbar__brand" aria-label="ArxisVR, página inicial">
         <img src="/logo-icon.svg" alt="" width={22} height={22} />
         <span>ArxisVR</span>
-      </a>
+      </Link>
 
       <div className="topbar__mid" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
         <div

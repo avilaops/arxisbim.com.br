@@ -1,4 +1,3 @@
-import { Copy, Trash2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useApiTokens } from '@/hooks/useApiTokens';
 import CreateApiTokenModal from '@/components/account/CreateApiTokenModal';

@@ -81,6 +81,27 @@ export default function Viewer3DPage() {
 
   // --- S12: cenários -------------------------------------------------------
   const viewerRef = useRef<ViewerHandle>(null)
+  const viewerPageRef = useRef<HTMLDivElement>(null)
+
+  // Tela cheia pela Fullscreen API. `null` = o navegador nao tem a API
+  // (Safari no iPhone so a ganhou no iOS 17.2) e o botao nem aparece.
+  // Vai para tela cheia a pagina do viewer inteira, para a toolbar (e o botao
+  // de sair) continuarem acessiveis.
+  const [fullscreen, setFullscreen] = useState<boolean | null>(() =>
+    typeof document !== 'undefined' && document.fullscreenEnabled ? document.fullscreenElement !== null : null,
+  )
+  useEffect(() => {
+    if (fullscreen === null) return
+    const sync = () => setFullscreen(document.fullscreenElement !== null)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [fullscreen === null])
+  const toggleFullscreen = () => {
+    const el = viewerPageRef.current
+    if (!el || fullscreen === null) return
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+    else void el.requestFullscreen().catch(() => setError('O navegador não permitiu a tela cheia.'))
+  }
   const [scenariosOpen, setScenariosOpen] = useState(false)
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [activeScenarioId, setActiveScenarioId] = useState('')
@@ -353,7 +374,7 @@ export default function Viewer3DPage() {
 
   return (
     <AppShell>
-      <div className="viewer-page">
+      <div className="viewer-page" ref={viewerPageRef}>
         <input
           ref={fileInputRef}
           className="viewer-file-input"
@@ -369,6 +390,10 @@ export default function Viewer3DPage() {
           onToggleProjects={() => setProjectsOpen((open) => !open)}
           onToggleProperties={() => setPropertiesOpen((open) => !open)}
           onToggleScenarios={() => setScenariosOpen((open) => !open)}
+          hasModel={Boolean(selectedModel)}
+          onResetView={() => { viewerRef.current?.redefinirVista() }}
+          fullscreen={fullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
 
         {(message || error || uploading) && (

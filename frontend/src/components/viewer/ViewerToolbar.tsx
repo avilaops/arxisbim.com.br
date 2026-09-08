@@ -4,6 +4,7 @@ import {
   Info,
   Layers,
   Maximize2,
+  Minimize2,
   RotateCcw,
   Upload,
 } from 'lucide-react'
@@ -14,6 +15,12 @@ interface ViewerToolbarProps {
   onToggleProjects: () => void
   onToggleProperties: () => void
   onToggleScenarios: () => void
+  /** Ha modelo aberto: sem ele, "Redefinir" nao tem o que redefinir. */
+  hasModel: boolean
+  onResetView: () => void
+  /** null = navegador sem Fullscreen API (iPhone antes do iOS 17.2): botao some. */
+  fullscreen: boolean | null
+  onToggleFullscreen: () => void
 }
 
 export default function ViewerToolbar({
@@ -22,6 +29,10 @@ export default function ViewerToolbar({
   onToggleProjects,
   onToggleProperties,
   onToggleScenarios,
+  hasModel,
+  onResetView,
+  fullscreen,
+  onToggleFullscreen,
 }: ViewerToolbarProps) {
   return (
     <header className="viewer-toolbar">
@@ -60,21 +71,25 @@ export default function ViewerToolbar({
         <button
           className="viewer-icon-button"
           type="button"
+          onClick={onResetView}
           aria-label="Redefinir visualização"
-          title="Redefinir visualização"
-          disabled
+          title={hasModel ? 'Redefinir visualização' : 'Abra um modelo para redefinir a visualização'}
+          disabled={!hasModel}
         >
           <RotateCcw size={17} strokeWidth={1.45} />
         </button>
-        <button
-          className="viewer-icon-button"
-          type="button"
-          aria-label="Tela cheia"
-          title="Tela cheia"
-          disabled
-        >
-          <Maximize2 size={17} strokeWidth={1.45} />
-        </button>
+        {fullscreen !== null && (
+          <button
+            className="viewer-icon-button"
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+            title={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+            aria-pressed={fullscreen}
+          >
+            {fullscreen ? <Minimize2 size={17} strokeWidth={1.45} /> : <Maximize2 size={17} strokeWidth={1.45} />}
+          </button>
+        )}
         <button
           className="viewer-icon-button viewer-mobile-action"
           type="button"

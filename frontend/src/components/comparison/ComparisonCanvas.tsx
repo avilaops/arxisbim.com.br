@@ -92,7 +92,6 @@ export default function ComparisonCanvas({
           const renderer = new THREE.WebGLRenderer({ antialias: true })
           renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
           renderer.setSize(largura, altura)
-          renderer.outputColorSpace = THREE.SRGBColorSpace
           host.appendChild(renderer.domElement)
 
           const controls = new OrbitControls(camera, renderer.domElement)

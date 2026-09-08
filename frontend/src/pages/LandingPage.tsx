@@ -103,7 +103,6 @@ function PricingSection() {
 }
 
 export default function LandingPage() {
-  const [faqOpen, setFaqOpen] = useState<number | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [signupBtnVisible, setSignupBtnVisible] = useState(false)
 
@@ -488,12 +487,12 @@ export default function LandingPage() {
             <div className="lp-section-head"><span className="lp-kicker">Casos de uso</span><h2 id="cases-title">Feito para times AEC que entregam projetos complexos.</h2></div>
             <img className="lp-section-image" src="/images/landing/time-aec-bim.jpg" alt="Equipe multidisciplinar coordenando um modelo BIM no canteiro de obras" loading="lazy" />
             <div className="lp-cases-grid">
-              {[
+              {([
                 [Building2, 'Construtoras & Incorporadoras', 'Reduza retrabalho com coordenação BIM e simulação 4D antes da obra.', ['Federação de disciplinas EST × HID × ELE × ARQ', 'Cronograma 4D com vínculo IFC ↔ tarefa', 'Revisão de clashes priorizada']],
                 [House, 'Escritórios de Arquitetura', 'Apresente o projeto ao cliente em 1:1, dentro do espaço, antes da obra começar.', ['Visita guiada em VR/AR', 'Cenários salvos por reunião', 'Comentários e anotações no modelo']],
                 [Users, 'Engenharia & MEP', 'Valide interferências e roteamentos com colaboração em tempo real.', ['Cortes e clipping dinâmicos', 'Inspeção de propriedades IFC', 'Filtros avançados por tipo/disciplina']],
                 [HardHat, 'Gerenciadoras de Obra', 'Acompanhe progresso físico-financeiro com 4D + 5D integrados.', ['Quantitativos automáticos do IFC', 'Custos por elemento e fase', 'Relatórios exportáveis']],
-              ].map(([Icon, title, description, items]) => <article className="lp-card lp-case" key={String(title)}><Icon className="lp-card-icon" aria-hidden="true" /><h3>{String(title)}</h3><p>{String(description)}</p><ul>{(items as string[]).map((item) => <li key={item}><Check size={15} aria-hidden="true" />{item}</li>)}</ul></article>)}
+              ] as const).map(([Icon, title, description, items]) => <article className="lp-card lp-case" key={title}><Icon className="lp-card-icon" aria-hidden="true" /><h3>{title}</h3><p>{description}</p><ul>{items.map((item) => <li key={item}><Check size={15} aria-hidden="true" />{item}</li>)}</ul></article>)}
             </div>
           </div>
         </section>

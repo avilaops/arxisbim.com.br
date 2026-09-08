@@ -934,3 +934,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Tela cheia (Fullscreen API): a pagina do viewer inteira vai para tela cheia,
+   com a toolbar, para o botao de sair continuar a mao. */
+.viewer-page:fullscreen {
+  background: var(--c-bg, #0a0a0a);
+  width: 100vw;
+  height: 100vh;
+}

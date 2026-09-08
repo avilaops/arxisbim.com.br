@@ -7,7 +7,6 @@ export default function JoinPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const workspaceId = searchParams.get('workspace')
   const workspaceName = searchParams.get('name') || 'ArxisVR'
 
   async function handleJoin(e: React.FormEvent) {

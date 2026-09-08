@@ -68,8 +68,16 @@ function statusLabel(status: string): { label: string; color: string } {
     under_review: { label: 'Em revisão', color: '#a855f7' },
     completed: { label: 'Finalizado', color: '#6b7280' },
     archived: { label: 'Arquivado', color: '#6b7280' },
+    // Estados derivados da versao ativa do modelo (projects.service):
+    // sem modelo, enviando, processando, pronto, falhou.
+    empty: { label: 'Sem modelo', color: '#6b7280' },
+    uploading: { label: 'Enviando', color: '#f59e0b' },
+    processing: { label: 'Processando', color: '#3b82f6' },
+    ready: { label: 'Pronto', color: '#22c55e' },
+    failed: { label: 'Falhou', color: '#ef4444' },
   }
-  return map[status] || { label: status, color: '#6b7280' }
+  // Valor desconhecido nunca vai cru para a tela: o usuario nao le enum.
+  return map[status] || { label: 'Sem status', color: '#6b7280' }
 }
 
 // ── Skeleton pulse ──────────────────────────────────────────

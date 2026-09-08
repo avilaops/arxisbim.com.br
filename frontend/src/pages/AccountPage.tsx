@@ -1,24 +1,32 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
 import ApiTokensPage from './account/ApiTokenspage'
 import ApiDocumentationPage from './account/ApiDocumentationPage'
 import BillingPage from './account/BillingPage'
 import MembersPage from './account/MembersPage'
 
-/** Aba inicial: o retorno do cartão do Mercado Pago volta com ?tab=billing. */
-function initialTab(): string {
-  const tab = new URLSearchParams(window.location.search).get('tab')
-  return ['members', 'billing', 'tokens', 'docs', 'audit', 'settings'].includes(tab ?? '')
-    ? (tab as string)
-    : 'members'
+const TABS = ['members', 'billing', 'tokens', 'docs', 'audit', 'settings']
+
+/** Aba pedida na URL: o submenu da sidebar e o retorno do cartão do Mercado
+ *  Pago chegam com ?tab=billing. */
+function tabFromSearch(search: string): string {
+  const tab = new URLSearchParams(search).get('tab')
+  return TABS.includes(tab ?? '') ? (tab as string) : 'members'
 }
 
 export default function AccountPage() {
   const navigate = useNavigate()
+  const { search } = useLocation()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState(initialTab)
+  const [activeTab, setActiveTab] = useState(() => tabFromSearch(search))
+
+  // Com a sidebar navegando sem recarregar, a pagina fica montada e precisa
+  // seguir a troca de ?tab= (Membros -> Plano & Cobranca no mesmo /account).
+  useEffect(() => {
+    setActiveTab(tabFromSearch(search))
+  }, [search])
 
   useEffect(() => {
     const checkAuth = () => {

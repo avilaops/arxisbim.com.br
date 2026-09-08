@@ -183,7 +183,7 @@ export default function BillingPage() {
             Cadastro de cartão pendente
           </div>
           <div style={{ fontSize: '12px', color: 'var(--c-text2)', marginBottom: '12px' }}>
-            Você começou a assinar o plano {pendingCheckout.plan} e o cartão ainda não foi cadastrado no Mercado Pago.
+            Você começou a assinar o plano {plans.find((p) => p.tier === pendingCheckout.plan)?.name ?? pendingCheckout.plan} e o cartão ainda não foi cadastrado no Mercado Pago.
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <a href={pendingCheckout.checkoutUrl} style={{ ...button('primary'), textDecoration: 'none', display: 'inline-block' }}>

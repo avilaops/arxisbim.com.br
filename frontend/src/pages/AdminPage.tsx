@@ -4,7 +4,6 @@ import AppShell from '@/components/layout/AppShell'
 
 export default function AdminPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,7 +23,6 @@ export default function AdminPage() {
           return
         }
 
-        setUser(parsedUser)
         setLoading(false)
       } catch {
         navigate('/login')
