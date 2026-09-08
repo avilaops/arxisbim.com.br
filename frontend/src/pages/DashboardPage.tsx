@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import { dashboardService, type DashboardData } from '@/services/dashboard.service'
@@ -104,6 +104,7 @@ function Skeleton({ width, height, borderRadius = 6 }: { width: string | number;
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const { hash } = useLocation()
   const [user, setUser] = useState<any>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -117,6 +118,14 @@ export default function DashboardPage() {
   const redirectedRef = useRef(false)
 
   // Auth check
+  // "Recentes" no menu e /dashboard#recentes: o conteudo rola dentro do .main,
+  // nao da janela, entao o browser nao rola sozinho ate o id.
+  useEffect(() => {
+    if (hash !== '#recentes') return
+    const alvo = document.getElementById('recentes')
+    if (alvo) alvo.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [hash, data])
+
   useEffect(() => {
     if (redirectedRef.current) return
     try {
@@ -372,6 +381,7 @@ export default function DashboardPage() {
 
         {/* Recent projects */}
         <div
+          id="recentes"
           style={{
             background: 'var(--c-surface2)',
             border: '1px solid var(--c-border)',

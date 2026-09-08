@@ -4,10 +4,7 @@ import {
   Home,
   Clock3,
   Box,
-  CalendarDays,
-  Users,
-  CircleDollarSign,
-  Search,
+  GitCompare,
   ShieldCheck,
   Settings,
   PanelLeftOpen,
@@ -44,7 +41,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
   }, [manageOpen])
 
   const isAdmin = user?.role === 'admin' || user?.role === 'owner'
-  const isDashboard = location.pathname === '/dashboard'
+  const isDashboard = location.pathname === '/dashboard' && location.hash !== '#recentes'
 
   const NavItem = ({ href, icon: Icon, label, active = false }: { href: string; icon: any; label: string; active?: boolean }) => (
     <Link
@@ -126,26 +123,28 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
       {/* Main nav */}
       <div style={{ padding: '12px 0 4px' }}>
         <NavItem href="/dashboard" icon={Home} label="Página inicial" active={isDashboard} />
-        <NavItem href="/dashboard#recentes" icon={Clock3} label="Recentes" />
+        <NavItem href="/dashboard#recentes" icon={Clock3} label="Recentes" active={location.pathname === '/dashboard' && location.hash === '#recentes'} />
       </div>
 
       <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
         <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
           Workspace
         </div>
-        <NavItem href="/app" icon={Box} label="Viewer 3D" />
-        <NavItem href="/app#bim4d" icon={CalendarDays} label="Planejamento 4D" />
-        <NavItem href="/app#meetings" icon={Users} label="Reuniões XR" />
+        <NavItem href="/app" icon={Box} label="Viewer 3D" active={location.pathname === '/app'} />
+        <NavItem href="/app/compare" icon={GitCompare} label="Comparar cenários" active={location.pathname === '/app/compare'} />
+        {/* Planejamento 4D, Reunioes XR, Orcamento 5D e Consulta BIM sairam em
+            08/09/2026: apontavam para /app#... e nada lia o hash. Voltam quando
+            cada tela existir (S24/S26/S15/S31). */}
       </div>
 
-      <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
-        <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
-          Ferramentas
+      {isAdmin && (
+        <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
+          <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
+            Ferramentas
+          </div>
+          <NavItem href="/admin" icon={ShieldCheck} label="Admin" active={location.pathname === '/admin'} />
         </div>
-        <NavItem href="/app#cost" icon={CircleDollarSign} label="Orçamento 5D" />
-        <NavItem href="/app#query" icon={Search} label="Consulta BIM" />
-        {isAdmin && <NavItem href="/admin" icon={ShieldCheck} label="Admin" />}
-      </div>
+      )}
 
       <div style={{ borderBottom: '1px solid var(--c-border)', margin: '4px 0' }}></div>
 

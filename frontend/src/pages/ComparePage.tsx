@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, GitCompare, Layers, Link2, Unlink } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Download, GitCompare, Layers, Link2, Unlink } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
-import ComparisonCanvas from '@/components/comparison/ComparisonCanvas'
+import ComparisonCanvas, { type ComparisonHandle } from '@/components/comparison/ComparisonCanvas'
 import { scenariosService, type Scenario } from '@/services/scenarios.service'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
@@ -23,12 +24,42 @@ interface ModeloResumo {
 export default function ComparePage() {
   const [modelo, setModelo] = useState<ModeloResumo | null>(null)
   const [cenarios, setCenarios] = useState<Scenario[]>([])
-  const [idA, setIdA] = useState('')
-  const [idB, setIdB] = useState('')
-  const [comparando, setComparando] = useState(false)
+  // A e B vivem na URL (?a=&b=): reload, voltar e link compartilhado reabrem a
+  // mesma comparacao. O split so abre com os dois presentes e diferentes.
+  const [params, setParams] = useSearchParams()
+  const idA = params.get('a') ?? ''
+  const idB = params.get('b') ?? ''
+  const comparando = params.get('split') === '1'
+  const setIdA = (id: string) => setParams((p) => { p.set('a', id); p.delete('split'); return p }, { replace: true })
+  const setIdB = (id: string) => setParams((p) => { p.set('b', id); p.delete('split'); return p }, { replace: true })
+  const setComparando = (v: boolean) => setParams((p) => { if (v) p.set('split', '1'); else p.delete('split'); return p })
   const [travado, setTravado] = useState(true)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+  const [exportando, setExportando] = useState(false)
+  const comparacaoRef = useRef<ComparisonHandle>(null)
+
+  const exportarImagem = async () => {
+    setExportando(true)
+    try {
+      const blob = await comparacaoRef.current?.exportarImagem()
+      if (!blob) {
+        setErro('A comparação ainda não terminou de abrir.')
+        return
+      }
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const nome = (s: string) => s.normalize('NFD').replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase()
+      a.href = url
+      a.download = `comparacao-${nome(cenarioA?.name ?? 'a')}-x-${nome(cenarioB?.name ?? 'b')}.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 2000)
+    } finally {
+      setExportando(false)
+    }
+  }
 
   const projectId = localStorage.getItem('arxisvr_project_id') || ''
 
@@ -78,6 +109,17 @@ export default function ComparePage() {
             </div>
             <div className="viewer-toolbar__actions">
               <button
+                className="viewer-upload-button"
+                type="button"
+                onClick={() => void exportarImagem()}
+                disabled={exportando}
+                aria-label="Exportar imagem da comparação"
+                title="Baixa um PNG com os dois lados como estão na tela"
+              >
+                <Download size={17} strokeWidth={1.45} />
+                <span>{exportando ? 'Gerando…' : 'Exportar imagem'}</span>
+              </button>
+              <button
                 className="viewer-icon-button"
                 type="button"
                 onClick={() => setTravado((v) => !v)}
@@ -101,7 +143,11 @@ export default function ComparePage() {
             </div>
           </header>
 
+          {erro && (
+            <p className="compare-picker__aviso" role="alert">{erro}</p>
+          )}
           <ComparisonCanvas
+            ref={comparacaoRef}
             modelId={modelo.id}
             modelName={modelo.originalName}
             scenarioA={cenarioA}
@@ -142,10 +188,10 @@ export default function ComparePage() {
                   ? 'Este projeto ainda não tem cenários. Crie dois no Viewer 3D para comparar.'
                   : 'Este projeto tem só um cenário. Crie outro no Viewer 3D para comparar.'}
               </p>
-              <a className="viewer-upload-button" href="/app">
+              <Link className="viewer-upload-button" to="/app">
                 <Layers size={17} strokeWidth={1.45} />
                 <span>Ir para o Viewer 3D</span>
-              </a>
+              </Link>
             </div>
           ) : (
             <>

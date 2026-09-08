@@ -913,6 +913,14 @@ main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px))
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-link { min-height: 36px; padding: 6px 12px; font-size: 13px; }
 }
+/* Painel Admin: 4 totais e 2 listas lado a lado no desktop */
+.admin-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-duo  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 768px) {
+  .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-duo  { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 370px) {
   /* so em 360: em 375+ duas colunas cabem e tres cards de "0 Total" em coluna
      unica gastavam 660px de tela para dizer quase nada */

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Camera, Check, GitCompare, Layers, Plus, Save, Trash2, X } from 'lucide-react'
 import type { Scenario } from '@/services/scenarios.service'
 
@@ -164,10 +165,10 @@ export default function ScenariosPanel({
 
           {/* S18: comparar só faz sentido com dois cenários. */}
           {scenarios.length >= 2 && (
-            <a className="viewer-panel__link" href="/app/compare">
+            <Link className="viewer-panel__link" to="/app/compare">
               <GitCompare size={16} strokeWidth={1.45} />
               <span>Comparar cenários</span>
-            </a>
+            </Link>
           )}
         </div>
       </aside>

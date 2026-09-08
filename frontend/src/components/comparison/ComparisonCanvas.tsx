@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import { CameraSync } from './cameraSync'
@@ -13,6 +13,15 @@ interface ComparisonCanvasProps {
   travado: boolean
 }
 
+export interface ComparisonHandle {
+  /**
+   * PNG com os dois lados como estão na tela, rotulados. Devolve null se ainda
+   * não há canvas (carregando ou erro). Sem backend: é `drawImage` dos dois
+   * canvas WebGL num canvas 2D e `toBlob`.
+   */
+  exportarImagem: () => Promise<Blob | null>
+}
+
 /**
  * Split-view A|B do S18.
  *
@@ -23,18 +32,51 @@ interface ComparisonCanvasProps {
  * Cada lado aplica o estado do seu cenário (câmera e visibilidade), então a
  * diferença entre os dois viewports é exatamente a diferença entre os cenários.
  */
-export default function ComparisonCanvas({
+const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(function ComparisonCanvas({
   modelId,
   modelName,
   scenarioA,
   scenarioB,
   travado,
-}: ComparisonCanvasProps) {
+}: ComparisonCanvasProps, ref) {
   const hostA = useRef<HTMLDivElement>(null)
   const hostB = useRef<HTMLDivElement>(null)
   const syncRef = useRef<CameraSync | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+
+  useImperativeHandle(ref, (): ComparisonHandle => ({
+    exportarImagem: async () => {
+      const ca = hostA.current?.querySelector('canvas')
+      const cb = hostB.current?.querySelector('canvas')
+      if (!ca || !cb) return null
+      const rotulo = 36
+      const vao = 8
+      const w = ca.width + vao + cb.width
+      const h = Math.max(ca.height, cb.height) + rotulo
+      const saida = document.createElement('canvas')
+      saida.width = w
+      saida.height = h
+      const ctx = saida.getContext('2d')
+      if (!ctx) return null
+      ctx.fillStyle = '#0a0a0a'
+      ctx.fillRect(0, 0, w, h)
+      // Os renderers foram criados com preserveDrawingBuffer para este drawImage
+      // nao vir preto (sem isso o buffer WebGL e descartado apos cada frame).
+      ctx.drawImage(ca, 0, rotulo)
+      ctx.drawImage(cb, ca.width + vao, rotulo)
+      ctx.fillStyle = '#f4f4f5'
+      ctx.font = `600 ${Math.round(rotulo * 0.42)}px Inter, system-ui, sans-serif`
+      ctx.textBaseline = 'middle'
+      ctx.fillText(`A · ${scenarioA.name}`, 12, rotulo / 2)
+      ctx.fillText(`B · ${scenarioB.name}`, ca.width + vao + 12, rotulo / 2)
+      ctx.fillStyle = '#a1a1aa'
+      ctx.font = `${Math.round(rotulo * 0.32)}px Inter, system-ui, sans-serif`
+      ctx.textAlign = 'right'
+      ctx.fillText(`${modelName} · ArxisVR · ${new Date().toLocaleDateString('pt-BR')}`, w - 12, rotulo / 2)
+      return new Promise((ok) => saida.toBlob((b) => ok(b), 'image/png'))
+    },
+  }), [scenarioA.name, scenarioB.name, modelName])
 
   // O cadeado muda sem remontar a cena: só avisa o sync que já existe.
   // A primeira execução é pulada de propósito: ela roda antes das cenas
@@ -89,7 +131,7 @@ export default function ComparisonCanvas({
           const camera = new THREE.PerspectiveCamera(45, largura / altura, 0.05, 100000)
           camera.position.set(10, 10, 10)
 
-          const renderer = new THREE.WebGLRenderer({ antialias: true })
+          const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
           renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
           renderer.setSize(largura, altura)
           host.appendChild(renderer.domElement)
@@ -258,4 +300,6 @@ export default function ComparisonCanvas({
       )}
     </div>
   )
-}
+})
+
+export default ComparisonCanvas
