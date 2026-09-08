@@ -87,3 +87,54 @@ refazer, ver as notas de conta de teste em `S12-PROVA-BROWSER.md`. Um detalhe a
 mais: o token JWT expira em cerca de uma hora, então numa sessão longa é preciso
 refazer o login — e redefinir a senha pelo banco exige mandar o hash bcrypt em
 **arquivo**, porque o `$2b$` é expandido pelo shell.
+
+---
+
+## Rodada 2: 08/09/2026, o que faltava do objetivo do sprint
+
+O marco (split + câmera sincronizada) caiu em 04/09. O objetivo do sprint tinha
+mais dois itens que ficaram de fora: **exportar como imagem** e a comparação
+**sobreviver ao reload**. Fechados hoje, zero backend.
+
+| # | Passo | Resultado |
+|---|---|---|
+| 10 | Menu sem Planejamento 4D, Reuniões XR, Orçamento 5D e Consulta BIM (apontavam para `/app#...`, nada lia o hash); "Comparar cenários" no menu | OK |
+| 11 | Painel de cenários → "Comparar cenários" abre `/app/compare` **sem recarregar** | OK |
+| 12 | A e B escolhidos vão para a URL (`?a=&b=`) | OK |
+| 13 | "Comparar" marca `split=1`; dois canvas, lado B com 790px | OK |
+| 14 | **Reload**: a comparação reabre sozinha, com os mesmos rótulos | OK |
+| 15 | A e B em câmeras diferentes (52% dos pixels) | OK |
+| 16 | Arrastar A move B (59%); cadeado solto, B fica (0,00%) | OK |
+| 17 | **"Exportar imagem"** baixa `comparacao-fachada-frente-x-vista-de-cima.png`, 1226×826, os dois lados rotulados, 52% dos pixels com conteúdo (não veio preto) | OK |
+| 18 | "Trocar cenários" volta ao seletor com A e B ainda marcados | OK |
+
+Em produção, bundle `pages-EbXtaJIJ.js`. Capturas novas em `provas/s18/`:
+`07-escolha-na-url.png`, `08-split-apos-reload.png`, `09-exportado.png` (o PNG
+que o botão gera).
+
+**Detalhe técnico do export.** `drawImage` de um canvas WebGL vem preto se o
+buffer já foi descartado depois do frame; os dois renderers do split passaram a
+usar `preserveDrawingBuffer: true`. O PNG é montado num canvas 2D com os
+rótulos "A · nome" e "B · nome", o modelo e a data.
+
+## O que continua fora, e por quê
+
+**"Diferenças visuais destacadas"** (o terceiro item do objetivo) não foi feito
+porque **não há diferença de visibilidade para destacar**: o viewer vivo não
+tem nenhuma ação que oculte elemento (sem seleção, sem raycaster, sem filtro),
+então `metadata.hidden` é `[]` em todo cenário de produção. Além disso o
+`hidden` é guardado por `id` de objeto three, que é um contador de runtime e
+muda a cada carga; e o `web-ifc-three` entrega o IFC como **um** mesh, então
+"ocultar um mesh" seria ocultar o prédio inteiro. Um diff sobre esse estado
+seria um painel dizendo "sem diferenças" para sempre: a mesma falsa affordance
+dos quatro itens de menu que saíram hoje.
+
+Para o diff existir de verdade, os cenários precisam poder diferir em algo além
+da câmera: visibilidade por **categoria IFC** (paredes, laje, cobertura,
+esquadrias) via subsets por `expressID`, que o `web-ifc-three` já faz. É uma
+fatia do S10 (filtros do viewer), frontend puro, e é o que transforma "duas
+câmeras do mesmo prédio" em "com cobertura × sem cobertura". Decisão em aberto.
+
+Conta usada: a de auditoria de 08/09 (`nicolasrosaab+auditoria-debito@`),
+projeto "Auditoria debito tecnica", cenários "Fachada frente" e "Vista de
+cima". Roteiro: `scratchpad/ui/validar-s18.mjs`.

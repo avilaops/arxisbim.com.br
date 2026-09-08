@@ -19,7 +19,14 @@ Três coisas que a documentação antiga ainda listava como abertas, e não são
 
 ## 2. Aberto, por ordem de valor
 
-### 2.1 S18 ★ — comparação visual (o próximo marco)
+### 2.1 ~~S18 ★ — comparação visual~~ — ATINGIDO 04/09, completado 08/09
+
+> Marco provado em 04/09 (split + câmera sincronizada). Em 08/09 entraram
+> exportar imagem e A/B na URL (reload). Falta só "diferenças destacadas", que
+> depende de os cenários poderem diferir em visibilidade (fatia do S10): ver
+> `S18-PROVA-BROWSER.md`, "O que continua fora". O texto abaixo é o
+> levantamento original.
+
 
 O mais valioso, e o mais barato agora que o S12 caiu: **já existe cenário salvo
 de verdade para comparar**.
@@ -120,7 +127,7 @@ Estão espalhadas pelos commits; ficam juntas aqui:
 
 ## 4. Recomendação
 
-**S18 ★.** É o próximo marco, tem peça órfã para aproveitar
+**S18 ★ caiu (04/09) e foi completado (08/09).** O texto original: era o próximo marco, tinha peça órfã para aproveitar
 (`comparison/ComparisonPage.ts`, `ScenarioPicker.ts`) e cenário salvo de verdade
 para comparar. O resto é dívida sem urgência ou decisão de negócio (2.5).
 

@@ -5,6 +5,7 @@
 **Backend:** parcial · **Interface:** nao  
 **Verificado em:** 04/09/2026 — provado em browser real, 9/9 passos.  
 **Prova:** `documentation/S18-PROVA-BROWSER.md`
+**Rodada 2 (08/09/2026):** exportar imagem ✅ · comparação sobrevive ao reload (A/B na URL) ✅ · diferenças destacadas ⏸ (não há estado de visibilidade para diferir; ver a prova, "O que continua fora").
 
 > **Zero backend novo.** O `GET /scenarios/:idA/diff/:idB`, que o
 > PENDENCIAS.md apontava como "o backend do S18", devolve `schedule` e `cost`:
