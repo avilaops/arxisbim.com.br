@@ -225,7 +225,16 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: 'var(--c-text2)' }}>
+          {/* A rota /forgot-password e a tela ja existiam, mas nao havia link
+              nenhum apontando para elas: quem esquecia a senha ficava sem saida.
+              Fica logo abaixo do botao, que e onde se procura. */}
+          <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '13px' }}>
+            <a href="/forgot-password" style={{ color: 'var(--c-text2)', textDecoration: 'none' }}>
+              Esqueci minha senha
+            </a>
+          </div>
+
+          <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '13px', color: 'var(--c-text2)' }}>
             Sem conta?{' '}
             <a href="/register" style={{ color: 'var(--c-blue)', textDecoration: 'none', fontWeight: 600 }}>
               Criar conta

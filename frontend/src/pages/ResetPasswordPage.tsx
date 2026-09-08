@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -75,7 +76,22 @@ export default function ResetPasswordPage() {
         return
       }
 
-      await new Promise((r) => setTimeout(r, 1000))
+      // Antes isto era `await new Promise(setTimeout)` seguido de sucesso: a
+      // senha NUNCA era trocada no servidor, e o usuario voltava para o login
+      // com a senha antiga achando que tinha redefinido.
+      const response = await fetch(buildApiV1Url('/auth/reset-password'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // O backend espera `newPassword`, nao `password`.
+        body: JSON.stringify({ token, newPassword: password }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setError(data?.message || data?.error || 'Não foi possível redefinir a senha. O link pode ter expirado.')
+        setLoading(false)
+        return
+      }
+
       setSuccess(true)
       setTimeout(() => navigate('/login'), 2000)
     } catch (err: any) {

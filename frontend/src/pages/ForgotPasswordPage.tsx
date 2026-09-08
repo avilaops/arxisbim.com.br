@@ -1,21 +1,35 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setErro(null)
 
+    // Antes isto era `await new Promise(setTimeout)` seguido de sucesso: a tela
+    // dizia "Email enviado" sem que nada saisse do servidor. Agora chama a API.
     try {
-      await new Promise((r) => setTimeout(r, 800))
+      const response = await fetch(buildApiV1Url('/auth/forgot-password'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setErro(data?.message || data?.error || 'Não foi possível enviar o e-mail.')
+        return
+      }
       setSent(true)
     } catch {
-      alert('Erro ao enviar email')
+      setErro('Falha de conexão. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -111,6 +125,23 @@ export default function ForgotPasswordPage() {
           <p style={{ fontSize: '14px', color: 'var(--c-text2)', marginBottom: '28px' }}>
             Digite seu email e enviaremos um link para resetar sua senha
           </p>
+
+          {erro && (
+            <div
+              role="alert"
+              style={{
+                marginBottom: '16px',
+                padding: '12px 14px',
+                borderRadius: 'var(--r)',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#fca5a5',
+                fontSize: '13px',
+              }}
+            >
+              {erro}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '24px' }}>
