@@ -6,6 +6,31 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [signupBtnVisible, setSignupBtnVisible] = useState(false)
 
+  // A landing precisa rolar, e o CSS global do app trava o body (layout SPA
+  // com container interno). `lp-page` no <html> devolve o fluxo normal do
+  // documento so enquanto esta pagina esta montada. Sem isto, nada abaixo da
+  // dobra era alcancavel por gesto: medido em producao em 08/09/2026.
+  useEffect(() => {
+    document.documentElement.classList.add('lp-page')
+    return () => document.documentElement.classList.remove('lp-page')
+  }, [])
+
+  // Drawer: trava o scroll da pagina e fecha no ESC. A classe vai no <html>
+  // (nao so no body) porque o Safari iOS ignora overflow:hidden do body quando
+  // ha position:fixed na tela.
+  useEffect(() => {
+    const root = document.documentElement
+    if (mobileMenuOpen) root.classList.add('lp-menu-open')
+    else root.classList.remove('lp-menu-open')
+    if (!mobileMenuOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      root.classList.remove('lp-menu-open')
+    }
+  }, [mobileMenuOpen])
+
   useEffect(() => {
     const handleScroll = () => {
       setSignupBtnVisible(window.scrollY > 200)
@@ -44,7 +69,6 @@ export default function LandingPage() {
               alignItems: 'center',
               gap: '10px',
               fontWeight: 700,
-              fontSize: '20px',
               color: 'var(--c-text)',
               letterSpacing: '-0.5px',
             }}
@@ -59,7 +83,6 @@ export default function LandingPage() {
               display: 'flex',
               gap: '28px',
               alignItems: 'center',
-              '@media (max-width: 760px)': { display: 'none' },
             }}
           >
             <a href="#features" style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}>
@@ -107,51 +130,75 @@ export default function LandingPage() {
             <button
               id="hamburger-btn"
               className="nav-hamburger"
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="lp-drawer"
               style={{
+                // display:none aqui e o que ESCONDE no desktop; no mobile a
+                // regra .nav-hamburger { display:flex !important } do CSS vence.
                 display: 'none',
-                flexDirection: 'column',
-                gap: '5px',
-                padding: '8px',
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',
-                '@media (max-width: 760px)': { display: 'flex' },
+                color: 'var(--c-text)',
               }}
             >
-              <span style={{ display: 'block', width: '22px', height: '2px', background: '#000', borderRadius: '2px' }}></span>
-              <span style={{ display: 'block', width: '22px', height: '2px', background: '#000', borderRadius: '2px' }}></span>
-              <span style={{ display: 'block', width: '22px', height: '2px', background: '#000', borderRadius: '2px' }}></span>
+              {mobileMenuOpen ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <nav
-          className="mobile-nav"
-          style={{
-            display: 'flex',
-            position: 'fixed',
-            inset: 0,
-            top: '68px',
-            zIndex: 49,
-            background: 'rgba(255,255,255,0.97)',
-            backdropFilter: 'blur(20px)',
-            padding: '24px',
-            flexDirection: 'column',
-            gap: '8px',
-          }}
-        >
-          <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--c-text)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
-            Recursos
-          </a>
-          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '16px', fontWeight: 500, color: 'var(--c-text)', border: 'none', background: 'none', textDecoration: 'none', cursor: 'pointer', transition: 'var(--transition)' }}>
-            Planos
-          </a>
+      {/* Drawer mobile. Sempre no DOM (data-open anima); fecha pelo X, pelo
+          backdrop, pelo ESC (efeito acima) e ao escolher um item. */}
+      <div
+        id="lp-drawer"
+        className="lp-drawer"
+        data-open={mobileMenuOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        aria-hidden={!mobileMenuOpen}
+      >
+        <div className="lp-drawer__backdrop" onClick={() => setMobileMenuOpen(false)} />
+        <nav className="lp-drawer__panel" aria-label="Navegação">
+          <div className="lp-drawer__head">
+            <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Menu</span>
+            <button type="button" className="lp-drawer__close" onClick={() => setMobileMenuOpen(false)} aria-label="Fechar menu">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+
+          <div className="lp-drawer__list">
+            {[
+              ['#features', 'Recursos'],
+              ['#selo', 'Para compradores'],
+              ['#usecases', 'Exemplos'],
+              ['#cases', 'Casos de uso'],
+              ['#pricing', 'Planos'],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="lp-drawer__link" onClick={() => setMobileMenuOpen(false)}>
+                {label}
+              </a>
+            ))}
+          </div>
+
+          <div className="lp-drawer__cta">
+            <a href="/register" className="lp-drawer__btn lp-drawer__btn--primary" onClick={() => setMobileMenuOpen(false)}>
+              Criar conta grátis →
+            </a>
+            <a href="/login" className="lp-drawer__btn lp-drawer__btn--ghost" onClick={() => setMobileMenuOpen(false)}>
+              Entrar
+            </a>
+          </div>
         </nav>
-      )}
+      </div>
 
       <main id="main-content">
         {/* HERO SECTION */}
@@ -159,7 +206,8 @@ export default function LandingPage() {
           className="hero"
           style={{
             position: 'relative',
-            padding: '80px 0 60px',
+            // overflow:hidden aqui NAO esconde erro de layout: contem o bleed
+            // decorativo dos radial-gradients absolutos logo abaixo.
             overflow: 'hidden',
           }}
         >
@@ -184,46 +232,34 @@ export default function LandingPage() {
                 borderRadius: '999px',
                 border: '1px solid var(--border-color)',
                 background: 'rgba(255,255,255,0.6)',
-                fontSize: '13px',
                 fontWeight: 500,
                 color: 'var(--c-text)',
-                marginBottom: '24px',
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)', boxShadow: '0 0 0 4px rgba(52, 199, 89, 0.15)' }}></span>
-              BIM · 4D/5D · Realidade Estendida · IA
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)', boxShadow: '0 0 0 4px rgba(52, 199, 89, 0.15)', flexShrink: 0 }}></span>
+              <span className="eyebrow-full">BIM · 4D/5D · Realidade Estendida · IA</span>
+              <span className="eyebrow-short">BIM · 4D/5D · XR · IA</span>
             </div>
 
             <h1
               className="h1"
               style={{
-                fontSize: 'clamp(34px, 5.5vw, 58px)',
                 fontWeight: 700,
-                letterSpacing: '-0.6px',
-                lineHeight: 1.1,
-                marginBottom: '20px',
                 color: 'var(--c-text)',
               }}
             >
               A plataforma BIM com <span style={{ background: 'linear-gradient(90deg, #007AFF 0%, #C4B5F4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Copilot de IA</span>
-              <br />e Realidade Estendida no navegador.
+              <span className="h1-br"><br /></span> e Realidade Estendida<span className="h1-nav"> no navegador</span>.
             </h1>
 
             <p
               className="lead"
-              style={{
-                fontSize: 'clamp(16px, 1.5vw, 18px)',
-                color: 'var(--text-secondary)',
-                maxWidth: '680px',
-                margin: '0 auto 36px',
-                lineHeight: 1.55,
-              }}
             >
               Carregue modelos IFC em escala 1:1, coordene disciplinas, simule cronograma 4D, revise clashes e custos 5D, e visite o projeto em VR ou AR, tudo em uma única plataforma, sem instalação.
             </p>
 
-            <div className="hero-cta" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
+            <div className="hero-cta">
               <a
                 href="/register"
                 className="btn btn-primary btn-lg"
@@ -231,7 +267,6 @@ export default function LandingPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '14px 26px',
                   borderRadius: '50px',
                   fontWeight: 600,
                   fontSize: '15px',
@@ -253,7 +288,6 @@ export default function LandingPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '14px 26px',
                   borderRadius: '50px',
                   fontWeight: 600,
                   fontSize: '15px',
@@ -272,7 +306,7 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <div className="hero-meta" style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', fontSize: '13.5px', color: 'var(--text-secondary)' }}>
+            <div className="hero-meta">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ color: 'var(--accent-green)', fontWeight: 700, fontSize: '16px' }}>✓</span> IFC 2x3, IFC4, IFC4.3
               </span>
@@ -364,7 +398,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer style={{ padding: '56px 0 32px', borderTop: '1px solid var(--border-color)', marginTop: '80px' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(3, 1fr)', gap: '32px', marginBottom: '36px', textAlign: 'left' }}>
+          <div className="foot-grid">
             <div className="foot-brand">
               <a
                 className="brand"
