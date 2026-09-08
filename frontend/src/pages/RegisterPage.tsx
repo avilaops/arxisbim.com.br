@@ -79,7 +79,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div
+    <div className="auth-split"
       style={{
         display: 'flex',
         minHeight: '100vh',
@@ -93,7 +93,7 @@ export default function RegisterPage() {
         path="/register"
       />
       {/* Left side - Branding */}
-      <div
+      <div className="auth-brand"
         style={{
           flex: 1,
           display: 'flex',
@@ -127,7 +127,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right side - Register Form */}
-      <div
+      <div className="auth-form"
         style={{
           flex: 1,
           display: 'flex',

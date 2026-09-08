@@ -84,6 +84,37 @@ elemento errado.
   `tsconfig.json` (`TS5103: Invalid value for '--ignoreDeprecations'`). Não é
   desta mudança. Fica em dívida.
 
+## 5b. Segunda rodada, depois dos prints do iPhone real
+
+O Nicolas testou no aparelho e mandou três telas. Duas estavam erradas.
+
+**CTA band ("Pronto para ver seu projeto…"): regressão minha.** O `<h2>` fica
+dentro de um card claro (`rgba(255,255,255,0.7)`). Na varredura de contraste de
+hoje cedo troquei todo `#000000` por `var(--c-text)`; recuperei dois botões de
+fundo branco, e este título passou. Estava certo antes; eu deixei branco sobre
+cinza-claro. Voltou para `#0a0a0a` (**9,8:1** medido). Os botões do card, que
+sempre foram lado a lado apertados no mobile, agora empilham full-width, como
+os do hero. E eu tinha validado só o hero apesar do prompt pedir a landing
+inteira: falha de cobertura, corrigida com o item 12 do validador.
+
+**Login (e registro, esqueci, redefinir): fora do escopo, mesma doença.** As
+quatro telas têm o split desktop (brand | form) em `flex: 1` inline, sem regra
+mobile: em 390px o formulário ocupava metade da tela e o placeholder saía
+cortado ("seu@email.con"). Marquei `.auth-split` / `.auth-brand` / `.auth-form`
+nas quatro por script (cada uma tem exatamente dois painéis `flex: 1`, nessa
+ordem) e em ≤760 o brand some e o form ocupa a tela. Input passou de ~270 para
+**350px**. Dois `!important` foram necessários porque `display` e `padding`
+estão inline nessas telas, o mesmo recurso que o código já usava para
+`.nav-links`.
+
+**Os links do menu não são "quebrados": o conteúdo foi perdido.** `#selo`,
+`#usecases` e `#cases` existiam em `frontend/index.html` e `#features` e
+`#pricing` em `frontend/arxisvr-build.html` **antes** da conversão HTML→TSX de
+24/06 (`8c11b92^`). A conversão não trouxe as cinco seções, e como a página
+parou de rolar no mesmo dia, ninguém desceu para notar. Recuperar é um
+trabalho de conteúdo (cinco seções do HTML antigo para React), não um bug fix:
+**decisão do Nicolas**. Removê-los esconderia a perda, então ficaram.
+
 ## 6. Dívida técnica encontrada
 
 1. **`tsconfig.json` do frontend** com `--ignoreDeprecations` inválido: o

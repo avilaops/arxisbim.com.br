@@ -329,7 +329,6 @@ export default function LandingPage() {
             <div
               className="cta-band"
               style={{
-                padding: '64px 32px',
                 borderRadius: '24px',
                 background: 'rgba(255,255,255,0.7)',
                 border: '1px solid var(--border-color)',
@@ -338,13 +337,13 @@ export default function LandingPage() {
                 backdropFilter: 'blur(20px)',
               }}
             >
-              <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--c-text)' }}>
+              <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '12px', color: '#0a0a0a' /* card claro: texto escuro */ }}>
                 Pronto para ver seu projeto em outra dimensão?
               </h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', fontSize: '15px' }}>
                 Crie sua conta gratuita e suba um IFC em menos de 2 minutos. Sem instalação, sem cartão de crédito.
               </p>
-              <div className="cta-row" style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div className="cta-row">
                 <a
                   href="/register"
                   className="btn btn-primary btn-lg"
@@ -352,7 +351,6 @@ export default function LandingPage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    padding: '14px 26px',
                     borderRadius: '50px',
                     fontWeight: 600,
                     fontSize: '15px',
@@ -374,7 +372,6 @@ export default function LandingPage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    padding: '14px 26px',
                     borderRadius: '50px',
                     fontWeight: 600,
                     fontSize: '15px',

@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div
+      <div className="auth-split"
         style={{
           display: 'flex',
           minHeight: '100vh',
@@ -92,14 +92,14 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div
+    <div className="auth-split"
       style={{
         display: 'flex',
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0a0a0a 0%, #111111 100%)',
       }}
     >
-      <div
+      <div className="auth-brand"
         style={{
           flex: 1,
           display: 'flex',
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
 
-      <div
+      <div className="auth-form"
         style={{
           flex: 1,
           display: 'flex',

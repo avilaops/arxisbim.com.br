@@ -550,6 +550,17 @@ html.lp-page.lp-menu-open body {
 }
 .foot-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; margin-bottom: 36px; text-align: left; }
 
+/* --- CTA band (valores desktop sairam do inline) --- */
+.cta-band { padding: 64px 32px; }
+.cta-row  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cta-row > a { padding: 14px 26px; }
+
+/* --- Telas de auth (login, registro, esqueci, redefinir) ---
+   Desktop: dois paineis lado a lado (brand | form), como sempre foi.
+   Mobile: o brand some e o form ocupa a tela. Os dois `!important` sao
+   necessarios porque display e padding estao inline nessas telas, e a
+   regra do codigo ja usa o mesmo recurso para .nav-links/.nav-hamburger. */
+
 /* --- Drawer mobile --- */
 .lp-drawer {
   position: fixed; inset: 0; z-index: 60;
@@ -656,6 +667,17 @@ html.lp-page.lp-menu-open body {
   }
 
   .foot-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+
+  .cta-band { padding: 40px 20px; }
+  .cta-row  { flex-direction: column; gap: 10px; }
+  .cta-row > a { width: 100%; justify-content: center; min-height: 50px; padding: 0 20px; }
+
+  .auth-split { flex-direction: column; }
+  .auth-brand { display: none !important; }
+  .auth-form  {
+    padding: calc(28px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 100dvh;
+  }
 }
 
 @media (max-width: 400px) {

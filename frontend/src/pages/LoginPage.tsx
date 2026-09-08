@@ -69,7 +69,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div
+    <div className="auth-split"
       style={{
         display: 'flex',
         minHeight: '100vh',
@@ -83,7 +83,7 @@ export default function LoginPage() {
         path="/login"
       />
       {/* Left side - Branding */}
-      <div
+      <div className="auth-brand"
         style={{
           flex: 1,
           display: 'flex',
@@ -105,7 +105,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Login Form */}
-      <div
+      <div className="auth-form"
         style={{
           flex: 1,
           display: 'flex',
