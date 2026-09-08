@@ -74,6 +74,31 @@ foram atualizados para `178.105.82.48` pela API do Cloudflare, com a Global Key.
 Seguem **dns-only** (sem proxy laranja), que é o que o Caddy precisa para o
 HTTP-01.
 
+## O e-mail estava mudo (corrigido no mesmo dia)
+
+O Nicolas se registrou pela tela e caiu em **"Token de verificação não
+encontrado"**. A causa era minha: no `.env` da migração eu tinha posto
+`EMAIL_PROVIDER=log`, e sem `SMTP_*` o `EmailService` cai no modo log, que só
+escreve no log do container. **O e-mail nunca saía**, então a conta nascia presa
+em `EMAIL_NOT_VERIFIED` sem caminho de volta pela tela.
+
+Detalhe: `EMAIL_PROVIDER` **nem é lido** pelo código. A escolha é por presença —
+`RESEND_API_KEY` primeiro, depois `SMTP_HOST/USER/PASSWORD`, senão log.
+
+Corrigido apontando para o **mail da própria casa**, que roda nesta mesma
+máquina (`172.17.0.1:587`, banner `mail.avilaops.com`), com a caixa
+`no-reply@avilaops.com`. Sem Resend, por decisão do Nicolas.
+
+**A armadilha do scrypt:** o hash tem `$` como separador (`$scrypt$N=32768...`),
+e passar isso por interpolação de shell **come os cifrões**. Gravei um hash
+corrompido (`=32768,r=8...`) e a autenticação recusava sem dizer por quê. A
+saída foi gerar o hash com o próprio `dist/lib/password.js` do mail e gravar via
+arquivo `.sql` com dollar-quoting, sem o shell no meio.
+
+Provado ponta a ponta depois: registro → e-mail sai por SMTP → `verify-email`
+com o token real → login devolve token. O campo do corpo é `verificationToken`,
+não `token`.
+
 ## O que NÃO veio junto
 
 **Os dados.** O banco anterior ficou no orquestrador inacessível, e o dump de
