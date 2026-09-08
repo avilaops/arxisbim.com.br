@@ -2,8 +2,10 @@
 #
 # Duas etapas porque `bcrypt` é nativo: a primeira precisa de python3/make/g++
 # para compilar quando não há prebuild, a segunda fica só com o runtime. As duas
-# saem do mesmo `node:20-slim`, então o .node compilado na etapa de build roda
-# sem mudança de ABI na etapa final.
+# saem do mesmo `node:24-slim`, então o .node compilado na etapa de build roda
+# sem mudança de ABI na etapa final. A versão acompanha o `engines` do
+# package.json (>=24): manter em 20 fazia a imagem divergir do que o projeto
+# declara e do que o CI usa.
 #
 # O build usa esbuild (`build.mjs`) com `bundle: false`: cada .ts vira um .js e
 # os imports continuam apontando para `node_modules`. Por isso a imagem final
@@ -12,7 +14,7 @@
 # As migrations vão junto: `runMigrations()` lê `../migrations` a partir de
 # `dist/` no boot, então `dist` e `migrations` precisam ser irmãos em /app.
 
-FROM node:20-slim AS build
+FROM node:24-slim AS build
 WORKDIR /app
 
 RUN apt-get update \
@@ -25,7 +27,7 @@ RUN npm ci
 COPY . .
 RUN npm run build && npm prune --omit=dev
 
-FROM node:20-slim
+FROM node:24-slim
 WORKDIR /app
 ENV NODE_ENV=production
 

@@ -1,0 +1,53 @@
+# ArxisVR no servidor de APLICACOES (178.105.82.48).
+#
+# Diferente do compose antigo (deploy/docker-compose.yml, escrito para o
+# orquestrador), porque a maquina e outra e as restricoes tambem:
+#
+#   - Nao ha container de banco. O host ja roda PostgreSQL 18.6 nativo, a mesma
+#     versao que validamos, e subir um segundo Postgres so para o ArxisVR
+#     custaria ~60 MB de RAM numa maquina com menos de 800 MB livres. O banco
+#     `arxisvr` e o usuario de mesmo nome foram criados la.
+#
+#   - As portas SAO publicadas em 127.0.0.1. Aqui o Caddy roda nativo no host
+#     (nao em container), entao ele nao alcanca a rede docker por nome de
+#     servico: alcanca por porta local. Ficam fechadas para fora pelo firewall,
+#     porque o bind e 127.0.0.1 e nao 0.0.0.0.
+#
+#   - `host.docker.internal` precisa de `extra_hosts`, que e como os outros
+#     projetos desta maquina (Odoo, lojas) falavam com o Postgres do host.
+#
+# RAM e o recurso escasso aqui: 35 containers, ~770 MB livres e swap em uso.
+# Por isso a imagem da API e construida na maquina do Nicolas e enviada pronta
+# (docker save | ssh docker load), em vez de compilar no servidor.
+
+services:
+  api:
+    image: arxisvr-api:local
+    container_name: arxisvr-api
+    restart: unless-stopped
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3101:3001"
+    volumes:
+      # Driver de storage local. Sem este volume os IFCs enviados somem no
+      # primeiro deploy.
+      - uploads:/app/uploads
+
+  web:
+    image: caddy:2-alpine
+    container_name: arxisvr-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3102:80"
+    volumes:
+      - ./web/dist:/srv:ro
+      - ./web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - web-data:/data
+      - web-config:/config
+
+volumes:
+  uploads:
+  web-data:
+  web-config:
