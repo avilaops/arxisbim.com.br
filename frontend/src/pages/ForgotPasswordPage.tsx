@@ -49,14 +49,25 @@ export default function ForgotPasswordPage() {
       >
         <div style={{ width: '100%', maxWidth: '360px', textAlign: 'center', color: '#fff' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>✉️</div>
+          {/* A API nao revela se a conta existe, de proposito: dizer "esse e-mail
+              nao esta cadastrado" entrega a lista de clientes para quem estiver
+              testando enderecos. Entao a tela NAO pode afirmar que enviou, senao
+              mente quando a conta nao existe, que foi o que aconteceu em
+              08/09/2026: a tela garantiu o envio de um e-mail que nunca sairia. */}
           <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--c-text)' }}>
-            Email enviado
+            Confira seu e-mail
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--c-text2)', marginBottom: '20px' }}>
-            Enviamos um link para resetar sua senha para <strong>{email}</strong>
+            Se existir uma conta com <strong>{email}</strong>, enviamos um link para
+            redefinir a senha.
           </p>
           <p style={{ fontSize: '13px', color: 'var(--c-text3)', marginBottom: '24px' }}>
-            Verifique seu email e clique no link para continuar. Se não receber em 5 minutos, verifique a pasta de spam.
+            Não chegou em 5 minutos? Veja a pasta de spam. Se ainda assim não vier,
+            provavelmente não existe conta com esse e-mail:{' '}
+            <a href="/register" style={{ color: 'var(--c-blue)', textDecoration: 'none', fontWeight: 600 }}>
+              criar conta
+            </a>
+            .
           </p>
           <button
             onClick={() => navigate('/login')}
