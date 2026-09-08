@@ -1,75 +1,86 @@
-# Incidente: orquestrador 23.88.60.193 fora do ar
+# Incidente: orquestrador inacessível (IP mudou + VPN)
 
 **Detectado:** 08/09/2026, ao revalidar o S12 antes de seguir para o S18.
-**Estado:** **não resolvido**. Depende de acesso ao painel da Hetzner.
+**Causa encontrada:** o servidor **não caiu**. Ele foi reconstruído: mudou de IP
+e passou a exigir VPN. As credenciais que eu tinha deixaram de valer.
+**Estado:** **bloqueado**, depende de uma chave SSH que só o Nicolas pode dar.
 
 ---
 
-## O que está fora
+## O que aconteceu
 
-O servidor **orquestrador** (`23.88.60.193`) não responde a nada:
+O que parecia queda era outra coisa. O painel da Hetzner mostra os dois
+servidores **verdes**, e o orquestrador com **IP novo**:
 
-| Verificação | Resultado |
-|---|---|
-| `ping` | 100% de perda (2 de 2) |
-| Porta 22 (SSH) | fechada — `Connection timed out` |
-| Porta 80 | fechada |
-| Porta 443 | fechada |
+| Servidor | IP no painel | IP que eu usava |
+|---|---|---|
+| orchestrator | **62.238.119.61** | ~~23.88.60.193~~ (morto) |
+| aplications | 178.105.82.48 | 178.105.82.48 (ok) |
 
-Não é serviço travado nem container caído: **a máquina não responde no nível de
-rede.** Container parado deixaria o SSH de pé.
+O IP antigo não responde a nada, o que explica o diagnóstico inicial de "máquina
+fora do ar". Ela não está fora: **é outra máquina**.
 
-## O que isso derruba
+## Como se chega nele agora
 
-Tudo o que vive nesse servidor, não só o ArxisVR:
+O acesso público foi fechado. Em `62.238.119.61` as portas 22, 80 e 443 estão
+**fechadas** — só o WireGuard (51820) atende.
 
-- `arxisvr.avilaops.com`, `api.arxisvr.avilaops.com` (000)
-- `n8n.avilaops.com` (000) — **todos os fluxos de automação da casa**
-- Grafana, Loki, Prometheus, Alertmanager, blackbox (observabilidade inteira)
+A configuração está em `C:/Users/nicol/.wireguard/orchestrator.conf`:
 
-## O que NÃO está fora
+```
+Address    = 10.66.0.1/24        (esta máquina, no túnel)
+Endpoint   = 62.238.119.61:51820
+AllowedIPs = 10.66.0.10/32       (o servidor, no túnel)
+```
 
-O problema é isolado a essa máquina:
+**O túnel está ativo** e funciona: `10.66.0.10` responde a ping, e as portas 22,
+80 e 443 estão abertas por ali. Ou seja, o servidor está vivo e servindo.
 
-- Minha rede local funciona: `github.com` responde 200.
-- O **outro** servidor Hetzner (`178.105.82.48`, produção) está de pé:
-  responde a ping, e `lojas.avilaops.com` devolve 200.
+## O que bloqueia
 
-Ou seja: não é a Hetzner inteira, nem DNS, nem Cloudflare. É esta máquina.
+**Nenhuma chave que eu tenho é aceita.** Testadas em `root`, `avila` e `deploy`,
+todas com `Permission denied (publickey)`:
 
-## Ironia registrada
+- `~/.ssh/hetzner_avilaops` — a que funcionava no servidor antigo
+- `C:/Users/nicol/Downloads/Avila_Ops.pem`
 
-A observabilidade que avisaria da queda **mora na máquina que caiu**. O
-Alertmanager, o Prometheus e o blackbox_exporter estão todos em
-`/opt/observabilidade`, no mesmo host. Não há como esse conjunto alertar sobre a
-própria morte.
+Como a máquina foi reconstruída, ela tem um par de chaves novo, e a minha
+pública não está no `authorized_keys` dela.
 
-Vale considerar um monitor externo (uptime de terceiro, ou um check no
-`178.105.82.48` apontando para cá), porque hoje a queda só é descoberta por
-alguém tentando usar o sistema.
+## O que o Nicolas precisa fazer
 
-## O que fazer
+Uma das duas, e é rápido:
 
-1. Abrir o **painel da Hetzner** e ver o estado da máquina. As causas prováveis,
-   em ordem: servidor desligado/reiniciando, disco cheio travando o boot, ou
-   bloqueio por billing.
-2. Se estiver de pé no painel, usar o **console** (KVM/rescue) — sem SSH é o
-   único caminho.
-3. Ao voltar, conferir que os containers subiram sozinhos: todos são
-   `restart: unless-stopped`, então devem voltar sem intervenção. Conferir
-   `arxisvr-db`, `arxisvr-api`, `arxisvr-web` e o `observabilidade-caddy-1`.
-4. **Atenção ao Postgres 18:** se a queda foi por falta de energia/disco, vale
-   olhar o log do `arxisvr-db` antes de confiar no banco. O volume do PG16
-   (`arxisvr_db-data-pg16-rollback`) e o dump de 02/09 em
-   `/opt/arxisvr/backups/` continuam lá como rede de segurança.
+1. **Autorizar a chave que já existe** — colar o conteúdo de
+   `C:/Users/nicol/.ssh/hetzner_avilaops.pub` no `/root/.ssh/authorized_keys` do
+   servidor (pelo console da Hetzner, ou de onde já houver acesso).
+2. **Ou passar a chave nova**, dizendo o caminho dela e o usuário certo.
+
+## O que muda no diagnóstico anterior
+
+A versão anterior deste documento dizia "servidor fora do ar" e sugeria olhar
+power/billing no painel. Estava errado no motivo, embora certo no efeito. Fica o
+aprendizado: **`ping` que falha não prova que a máquina morreu** — pode ser que
+o endereço tenha deixado de ser dela.
+
+Também some a ironia registrada antes (a observabilidade não avisou porque
+morreu junto): ela não morreu, mudou de endereço com o resto.
+
+## Sobre apagar a observabilidade
+
+Decidido em 08/09: **apagar Grafana, Loki, Prometheus e Alertmanager**, porque
+com 5 clientes ativos é custo sem retorno. Não dá para executar agora, por falta
+de acesso. Quando houver, some junto o consumo de RAM daquele conjunto, que era
+o argumento contra hospedar mais coisa ali.
+
+No servidor de aplicações (`178.105.82.48`) só há um `node_exporter` (12 MB),
+que não vale o trabalho de remover.
 
 ## Consequência para o roadmap
 
-**O S18 não pode começar** e o S12 não pode ser revalidado enquanto isso durar:
-os dois exigem prova em browser na aplicação publicada, e não há aplicação
-publicada agora.
+**O S18 não começa** e o S12 não é revalidado enquanto durar: os dois exigem
+prova em browser na aplicação publicada, e `arxisvr.avilaops.com` responde 000.
 
-O S12 ★ **permanece atingido**: foi provado em 03/09 em browser real, com as
-capturas versionadas em `documentation/provas/s12/` e o relato em
-`S12-PROVA-BROWSER.md`. Esta queda é de infraestrutura e não invalida aquela
-prova, mas convém repetir a verificação quando o servidor voltar.
+O S12 ★ **permanece atingido**: provado em 03/09 em browser real, com capturas
+em `documentation/provas/s12/` e relato em `S12-PROVA-BROWSER.md`. Esta
+indisponibilidade é de infraestrutura e não invalida aquela prova.
