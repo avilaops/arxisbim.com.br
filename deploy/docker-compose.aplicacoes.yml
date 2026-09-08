@@ -16,6 +16,14 @@
 #   - `host.docker.internal` precisa de `extra_hosts`, que e como os outros
 #     projetos desta maquina (Odoo, lojas) falavam com o Postgres do host.
 #
+#   - A sub-rede e FIXA em 172.23.0.0/16, e isso nao e detalhe. O firewall
+#     libera a 5432 so para 172.16.0.0/12; se o Docker escolher a faixa
+#     sozinho, ele pega 192.168.x e a conexao com o Postgres morre em
+#     CONNECT_TIMEOUT, que foi o que aconteceu na primeira subida.
+#     A /24 dentro de 172.16 e de proposito: os /16 de 172.17 a 172.30 ja estao
+#     todos tomados por outros projetos desta maquina, e 172.16.0.0/24 (a
+#     rede `edge`) deixa o resto do /16 livre.
+#
 # RAM e o recurso escasso aqui: 35 containers, ~770 MB livres e swap em uso.
 # Por isso a imagem da API e construida na maquina do Nicolas e enviada pronta
 # (docker save | ssh docker load), em vez de compilar no servidor.
@@ -51,3 +59,9 @@ volumes:
   uploads:
   web-data:
   web-config:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.16.50.0/24
