@@ -1,4 +1,5 @@
 .viewer-page {
+  position: relative; /* ancora do .viewer-notice quando vira toast no mobile */
   display: flex;
   flex: 1;
   min-height: 0;
@@ -407,6 +408,34 @@
   gap: 3px;
 }
 
+/* Variantes: teclado (ponteiro fino) x gestos (ponteiro grosso = touch).
+   Nao e por largura: um iPad de 1024px e touch, um notebook de 1280 nao. */
+.viewer-navigation-help--touch { display: none; }
+@media (pointer: coarse) {
+  .viewer-navigation-help--keyboard { display: none; }
+  .viewer-navigation-help--touch {
+    display: flex;
+    pointer-events: auto;              /* para o botao de fechar funcionar */
+    left: 12px; right: 12px;           /* largura toda no celular */
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 10px 8px 12px;
+    font-size: 12px;
+    gap: 6px 14px;
+    justify-content: space-between;
+  }
+  .viewer-navigation-help--touch .viewer-help-close {
+    width: 32px; height: 32px; margin: -6px -6px -6px 0;
+    display: inline-grid; place-items: center;
+    background: none; border: none; color: var(--c-text2); border-radius: 8px;
+  }
+  .viewer-navigation-help--touch .viewer-help-gesto {
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .viewer-navigation-help--touch .viewer-help-gesto b {
+    color: var(--c-text); font-weight: 600;
+  }
+}
+
 .viewer-navigation-help kbd {
   min-width: 18px;
   height: 18px;
@@ -642,6 +671,7 @@
 
   .viewer-properties-panel.is-open {
     transform: translateX(0);
+    z-index: 4; /* acima do backdrop (3): antes o backdrop cobria o painel */
   }
 
   .viewer-mobile-action {
@@ -671,16 +701,54 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .viewer-toolbar {
-    min-height: 56px;
-    padding: 0 12px;
+    min-height: 52px;
+    padding: 0 8px 0 12px;
+    gap: 8px;
+  }
+  .viewer-toolbar__actions { gap: 6px; }
+
+  /* 34x34 era abaixo do minimo de toque; 44 e o alvo da Apple HIG */
+  .viewer-icon-button.viewer-mobile-action,
+  .viewer-upload-button,
+  .viewer-panel__close,
+  .viewer-panel__add {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  .viewer-panel__item { min-height: 44px; }
+
+  /* O aviso "modelo enviado" era um banner no fluxo, empurrando o canvas e
+     crescendo quando o texto quebrava. Vira toast sobreposto, compacto, que o
+     Viewer3DPage apaga sozinho em alguns segundos. */
+  .viewer-notice {
+    position: absolute;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    z-index: 6;
+    min-height: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    border-radius: 10px;
+    background: rgba(13, 24, 48, 0.94);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .viewer-notice--error {
+    background: rgba(48, 13, 13, 0.94);
+    border-color: rgba(239, 68, 68, 0.4);
   }
 
   .viewer-toolbar__title span,
-  .viewer-icon-button:not(.viewer-mobile-action) {
+  .viewer-icon-button:not(.viewer-mobile-action):not(.viewer-always) {
     display: none;
   }
+  .viewer-icon-button.viewer-always { width: 44px; height: 44px; }
 
   .viewer-upload-button {
     padding-inline: 10px;
@@ -703,6 +771,7 @@
 
   .viewer-projects-panel.is-open {
     transform: translateX(0);
+    z-index: 4; /* idem: o backdrop interceptava o toque no modelo */
   }
 
   .viewer-canvas {
@@ -723,7 +792,7 @@
   }
 
   .viewer-upload-button {
-    width: 36px;
+    width: 44px;
     padding: 0;
   }
 }

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { AlertTriangle, Box, Loader2, Upload } from 'lucide-react'
+import { AlertTriangle, Box, Loader2, Upload, X } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import type { CameraState } from '@/services/scenarios.service'
 
@@ -61,6 +61,13 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
 }: ViewerCanvasProps, ref) {
   const hostRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<CenaViva | null>(null)
+  const [touchHelpDismissed, setTouchHelpDismissed] = useState(() => {
+    try { return localStorage.getItem('arxisvr_viewer_touch_help') === 'ok' } catch { return false }
+  })
+  const dismissTouchHelp = () => {
+    setTouchHelpDismissed(true)
+    try { localStorage.setItem('arxisvr_viewer_touch_help', 'ok') } catch {}
+  }
   const [loadingModel, setLoadingModel] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -396,12 +403,28 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
       )}
 
       {modelId && !loadingModel && !loadError && (
-        <div className="viewer-navigation-help">
-          <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> mover</span>
-          <span><kbd>Q</kbd><kbd>E</kbd> altura</span>
-          <span><kbd>Shift</kbd> acelerar</span>
-          <span>Mouse orbitar e zoom</span>
-        </div>
+        <>
+          {/* Teclado/mouse: o CSS so mostra em ponteiro fino. */}
+          <div className="viewer-navigation-help viewer-navigation-help--keyboard" aria-hidden="true">
+            <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> mover</span>
+            <span><kbd>Q</kbd><kbd>E</kbd> altura</span>
+            <span><kbd>Shift</kbd> acelerar</span>
+            <span>Mouse orbitar e zoom</span>
+          </div>
+          {/* Touch: so os gestos que o OrbitControls de fato faz (1 dedo
+              orbita, pinca da zoom, 2 dedos move). Nao ha toque duplo. Fecha
+              no X e fica fechada nas proximas visitas. */}
+          {!touchHelpDismissed && (
+            <div className="viewer-navigation-help viewer-navigation-help--touch" role="note" aria-label="Como navegar no modelo">
+              <span className="viewer-help-gesto"><b>1 dedo</b> orbita</span>
+              <span className="viewer-help-gesto"><b>Pinça</b> zoom</span>
+              <span className="viewer-help-gesto"><b>2 dedos</b> move</span>
+              <button type="button" className="viewer-help-close" onClick={dismissTouchHelp} aria-label="Fechar dica">
+                <X size={16} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </main>
   )

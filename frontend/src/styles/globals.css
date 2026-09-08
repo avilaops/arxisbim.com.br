@@ -1030,21 +1030,146 @@ footer {
   transition: opacity 0.2s;
 }
 
+/* ===== Navegacao mobile do app (auditoria de 08/09/2026) =====
+   O drawer mobile tinha TRES defeitos de causa, nao de estilo:
+   1. abria sozinho em toda visita nova, porque usava o mesmo estado da sidebar
+      "expandida" do desktop (padrao). Agora e `.mobile-nav-open`, separado.
+   2. fechado, nao havia como reabrir: o unico controle ("Recolher menu") ficava
+      DENTRO da sidebar. Agora ha hamburguer no topbar.
+   3. ficava por baixo do topbar (z 60 < 100). Agora sobe para 110. */
+
+/* --- Dashboard: valores desktop (sairam do inline) e mobile --- */
+.dash-page { padding: 28px 28px 48px; }
+.dash-cta  { height: 30px; padding: 0 12px; font-size: 12px; }
+.dash-kpis { grid-template-columns: repeat(3, 1fr); }
+.dash-link { padding: 4px 8px; font-size: 12px; }
+
+@media (max-width: 768px) {
+  .dash-page { padding: 16px 16px calc(32px + env(safe-area-inset-bottom, 0px)); gap: 16px; }
+  /* titulo em cima, CTA embaixo na largura toda: a acao principal fica obvia */
+  .dash-head { flex-direction: column; align-items: stretch !important; gap: 12px; }
+  .dash-head > div:last-child { display: flex; }
+  .dash-cta  { height: 44px; padding: 0 16px; font-size: 14px; flex: 1; justify-content: center; }
+  /* 3 colunas em 390px dava 110px por card e "Reunioes XR" quebrava */
+  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-link { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+}
+@media (max-width: 370px) {
+  /* so em 360: em 375+ duas colunas cabem e tres cards de "0 Total" em coluna
+     unica gastavam 660px de tela para dizer quase nada */
+  .dash-kpis { grid-template-columns: 1fr; }
+}
+
+/* Controles que so existem no celular: escondidos por padrao. */
+.topbar__menu,
+.topbar__brand,
+.sidebar-close-mobile { display: none; }
+
+.topbar { height: 48px; padding: 0 20px; }
+
+.topbar__link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px; height: 32px; border-radius: var(--r);
+  font-size: 12px; color: var(--c-text2);
+  transition: background .12s, color .12s;
+}
+
+/* drawer aberto: trava o scroll (o body do app ja e hidden; o que rola e o
+   .main, mas o html e o que o iOS respeita com fixed na tela) */
+html.app-nav-open { overflow: hidden; overscroll-behavior: none; }
+
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
-    width: var(--sidebar-expanded) !important;
+    width: min(84vw, 300px) !important;
+    z-index: 110; /* acima do topbar (100) */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.5);
   }
-  .app-layout.sidebar-expanded .sidebar {
+  .app-layout.mobile-nav-open .sidebar {
     transform: translateX(0);
   }
-  .app-layout.sidebar-expanded .sidebar-backdrop {
+  .sidebar-backdrop {
+    z-index: 105;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .app-layout.mobile-nav-open .sidebar-backdrop {
     display: block;
     opacity: 1;
     pointer-events: auto;
   }
+  .app-layout.mobile-nav-open { touch-action: none; }
+  .app-layout.mobile-nav-open .sidebar { touch-action: pan-y; }
+
   .main-content,
   .app-layout.sidebar-collapsed .main-content {
     margin-left: 0 !important;
   }
+
+  /* No celular a sidebar nunca fica "recolhida" (nao ha estado intermediario):
+     labels e secoes sempre visiveis, mesmo que o desktop tenha salvo
+     "recolhida" no localStorage. */
+  .app-layout.sidebar-collapsed .sidebar-label,
+  .app-layout.sidebar-collapsed .sidebar-section-title,
+  .app-layout.sidebar-collapsed .sidebar-submenu,
+  .app-layout.sidebar-collapsed .brand-name {
+    display: revert !important;
+  }
+  .app-layout.sidebar-collapsed .sidebar-item {
+    justify-content: flex-start;
+    padding-inline: 14px !important;
+  }
+
+  /* cabeca do drawer: marca a esquerda, X a direita */
+  .sidebar-head { justify-content: space-between !important; height: 56px !important; }
+  .sidebar-close-mobile {
+    display: inline-grid; place-items: center;
+    width: 44px; height: 44px; margin-right: -10px;
+    background: none; border: none; color: var(--c-text); border-radius: 10px;
+  }
+  .sidebar-close-mobile:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
+
+  /* a busca e decorativa (div sem input) e trazia "Ctrl K": some no touch */
+  .sidebar-search { display: none !important; }
+
+  /* itens com area de toque de 44px */
+  .sidebar-item {
+    min-height: 44px;
+    padding-block: 10px !important;
+    font-size: 15px !important;
+  }
+  .sidebar-section-title { padding-top: 10px !important; }
+
+  /* o "Recolher menu" e semantica de desktop */
+  .sidebar-toggle { display: none !important; }
+
+  /* topbar: hamburguer + marca + suporte (icone) + avatar */
+  .topbar {
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 8px 0 8px;
+    gap: 4px;
+  }
+  .topbar__menu {
+    display: inline-grid; place-items: center;
+    width: 44px; height: 44px;
+    background: none; border: none; color: var(--c-text); border-radius: 10px;
+    cursor: pointer;
+  }
+  .topbar__menu:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
+  .topbar__brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.2px; color: var(--c-text);
+    text-decoration: none; padding: 0 4px;
+  }
+  .topbar__breadcrumb { display: none !important; }
+  .topbar__link {
+    width: 44px; height: 44px; padding: 0; justify-content: center;
+  }
+  .topbar__link-text { display: none; }
+  /* avatar de 28px vira alvo de 44: cresce para 36 e o wrap completa com padding */
+  .topbar__avatar-wrap { padding: 4px; }
+  .topbar__avatar { width: 36px !important; height: 36px !important; font-size: 13px !important; }
 }

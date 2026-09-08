@@ -44,7 +44,12 @@ export default function ViewerToolbar({
           <FolderTree size={17} strokeWidth={1.45} />
         </button>
         <button
-          className="viewer-icon-button"
+          // viewer-always: o botao precisa existir em TODO viewport. Sem classe
+          // ele sumia no mobile (regra que esconde icon-buttons em <=768); com
+          // viewer-mobile-action sumia no desktop (essa classe e display:none
+          // fora do mobile, porque os paineis la sao colunas fixas). O S12 ficou
+          // invisivel num lado e depois no outro ate o teste pegar os dois.
+          className="viewer-icon-button viewer-always"
           type="button"
           onClick={onToggleScenarios}
           aria-label="Abrir cenários"

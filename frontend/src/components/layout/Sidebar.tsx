@@ -12,14 +12,18 @@ import {
   Settings,
   PanelLeftOpen,
   PanelLeftClose,
+  X,
 } from 'lucide-react'
 
 interface SidebarProps {
   collapsed: boolean
   onToggle: (collapsed: boolean) => void
+  /** Drawer mobile aberto (estado separado do "recolhida" do desktop). */
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
   const [manageOpen, setManageOpen] = useState(() => {
     return localStorage.getItem('arxisvr_manage_open') === '1'
   })
@@ -62,9 +66,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }}
       onMouseEnter={(e) => !active && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
       onMouseLeave={(e) => !active && (e.currentTarget.style.background = 'transparent')}
+      onClick={onMobileClose}
+      aria-current={active ? 'page' : undefined}
     >
       <span style={{ width: '15px', height: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={17} strokeWidth={1.45} />
+        <Icon size={17} strokeWidth={1.45} aria-hidden="true" />
       </span>
       <span className="sidebar-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
     </a>
@@ -72,7 +78,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <nav
+      id="app-sidebar"
       className="sidebar"
+      aria-label="Menu principal"
+      data-mobile-open={mobileOpen}
       style={{
         background: 'var(--c-surface)',
         borderRight: '1px solid var(--c-border)',
@@ -83,7 +92,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }}
     >
       {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '48px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+      <div className="sidebar-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '48px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
         <a
           className="sidebar-brand"
           href="/dashboard"
@@ -99,6 +108,16 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <img src="/logo-icon.svg" alt="" style={{ width: '22px', height: '22px' }} />
           <span className="brand-name">ArxisVR</span>
         </a>
+        {/* So no mobile (CSS): o "Recolher menu" do rodape e semantica de
+            desktop e ficava a 1.500px de distancia do polegar. */}
+        <button
+          type="button"
+          className="sidebar-close-mobile"
+          onClick={onMobileClose}
+          aria-label="Fechar menu"
+        >
+          <X size={22} strokeWidth={1.75} aria-hidden="true" />
+        </button>
       </div>
 
       {/* Search */}

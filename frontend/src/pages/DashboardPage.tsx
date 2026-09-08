@@ -236,9 +236,9 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <style>{pulseKeyframes}</style>
-      <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
+      <div className="dash-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         {/* Page header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+        <div className="dash-head" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <div style={{ fontSize: '11px', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>
               Bem-vindo de volta
@@ -249,15 +249,13 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
+              className="dash-cta"
               onClick={() => setCreateOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                height: '30px',
-                padding: '0 12px',
                 borderRadius: 'var(--r)',
-                fontSize: '12px',
                 fontWeight: 500,
                 color: 'var(--c-text2)',
                 background: 'var(--c-surface2)',
@@ -311,7 +309,7 @@ export default function DashboardPage() {
         )}
 
         {/* Analytics cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        <div className="dash-kpis" style={{ display: 'grid', gap: '10px' }}>
           {loading
             ? [0, 1, 2].map((i) => (
                 <div
@@ -388,13 +386,12 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => void showAllProjects()}
+              className="dash-link"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '12px',
                 color: 'var(--c-blue)',
-                padding: '4px 8px',
                 borderRadius: 'var(--r)',
                 border: '1px solid rgba(59,130,246,0.25)',
                 transition: 'background .12s',

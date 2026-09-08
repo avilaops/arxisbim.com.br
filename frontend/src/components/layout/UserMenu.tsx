@@ -41,10 +41,13 @@ export default function UserMenu({ user }: UserMenuProps) {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="topbar__avatar-wrap" style={{ position: 'relative' }}>
       <div
         ref={avatarRef}
         className="topbar__avatar"
+        role="button"
+        tabIndex={0}
+        aria-label="Menu da conta"
         style={{
           width: '28px',
           height: '28px',

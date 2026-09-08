@@ -68,6 +68,14 @@ export default function Viewer3DPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
+
+  // Aviso de sucesso some sozinho: no celular ele e um toast sobre o canvas e
+  // nao pode ficar la roubando area do modelo. Erro fica ate o usuario agir.
+  useEffect(() => {
+    if (!message) return
+    const t = setTimeout(() => setMessage(null), 4500)
+    return () => clearTimeout(t)
+  }, [message])
   const [error, setError] = useState<string | null>(null)
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
@@ -392,7 +400,10 @@ export default function Viewer3DPage() {
             selectedModelId={selectedModelId}
             loading={loadingProjects}
             onSelectProject={selectProject}
-            onSelectModel={setSelectedModelId}
+            // No celular o painel e um drawer: escolher o modelo fecha o painel,
+            // senao ele continua cobrindo o que o usuario acabou de pedir para
+            // ver. No desktop o painel e coluna fixa e projectsOpen nao muda nada.
+            onSelectModel={(id) => { setSelectedModelId(id); setProjectsOpen(false) }}
             onCreateProject={() => setCreateProjectOpen(true)}
           />
           <ViewerCanvas
