@@ -197,7 +197,7 @@ export class CollaborationPanel {
       this.joinBtn.style.display = 'none';
       this.leaveBtn.style.display = '';
       this.setStatus('connected', `🟢 Conectado (local)`);
-      const localLink = `${window.location.origin}/join.html?token=${roomId}`;
+      const localLink = `${window.location.origin}/join?token=${roomId}`;
       this.showInviteLink(localLink);
       this.updateCallButton();
       this.startPresence();
@@ -273,7 +273,7 @@ export class CollaborationPanel {
         <strong>Chamadas disponíveis a partir do plano Pro</strong><br>
         <span>Seu plano atual: <em>${this.getLoggedUser()?.plan ?? 'free'}</em></span>
       </div>
-      <a href="/billing.html" class="collab-panel__upgrade-link">Fazer upgrade →</a>
+      <a href="/account?tab=billing" class="collab-panel__upgrade-link">Fazer upgrade →</a>
     `;
     // Insert after actions
     const actions = this.container.querySelector('.collab-panel__actions');

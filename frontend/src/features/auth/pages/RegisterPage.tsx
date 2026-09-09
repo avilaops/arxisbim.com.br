@@ -51,12 +51,12 @@ export default function RegisterPage() {
       // Se o servidor retornou requiresEmailVerification, mostrar mensagem
       if (result?.requiresEmailVerification) {
         setError(''); // limpar erros
-        window.location.href = `/verify-email.html?email=${encodeURIComponent(email.trim())}`;
+        window.location.href = `/verify-email?email=${encodeURIComponent(email.trim())}`;
         return;
       }
 
       // Fallback: se por algum motivo já tiver token, vai para app
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err?.message || 'Não foi possível criar a conta.');
     } finally {

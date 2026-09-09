@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
               <br />
               Verifique também a pasta de spam.
             </p>
-            <a className="auth-link" href="/login.html">
+            <a className="auth-link" href="/login">
               Voltar para o login
             </a>
           </div>
@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
 
             <p className="auth-footer-text">
               Lembrou a senha?{' '}
-              <a className="auth-link" href="/login.html">
+              <a className="auth-link" href="/login">
                 Entrar
               </a>
             </p>

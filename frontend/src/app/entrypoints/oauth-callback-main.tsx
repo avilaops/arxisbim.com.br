@@ -14,10 +14,10 @@ if (token && refreshToken) {
   // CRÍTICO: deriva e grava arxisvr_user a partir do token.
   // Sem isso, greeting (lê token) e header (exigia user) divergiam → "Olá, Nicolas" + "Entrar".
   hydrateUserFromToken();
-  window.location.replace('/dashboard.html');
+  window.location.replace('/dashboard');
 } else {
   // No tokens — redirect to login with error
   const params = new URLSearchParams(window.location.search);
   const err = params.get('oauth_error') ?? 'Login social falhou';
-  window.location.replace(`/login.html?oauth_error=${encodeURIComponent(err)}`);
+  window.location.replace(`/login?oauth_error=${encodeURIComponent(err)}`);
 }

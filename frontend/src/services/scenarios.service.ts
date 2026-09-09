@@ -13,7 +13,10 @@ import { buildApiV1Url } from '@/config/apiBaseUrl'
  *   - Este aqui (`modules/scenarios`) grava `camera`, `player` e `metadata`,
  *     que são jsonb livres na tabela `scenarios`.
  *
- * Guardamos a câmera em `camera` e a visibilidade em `metadata.hidden`.
+ * Guardamos a câmera em `camera` e a visibilidade em
+ * `metadata.visibility.hiddenIfcCategories` (nomes de tipo IFC, estáveis).
+ * O antigo `metadata.hidden` (ids de objeto three) nunca teve conteúdo em
+ * produção e é ignorado.
  * `player` e `config` são obrigatórios na criação, então vão preenchidos com o
  * mínimo que o backend aceita.
  */
@@ -28,7 +31,7 @@ export interface Scenario {
   name: string
   projectId: string
   camera?: CameraState | null
-  metadata?: { hidden?: number[] } | null
+  metadata?: { hidden?: number[]; visibility?: { hiddenIfcCategories?: string[] } } | null
   createdAt?: string
   updatedAt?: string
 }
@@ -91,7 +94,7 @@ export const scenariosService = {
     scenarioId: string,
     name: string,
     camera: CameraState,
-    hidden: number[],
+    hiddenIfcCategories: string[],
   ): Promise<Scenario> {
     const response = await fetch(
       buildApiV1Url(`/projects/${projectId}/scenarios/${scenarioId}`),
@@ -103,7 +106,7 @@ export const scenariosService = {
           camera,
           player: PLAYER_PADRAO,
           config: CONFIG_PADRAO,
-          metadata: { hidden },
+          metadata: { visibility: { hiddenIfcCategories } },
         }),
       },
     )

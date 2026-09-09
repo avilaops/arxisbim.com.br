@@ -1,6 +1,6 @@
 /**
  * Join Session entrypoint
- * URL: /join.html?token=<inviteToken>  or  /join/<inviteToken>
+ * URL: /join?token=<inviteToken>  or  /join/<inviteToken>
  *
  * Auth requirement: both host and guest MUST have an account (even free tier).
  * If not logged in, an auth wall is shown before the join form.
@@ -168,9 +168,9 @@ function renderAuthWall(token: string, content: HTMLElement): void {
       if (data.requiresEmailVerification || !(data.accessToken || data.token)) {
         regStatus.className = 'status loading';
         regStatus.textContent = '📧 Verifique seu email para ativar a conta...';
-        const next = encodeURIComponent(`/join.html?token=${token}`);
+        const next = encodeURIComponent(`/join?token=${token}`);
         setTimeout(() => {
-          window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}&next=${next}`;
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}&next=${next}`;
         }, 800);
         return;
       }
@@ -312,7 +312,7 @@ function renderJoinForm(token: string, _content: HTMLElement): void {
       localStorage.removeItem('arxisvr_session_token');
       localStorage.setItem('arxisvr_local_guest_id', guestId);
       statusMsg.textContent = '✅ Entrando...';
-      setTimeout(() => { window.location.href = `/app.html?session=${token}`; }, 600);
+      setTimeout(() => { window.location.href = `/app?session=${token}`; }, 600);
       return;
     }
 
@@ -343,7 +343,7 @@ function renderJoinForm(token: string, _content: HTMLElement): void {
       localStorage.setItem('arxisvr_guest_name', name);
 
       statusMsg.textContent = '✅ Entrando...';
-      setTimeout(() => { window.location.href = `/app.html?session=${data.sessionId}`; }, 600);
+      setTimeout(() => { window.location.href = `/app?session=${data.sessionId}`; }, 600);
     } catch {
       statusMsg.className = 'status error';
       statusMsg.textContent = 'Erro de conexão.';

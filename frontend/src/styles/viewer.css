@@ -146,10 +146,20 @@
   position: relative;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr) 280px;
+  /* Duas linhas na coluna da esquerda: projetos em cima, cenarios embaixo.
+     Antes o painel de cenarios (4o item do grid) criava uma segunda linha
+     implicita e roubava metade da altura do canvas desde o S12; com a lista
+     de visibilidade o canvas virava uma faixa. Canvas e propriedades
+     atravessam as duas linhas. */
+  grid-template-rows: minmax(0, auto) minmax(0, 1fr);
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
+.viewer-projects-panel { grid-column: 1; grid-row: 1; max-height: 45vh; }
+.viewer-scenarios-panel { grid-row: 2; border-top: 1px solid var(--c-border); }
+.viewer-canvas { grid-column: 2; grid-row: 1 / 3; }
+.viewer-properties-panel { grid-column: 3; grid-row: 1 / 3; }
 
 .viewer-panel {
   position: relative;
@@ -289,6 +299,65 @@
   color: var(--c-text);
   background: var(--c-blue-dim);
   border-color: rgba(37, 99, 235, 0.22);
+}
+
+/* Visibilidade por categoria IFC (painel de cenarios) */
+.viewer-panel__hint {
+  font-size: 10.5px;
+  color: var(--c-text3);
+  white-space: nowrap;
+}
+.viewer-panel__categoria { cursor: pointer; }
+.viewer-panel__categoria span { flex: 1; }
+.viewer-panel__categoria small {
+  font-size: 10px;
+  color: var(--c-text3);
+  font-variant-numeric: tabular-nums;
+}
+.viewer-panel__categoria.is-oculta {
+  color: var(--c-text3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.25);
+}
+.viewer-panel__categoria.is-oculta svg { opacity: 0.55; }
+
+/* Diferencas entre cenarios (S18): o estado e a fonte, nao o pixel */
+.compare-diff {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  min-width: 220px;
+  max-width: min(360px, calc(100% - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(8px);
+  color: var(--c-text2);
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.compare-diff h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+}
+.compare-diff ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.compare-diff li { display: flex; align-items: center; gap: 8px; }
+.compare-diff li b { color: var(--c-text); font-weight: 600; flex: 1; }
+.compare-diff__cor {
+  width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+}
+.compare-diff__cor--a { background: #f97316; }
+.compare-diff__cor--b { background: #d946ef; }
+.compare-diff__onde { color: var(--c-text3); font-size: 11px; white-space: nowrap; }
+.compare-diff__vazio { margin: 0; color: var(--c-text3); }
+@media (max-width: 768px) {
+  .compare-diff { left: 8px; right: 8px; bottom: 8px; max-width: none; }
 }
 
 .viewer-canvas {
@@ -661,6 +730,10 @@
   }
 
   .viewer-properties-panel {
+    /* Item absoluto com grid-area explicita usa a AREA como bloco de
+       contencao: na grade de 2 colunas a coluna 3 nao existe e a gaveta
+       nascia com largura zero. `auto` devolve o workspace inteiro. */
+    grid-area: auto;
     position: absolute;
     inset: 0 0 0 auto;
     width: min(320px, calc(100% - 48px));
@@ -759,6 +832,10 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
   }
+  .viewer-canvas { grid-column: 1; grid-row: 1; }
+  /* gavetas absolutas: mesma armadilha, a linha 2 nao existe aqui */
+  .viewer-projects-panel,
+  .viewer-scenarios-panel { grid-area: auto; max-height: none; border-top: 0; }
 
   .viewer-projects-panel {
     position: absolute;

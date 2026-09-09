@@ -4,6 +4,7 @@ import ViewerToolbar from '@/components/viewer/ViewerToolbar'
 import ProjectModelsPanel from '@/components/viewer/ProjectModelsPanel'
 import ViewerCanvas, { type ViewerHandle } from '@/components/viewer/ViewerCanvas'
 import ScenariosPanel from '@/components/viewer/ScenariosPanel'
+import type { Categoria } from '@/components/viewer/visibilidadeIfc'
 import { scenariosService, type Scenario } from '@/services/scenarios.service'
 import ViewerPropertiesPanel from '@/components/viewer/ViewerPropertiesPanel'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
@@ -109,6 +110,9 @@ export default function Viewer3DPage() {
   const [savingScenario, setSavingScenario] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [creatingProject, setCreatingProject] = useState(false)
+  // Visibilidade por categoria IFC (fatia do S10 para o S18)
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [ocultos, setOcultos] = useState<string[]>([])
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId)
   const selectedModel = models.find((model) => model.id === selectedModelId)
@@ -201,7 +205,9 @@ export default function Viewer3DPage() {
       return
     }
     if (scenario.camera) viewer.aplicarCamera(scenario.camera)
-    viewer.aplicarOcultos(scenario.metadata?.hidden ?? [])
+    const ocultosDoCenario = scenario.metadata?.visibility?.hiddenIfcCategories ?? []
+    viewer.aplicarOcultos(ocultosDoCenario)
+    setOcultos(ocultosDoCenario)
     setActiveScenarioId(scenario.id)
     setMessage(`Cenário "${scenario.name}" aplicado.`)
   }
@@ -236,6 +242,18 @@ export default function Viewer3DPage() {
     } finally {
       setSavingScenario(false)
     }
+  }
+
+  /** Mostra/oculta uma categoria IFC no viewer (o cenario so guarda ao salvar). */
+  const alternarCategoria = (categoria: Categoria) => {
+    const viewer = viewerRef.current
+    if (!viewer?.pronto()) return
+    const oculta = categoria.tipos.some((t) => ocultos.includes(t))
+    const proximos = oculta
+      ? ocultos.filter((t) => !categoria.tipos.includes(t))
+      : [...ocultos, ...categoria.tipos]
+    viewer.aplicarOcultos(proximos)
+    setOcultos(proximos)
   }
 
   const salvarCenario = async () => {
@@ -438,6 +456,7 @@ export default function Viewer3DPage() {
             projectName={selectedProject?.name}
             modelId={selectedModel?.id}
             modelName={selectedModel?.originalName}
+            onModeloAberto={(lista) => { setCategorias(lista); setOcultos([]) }}
           />
           <ViewerPropertiesPanel
             open={propertiesOpen}
@@ -455,6 +474,9 @@ export default function Viewer3DPage() {
             onSelect={(id) => void selecionarCenario(id)}
             onSave={() => void salvarCenario()}
             onDelete={(id) => void apagarCenario(id)}
+            categorias={categorias}
+            ocultos={ocultos}
+            onToggleCategoria={alternarCategoria}
           />
         </div>
 

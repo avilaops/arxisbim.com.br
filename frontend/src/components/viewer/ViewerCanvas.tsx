@@ -2,6 +2,13 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { AlertTriangle, Box, Loader2, Upload, X } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import type { CameraState } from '@/services/scenarios.service'
+import {
+  aplicarVisibilidade as aplicarVisibilidadeIfc,
+  idsOcultos,
+  listarCategorias,
+  todosExpressIds,
+  type Categoria,
+} from './visibilidadeIfc'
 
 interface ViewerCanvasProps {
   onUpload: () => void
@@ -9,6 +16,8 @@ interface ViewerCanvasProps {
   projectName?: string
   modelId?: string
   modelName?: string
+  /** Modelo carregado: as categorias IFC presentes (para o painel de visibilidade). */
+  onModeloAberto?: (categorias: Categoria[]) => void
 }
 
 /**
@@ -24,12 +33,14 @@ interface ViewerCanvasProps {
 export interface ViewerHandle {
   /** Câmera atual, ou null se ainda não há modelo aberto. */
   capturarCamera: () => CameraState | null
-  /** expressIDs ocultos no momento. */
-  capturarOcultos: () => number[]
+  /** Tipos IFC ocultos no momento (ex.: IFCROOF). */
+  capturarOcultos: () => string[]
   /** Reaplica a câmera. Devolve false se não havia cena. */
   aplicarCamera: (camera: CameraState) => boolean
-  /** Reaplica a visibilidade: tudo visível, menos estes expressIDs. */
-  aplicarOcultos: (expressIds: number[]) => boolean
+  /** Reaplica a visibilidade: tudo visível, menos estes tipos IFC. */
+  aplicarOcultos: (tiposIfc: string[]) => boolean
+  /** Categorias presentes no modelo aberto (vazio sem modelo). */
+  categorias: () => Categoria[]
   /** Há uma cena carregada agora? */
   pronto: () => boolean
   /** Volta ao enquadramento calculado quando o modelo abriu. */
@@ -39,12 +50,8 @@ export interface ViewerHandle {
 /**
  * O que o `useEffect` publica para o handle consultar.
  *
- * A visibilidade é por **mesh do modelo**, identificada pelo `id` do objeto
- * three. O viewer vivo ainda não tem seleção de elemento (não há raycaster nem
- * clique no canvas), então o S12 guarda e restaura quais partes do modelo estão
- * escondidas, não "o elemento que o usuário clicou". Quando a seleção existir
- * (S13/S16 no app vivo), a mesma lista passa a ser de expressID sem mudar o
- * formato salvo.
+ * A visibilidade é por **categoria IFC** (tipos como IFCROOF), aplicada por
+ * subsets de expressID do web-ifc-three. Ver `visibilidadeIfc.ts`.
  */
 interface CenaViva {
   camera: any
@@ -52,8 +59,10 @@ interface CenaViva {
   model: any
   /** Enquadramento inicial (o mesmo que o efeito calcula ao abrir o modelo). */
   vistaInicial: CameraState
-  ocultos: Set<number>
-  aplicarVisibilidade: (ocultos: Set<number>) => void
+  categorias: Categoria[]
+  /** Tipos IFC ocultos agora. */
+  ocultos: Set<string>
+  aplicarVisibilidade: (ocultos: Set<string>) => void
 }
 
 const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function ViewerCanvas({
@@ -62,6 +71,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
   projectName,
   modelId,
   modelName,
+  onModeloAberto,
 }: ViewerCanvasProps, ref) {
   const hostRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<CenaViva | null>(null)
@@ -197,11 +207,17 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
         // Publica a cena para o handle imperativo (S12). A partir daqui a tela
         // consegue ler e reaplicar camera/visibilidade sem tocar no ciclo de
         // vida do efeito.
-        const ocultosAtuais = new Set<number>()
-        const aplicarVisibilidade = (ocultos: Set<number>) => {
-          model.traverse((child: any) => {
-            if (child instanceof THREE.Mesh) child.visible = !ocultos.has(child.id)
-          })
+        // Categorias IFC presentes: e o que o painel lista e o que o cenario
+        // persiste (tipos IFC). Os expressIDs ficam aqui para os subsets.
+        const categorias = await listarCategorias(loader.ifcManager as any, (model as any).modelID)
+        if (cancelled) {
+          loader.ifcManager.dispose()
+          return
+        }
+        const todos = todosExpressIds(model)
+        const ocultosAtuais = new Set<string>()
+        const aplicarVisibilidade = (ocultos: Set<string>) => {
+          aplicarVisibilidadeIfc(loader.ifcManager as any, model, scene, todos, idsOcultos(categorias, ocultos))
         }
         sceneRef.current = {
           camera,
@@ -211,9 +227,11 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
             position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
             target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
           },
+          categorias,
           ocultos: ocultosAtuais,
           aplicarVisibilidade,
         }
+        onModeloAberto?.(categorias)
 
         const pressedKeys = new Set<string>()
         const movementClock = new THREE.Clock()
@@ -369,14 +387,16 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
       return true
     },
 
-    aplicarOcultos: (expressIds) => {
+    aplicarOcultos: (tiposIfc) => {
       const cena = sceneRef.current
       if (!cena) return false
       cena.ocultos.clear()
-      for (const id of expressIds ?? []) cena.ocultos.add(id)
+      for (const t of tiposIfc ?? []) cena.ocultos.add(t)
       cena.aplicarVisibilidade(cena.ocultos)
       return true
     },
+
+    categorias: () => sceneRef.current?.categorias ?? [],
   }), [])
 
   return (

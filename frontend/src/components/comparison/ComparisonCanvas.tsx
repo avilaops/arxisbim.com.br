@@ -3,6 +3,15 @@ import { AlertTriangle, Loader2 } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import { CameraSync } from './cameraSync'
 import type { Scenario } from '@/services/scenarios.service'
+import {
+  aplicarDestaque,
+  aplicarVisibilidade,
+  diferencaVisibilidade,
+  idsOcultos,
+  listarCategorias,
+  todosExpressIds,
+  type DiferencaCategoria,
+} from '@/components/viewer/visibilidadeIfc'
 
 interface ComparisonCanvasProps {
   modelId: string
@@ -44,6 +53,9 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
   const syncRef = useRef<CameraSync | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  // Diferencas por categoria, calculadas do estado dos cenarios (nao de pixel).
+  // null = modelo ainda nao lido; [] = os dois cenarios mostram o mesmo.
+  const [diferencas, setDiferencas] = useState<DiferencaCategoria[] | null>(null)
 
   useImperativeHandle(ref, (): ComparisonHandle => ({
     exportarImagem: async () => {
@@ -52,8 +64,9 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       if (!ca || !cb) return null
       const rotulo = 36
       const vao = 8
+      const rodape = diferencas && diferencas.length ? 30 : 0
       const w = ca.width + vao + cb.width
-      const h = Math.max(ca.height, cb.height) + rotulo
+      const h = Math.max(ca.height, cb.height) + rotulo + rodape
       const saida = document.createElement('canvas')
       saida.width = w
       saida.height = h
@@ -74,9 +87,28 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       ctx.font = `${Math.round(rotulo * 0.32)}px Inter, system-ui, sans-serif`
       ctx.textAlign = 'right'
       ctx.fillText(`${modelName} · ArxisVR · ${new Date().toLocaleDateString('pt-BR')}`, w - 12, rotulo / 2)
+      if (rodape && diferencas) {
+        // A diferenca vai escrita no PNG: quem recebe a imagem nao ve a legenda da tela.
+        const y = h - rodape / 2
+        ctx.textAlign = 'left'
+        ctx.font = `${Math.round(rotulo * 0.34)}px Inter, system-ui, sans-serif`
+        let x = 12
+        ctx.fillStyle = '#a1a1aa'
+        ctx.fillText('Diferenças:', x, y)
+        x += ctx.measureText('Diferenças:').width + 12
+        for (const d of diferencas) {
+          ctx.fillStyle = d.visivelEm === 'A' ? '#f97316' : '#d946ef'
+          ctx.fillRect(x, y - 5, 10, 10)
+          x += 16
+          ctx.fillStyle = '#f4f4f5'
+          const texto = `${d.nome} (só em ${d.visivelEm})`
+          ctx.fillText(texto, x, y)
+          x += ctx.measureText(texto).width + 18
+        }
+      }
       return new Promise((ok) => saida.toBlob((b) => ok(b), 'image/png'))
     },
-  }), [scenarioA.name, scenarioB.name, modelName])
+  }), [scenarioA.name, scenarioB.name, modelName, diferencas])
 
   // O cadeado muda sem remontar a cena: só avisa o sync que já existe.
   // A primeira execução é pulada de propósito: ela roda antes das cenas
@@ -121,8 +153,25 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         const blob = await resposta.blob()
         if (cancelado) return
 
+        const ocultosA = scenarioA.metadata?.visibility?.hiddenIfcCategories ?? []
+        const ocultosB = scenarioB.metadata?.visibility?.hiddenIfcCategories ?? []
+        // Cores do destaque: laranja = visivel so em A; magenta = visivel so em B.
+        // Nenhuma das duas aparece em material de IFC comum (verde confundia
+        // com o terreno do modelo de teste).
+        const materialSoEmA = new THREE.MeshLambertMaterial({ color: 0xf97316, emissive: 0x9a3412, emissiveIntensity: 0.45 })
+        const materialSoEmB = new THREE.MeshLambertMaterial({ color: 0xd946ef, emissive: 0x86198f, emissiveIntensity: 0.45 })
+
+        // UM loader para os dois lados. Com dois IFCLoader o web-ifc-three
+        // partilha a API wasm por baixo: o segundo modelo nascia com modelID 1
+        // num manager que so conhecia o 0, e getAllItemsOfType devolvia nada
+        // (o lado B ficava sem categorias e sem destaque).
+        const loader = new IFCLoader()
+        loader.ifcManager.setWasmPath('/wasm/')
+        loader.ifcManager.useWebWorkers(false)
+        loader.ifcManager.applyWebIfcConfig({ COORDINATE_TO_ORIGIN: true, USE_FAST_BOOLS: true })
+
         // Um lado do split. Devolve o que o cleanup e o sync precisam.
-        const montarLado = async (host: HTMLDivElement, cenario: Scenario) => {
+        const montarLado = async (host: HTMLDivElement, cenario: Scenario, lado: 'A' | 'B') => {
           const largura = Math.max(host.clientWidth, 1)
           const altura = Math.max(host.clientHeight, 1)
 
@@ -146,11 +195,6 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
           scene.add(luz)
           const grid = new THREE.GridHelper(100, 100, 0x3a4651, 0x222a31)
           scene.add(grid)
-
-          const loader = new IFCLoader()
-          loader.ifcManager.setWasmPath('/wasm/')
-          loader.ifcManager.useWebWorkers(false)
-          loader.ifcManager.applyWebIfcConfig({ COORDINATE_TO_ORIGIN: true, USE_FAST_BOOLS: true })
 
           const url = URL.createObjectURL(blob)
           const model = await new Promise<any>((ok, falha) => loader.load(url, ok, undefined, falha))
@@ -187,12 +231,20 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
           camera.updateProjectionMatrix()
           controls.update()
 
-          const ocultos = new Set(cenario.metadata?.hidden ?? [])
-          if (ocultos.size) {
-            model.traverse((filho: any) => {
-              if (filho instanceof THREE.Mesh) filho.visible = !ocultos.has(filho.id)
-            })
-          }
+          // Visibilidade do cenario por categoria IFC, e o destaque do que so
+          // este lado mostra. O destaque sai do subset normal (senao a mesma
+          // geometria seria desenhada duas vezes e tremeria) e entra com cor.
+          const manager = loader.ifcManager as any
+          const categorias = await listarCategorias(manager, model.modelID)
+          const todos = todosExpressIds(model)
+          const ocultosDesteLado = new Set(lado === 'A' ? ocultosA : ocultosB)
+          const ocultosDoOutro = new Set(lado === 'A' ? ocultosB : ocultosA)
+          // visivel aqui e oculto la = "so em <lado>"
+          const soAqui = [...ocultosDoOutro].filter((t) => !ocultosDesteLado.has(t))
+          const idsSoAqui = idsOcultos(categorias, soAqui)
+          aplicarVisibilidade(manager, model, scene, todos, idsOcultos(categorias, ocultosDesteLado), idsSoAqui)
+          aplicarDestaque(manager, model, scene, [...idsSoAqui], lado === 'A' ? materialSoEmA : materialSoEmB)
+          if (lado === 'A') setDiferencas(diferencaVisibilidade(categorias, ocultosA, ocultosB))
 
           const observer = new ResizeObserver(() => {
             const l = Math.max(host.clientWidth, 1)
@@ -223,22 +275,23 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
                 const mats = Array.isArray(o.material) ? o.material : [o.material]
                 mats.forEach((m: any) => m?.dispose())
               })
-              loader.ifcManager.dispose()
               renderer.dispose()
               renderer.domElement.remove()
             },
           }
         }
 
-        const ladoA = await montarLado(a!, scenarioA)
+        const ladoA = await montarLado(a!, scenarioA, 'A')
         if (cancelado) {
           ladoA.destruir()
+          loader.ifcManager.dispose()
           return
         }
-        const ladoB = await montarLado(b!, scenarioB)
+        const ladoB = await montarLado(b!, scenarioB, 'B')
         if (cancelado) {
           ladoA.destruir()
           ladoB.destruir()
+          loader.ifcManager.dispose()
           return
         }
 
@@ -254,6 +307,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
           syncRef.current = null
           ladoA.destruir()
           ladoB.destruir()
+          loader.ifcManager.dispose()
         }
       } catch (e) {
         if (!cancelado) {
@@ -263,6 +317,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       }
     }
 
+    setDiferencas(null)
     void montar()
     return () => {
       cancelado = true
@@ -284,6 +339,26 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         <div ref={hostB} className="comparison-canvas__host" />
       </div>
 
+      {!carregando && !erro && diferencas && (
+        <aside className="compare-diff" aria-label="Diferenças entre os cenários">
+          <h3>Diferenças</h3>
+          {diferencas.length === 0 ? (
+            <p className="compare-diff__vazio">Os dois cenários mostram as mesmas categorias. A diferença é só o ponto de vista.</p>
+          ) : (
+            <ul>
+              {diferencas.map((d) => (
+                <li key={d.nome}>
+                  <span className={`compare-diff__cor compare-diff__cor--${d.visivelEm.toLowerCase()}`} aria-hidden="true" />
+                  <b>{d.nome}</b>
+                  <span className="compare-diff__onde">
+                    {d.visivelEm === 'A' ? 'visível em A · oculta em B' : 'oculta em A · visível em B'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+      )}
       {carregando && (
         <div className="viewer-loading-state" role="status">
           <Loader2 className="spin" size={28} strokeWidth={1.45} />

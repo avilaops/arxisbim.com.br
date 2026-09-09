@@ -161,6 +161,15 @@ const PASSWORD_HISTORY_DEPTH = parseInt(process.env.PASSWORD_HISTORY_DEPTH || '3
 // Garante tempo de resposta constante mesmo quando o usuário não existe.
 const DUMMY_HASH = bcrypt.hashSync('arxisvr-timing-protection-dummy-2026', BCRYPT_ROUNDS);
 
+let authDbCache: ReturnType<typeof drizzle<{ users: typeof users; tenants: typeof tenants }>> | null = null;
+function authDb() {
+  if (!authDbCache) {
+    const client = postgres(process.env.DATABASE_URL!, { max: 4 });
+    authDbCache = drizzle(client, { schema: { users, tenants } });
+  }
+  return authDbCache;
+}
+
 export class AuthService {
   private db;
   private jwtSecret: string;
@@ -169,9 +178,10 @@ export class AuthService {
   private refreshTokenExpiry = '7d';
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL!;
-    const client = postgres(connectionString);
-    this.db = drizzle(client, { schema: { users, tenants } });
+    // Tres AuthService vivem no processo (rotas, middleware, workspaces).
+    // Um pool por instancia com max 10 = 30 conexoes so daqui. Pool unico,
+    // compartilhado, pequeno (incidente de conexoes de 09/09/2026).
+    this.db = authDb();
     // JWT secrets are resolved lazily (getJwtSecret/getJwtRefreshSecret) so that
     // the constructor can be called before process.env is fully populated (e.g. tests).
     this.jwtSecret = '';

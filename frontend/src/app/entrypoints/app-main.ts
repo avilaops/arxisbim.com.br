@@ -75,8 +75,8 @@ const hasAuthToken = () => Boolean(localStorage.getItem('arxisvr_token'));
  */
 function enforceAuthOrRedirect(): boolean {
   if (isAuthenticated()) return true;
-  const next = encodeURIComponent('/app.html' + window.location.search + window.location.hash);
-  window.location.replace('/login.html?next=' + next);
+  const next = encodeURIComponent('/app' + window.location.search + window.location.hash);
+  window.location.replace('/login?next=' + next);
   return false;
 }
 

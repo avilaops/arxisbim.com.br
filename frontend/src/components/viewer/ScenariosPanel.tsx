@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Camera, Check, GitCompare, Layers, Plus, Save, Trash2, X } from 'lucide-react'
+import { Camera, Check, Eye, EyeOff, GitCompare, Layers, Plus, Save, Trash2, X } from 'lucide-react'
 import type { Scenario } from '@/services/scenarios.service'
+import type { Categoria } from './visibilidadeIfc'
 
 interface ScenariosPanelProps {
   open: boolean
@@ -16,6 +17,10 @@ interface ScenariosPanelProps {
   onSelect: (scenarioId: string) => void
   onSave: () => void
   onDelete: (scenarioId: string) => void
+  /** Categorias IFC do modelo aberto e quais tipos estao ocultos agora. */
+  categorias: Categoria[]
+  ocultos: string[]
+  onToggleCategoria: (categoria: Categoria) => void
 }
 
 /**
@@ -34,6 +39,9 @@ export default function ScenariosPanel({
   onSelect,
   onSave,
   onDelete,
+  categorias,
+  ocultos,
+  onToggleCategoria,
 }: ScenariosPanelProps) {
   const [criando, setCriando] = useState(false)
   const [nome, setNome] = useState('')
@@ -54,7 +62,7 @@ export default function ScenariosPanel({
         onClick={onClose}
         aria-label="Fechar painel de cenários"
       />
-      <aside className={`viewer-panel viewer-projects-panel ${open ? 'is-open' : ''}`}>
+      <aside className={`viewer-panel viewer-projects-panel viewer-scenarios-panel ${open ? 'is-open' : ''}`}>
         <div className="viewer-panel__header">
           <div>
             <span className="viewer-panel__eyebrow">Comparar alternativas</span>
@@ -69,6 +77,39 @@ export default function ScenariosPanel({
             <X size={17} strokeWidth={1.45} />
           </button>
         </div>
+
+        {/* Visibilidade por categoria IFC: e o que faz um cenario diferir do
+            outro em algo alem da camera. O que se salva sao tipos IFC. */}
+        {viewerPronto && categorias.length > 0 && (
+          <div className="viewer-panel__section viewer-panel__section--visibilidade">
+            <div className="viewer-panel__section-heading">
+              <div className="viewer-panel__section-title">
+                <Eye size={17} strokeWidth={1.45} />
+                <span>Visibilidade</span>
+              </div>
+              <span className="viewer-panel__hint">{ocultos.length ? `${categorias.filter((c) => c.tipos.some((t) => ocultos.includes(t))).length} oculta(s)` : 'tudo visível'}</span>
+            </div>
+            <div className="viewer-panel__list" role="group" aria-label="Categorias IFC">
+              {categorias.map((categoria) => {
+                const oculta = categoria.tipos.some((t) => ocultos.includes(t))
+                return (
+                  <button
+                    key={categoria.nome}
+                    type="button"
+                    className={`viewer-panel__item viewer-panel__categoria ${oculta ? 'is-oculta' : ''}`}
+                    onClick={() => onToggleCategoria(categoria)}
+                    aria-pressed={!oculta}
+                    aria-label={`${oculta ? 'Mostrar' : 'Ocultar'} ${categoria.nome}`}
+                  >
+                    {oculta ? <EyeOff size={16} strokeWidth={1.45} /> : <Eye size={16} strokeWidth={1.45} />}
+                    <span>{categoria.nome}</span>
+                    <small>{categoria.ids.length}</small>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="viewer-panel__section">
           <div className="viewer-panel__section-heading">
@@ -159,7 +200,7 @@ export default function ScenariosPanel({
               disabled={saving || !viewerPronto}
             >
               <Save size={17} strokeWidth={1.45} />
-              <span>{saving ? 'Salvando…' : 'Salvar posição atual'}</span>
+              <span>{saving ? 'Salvando…' : 'Salvar câmera e visibilidade'}</span>
             </button>
           )}
 

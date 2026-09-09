@@ -7,7 +7,7 @@ import Dashboard from '../pages/Dashboard';
 
 function enforceAuthOrRedirect(): boolean {
   if (isAuthenticated()) return true;
-  window.location.replace('/login.html?next=/dashboard.html');
+  window.location.replace('/login?next=/dashboard');
   return false;
 }
 

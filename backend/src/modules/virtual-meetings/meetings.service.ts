@@ -32,7 +32,7 @@ export class MeetingsService {
 
   constructor() {
     const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/arxisvr';
-    const client = postgres(connectionString);
+    const client = postgres(connectionString, { max: 3 });
     this.db = drizzle(client, { 
       schema: { 
         virtualMeetingRooms, 
