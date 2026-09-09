@@ -47,7 +47,7 @@ A cadeia de cenários é o ativo intransferível.
 | Marco | Sprint | Valida | Estado | Por quê |
 |---|---|---|---|---|
 | ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
-| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 04/09/2026** | Provado em browser real, 9/9 passos: escolhe A e B, dois viewports lado a lado, **cada um na câmera do seu cenário**, câmera sincronizada e cadeado que solta. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
+| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
 | ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** | Rota de backend existe (`scenario-comparison.routes.ts`). A UI (`src/timeline/`) está órfã. |
 | ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |
 

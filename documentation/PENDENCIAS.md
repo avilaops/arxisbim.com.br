@@ -19,7 +19,7 @@ Três coisas que a documentação antiga ainda listava como abertas, e não são
 
 ## 2. Aberto, por ordem de valor
 
-### 2.1 ~~S18 ★ — comparação visual~~ — ATINGIDO 04/09, completado 08/09
+### 2.1 ~~S18 ★ — comparação visual~~ — ATINGIDO 09/09/2026 (estado real de cenário)
 
 > Marco provado em 04/09 (split + câmera sincronizada). Em 08/09 entraram
 > exportar imagem e A/B na URL (reload). Falta só "diferenças destacadas", que

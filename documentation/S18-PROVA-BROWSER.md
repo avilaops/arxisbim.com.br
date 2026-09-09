@@ -138,3 +138,58 @@ câmeras do mesmo prédio" em "com cobertura × sem cobertura". Decisão em aber
 Conta usada: a de auditoria de 08/09 (`nicolasrosaab+auditoria-debito@`),
 projeto "Auditoria debito tecnica", cenários "Fachada frente" e "Vista de
 cima". Roteiro: `scratchpad/ui/validar-s18.mjs`.
+
+---
+
+## Rodada 3: 09/09/2026, estado real de cenário. O ★ de verdade
+
+A rodada 2 deixou escrito: A e B diferiam só pela câmera, e "diferenças
+destacadas" não tinha o que destacar. Hoje entrou a fatia mínima do S10 que
+faltava, **visibilidade por categoria IFC**, e o critério final passou em
+produção, 12 de 12, no bundle `pages-BIoc7CZP.js`:
+
+| # | Passo | Resultado |
+|---|---|---|
+| 19 | Painel de cenários lista as categorias IFC do modelo (Paredes, Janelas, Portas, Lajes e pisos, Vigas, Guarda-corpos, Escadas, Terreno, Barras e montantes) | OK |
+| 20 | Ocultar Janelas muda o canvas (14% dos pixels) e o botão vira "Mostrar Janelas" | OK |
+| 21 | Cenário A salvo com `metadata.visibility.hiddenIfcCategories = ["IFCWINDOW"]` | OK |
+| 22 | Cenário B salvo com tudo visível | OK |
+| 23 | Selecionar A no painel reaplica as janelas ocultas | OK |
+| 24 | Comparar A\|B: legenda vinda do **estado**: "Janelas: oculta em A · visível em B" | OK |
+| 25 | Janelas em **magenta só no lado B** (0,4% dos pixels de B, 0,02% em A, que é o quadrado da legenda) | OK |
+| 26 | Arrastar A move B (36%) | OK |
+| 27 | PNG exportado: destaque só na metade direita, rodapé com "Diferenças: Janelas (só em B)" | OK |
+| 28 | **Reload**: split, legenda e destaque continuam | OK |
+
+Capturas em `provas/s18/`: `10-viewer-visibilidade-sem-janelas.png`,
+`11-split-diferenca-destacada.png`, `12-apos-reload.png`,
+`13-exportado-com-diferenca.png` (o PNG do botão), `14-390-visibilidade.png`
+(a gaveta no celular, itens de 44px, rolável).
+
+### O que se persiste
+
+Nomes de tipo IFC, não ids. `IFCWALL` e `IFCWALLSTANDARDCASE` viram a linha
+"Paredes"; o cenário guarda os dois. Cor do destaque: laranja = visível só em
+A, magenta = visível só em B (verde confundia com o terreno do modelo). A
+diferença é calculada do que cada cenário declarou oculto; pixel nenhum é
+comparado.
+
+### O que a prova pegou
+
+1. **Dois `IFCLoader` no split**: o web-ifc-three partilha a API wasm por
+   baixo, o lado B nascia com `modelID 1` num manager que só conhecia o 0, e
+   `getAllItemsOfType` devolvia nada. Um loader para os dois lados.
+2. **O painel de cenários roubava metade do canvas desde o S12**: era o 4º
+   item de um grid de 3 colunas e criava uma segunda linha implícita. A
+   captura `01-painel.png` de 04/09 já mostrava o canvas com 400 de 900px e
+   ninguém mediu. Com a lista de visibilidade o canvas virava uma faixa.
+   Coluna da esquerda em duas linhas, canvas atravessando as duas.
+3. **Gaveta mobile com 1px de altura**: item absoluto com `grid-row` explícito
+   usa a área do grid como bloco de contenção, e no celular a linha 2 não
+   existe. `grid-area: auto` nas gavetas.
+4. **Incidente de produção às 18:16 UTC**, achado porque a prova parou de
+   listar cenários: ver `INCIDENTE-2026-09-09-conexoes-postgres.md`. Nove
+   controladores da API abriam um pool novo a cada requisição.
+
+Fora do escopo, de propósito: filtros, pavimentos, seleção individual,
+materiais, diff geométrico, custo, prazo. O ★ termina aqui.
