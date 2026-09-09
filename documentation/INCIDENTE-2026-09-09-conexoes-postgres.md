@@ -44,3 +44,26 @@ salvar) só aceleraram o que qualquer uso faria. Por cima disso, o
   (`avila_mail` 10, `lojas` 8, `app_avila` 6...). Com 100 de teto, o próximo
   vazamento de qualquer app derruba todos de novo. Vale revisar os pools ou
   subir `max_connections` com pgbouncer na frente.
+
+## Feito em seguida (09/09, 19:00 UTC)
+
+1. **Teto de conexões por papel** no Postgres do host (`ALTER ROLE ...
+   CONNECTION LIMIT`): `arxisvr` 20, `avila_mail` e `lojas` 25, `app_avila` e
+   `app_avilaops` 20, `auth_avila`/`saudepet`/`ia`/`outline`/`n8n`/`sms`/
+   `migdolus` 15, `despolarizamed`/`sorroche_app`/`wabusiness` 10, `agricola` e
+   os quatro `odoo_*` 5. O próximo vazamento de qualquer app dá erro só naquele
+   app, não derruba o servidor. Script aplicado: `/root/limites-conexoes-2026-09-09.sql`.
+2. **Vigia do ArxisVR** (`deploy/health-watch.sh`, instalado em
+   `/opt/arxisvr/health-watch.sh`, cron `/etc/cron.d/arxisvr-health` a cada 2
+   min): lê `/health` da API e a raiz do site; com `database: down` em duas
+   checagens seguidas reinicia `arxisvr-api` (o remédio do incidente); avisa
+   por e-mail na borda, pelo nosso SMTP com STARTTLS, credenciais lidas do
+   `/opt/arxisvr/.env` em tempo de execução, destinatário de
+   `/etc/avila-alerts.env`. Provado: borda forçada gerou "ArxisVR voltou" na
+   caixa `nicolas@avilaops.com` às 19:07 UTC.
+
+Decisão registrada: **sem container de Postgres dedicado por enquanto**. A
+máquina tem 3,8 GB com 3,6 GB de swap em uso e o banco do ArxisVR tem 19 MB;
+o isolamento que um container daria já vem do teto por papel, sem custo de
+RAM. Volta a valer quando o ArxisVR precisar de versão, extensão ou tuning
+próprios, ou sair desta máquina.
