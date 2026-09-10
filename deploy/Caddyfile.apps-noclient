@@ -1,0 +1,71 @@
+# Caddy do servidor "apps-noclient" (204.168.249.111, Hetzner hel1, CX23).
+# Criado em 10/09/2026 quando ArxisVR, CRM, SMS e Alo Barbeiro sairam do
+# servidor de aplicacoes (178.105.82.48). Caddy nativo, apps em Docker
+# publicando portas em 127.0.0.1 (mesmo desenho do servidor de aplicacoes).
+#
+# Fonte deste arquivo: arxisvr.avilaops.com/deploy/Caddyfile.apps-noclient.
+# Instalado em /etc/caddy/Caddyfile.
+
+{
+	# Conta ACME: com e-mail o Caddy consegue cair para a ZeroSSL quando a
+	# Let's Encrypt limita (aconteceu no primeiro dia: 5 falhas de autorizacao
+	# em alobarbeiro.com enquanto o DNS propagava).
+	email nicolas@avilaops.com
+
+	# Faixas da Cloudflare (api.cloudflare.com/client/v4/ips, 26/08/2026). Só o
+	# crm.avilaops.com passa pelo proxy laranja; para ele, {client_ip} e
+	# remote_ip valem o visitante de verdade, nao a borda.
+	servers {
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+	}
+}
+
+# --- ArxisVR (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
+arxisvr.avilaops.com, www.arxisvr.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3102
+}
+
+api.arxisvr.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3101
+}
+
+# --- CRM (container agenda-crm-app 3020, /opt/agenda-crm/current) ---
+crm.avilaops.com {
+	reverse_proxy 127.0.0.1:3020
+}
+
+# --- Avila SMS (containers sms 3091 e sms-smpp 3093, /opt/sms) ---
+sms.avilaops.com {
+	encode zstd gzip
+
+	# /api/interno/* aceita "envie no nome desta conta" com um token so, que
+	# vale para todas as contas. Quem precisa chegar aqui de fora e o n8n, que
+	# desde 08/09/2026 roda no servidor de aplicacoes (178.105.82.48). O token
+	# continua sendo a fechadura; isto e a corrente.
+	@interno_de_fora {
+		path /api/interno/*
+		not remote_ip 127.0.0.1 ::1 172.16.0.0/12 178.105.82.48
+	}
+	respond @interno_de_fora 403
+
+	# Metricas da rota SMPP: o Prometheus que as lia (VPS de infra) nao existe
+	# mais; a rota fica fechada para tudo que nao for o proprio host.
+	handle /metricas/smpp {
+		@fora not remote_ip 127.0.0.1 ::1
+		respond @fora 403
+		rewrite * /metricas
+		reverse_proxy 127.0.0.1:3093
+	}
+
+	reverse_proxy 127.0.0.1:3091
+}
+
+# --- Alo Barbeiro (container alobarbeiro 3110, /opt/alobarbeiro) ---
+# Primeiro deploy em 10/09/2026. A zona na Cloudflare e alobarbeiro.com; o
+# repositorio chama-se alobarbeiro.com.br, mas essa zona nao esta na conta.
+alobarbeiro.com, www.alobarbeiro.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3110
+}

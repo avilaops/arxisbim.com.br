@@ -1,4 +1,4 @@
-# ArxisVR no servidor de APLICACOES (178.105.82.48).
+# ArxisVR no servidor apps-noclient (204.168.249.111). Ate 10/09/2026, no de aplicacoes (178.105.82.48).
 #
 # Diferente do compose antigo (deploy/docker-compose.yml, escrito para o
 # orquestrador), porque a maquina e outra e as restricoes tambem:

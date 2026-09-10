@@ -1,0 +1,81 @@
+# Migração 10/09/2026: ArxisVR, CRM, SMS e Alô Barbeiro para o servidor apps-noclient
+
+**Servidor novo:** `apps-noclient`, Hetzner CX23 (2 vCPU, 4 GB, 40 GB), Helsinki,
+`204.168.249.111` / `2a01:4f9:c015:4991::/64`, hostname `ubuntu-4gb-hel1-2`,
+Ubuntu 26.04. Alias SSH local: `apps-noclient`.
+**Servidor antigo:** aplicações, `178.105.82.48` (em swap; 3,6 GB usados antes da
+mudança, 3,2 GB depois).
+**Janela:** 19:03 a 19:20 UTC. Cada app ficou fora entre 2 e 6 minutos, o
+tempo de dump, restore e certificado.
+
+## O que foi para lá
+
+| App | Como roda | Dado | DNS |
+|---|---|---|---|
+| ArxisVR | `/opt/arxisvr`, containers `arxisvr-api` (3101) e `arxisvr-web` (3102) | banco `arxisvr` no Postgres 18 do host + volume `arxisvr_uploads` | `arxisvr.avilaops.com`, `api.arxisvr.avilaops.com` → novo IP, dns-only |
+| CRM | `/opt/agenda-crm/current`, containers `agenda-crm-app` (3020) e `agenda-crm-db` (Postgres 18 alpine) | banco no container + volume `agenda-crm-storage` | `crm.avilaops.com` → novo IP, proxied |
+| Avila SMS | `/opt/sms`, containers `sms` (3091), `sms-smpp` (3093), `sms-smpp-lab` (profile) | banco `sms` no host + volume `sms_smpp-dados` | `sms.avilaops.com` → novo IP, dns-only |
+| Alô Barbeiro | `/opt/alobarbeiro`, container `alobarbeiro` (3110), **primeiro deploy** | sem banco (fase 1, mock) | `alobarbeiro.com` e `www` criados, dns-only |
+
+`wa.avilaops.com` continua no servidor antigo como redirect para o SMS.
+
+## Base do servidor novo
+
+Docker 29 + Compose 2.40 (pacotes do Ubuntu), Caddy 2.11 nativo (repositório
+oficial: o 2.6 do Ubuntu não conhece `trusted_proxies`), Postgres 18.6 nativo
+escutando em `localhost,172.17.0.1` com `pg_hba` para `172.16.0.0/12`, ufw
+(22/80/443 abertos; 5432, 3091, 3093 e 2775 só para a faixa Docker), fail2ban,
+rclone. Papéis `arxisvr` e `sms` com as mesmas senhas e `CONNECTION LIMIT 20`.
+Caddyfile versionado em `deploy/Caddyfile.apps-noclient`.
+
+## Como foi feito
+
+1. Chave SSH temporária do servidor antigo para o novo: imagens (`docker save |
+   docker load`), `.env`, composes, volumes e `rclone.conf` foram direto entre
+   os dois, sem passar pela máquina do Nicolas. Chave removida no fim.
+2. Por app: parar o container do app (banco de pé) → `pg_dump | psql` → re-sync
+   do volume → `compose up` no novo → conferir em `127.0.0.1` → trocar o A na
+   Cloudflare (Global Key) → certificado → conferir pelo DNS público.
+3. ArxisVR provado com o roteiro do S18 em produção (12/12, IFC de 2,5 MB,
+   salvar cenário, export). E-mail de redefinição de senha saiu pelo
+   `mail.avilaops.com:587` público (era `172.17.0.1`).
+4. SMS: rota SMPP `pronta` contra o laboratório; `/api/interno` responde 401
+   (não 403) para o host do n8n, que entrou na corrente.
+5. CRM: 4.435 contatos dos dois lados; compose no novo aponta para a imagem
+   `current-app:latest` em vez de `build:`.
+
+## O que a migração pegou
+
+- **Restore como `postgres` deixa as tabelas com o dono errado.** `pg_dump
+  --no-owner` restaurado pelo superusuário cria tudo como `postgres`; a API
+  levava `permission denied for table users` no login. `ALTER ... OWNER TO`
+  em tabelas, sequências, views, funções e tipos resolveu. Para o CRM não
+  aconteceu porque o restore foi como `agenda_crm`.
+- **Let's Encrypt limita 5 falhas de autorização por hora.** O Caddy tentou
+  `alobarbeiro.com` antes de o DNS propagar e estourou o limite; com `email`
+  nas opções globais ele caiu para a ZeroSSL e emitiu. Ficou no Caddyfile.
+- **O banco `arxisvr` nunca esteve na lista de backup do servidor antigo.** No
+  novo está: `backup-todos-bancos.sh` (03:30) dumpa `arxisvr`, `sms`,
+  `agenda_crm` e os três volumes; `sync-r2.sh` (04:00) manda para
+  `r2:avilaops-backups/apps-noclient/db`. Primeira rodada feita e conferida no R2.
+
+## Servidor antigo
+
+Containers dos quatro **parados e mantidos** (`restart=no`) para rollback até
+17/09/2026; bancos `arxisvr` e `sms` e volumes intactos. Blocos do Caddy
+removidos (cópia em `/etc/caddy/Caddyfile.antes-migracao-20260910`), crons
+`arxisvr-health` e `agenda-crm-backup` apagados, `sms` e `agenda-crm-db` fora
+da lista de backup, portas 3091/3093/2775 fechadas no ufw.
+
+## Vigia
+
+`/opt/arxisvr/health-watch.sh` a cada 2 min no novo servidor (mesmo script de
+09/09). Alerta por e-mail via SMTP público.
+
+## Pendente
+
+- Apagar os containers, bancos e volumes antigos depois de 17/09.
+- `alobarbeiro.com.br` (nome do repositório) não está na Cloudflare; o site
+  está em `alobarbeiro.com`.
+- Deploy do CRM (`scripts/subir-sem-ci.sh`) e do SMS (`deploy/subir.sh`)
+  apontados para o novo servidor, ainda não exercitados de ponta a ponta.

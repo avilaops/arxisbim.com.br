@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Deploy do ArxisVR no servidor de APLICACOES (178.105.82.48).
+# Deploy do ArxisVR no servidor apps-noclient (204.168.249.111, Hetzner hel1).
+# Ate 10/09/2026 era o servidor de aplicacoes (178.105.82.48).
 #
 # Existe por causa de um erro concreto, em 08/09/2026: rodei o `docker save` da
 # imagem da API enquanto o `docker build` dela ainda estava em andamento, entao
@@ -16,7 +17,7 @@
 # Uso:  ./deploy/deploy-aplicacoes.sh [api|web|tudo]
 set -euo pipefail
 
-HOST="${ARXISVR_HOST:-178.105.82.48}"
+HOST="${ARXISVR_HOST:-204.168.249.111}"
 KEY="${ARXISVR_SSH_KEY:-$HOME/.ssh/hetzner_avilaops}"
 REMOTE=/opt/arxisvr
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
