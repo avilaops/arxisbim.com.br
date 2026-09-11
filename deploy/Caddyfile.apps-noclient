@@ -71,9 +71,12 @@ alobarbeiro.com, www.alobarbeiro.com {
 }
 
 # --- CDDA Judô (container cdda 3120, /opt/cdda) ---
-# Primeiro deploy em 11/09/2026. Zona cdda.com.br na Cloudflare, registros A
-# DNS-only (o TLS é do Caddy). Fonte: cdda.com.br/deploy/Caddyfile.bloco.
-cdda.com.br, www.cdda.com.br {
+# Primeiro deploy em 11/09/2026. Enquanto o cliente não paga o cdda.com.br,
+# o site responde em cdda.avilaops.com (A DNS-only na zona avilaops.com; o
+# TLS é do Caddy). Quando o domínio for pago, somar "cdda.com.br,
+# www.cdda.com.br" na linha de hosts; a zona na Cloudflare já tem os
+# registros A. Fonte: cdda.com.br/deploy/Caddyfile.bloco.
+cdda.avilaops.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3120
 }
