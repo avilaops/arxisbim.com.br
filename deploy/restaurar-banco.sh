@@ -89,12 +89,17 @@ echo "    tabelas: $tabelas · com dono errado: $alheios · migrations: $migr"
 [ "$tabelas" -gt 0 ] || { echo "restore vazio" >&2; exit 1; }
 
 # A prova que importa: o papel da aplicacao, sem ser superusuario, le e escreve.
-if [ -f /opt/arxisvr/.env ]; then
-  senha="$(grep -o '^DATABASE_URL=.*' /opt/arxisvr/.env | sed -E 's#^DATABASE_URL=postgres(ql)?://[^:]+:([^@]+)@.*#\2#')"
-  PGPASSWORD="$senha" psql -h 127.0.0.1 -U "$DONO" -d "$DB" -v ON_ERROR_STOP=1 -qAt \
-    -c "select 'conectou como '||current_user||' (superuser='||(select rolsuper from pg_roles where rolname=current_user)||')'" \
-    -c "select 'le users: '||count(*) from users" \
-    -c "create temp table _probe(id int); insert into _probe values (1); select 'escreve: ok'" \
-    || { echo "o papel $DONO NAO consegue usar o banco restaurado" >&2; exit 1; }
+# A senha vem de SENHA_DONO (ou do DATABASE_URL de /opt/arxisvr/.env quando o
+# dono e arxisvr). Sem senha para o papel, a prova e pulada com aviso: em 11/09
+# este script rodou para outline, ia e n8n com a senha do arxisvr e reprovou
+# tres restores que estavam certos.
+senha="${SENHA_DONO:-}"
+if [ -z "$senha" ] && [ "$DONO" = arxisvr ] && [ -f /opt/arxisvr/.env ]; then
+  senha="$(grep -o '^DATABASE_URL=.*' /opt/arxisvr/.env | sed -E 's#^DATABASE_URL=postgres(ql)?://[^:]+:([^@]+)@.*##')"
+fi
+if [ -n "$senha" ]; then
+  PGPASSWORD="$senha" psql -h 127.0.0.1 -U "$DONO" -d "$DB" -v ON_ERROR_STOP=1 -qAt     -c "select 'conectou como '||current_user||' (superuser='||(select rolsuper from pg_roles where rolname=current_user)||')'"     -c "select 'le '||count(*)||' tabelas' from pg_tables where schemaname='public'"     -c "create temp table _probe(id int); insert into _probe values (1); select 'escreve: ok'"     || { echo "o papel $DONO NAO consegue usar o banco restaurado" >&2; exit 1; }
+else
+  echo "    (sem SENHA_DONO: prova de leitura/escrita como $DONO pulada; dono e grants conferidos acima)"
 fi
 echo "==> restore de '$DB' concluido e provado"

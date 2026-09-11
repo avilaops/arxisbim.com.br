@@ -41,12 +41,13 @@ sms.avilaops.com {
 	encode zstd gzip
 
 	# /api/interno/* aceita "envie no nome desta conta" com um token so, que
-	# vale para todas as contas. Quem precisa chegar aqui de fora e o n8n, que
-	# desde 08/09/2026 roda no servidor de aplicacoes (178.105.82.48). O token
+	# vale para todas as contas. Quem chama e o n8n, que desde 11/09/2026 roda
+	# NESTE servidor: o pedido sai do container pelo IP publico da maquina
+	# (204.168.249.111), nao pela bridge, entao ele entra na lista. O token
 	# continua sendo a fechadura; isto e a corrente.
 	@interno_de_fora {
 		path /api/interno/*
-		not remote_ip 127.0.0.1 ::1 172.16.0.0/12 178.105.82.48
+		not remote_ip 127.0.0.1 ::1 172.16.0.0/12 204.168.249.111
 	}
 	respond @interno_de_fora 403
 
@@ -79,4 +80,49 @@ alobarbeiro.com, www.alobarbeiro.com {
 cdda.avilaops.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3120
+}
+
+# --- n8n (container n8n-n8n-1, /opt/n8n) ---
+# Veio do servidor de aplicacoes em 11/09/2026 (la vivia em swap; antes disso
+# no VPS de infra, removido em 08/09). Motor comercial: todo produto da casa
+# chama n8n.avilaops.com pelo nome publico, entao mudar de maquina nao muda
+# nenhuma configuracao deles.
+n8n.avilaops.com {
+	reverse_proxy 127.0.0.1:5678 {
+		# O editor usa WebSocket para execucao ao vivo; sem cabecalho longo a
+		# tela fica "conectando" para sempre.
+		flush_interval -1
+	}
+}
+
+# --- Notas (Outline, container notas-outline 3090, /opt/notas-avilaops-com) ---
+# Login pelo auth.avilaops.com (OIDC), que continua no servidor de aplicacoes.
+notas.avilaops.com {
+	encode zstd gzip
+	# Websocket obrigatorio: edicao colaborativa em tempo real.
+	reverse_proxy 127.0.0.1:3090 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# --- Avila IA (containers ia-app 3092 e ia-worker, /opt/ia) ---
+ia.avilaops.com {
+	encode zstd gzip
+	request_body {
+		max_size 40MB
+	}
+	reverse_proxy 127.0.0.1:3092 {
+		transport http {
+			response_header_timeout 5m
+			read_timeout 5m
+			write_timeout 5m
+		}
+	}
 }

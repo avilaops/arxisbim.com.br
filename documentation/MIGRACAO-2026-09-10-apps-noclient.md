@@ -89,8 +89,48 @@ da lista de backup, portas 3091/3093/2775 fechadas no ufw.
 Base do servidor novo ganhou `docker-buildx` (o `docker.io` do Ubuntu não traz
 o plugin e o BuildKit não constrói sem ele).
 
+## Segunda leva (11/09/2026, 11:00 a 11:10 UTC): n8n, Notas e Avila IA
+
+Nicolas: "o outro servidor tá sufocado". Medido antes: 863 MB disponíveis e
+3,5 GB de swap no de aplicações; 2,4 GB livres e swap zero no apps-noclient.
+Critério, o mesmo de 10/09: sai o que **não é de cliente**. Pelos números,
+os maiores eram n8n (330 MB), Outline (155 MB + redis) e ia (108 MB + worker);
+o app da Ávila (128 MB) fica porque é o portal e o hub de auth/mail; Migdolus e
+Fênix são pilotos de cliente.
+
+| App | Como roda agora | Dado | Prova |
+|---|---|---|---|
+| n8n | `/opt/n8n`, `n8n-n8n-1` (5678), banco `n8n` no Postgres do host | dump (136 tabelas) + `dados/` (config e **chave de criptografia**) + `arquivos/` | 54 workflows / 52 ativos nos dois lados, 18 credenciais nos dois lados; `/healthz` ok; `n8n.avilaops.com` 200 |
+| Notas (Outline) | `/opt/notas-avilaops-com`, `notas-outline` (3090) + `notas-redis`, banco `notas` (papel `outline`) | dump (42 tabelas) + volume `outline-data` | `/_health` 200; login continua no `auth.avilaops.com` (OIDC), que ficou no de aplicações |
+| Avila IA | `/opt/ia`, `ia-app` (3092) + `ia-worker`, banco `ia` | dump (8 tabelas) + volumes `ia_dados` e `ia_modelos` (943 MB) | `/api/health` com `banco: true` e worker ok; `ia.avilaops.com` 200 |
+
+Cada um: parar no antigo → `pg_dump | restaurar-banco.sh` no novo (dono e grants
+provados: `outline`, `ia` e `n8n` leem e escrevem, superuser=false) → re-sync
+dos dados fora do banco → `compose up` → conferência local → A na Cloudflare →
+certificado → conferência pública. Blocos no `Caddyfile.apps-noclient`.
+
+**O que a leva pegou.** (1) Instalei os três blocos no Caddy um minuto ANTES de
+trocar o DNS: o Caddy pediu certificado para o IP errado 8 vezes (a ZeroSSL
+entrou uma). Não estourou o limite, mas foi exatamente o erro que o
+`preflight-dns` existe para evitar, e eu tinha o script instalado. Regra que
+fica: bloco no Caddy só depois do `preflight-dns` dizer "pronto". (2) A prova
+final do `restaurar-banco.sh` usava a senha do `arxisvr` para qualquer papel e
+reprovou três restores certos; corrigido: `SENHA_DONO`, e sem senha a prova é
+pulada com aviso. (3) O n8n no mesmo servidor chega ao `/api/interno` do SMS
+pelo IP público da máquina, não pela bridge: a lista de permitidos passou de
+`178.105.82.48` para `204.168.249.111` (401 do novo host, 403 de fora e do
+antigo). (4) O backup do novo servidor ganhou os três bancos, os volumes e um
+tar de `/opt/n8n/dados` (sem a chave de criptografia o dump do n8n é inútil):
+`ok=12 erros=0` na hora.
+
+**Servidor de aplicações depois:** 1,96 GB disponíveis (era 863 MB). Os cinco
+containers ficaram parados com `restart=no`, bancos `n8n`/`notas`/`ia` e
+volumes intactos, para rollback até **18/09/2026**. Blocos do Caddy removidos
+(cópia em `Caddyfile.antes-migracao2-20260911`), bancos tirados da lista de
+backup de lá.
+
 ## Pendente
 
-- Apagar os containers, bancos e volumes antigos depois de 17/09.
+- Apagar os containers, bancos e volumes antigos no servidor de aplicações: os de 10/09 depois de 17/09, os de 11/09 (n8n, notas, ia) depois de 18/09.
 - `alobarbeiro.com.br` (nome do repositório) não está na Cloudflare; o site
   está em `alobarbeiro.com`.
