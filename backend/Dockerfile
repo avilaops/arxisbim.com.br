@@ -25,6 +25,11 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+# Portao de tipos dentro da imagem (11/09/2026): o build e esbuild, que nao
+# checa tipos; sem isto um erro de tipo viaja para producao em silencio.
+# CONFERIR=1 pula (emergencia comprovada, nunca por rotina).
+ARG CONFERIR=0
+RUN if [ "$CONFERIR" != "1" ]; then npm run type-check; fi
 RUN npm run build && npm prune --omit=dev
 
 FROM node:24-slim

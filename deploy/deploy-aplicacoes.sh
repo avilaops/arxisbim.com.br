@@ -25,32 +25,66 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ssh_() { ssh -i "$KEY" -o StrictHostKeyChecking=no "root@$HOST" "$@"; }
 
 deploy_api() {
-  echo "==> [api] build local"
-  # Local, e nao no servidor: o build e o pico de consumo de RAM e a maquina
-  # divide 3,7 GB com os clientes. Compilar la arrisca derrubar quem paga.
-  docker build -t arxisvr-api:local "$ROOT/backend"
-
-  # Marca do build: a data de modificacao do dist dentro da imagem. Serve para
-  # provar, depois, que o servidor recebeu ESTA imagem e nao uma anterior.
-  local marca
-  marca="$(docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c')"
-  echo "    marca do build (bytes de dist/index.js): $marca"
-
-  echo "==> [api] enviando a imagem"
-  docker save arxisvr-api:local | gzip -1 | ssh_ 'gunzip | docker load'
-
-  echo "==> [api] conferindo a imagem NO SERVIDOR antes de subir"
-  local remoto
-  remoto="$(ssh_ "docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c'")"
-  if [ "$marca" != "$remoto" ]; then
-    echo "[api] ABORTADO: a imagem no servidor ($remoto) nao e a que acabei de" >&2
-    echo "      construir ($marca). Foi isso que aconteceu em 08/09/2026." >&2
-    return 1
+  # Portao: tipos do backend ANTES de construir a imagem. O build e esbuild,
+  # que remove os tipos sem checar: um erro de tipo viaja para producao sem
+  # nenhum aviso. O portao existia em deploy/deploy.sh (orquestrador) e nao
+  # tinha vindo para ca; achado na prova de deploy de 11/09/2026.
+  # O type-check tambem roda no servidor (etapa do Dockerfile, abaixo), pelo
+  # mesmo motivo do build: a maquina do Nicolas e dividida com outras sessoes
+  # e um `tsc` local chegou a ficar 20 min sem terminar (11/09/2026).
+  # ARXISVR_BUILD_LOCAL=1 confere aqui, como antes.
+  if [ "${ARXISVR_BUILD_LOCAL:-0}" = "1" ] && [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
+    echo "==> [api] type-check (npm run type-check)"
+    (cd "$ROOT/backend" && npm run type-check) || { echo "    tipos com erro: deploy parado antes de construir"; return 1; }
   fi
-  echo "    ok, e a mesma imagem"
+  # Build NO SERVIDOR, a partir do codigo enviado por tar (11/09/2026). No
+  # servidor de aplicacoes o build era local porque a maquina dividia 3,7 GB
+  # com clientes pagantes; o apps-noclient nao tem cliente, tem 2,4 GB livres,
+  # e o app esta em desenvolvimento: um build pesado la so pesa no proprio
+  # ArxisVR. Local, a imagem de 850 MB levava 20 min para construir e outros
+  # tantos para subir (o `docker save | ssh` trava a maquina do Nicolas).
+  # ARXISVR_BUILD_LOCAL=1 volta ao caminho antigo, se um dia fizer falta.
+  local marca
+  if [ "${ARXISVR_BUILD_LOCAL:-0}" = "1" ]; then
+    echo "==> [api] build local"
+    docker build -t arxisvr-api:local "$ROOT/backend"
+    marca="$(docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c')"
+    echo "    marca do build (bytes de dist/index.js): $marca"
+    echo "==> [api] enviando a imagem"
+    docker save arxisvr-api:local | gzip -1 | ssh_ 'gunzip | docker load'
+  else
+    echo "==> [api] enviando o codigo (tar, respeitando o .dockerignore)"
+    # O tar leva so o que o Dockerfile usaria: sem node_modules, dist, .env,
+    # uploads. Sao ~1 MB em vez de 850 MB de imagem.
+    # O .dockerignore exclui o proprio Dockerfile (ele nao precisa ir para
+    # DENTRO da imagem), mas o build precisa dele no contexto: vai a parte.
+    tar -C "$ROOT/backend" --exclude-from="$ROOT/backend/.dockerignore" -czf - .       | ssh_ "rm -rf $REMOTE/build-api && mkdir -p $REMOTE/build-api && tar -C $REMOTE/build-api -xzf -"
+    scp -q -i "$KEY" "$ROOT/backend/Dockerfile" "$ROOT/backend/.dockerignore" "root@$HOST:$REMOTE/build-api/"
+    echo "==> [api] type-check + build NO SERVIDOR (o Dockerfile roda tsc --noEmit antes do esbuild)"
+    ssh_ "cd $REMOTE/build-api && DOCKER_BUILDKIT=1 docker build --build-arg CONFERIR=${ARXISVR_SEM_CONFERIR:-0} -q -t arxisvr-api:local . >/dev/null && rm -rf $REMOTE/build-api"       || { echo "[api] type-check ou build falhou no servidor (leia acima)" >&2; return 1; }
+    marca="$(ssh_ "docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c'")"
+    echo "    marca do build (bytes de dist/index.js): $marca"
+  fi
 
+  # Marca do build: o tamanho do dist dentro da imagem. Depois de subir, o
+  # container em execucao tem de mostrar a MESMA marca: e a prova de que o
+  # que esta rodando e o que acabou de ser construido (08/09/2026: um deploy
+  # "sem erro" tinha subido a imagem anterior).
   echo "==> [api] subindo"
   ssh_ "cd $REMOTE && docker compose up -d --force-recreate api"
+  local rodando
+  rodando="$(ssh_ "docker exec arxisvr-api sh -c 'cat /app/dist/index.js | wc -c'")"
+  if [ "$marca" != "$rodando" ]; then
+    echo "[api] ABORTADO: o container em execucao ($rodando) nao e a imagem recem-construida ($marca)." >&2
+    return 1
+  fi
+  echo "    ok, o container roda a imagem recem-construida"
+
+  # O .env e o volume de uploads nao sao tocados pelo deploy: conferido aqui
+  # porque perde-los seria silencioso (a API sobe, os IFCs somem).
+  echo "==> [api] conferindo .env e volume de uploads no container novo"
+  ssh_ "test -s $REMOTE/.env && docker inspect arxisvr-api --format '{{range .Mounts}}{{.Name}} {{.Destination}}{{println}}{{end}}' | grep -q 'arxisvr_uploads /app/uploads'"     || { echo "[api] ABORTADO: .env vazio ou volume de uploads nao montado" >&2; return 1; }
+  echo "    ok"
 
   echo "==> [api] esperando o /health"
   for _ in $(seq 1 40); do
@@ -72,7 +106,7 @@ deploy_web() {
     echo "==> [web] type-check (npm run typecheck)"
     (cd "$ROOT/frontend" && npm run typecheck) || { echo "    tipos com erro: deploy parado antes de empacotar"; return 1; }
   fi
-  echo "==> [web] build local"
+  echo "==> [web] build local (Vite, ~1 min: nao vale o tar de 14 MB de dist mais o node_modules no servidor)"
   # VITE_API_URL entra no bundle em tempo de build: sem isto o site publicado
   # aponta para localhost e nenhuma tela carrega dado.
   (cd "$ROOT/frontend" && VITE_API_URL=https://api.arxisvr.avilaops.com npm run build)
@@ -110,6 +144,13 @@ esac
 
 echo
 echo "==> conferindo no ar"
-for u in https://api.arxisvr.avilaops.com/health https://arxisvr.avilaops.com/; do
-  printf '  %-45s %s\n' "$u" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$u")"
+falhou=0
+for u in https://api.arxisvr.avilaops.com/health https://arxisvr.avilaops.com/ https://arxisvr.avilaops.com/validador https://arxisvr.avilaops.com/app/compare; do
+  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$u")"
+  printf '  %-45s %s
+' "$u" "$codigo"
+  [ "$codigo" = "200" ] || falhou=1
 done
+# /health precisa dizer que o banco esta de pe: 200 com database:down foi o incidente de 09/09.
+curl -s --max-time 25 https://api.arxisvr.avilaops.com/health | grep -q '"database":"up"' && echo '  banco: up' || { echo '  banco: NAO esta up' >&2; falhou=1; }
+[ "$falhou" = 0 ] || { echo "deploy terminou, mas a conferencia publica falhou" >&2; exit 1; }
