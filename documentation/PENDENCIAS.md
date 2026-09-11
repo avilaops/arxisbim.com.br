@@ -1,7 +1,7 @@
 # ArxisVR — o que falta executar
 
 **Levantado em:** 04/09/2026, conferindo servidor, repo e produção.
-**Atualizado em:** 07/09/2026 — type-check zerado e com portão (item 2.4).
+**Atualizado em:** 11/09/2026 — migração operacional fechada; S26 levantado (item 3.1).
 **Estado:** produção no ar (`/`, `/app`, API, todos 200). S12 ★ atingido.
 
 ---
@@ -124,6 +124,38 @@ Estão espalhadas pelos commits; ficam juntas aqui:
   não só `email_verified_at`), e upload de IFC exige o campo `discipline`.
 
 ---
+
+## 3.1 S26 ★ (comparação temporal): o que existe de verdade (conferido 11/09/2026)
+
+**Backend:** registrado e vivo. `schedules` (por projeto, opcionalmente por
+cenário), `activities` (planned_start/end, duração gerada), `activity_predecessors`
+(FS/SS/FF/SF, lag), `activity_elements` (por **GlobalId**), `cpm.service`
+(forward pass, data de conclusão) e `GET /scenarios/:a/:b/timeline-comparison`
+(carrega os dois cronogramas, roda CPM, devolve atividades com early start/finish
+e `deltaDays`). Rotas de criar cronograma e atividade existem (`POST
+/projects/:id/schedules`, `POST /schedules/:id/activities`, `.../elements`).
+
+**Frontend órfão:** `src/timeline/` (1.119 linhas, com testes): `TimelineSlider`,
+`AnimationController`, `ElementStateResolver` (not_started/active/complete por
+data), `TimelineComparison` (lê exatamente a rota acima e usa o `SplitView`
+órfão). DOM manual, como o `CameraSync` que o S18 aproveitou.
+
+**Produção:** `schedules`, `activities`, `predecessors`, `activity_elements`:
+**0 linhas cada**. Nenhum usuário consegue criar um cronograma: não há tela.
+
+**O buraco, portanto, não é o diff nem o slider: é a entrada de dados.** Sem
+cronograma não há o que comparar. E há um descasamento a resolver antes: o 4D
+vincula elemento por **GlobalId** (IFC) e o viewer vivo só conhece
+**expressID** (subsets do web-ifc-three); o `web-ifc` dá o GlobalId a partir do
+expressID (`getItemProperties`), mas isso ainda não é lido em lugar nenhum vivo.
+
+**Caminho mínimo para o ★ (sem backend novo):** (1) tela de cronograma por
+cenário com atividades e datas, gravando nas rotas existentes; (2) vínculo
+atividade → categoria IFC (o que o viewer já sabe) traduzido para GlobalIds no
+salvamento; (3) slider de data no viewer (do órfão), colorindo por estado;
+(4) A|B com `deltaDays` e conclusão de cada lado, sobre o `ComparisonCanvas`
+do S18; (5) prova em produção: dois cenários com cronogramas diferentes, o
+split mostra a diferença de prazo, reload mantém.
 
 ## 4. Recomendação
 

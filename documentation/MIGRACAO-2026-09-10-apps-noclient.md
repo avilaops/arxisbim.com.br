@@ -72,10 +72,25 @@ da lista de backup, portas 3091/3093/2775 fechadas no ufw.
 `/opt/arxisvr/health-watch.sh` a cada 2 min no novo servidor (mesmo script de
 09/09). Alerta por e-mail via SMTP público.
 
+## Fechamento operacional (11/09/2026)
+
+| Portão | Estado | Prova |
+|---|---|---|
+| Deploy ArxisVR | ✅ provado | `deploy/deploy-aplicacoes.sh tudo` do HEAD, 09:12 a 09:18 UTC, exit 0. Type-check e build da API **no servidor** (tar de ~1 MB; a máquina local dividia CPU com outras sessões e o `tsc` passou 20 min sem terminar). Marca 26722 na imagem e no container; `.env` e volume `arxisvr_uploads` conferidos; `/health` com `database: up`; `/`, `/validador`, `/app/compare` em 200; S18 12/12 em seguida. Commit `9e86903`. |
+| Deploy CRM | ✅ provado | `scripts/subir-sem-ci.sh` (commit `cfbbdb7`): typecheck, lint, testes, build, camada nova sobre a imagem, migrate, "no ar, revisão cfbbdb7". 4.435 contatos antes e depois; `crm.avilaops.com` 200 pela Cloudflare. |
+| Deploy SMS | _(ver abaixo)_ | `deploy/subir.sh`: `npm run conferir`, build das duas imagens, envio, compose. A primeira rodada parou no `prisma migrate deploy`: a migration `20260904000000_canal_de_teste` **nunca foi registrada** no servidor antigo (a coluna foi criada à mão em 04/09 e o arquivo commitado depois), e o dump trouxe a coluna sem a linha em `_prisma_migrations`. Resolvido com `prisma migrate resolve --applied` (só a contabilidade; a coluna já existia e é a certa). |
+| Backup | ✅ | 03:30 de 11/09: `ok=6 erros=0`; R2 em `apps-noclient/db`, 12 arquivos, SHA-256 do `host-arxisvr-20260911.sql.gz` igual local e no bucket. |
+| Restore | ✅ provado | Dump baixado **do R2**, restaurado como `postgres` em `arxisvr_restore_test_20260911`: 77 tabelas, 60 migrations, 5 tenants, 2 users, 2 projects, 2 ifc_models, 2 scenarios, 326 índices, 719 constraints, iguais à produção. Banco temporário apagado; o dump ficou. |
+| Ownership pós-restore | ✅ automatizado | O dump noturno **já traz** `ALTER ... OWNER TO arxisvr` (87 sentenças); o defeito da migração veio do meu `--no-owner` manual. Mesmo assim `deploy/restaurar-banco.sh` transfere dono de tabelas, sequências, views, funções e enums, dá os grants, e **prova** no fim: o papel `arxisvr` (superuser=false) conecta, lê `users` e escreve. Rodado no servidor: "tabelas: 77 · com dono errado: 0". |
+| SMS `/api/interno` | ✅ conferido | De fora: 403 (nem chega na autenticação). Do host do n8n (178.105.82.48): 401 sem token, 401 com token errado, 400 de validação com o token certo. `/metricas/smpp` de fora: 403. Fluxos "Messageria — Enviar" e "Avila SMS — Onboarding e Operação" ativos no n8n. |
+| Caddy / certificados | ✅ | `deploy/preflight-dns.sh` (instalado como `/usr/local/bin/preflight-dns`): resolve em 1.1.1.1 e 8.8.8.8, aceita o IP do servidor ou a Cloudflare (proxied), reprova "aponta para outro lugar" e "não resolve". Testado nos 8 hostnames (o `wa.avilaops.com` reprova de propósito: fica no servidor antigo). `email` da CA mantido no Caddyfile. |
+| Servidor antigo | ✅ preservado até 17/09 | 7 containers `Exited` com `restart=no`; bancos `arxisvr` (21 MB) e `sms` (9 MB) e 7 volumes intactos; 0 conexões desses papéis; nada escuta em 3020/3091/3093/3101/3102; sem regra no ufw; sem cron; 0 blocos no Caddy; DNS público dos 4 apps aponta para o novo. As "4 falhas" do backup noturno de lá eram `avilaops`, `brilhax`, `partsagricola` e `agricola_medusa`, bancos que não existem mais naquele Postgres desde antes da migração: tirados da lista em 11/09. |
+
+Base do servidor novo ganhou `docker-buildx` (o `docker.io` do Ubuntu não traz
+o plugin e o BuildKit não constrói sem ele).
+
 ## Pendente
 
 - Apagar os containers, bancos e volumes antigos depois de 17/09.
 - `alobarbeiro.com.br` (nome do repositório) não está na Cloudflare; o site
   está em `alobarbeiro.com`.
-- Deploy do CRM (`scripts/subir-sem-ci.sh`) e do SMS (`deploy/subir.sh`)
-  apontados para o novo servidor, ainda não exercitados de ponta a ponta.
