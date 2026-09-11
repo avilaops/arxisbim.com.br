@@ -1,0 +1,52 @@
+/* Ávila Ops · n8n no celular (11/09/2026)
+   Nas listas (Visão geral, Workflows, Credenciais, Execuções) o n8n prende o
+   cabeçalho (título, botão, métricas, abas, busca, filtros) e rola só a
+   lista, num bloco absoluto. Num iPhone sobra menos da metade da tela para os
+   fluxos. Aqui, até 820px, a lista deixa de ser um bloco próprio e a página
+   inteira rola: o cabeçalho sobe junto e some conforme a pessoa desce.
+   Seletores por data-test-id, que são estáveis entre versões; nada de classe
+   com hash. Servido pelo Caddy, injetado no <head> do index.html. */
+@media (max-width: 820px) {
+  /* A lista volta ao fluxo normal e cresce com o conteúdo. */
+  [data-test-id="resources-list-wrapper"] {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  [data-test-id="paginated-list"],
+  [data-test-id="paginated-list"] > * {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Os pais que davam altura fixa ao bloco da lista soltam a altura. */
+  div:has(> [data-test-id="resources-list-wrapper"]),
+  div:has(> div > [data-test-id="resources-list-wrapper"]),
+  div:has(> div > div > [data-test-id="resources-list-wrapper"]),
+  main:has([data-test-id="resources-list-wrapper"]) {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+  /* Cabeçalho mais baixo: sem o subtítulo, com menos respiro. */
+  [data-test-id="project-subtitle"] {
+    display: none !important;
+  }
+  [data-test-id="project-name"] {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+  [data-test-id="add-resource-buttons"] {
+    margin-top: 6px !important;
+  }
+  /* Busca, ordenação e filtro numa linha só, em vez de três. */
+  [data-test-id="resources-list-search"] {
+    min-width: 0 !important;
+  }
+  /* O cartão de fluxo ocupa a largura e não quebra a ação para a direita. */
+  [data-test-id="resources-list-item-workflow"] {
+    margin-right: 0 !important;
+  }
+}
