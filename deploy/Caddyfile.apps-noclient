@@ -69,3 +69,11 @@ alobarbeiro.com, www.alobarbeiro.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3110
 }
+
+# --- CDDA Judô (container cdda 3120, /opt/cdda) ---
+# Primeiro deploy em 11/09/2026. Zona cdda.com.br na Cloudflare, registros A
+# DNS-only (o TLS é do Caddy). Fonte: cdda.com.br/deploy/Caddyfile.bloco.
+cdda.com.br, www.cdda.com.br {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3120
+}
