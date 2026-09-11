@@ -82,6 +82,15 @@ cdda.avilaops.com {
 	reverse_proxy 127.0.0.1:3120
 }
 
+# --- EngOps (container engops 3130, /opt/engops) ---
+# Demandas Caixa (SIMIL, RAE, SIOPI) da vertical EngOps, no ar desde
+# 11/09/2026. Login pelo auth.avilaops.com (cookie avila_sso). A DNS-only na
+# zona avilaops.com; TLS do Caddy. Fonte: engops/deploy/Caddyfile.snippet.
+engops.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3130
+}
+
 # --- n8n (container n8n-n8n-1, /opt/n8n) ---
 # Veio do servidor de aplicacoes em 11/09/2026 (la vivia em swap; antes disso
 # no VPS de infra, removido em 08/09). Motor comercial: todo produto da casa
