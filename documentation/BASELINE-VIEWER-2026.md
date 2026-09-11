@@ -61,8 +61,8 @@ Open IFC Model Repository servem: FZK-Haus é um deles).
 
 ## 4. Benchmark inicial (viewer vivo, produção)
 
-Roteiro: `scratchpad/ui/bench-viewer.mjs` (Playwright, Chromium headless com
-ANGLE, 1440×900). Mede sem tocar no código: tempo até o canvas, tempo até o fim
+Roteiro: `deploy/bench/bench-viewer.mjs` (Playwright, 1440×900; `HEADED=1`
+para GPU real). Mede sem tocar no código: tempo até o canvas, tempo até o fim
 do "carregando", long tasks, heap, frame time parado e em órbita.
 
 **Limitação registrada:** a primeira tentativa em 11/09 rodou numa máquina
@@ -71,15 +71,32 @@ estourou 30 s, com o servidor respondendo em 88 ms. Números de máquina saturad
 não são baseline; a tabela abaixo é preenchida só com uma rodada em máquina
 ociosa, com o hardware anotado.
 
-| Métrica | Valor | Hardware |
+**Hardware:** i5-1334U (10 núcleos), 8 GB, Intel UHD integrada, Windows 11,
+máquina do Nicolas **dividida com outras sessões** (22 a 39 processos `node`
+durante as medições). Modelo: `ac20-fzk-haus_ifc4.ifc`, 2,57 MB, 90 elementos.
+Produção (`pages-BIoc7CZP.js`, 11/09/2026).
+
+| Métrica | Headless (SwiftShader) mediana de 3 | Headed (GPU real) melhor de 2 |
 |---|---|---|
-| ms até o canvas existir | _(pendente)_ | |
-| ms até "carregando" sumir | _(pendente)_ | |
-| long tasks durante a carga (n / máx ms) | _(pendente)_ | |
-| heap JS após carga (MB) | _(pendente)_ | |
-| frame time parado p50 / p95 (ms) | _(pendente)_ | |
-| frame time em órbita p50 / p95 (ms) | _(pendente)_ | |
-| draw calls / triângulos / geometrias | **não mensurável hoje**: o viewer não expõe `renderer.info` | |
+| ms do clique no modelo até o canvas existir | 4.893 | 4.733 |
+| ms até o "carregando" sumir (modelo pronto) | 13.551 | 17.871 |
+| long tasks durante a carga (n / máx ms / soma ms) | 22 / 1.649 / 6.139 | 8 / 1.217 / 2.377 |
+| heap JS após carga / após órbita (MB) | 41 / 36 | 41 / 42 |
+| frame time parado p50 / p95 (ms) | 200 / 233 | **16,7 / 16,8** |
+| frame time em órbita p50 / p95 (ms) | 217 / 250 | **16,7 / 16,8** |
+| draw calls / triângulos / geometrias | não mensurável: o viewer não expõe `renderer.info` | idem |
+
+**Leitura.** Os 200 ms de frame do headless são o SwiftShader (render por
+software, ~5 FPS fixo): não medem o produto. Com GPU o viewer está **preso ao
+vsync** (16,7 ms cravado, parado e em órbita) num modelo de 90 elementos, que é
+o esperado: o FZK-Haus não revela gargalo de render. **O que os números
+revelam é a carga:** 13 a 18 s do clique ao modelo pronto, dos quais ~5 s até o
+canvas (download de 2,5 MB + import dinâmico dos chunks `three` e `web-ifc`) e o
+resto parse na main thread, em 8 a 22 long tasks com picos de 1,2 a 1,6 s cada.
+Numa máquina ociosa esses tempos caem; numa saturada, o headed round 1 registrou
+uma long task de 137 s (a janela disputando a CPU com o resto). O baseline a
+bater, em máquina ociosa, será medido de novo antes da Fase 1; o que fica desde
+já: **carga = long task**, e é a primeira coisa a mover para worker.
 
 O que já se sabe sem medir: o parse do IFC roda na **main thread**, então o
 tempo de carga é inteiro uma long task; e o FZK-Haus é pequeno demais para
