@@ -86,7 +86,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       ctx.fillStyle = '#a1a1aa'
       ctx.font = `${Math.round(rotulo * 0.32)}px Inter, system-ui, sans-serif`
       ctx.textAlign = 'right'
-      ctx.fillText(`${modelName} · ArxisVR · ${new Date().toLocaleDateString('pt-BR')}`, w - 12, rotulo / 2)
+      ctx.fillText(`${modelName} · Arxis · ${new Date().toLocaleDateString('pt-BR')}`, w - 12, rotulo / 2)
       if (rodape && diferencas) {
         // A diferenca vai escrita no PNG: quem recebe a imagem nao ve a legenda da tela.
         const y = h - rodape / 2

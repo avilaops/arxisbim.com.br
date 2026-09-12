@@ -93,7 +93,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           }}
         >
           <img src="/logo-icon.svg" alt="" style={{ width: '22px', height: '22px' }} />
-          <span className="brand-name">ArxisVR</span>
+          <span className="brand-name">Arxis</span>
         </Link>
         {/* So no mobile (CSS): o "Recolher menu" do rodape e semantica de
             desktop e ficava a 1.500px de distancia do polegar. */}

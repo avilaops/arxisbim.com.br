@@ -7,7 +7,7 @@ export default function JoinPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const workspaceName = searchParams.get('name') || 'ArxisVR'
+  const workspaceName = searchParams.get('name') || 'Arxis'
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -39,7 +39,7 @@ export default function JoinPage() {
       }}
     >
       <div style={{ width: '100%', maxWidth: '500px', textAlign: 'center' }}>
-        <img src="/logo-icon.svg" alt="ArxisVR" style={{ width: '48px', height: '48px', margin: '0 auto 24px' }} />
+        <img src="/logo-icon.svg" alt="Arxis" style={{ width: '48px', height: '48px', margin: '0 auto 24px' }} />
 
         <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '8px', letterSpacing: '-0.5px' }}>
           Junte-se a {workspaceName}

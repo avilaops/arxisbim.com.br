@@ -3,7 +3,7 @@ import { ViewerSnapshot } from './ViewerStateSnapshot';
 import { ViewerAction } from './ActionDSL';
 
 /**
- * AIAssistant - Assistente AI para ArxisVR
+ * AIAssistant - Assistente AI para Arxis
  * 
  * Integra com ChatGPT para comandos em linguagem natural.
  * Interpreta intenção do usuário e executa ações no viewer.
@@ -114,7 +114,7 @@ export class AIAssistant {
    * Constrói prompt do sistema com contexto
    */
   private buildSystemPrompt(state: ViewerSnapshot): string {
-    return `You are ArxisVR's BIM assistant for enterprise architecture, engineering and construction coordination.
+    return `You are Arxis's BIM assistant for enterprise architecture, engineering and construction coordination.
 
   Current workspace state:
 - Camera: Position (${state.camera.position.join(', ')}), Target (${state.camera.target.join(', ')})

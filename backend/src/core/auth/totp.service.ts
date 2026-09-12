@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { users } from '../../shared/database/schema/tenants.js';
 import jwt from 'jsonwebtoken';
 
-const APP_NAME = 'ArxisVR';
+const APP_NAME = 'Arxis';
 const BACKUP_CODE_COUNT = 8;
 const CHALLENGE_EXPIRY = '10m';
 

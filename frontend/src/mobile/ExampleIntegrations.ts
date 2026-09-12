@@ -114,7 +114,7 @@ export class MobileBackButtonHandler {
       }
 
       // 3. Se não tem nada aberto, confirmar saída
-      const shouldExit = confirm('Deseja sair do ArxisVR?');
+      const shouldExit = confirm('Deseja sair do Arxis?');
       return shouldExit;
     });
   }
@@ -259,7 +259,7 @@ export class MobileShareHelper {
 
       // 3. Compartilhar
       await mobilePlatform.shareContent({
-        title: `${projectName} - ArxisVR`,
+        title: `${projectName} - Arxis`,
         text: 'Confira este modelo BIM!',
         files: [path]
       });

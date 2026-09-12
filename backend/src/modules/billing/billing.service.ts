@@ -500,7 +500,7 @@ export class BillingService {
         billingCycle,
         amountCents,
         currency: DEFAULT_CURRENCY,
-        reason: `ArxisVR · ${definition.name} (${billingCycle === 'yearly' ? 'anual' : 'mensal'})`,
+        reason: `Arxis · ${definition.name} (${billingCycle === 'yearly' ? 'anual' : 'mensal'})`,
         payerEmail: requester.email,
         externalReference: buildExternalReference(tenantId, plan, billingCycle),
         backUrl: successUrl,
@@ -1101,7 +1101,7 @@ export class BillingService {
         currency: charge.currency.toUpperCase(),
         customerEmail: (charge.raw?.payer?.email as string) || null,
         customerName: null,
-        description: 'Assinatura ArxisVR',
+        description: 'Assinatura Arxis',
       });
       if (fiscal.emitted) {
         await db
@@ -1612,7 +1612,7 @@ export class BillingService {
     const appUrl = getAppBaseUrl();
     const isFree = nextStatus === 'active';
     const subject = isFree
-      ? 'Seu período de teste do ArxisVR terminou'
+      ? 'Seu período de teste do Arxis terminou'
       : 'Seu período de teste terminou — regularize seu pagamento';
     const body = isFree
       ? `<p>Seu teste do plano <strong>${plan}</strong> terminou. Sua conta continua ativa no plano gratuito e seus dados estão preservados.</p>`

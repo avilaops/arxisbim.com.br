@@ -45,7 +45,7 @@ export default function ApiTokensPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Integrações</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Conecte o ArxisVR a outras ferramentas (n8n, Power BI, ERP, aplicativos próprios, etc.)
+            Conecte o Arxis a outras ferramentas (n8n, Power BI, ERP, aplicativos próprios, etc.)
           </p>
         </div>
         <button

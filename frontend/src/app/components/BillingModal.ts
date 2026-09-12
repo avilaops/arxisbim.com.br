@@ -301,7 +301,7 @@ export class BillingModal {
         <div style="font-size:12px;color:#64748b;">Plano atual</div>
         <div style="font-size:18px;font-weight:700;color:#0f172a;text-transform:capitalize;">${currentPlan || 'free'}</div>
         <div style="font-size:12px;color:#64748b;">Situação: ${statusLabel} · Próxima cobrança: ${formatDate(nextBilling)}</div>
-        ${isProvider ? '<div style="font-size:12px;color:#64748b;">Cobrança recorrente via Mercado Pago — cartão cadastrado na página deles, nada fica no ArxisVR.</div>' : ''}
+        ${isProvider ? '<div style="font-size:12px;color:#64748b;">Cobrança recorrente via Mercado Pago — cartão cadastrado na página deles, nada fica no Arxis.</div>' : ''}
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;">

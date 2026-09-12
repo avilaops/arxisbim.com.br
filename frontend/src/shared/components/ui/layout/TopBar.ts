@@ -283,7 +283,7 @@ private container: HTMLElement;
             <circle cx="0" cy="1.5" r="1" fill="url(#topbarGrad2)"/>
           </g>
         </svg>
-        <span>ArxisVR</span>
+        <span>Arxis</span>
       </div>
       
       <div class="top-bar-menus">
@@ -486,7 +486,7 @@ private container: HTMLElement;
       </button>
       <div class="top-bar-dropdown-separator"></div>
       <button class="top-bar-dropdown-item" data-command="${CommandId.HELP_ABOUT}">
-        <span>Sobre o ArxisVR</span>
+        <span>Sobre o Arxis</span>
       </button>
     `;
   }

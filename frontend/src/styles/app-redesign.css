@@ -1,31 +1,36 @@
-/* Arxis workspace visual system: technical dark surfaces, teal navigation and
-   orange signal details. Scoped to the authenticated product shell. */
+/* Arxis workspace visual system: clear editorial surfaces with a technical BIM canvas.
+   Scoped to the authenticated product shell so public pages keep their own rhythm. */
+@font-face {
+  font-family: 'Arxis Montserrat';
+  src: url('/fonts/Montserrat-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
 .app-layout {
-  --c-bg: #07131b;
-  --c-surface: #0b1b24;
-  --c-surface2: #102631;
-  --c-surface3: #173744;
-  --c-border: rgba(151, 205, 218, 0.16);
-  --c-border2: rgba(151, 205, 218, 0.09);
-  --c-text: #edf8fa;
-  --c-text2: #a8c2c8;
-  --c-text3: #6e8e97;
-  --c-blue: #147f9f;
-  --c-blue-dim: rgba(20, 127, 159, 0.16);
+  --c-bg: #f5f8f9;
+  --c-surface: #ffffff;
+  --c-surface2: #f7fafb;
+  --c-surface3: #edf3f5;
+  --c-border: #dfe5e8;
+  --c-border2: #edf1f2;
+  --c-text: #1e2d3d;
+  --c-text2: #536272;
+  --c-text3: #7b8996;
+  --c-blue: #0e6b8f;
+  --c-blue-dim: rgba(14, 107, 143, 0.1);
   --arxis-orange: #f36b21;
-  --arxis-orange-soft: rgba(243, 107, 33, 0.14);
-  background:
-    radial-gradient(circle at 75% -15%, rgba(20, 127, 159, 0.18), transparent 35%),
-    var(--c-bg);
+  --arxis-orange-soft: rgba(243, 107, 33, 0.1);
+  font-family: 'Arxis Montserrat', Arial, sans-serif;
+  background: var(--c-bg);
   color: var(--c-text);
 }
 
 .app-layout .sidebar {
   width: 248px;
   padding: 14px 12px;
-  background: linear-gradient(180deg, #0b1b24 0%, #08151c 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fafb 100%);
   border-right: 1px solid var(--c-border);
-  box-shadow: 18px 0 50px rgba(0, 0, 0, 0.16);
+  box-shadow: 8px 0 28px rgba(30, 45, 61, 0.06);
 }
 .app-layout.sidebar-collapsed .sidebar { width: 72px; }
 .app-layout .main-content { margin-left: 248px; }
@@ -62,23 +67,23 @@
   color: var(--c-text2) !important;
   transition: background .18s ease, color .18s ease, transform .18s ease;
 }
-.app-layout .sidebar-item:hover { color: var(--c-text) !important; background: rgba(151, 205, 218, .08) !important; transform: translateX(2px); }
+.app-layout .sidebar-item:hover { color: var(--c-text) !important; background: rgba(30, 45, 61, .04) !important; transform: translateX(2px); }
 .app-layout .sidebar-item[aria-current="page"] {
   color: var(--c-text) !important;
-  background: linear-gradient(100deg, rgba(20, 127, 159, .3), rgba(20, 127, 159, .1)) !important;
-  box-shadow: inset 3px 0 0 var(--arxis-orange), 0 8px 18px rgba(0, 0, 0, .12);
+  background: rgba(14, 107, 143, .1) !important;
+  box-shadow: inset 3px 0 0 var(--arxis-orange);
 }
 .app-layout .sidebar-item > span:first-child { width: 22px !important; height: 22px !important; }
 .app-layout [data-arxis-icon] { color: currentColor; }
 .app-layout .sidebar-section-title { color: #6fa0ad !important; letter-spacing: .14em !important; padding: 10px 12px 6px !important; }
 .app-layout .sidebar > div[style*="border-bottom"] { border-color: var(--c-border) !important; }
-.app-layout .sidebar-submenu { background: rgba(5, 16, 22, .46) !important; border-color: var(--c-border) !important; border-radius: 9px; }
+.app-layout .sidebar-submenu { background: #fff !important; border-color: var(--c-border) !important; border-radius: 9px; }
 .app-layout .sidebar-toggle { color: var(--c-text3); margin: auto auto 2px; }
 
 .app-layout .topbar {
   height: 64px;
   padding: 0 24px;
-  background: rgba(11, 27, 36, .86) !important;
+  background: rgba(255, 255, 255, .94) !important;
   border-bottom: 1px solid var(--c-border) !important;
   backdrop-filter: blur(18px);
 }
@@ -90,19 +95,19 @@
 .app-layout .viewer-toolbar {
   min-height: 72px;
   padding: 0 24px;
-  background: linear-gradient(100deg, rgba(11, 27, 36, .98), rgba(13, 34, 44, .9));
+  background: #ffffff;
   border-bottom-color: var(--c-border);
 }
 .app-layout .viewer-toolbar__title > svg { color: var(--arxis-orange); }
 .app-layout .viewer-toolbar__title h1 { color: var(--c-text); font-size: 16px; letter-spacing: -.02em; }
 .app-layout .viewer-toolbar__title span { color: var(--c-text3); }
 .app-layout .viewer-toolbar__actions { gap: 8px; }
-.app-layout .viewer-icon-button { width: 40px; height: 40px; border-color: var(--c-border); border-radius: 10px; color: var(--c-text2); background: rgba(151, 205, 218, .035); }
+.app-layout .viewer-icon-button { width: 40px; height: 40px; border-color: var(--c-border); border-radius: 10px; color: var(--c-text2); background: #fff; }
 .app-layout .viewer-icon-button:hover:not(:disabled) { color: var(--c-text); border-color: rgba(243, 107, 33, .55); background: var(--arxis-orange-soft); transform: translateY(-1px); }
 .app-layout .viewer-upload-button { min-height: 40px; border: 1px solid rgba(243, 107, 33, .55); border-radius: 10px; background: linear-gradient(135deg, #147f9f, #0e6884); box-shadow: 0 8px 20px rgba(6, 63, 83, .25); }
 .app-layout .viewer-upload-button:hover { background: linear-gradient(135deg, #1b91b3, #14728f); }
 
-.app-layout .viewer-panel { background: rgba(11, 27, 36, .94); border-color: var(--c-border); }
+.app-layout .viewer-panel { background: #fff; border-color: var(--c-border); }
 .app-layout .viewer-panel__header { border-bottom-color: var(--c-border); }
 .app-layout .viewer-panel__eyebrow { color: #6fa0ad; letter-spacing: .14em; }
 .app-layout .viewer-canvas { background: #08131a; }
@@ -116,11 +121,29 @@
 .app-layout .dash-page > div:last-of-type {
   border-color: var(--c-border) !important;
   border-radius: 14px !important;
-  background: linear-gradient(145deg, rgba(16, 38, 49, .92), rgba(10, 27, 36, .92)) !important;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, .12);
+  background: #fff !important;
+  box-shadow: 0 12px 30px rgba(30, 45, 61, .06);
 }
 .app-layout .dash-cta { min-height: 42px; border-radius: 10px !important; color: var(--c-text) !important; border-color: rgba(243, 107, 33, .45) !important; background: var(--arxis-orange-soft) !important; }
 .app-layout .dash-cta:hover { background: rgba(243, 107, 33, .24) !important; }
+.app-layout .sidebar-brand img { box-shadow: 0 0 0 1px rgba(14, 107, 143, .16); }
+.app-layout .sidebar-section-title { color: var(--c-blue) !important; }
+.app-layout .sidebar-toggle:hover,
+.app-layout .topbar__link:hover { background: rgba(14, 107, 143, .07); color: var(--c-blue); }
+.app-layout .viewer-panel__header,
+.app-layout .viewer-panel__section { background: #fff; }
+.app-layout .viewer-panel__title,
+.app-layout .viewer-panel__section-title { color: var(--c-text); }
+.app-layout .viewer-empty-state { color: var(--c-text); }
+.app-layout .viewer-empty-state p { color: var(--c-text2); }
+.app-layout button:focus-visible,
+.app-layout a:focus-visible,
+.app-layout input:focus-visible,
+.app-layout select:focus-visible { outline: 3px solid rgba(14, 107, 143, .28); outline-offset: 2px; }
+.app-layout [role="alert"] { color: #9d3a27; background: #fff3ef; border-color: #f6c7bc; }
+.app-layout .dash-page [style*="background: rgba(255,255,255"] { background: #fff !important; }
+.app-layout .dash-page [style*="color: #fff"],
+.app-layout .dash-page [style*="color:#fff"] { color: var(--c-text) !important; }
 
 @media (max-width: 768px) {
   .app-layout .main-content,

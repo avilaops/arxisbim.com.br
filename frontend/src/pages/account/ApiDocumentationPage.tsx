@@ -10,7 +10,7 @@ export default function ApiDocumentationPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Documentação da API</h1>
         <p className="text-lg text-gray-600">
-          Use tokens API para acessar os recursos do ArxisVR programaticamente
+          Use tokens API para acessar os recursos do Arxis programaticamente
         </p>
       </div>
 

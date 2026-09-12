@@ -5,14 +5,14 @@ import { observabilityService } from '../observability/service.js';
 import { enqueueEmail } from './email-queue.worker.js';
 
 /**
- * Email Service para ArxisVR
+ * Email Service para Arxis
  * Prioridade: Resend API (RESEND_API_KEY) > SMTP > modo log
  */
 export class EmailService {
   private initialized = false;
   private transporter: Transporter | null = null;
   private resend: Resend | null = null;
-  private readonly appName = 'ArxisVR';
+  private readonly appName = 'Arxis';
   private readonly frontendUrl: string;
   private readonly fromAddress: string;
 
@@ -180,7 +180,7 @@ export class EmailService {
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 0">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     <div style="background:linear-gradient(135deg,#2563EB,#7C3AED);padding:32px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:24px">ArxisVR</h1>
+      <h1 style="color:#fff;margin:0;font-size:24px">Arxis</h1>
     </div>
     <div style="padding:32px">
       <h2 style="margin:0 0 8px;color:#111827;font-size:20px">Redefinição de senha</h2>
@@ -222,7 +222,7 @@ export class EmailService {
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 0">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     <div style="background:linear-gradient(135deg,#2563EB,#7C3AED);padding:32px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:24px">ArxisVR</h1>
+      <h1 style="color:#fff;margin:0;font-size:24px">Arxis</h1>
     </div>
     <div style="padding:32px">
       <h2 style="margin:0 0 8px;color:#111827;font-size:20px">Bem-vindo, ${name}! 🎉</h2>
@@ -232,7 +232,7 @@ export class EmailService {
       <div style="text-align:center;margin:24px 0">
         <a href="${this.frontendUrl}/login"
            style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
-          Acessar ArxisVR
+          Acessar Arxis
         </a>
       </div>
     </div>

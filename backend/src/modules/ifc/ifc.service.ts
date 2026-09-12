@@ -520,12 +520,12 @@ export class IfcService {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatório de Qualidade IFC — ArxisVR</title>
+  <title>Relatório de Qualidade IFC — Arxis</title>
 </head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#ffffff;margin:0;padding:32px 0">
   <div style="max-width:600px;margin:0 auto;background:#111111;border:1px solid #222222;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
     <div style="background:linear-gradient(135deg,#007AFF,#C4B5F4);padding:40px;text-align:center">
-      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;letter-spacing:-0.5px">ArxisVR</h1>
+      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;letter-spacing:-0.5px">Arxis</h1>
       <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:15px">Relatório de Diagnóstico de Qualidade BIM</p>
     </div>
     
@@ -577,7 +577,7 @@ export class IfcService {
     </div>
     
     <div style="background:#0a0a0a;padding:24px;text-align:center;border-top:1px solid #222222;font-size:12px;color:#555555">
-      © 2026 ArxisVR by AvilaOps. Todos os direitos reservados.
+      © 2026 Arxis by AvilaOps. Todos os direitos reservados.
     </div>
   </div>
 </body>

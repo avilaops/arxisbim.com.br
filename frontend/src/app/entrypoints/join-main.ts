@@ -28,7 +28,7 @@ function getLoggedUser(): { id: string; name: string; email: string; plan?: stri
 function renderAuthWall(token: string, content: HTMLElement): void {
   content.innerHTML = `
     <h1>Você foi convidado</h1>
-    <p class="auth-wall-desc">Para entrar nesta sessão colaborativa, você precisa ter uma conta ArxisVR.<br>É gratuito e leva menos de 1 minuto.</p>
+    <p class="auth-wall-desc">Para entrar nesta sessão colaborativa, você precisa ter uma conta Arxis.<br>É gratuito e leva menos de 1 minuto.</p>
 
     <div class="auth-tabs" id="auth-tabs">
       <button class="auth-tab active" data-tab="login">Já tenho conta</button>

@@ -91,7 +91,7 @@ export async function workspaceRoutes(fastify: FastifyInstance) {
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:auto">
         <h2>Você foi convidado para o workspace <strong>${ws?.name || tenantId}</strong></h2>
-        <p>Você foi convidado como <strong>${inviteRole}</strong> no ArxisVR.</p>
+        <p>Você foi convidado como <strong>${inviteRole}</strong> no Arxis.</p>
         <p><a href="${acceptUrl}" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Aceitar convite</a></p>
         <p style="color:#888;font-size:13px">O convite expira em 7 dias. Se você não esperava isto, ignore este email.</p>
       </div>`;

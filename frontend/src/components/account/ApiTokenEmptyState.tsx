@@ -4,7 +4,7 @@ export default function ApiTokenEmptyState() {
       <div className="mx-auto mb-4 text-5xl">🔗</div>
       <p className="text-gray-600 font-semibold mb-2">Nenhuma integração conectada</p>
       <p className="text-sm text-gray-500">
-        Clique em "+ Nova integração" para conectar o ArxisVR a uma ferramenta externa.
+        Clique em "+ Nova integração" para conectar o Arxis a uma ferramenta externa.
       </p>
     </div>
   );

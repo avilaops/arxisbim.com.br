@@ -75,7 +75,7 @@ export class MobileNavigation {
     const header = document.createElement('div');
     header.className = 'arxis-mobile-nav__header';
     header.innerHTML = `
-      <h3>ArxisVR</h3>
+      <h3>Arxis</h3>
       <button class="arxis-mobile-nav__close">✕</button>
     `;
     header.querySelector('.arxis-mobile-nav__close')?.addEventListener('click', () => this.close());

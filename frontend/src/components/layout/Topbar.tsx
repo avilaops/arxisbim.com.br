@@ -53,9 +53,9 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
 
       {/* No mobile a marca vem para ca, porque a da sidebar fica escondida com
           o drawer fechado e o topo ficava so com o nome do usuario. */}
-      <Link to="/dashboard" className="topbar__brand" aria-label="ArxisVR, página inicial">
+      <Link to="/dashboard" className="topbar__brand" aria-label="Arxis, página inicial">
         <img src="/logo-icon.svg" alt="" width={22} height={22} />
-        <span>ArxisVR</span>
+        <span>Arxis</span>
       </Link>
 
       <div className="topbar__mid" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>

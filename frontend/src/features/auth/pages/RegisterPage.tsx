@@ -69,7 +69,7 @@ export default function RegisterPage() {
       <section className="auth-card slide-in">
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
-          <h1 className="auth-title">ArxisVR</h1>
+          <h1 className="auth-title">Arxis</h1>
           <p className="auth-subtitle">Crie sua conta para começar</p>
         </div>
 
