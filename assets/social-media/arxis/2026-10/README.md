@@ -6,3 +6,6 @@
 | P12 | Três perguntas que revelam falta de contexto | Ilustração editorial com lacunas visuais no modelo | 1080 x 1080 | `final/P12-tres-perguntas-contexto-1080x1080.png` |
 
 As versões `raw` preservam os originais gerados. As versões `final` recebem a assinatura oficial do Arxis.
+
+- P13 — Comece por uma pergunta do seu projeto — carrossel 1080x1350 — editorial humano + modelo BIM.
+- P14 — Uma dúvida da rotina: por onde começar a análise? — reel 1080x1920 — cena cinematográfica com caminhos de análise.
