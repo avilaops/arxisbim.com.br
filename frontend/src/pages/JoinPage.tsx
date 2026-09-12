@@ -39,7 +39,7 @@ export default function JoinPage() {
       }}
     >
       <div style={{ width: '100%', maxWidth: '500px', textAlign: 'center' }}>
-        <img src="/logo-icon.svg" alt="Arxis" style={{ width: '48px', height: '48px', margin: '0 auto 24px' }} />
+        <img src="/images/brand/arxis-icon-192.png" alt="Arxis" style={{ width: '48px', height: '48px', margin: '0 auto 24px', objectFit: 'contain' }} />
 
         <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '8px', letterSpacing: '-0.5px' }}>
           Junte-se a {workspaceName}

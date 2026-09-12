@@ -182,7 +182,7 @@ export default function AcceptInvitePage() {
           backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(59,130,246,0.1) 0%, transparent 50%)',
         }}
       >
-        <img src="/logo-icon.svg" alt="Arxis" style={{ width: '48px', height: '48px', marginBottom: '24px' }} />
+        <img src="/images/brand/arxis-icon-192.png" alt="Arxis" style={{ width: '48px', height: '48px', marginBottom: '24px', objectFit: 'contain' }} />
         <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '12px' }}>Arxis</h1>
         <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', textAlign: 'center', maxWidth: '300px' }}>
           {organization ? `Você foi convidado para ${organization}` : 'Você recebeu um convite'}
