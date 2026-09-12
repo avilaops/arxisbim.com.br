@@ -8,7 +8,7 @@
 	# SPA: as rotas (/validador, /login, /account...) só existem no React Router,
 	# então qualquer caminho que não seja arquivo real cai no index.html. Sem
 	# isto, abrir /validador direto ou recarregar a página dá 404.
-	try_files {path} /index.html
+	try_files {path} {path}/index.html /index.html
 	file_server
 
 	# O bundle tem hash no nome, então pode ser cacheado para sempre. O
@@ -18,7 +18,7 @@
 	header @imutavel Cache-Control "public, max-age=31536000, immutable"
 
 	@semCache {
-		path /index.html /sw.js /workbox-*.js /manifest.webmanifest
+		path / /index.html /blog /blog/* /feed.xml /sitemap.xml /sw.js /workbox-*.js /manifest.webmanifest
 	}
 	header @semCache Cache-Control "no-cache"
 

@@ -8,6 +8,13 @@ import { Sentry } from './instrument'
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element not found')
 
+// Public routes are readable without JavaScript. React takes over the page and
+// owns its metadata after startup, including navigation between blog articles.
+document.querySelectorAll('[data-arxis-ssr]').forEach(element => element.remove())
+if (!['/', '/blog'].includes(window.location.pathname) && !window.location.pathname.startsWith('/blog/')) {
+  document.documentElement.classList.remove('arxis-public')
+}
+
 function SentryFallback() {
   return (
     <main style={{ padding: 32, fontFamily: 'Inter, sans-serif' }}>
