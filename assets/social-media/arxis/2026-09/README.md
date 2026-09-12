@@ -13,3 +13,11 @@ Artes criadas a partir do cronograma de 360 dias. Cada pauta recebeu uma linguag
 | P07 | Sete itens para uma reunião de projeto mais clara | Fotografia documental de colaboração | 1080 x 1080 | `final/P07-reuniao-projeto-clara-1080x1080.png` |
 
 A pasta `raw` preserva as imagens geradas antes da assinatura final. A pasta `final` contém as versões prontas para revisão, texto e publicação.
+
+## Lote seguinte
+
+| ID | Pauta | Direção | Formato |
+|---|---|---|---|
+| P08 | Quem confirma a informação antes da decisão? | Retrato editorial de liderança e camadas de informação | 1080 x 1080 |
+| P09 | Como avaliar duas alternativas de projeto | Quadro comparativo de dois modelos arquitetônicos | 1080 x 1350 |
+| P10 | Como registrar uma alternativa para retomar depois | Reel cinematográfico com ramificação de cenários | 1080 x 1920 |
