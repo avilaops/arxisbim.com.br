@@ -52,7 +52,7 @@ export default function ViewerToolbar({
           aria-label="Abrir projetos e modelos"
           title="Projetos e modelos"
         >
-          <FolderTree size={17} strokeWidth={1.45} />
+          <FolderTree size={18} strokeWidth={1.8} />
         </button>
         <button
           // viewer-always: o botao precisa existir em TODO viewport. Sem classe
@@ -66,7 +66,7 @@ export default function ViewerToolbar({
           aria-label="Abrir cenários"
           title="Cenários"
         >
-          <Layers size={17} strokeWidth={1.45} />
+          <Layers size={18} strokeWidth={1.8} />
         </button>
         <button
           className="viewer-icon-button"
@@ -76,7 +76,7 @@ export default function ViewerToolbar({
           title={hasModel ? 'Redefinir visualização' : 'Abra um modelo para redefinir a visualização'}
           disabled={!hasModel}
         >
-          <RotateCcw size={17} strokeWidth={1.45} />
+          <RotateCcw size={18} strokeWidth={1.8} />
         </button>
         {fullscreen !== null && (
           <button
@@ -87,7 +87,7 @@ export default function ViewerToolbar({
             title={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
             aria-pressed={fullscreen}
           >
-            {fullscreen ? <Minimize2 size={17} strokeWidth={1.45} /> : <Maximize2 size={17} strokeWidth={1.45} />}
+            {fullscreen ? <Minimize2 size={18} strokeWidth={1.8} /> : <Maximize2 size={18} strokeWidth={1.8} />}
           </button>
         )}
         <button
@@ -97,7 +97,7 @@ export default function ViewerToolbar({
           aria-label="Abrir informações"
           title="Informações"
         >
-          <Info size={17} strokeWidth={1.45} />
+          <Info size={18} strokeWidth={1.8} />
         </button>
         <button
           className="viewer-upload-button"
@@ -105,7 +105,7 @@ export default function ViewerToolbar({
           onClick={onUpload}
           disabled={uploading}
         >
-          <Upload size={17} strokeWidth={1.45} />
+          <Upload size={18} strokeWidth={1.8} />
           <span>{uploading ? 'Enviando…' : 'Enviar modelo IFC'}</span>
         </button>
       </div>

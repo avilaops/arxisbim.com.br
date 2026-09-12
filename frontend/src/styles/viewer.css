@@ -59,6 +59,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .viewer-icon-button,
@@ -72,6 +74,21 @@
   background: transparent;
   border: 1px solid var(--c-border);
   border-radius: var(--r);
+}
+
+/* Os SVGs do Lucide precisam manter a geometria mesmo quando a barra encolhe.
+   Sem isso, regras globais de flex e tamanho acabam comprimindo o desenho. */
+.viewer-toolbar svg,
+.viewer-empty-state svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.viewer-toolbar__title > svg {
+  width: 20px;
+  height: 20px;
 }
 
 .viewer-icon-button:hover:not(:disabled),
@@ -784,12 +801,23 @@
 
   /* 34x34 era abaixo do minimo de toque; 44 e o alvo da Apple HIG */
   .viewer-icon-button.viewer-mobile-action,
-  .viewer-upload-button,
   .viewer-panel__close,
   .viewer-panel__add {
     width: 44px;
     height: 44px;
     min-height: 44px;
+  }
+  /* O CTA continua sendo um CTA: só os comandos puramente icônicos viram
+     quadrados. A regra anterior deixava o texto dentro de 44px e quebrava
+     cada palavra em uma linha. */
+  .viewer-upload-button {
+    width: auto;
+    min-width: max-content;
+    min-height: 44px;
+    height: 44px;
+    padding-inline: 14px;
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
   .viewer-panel__item { min-height: 44px; }
 
@@ -870,6 +898,7 @@
 
   .viewer-upload-button {
     width: 44px;
+    min-width: 44px;
     padding: 0;
   }
 }
