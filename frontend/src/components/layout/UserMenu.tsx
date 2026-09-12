@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, LogOut } from 'lucide-react'
+import ArxisIcon from '@/components/ui/ArxisIcon'
 
 interface User {
   name?: string
@@ -124,7 +124,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 e.currentTarget.style.color = 'var(--c-text2)'
               }}
             >
-              <ShieldCheck size={14} strokeWidth={1.5} /> Painel Admin
+              <ArxisIcon name="admin" size={16} /> Painel Admin
             </button>
             <div style={{ height: '1px', background: 'var(--c-border)', margin: '4px 0' }}></div>
           </>
@@ -156,7 +156,7 @@ export default function UserMenu({ user }: UserMenuProps) {
             e.currentTarget.style.color = '#f87171'
           }}
         >
-          <LogOut size={14} strokeWidth={1.5} /> Sair
+          <ArxisIcon name="logout" size={16} /> Sair
         </button>
       </div>
     </div>

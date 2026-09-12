@@ -16,6 +16,7 @@ export type ArxisIconName =
   | 'menu'
   | 'close'
   | 'support'
+  | 'logout'
 
 interface ArxisIconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: ArxisIconName
@@ -52,6 +53,7 @@ export default function ArxisIcon({ name, size = 18, ...props }: ArxisIconProps)
     menu: <><path d="M4 6h16M4 12h16M4 18h16" {...common} /><path d="M4 6h3" {...common} stroke="#f36b21" /></>,
     close: <><path d="m5 5 14 14M19 5 5 19" {...common} /><path d="m16.5 5 2.5 2.5" {...common} stroke="#f36b21" /></>,
     support: <><path d="M4 13v-1a8 8 0 0 1 16 0v1" {...common} /><path d="M4 13h3v5H5a1 1 0 0 1-1-1v-4ZM20 13h-3v5h2a1 1 0 0 0 1-1v-4Z" {...common} /><path d="M10 20h4" {...common} /><path d="m17.5 5.5 1 1" {...common} stroke="#f36b21" /></>,
+    logout: <><path d="M14 5h5v14h-5M10 12h9M10 12l3-3M10 12l3 3" {...common} /><path d="M5 12h5" {...common} stroke="#f36b21" /></>,
   }
 
   return <svg {...props} data-arxis-icon={name} width={size} height={size} viewBox="0 0 24 24" aria-hidden={props['aria-label'] ? undefined : true}>{drawings[name]}</svg>
