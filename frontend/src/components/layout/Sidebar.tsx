@@ -279,7 +279,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         {collapsed ? (
           <ArxisIcon name="menu" size={18} />
         ) : (
-          <ArxisIcon name="close" size={18} />
+          <ArxisIcon name="menu" size={18} />
         )}
       </button>
     </nav>
