@@ -121,9 +121,9 @@ export class EmailService {
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 0">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
-    <div style="background:linear-gradient(135deg,#2563EB,#7C3AED);padding:32px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:24px;letter-spacing:-0.5px">ArxisVR</h1>
-      <p style="color:rgba(255,255,255,.8);margin:8px 0 0;font-size:14px">Plataforma BIM Imersiva</p>
+    <div style="background:#eaf4f6;padding:30px 32px;text-align:center;border-bottom:3px solid #f36b21">
+      <div style="color:#1e2d3d;margin:0;font-size:25px;font-weight:800;letter-spacing:.16em">AR<span style="color:#f36b21">X</span>IS</div>
+      <p style="color:#0e6b8f;margin:9px 0 0;font-size:12px;letter-spacing:.13em;text-transform:uppercase">BIM · Dados · Pessoas · Possibilidades</p>
     </div>
     <div style="padding:32px">
       <h2 style="margin:0 0 8px;color:#111827;font-size:20px">Olá, ${name} 👋</h2>
@@ -132,7 +132,7 @@ export class EmailService {
       </p>
       <div style="text-align:center;margin:0 0 24px">
         <a href="${verificationUrl}"
-           style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+           style="display:inline-block;padding:14px 32px;background:#0e6b8f;color:#fff;text-decoration:none;border-radius:5px;font-weight:700;font-size:15px">
           Verificar meu email
         </a>
       </div>
@@ -153,7 +153,7 @@ export class EmailService {
 </html>`;
 
     try {
-      await this.send(to, `Confirme seu email - ${this.appName}`, html, { emailType: 'email_verification', tenantId });
+      await this.send(to, `Confirme seu email · Arxis`, html, { emailType: 'email_verification', tenantId });
       observabilityService.recordMetric('email.verification.sent', 1);
       console.log(`📧 Email de verificação enviado para ${to}`);
     } catch (error: any) {
