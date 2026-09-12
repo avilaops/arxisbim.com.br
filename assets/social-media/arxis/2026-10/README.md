@@ -9,3 +9,6 @@ As versões `raw` preservam os originais gerados. As versões `final` recebem a 
 
 - P13 — Comece por uma pergunta do seu projeto — carrossel 1080x1350 — editorial humano + modelo BIM.
 - P14 — Uma dúvida da rotina: por onde começar a análise? — reel 1080x1920 — cena cinematográfica com caminhos de análise.
+
+- P15 — Como avaliar uma ferramenta BIM para sua equipe — carrossel 1080x1350 — still life tecnológico com comparação visual.
+- P16 — Vamos conversar sobre o seu próximo projeto? — estático 1080x1080 — fotografia humana de colaboração.
