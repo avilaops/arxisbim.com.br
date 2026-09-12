@@ -1,13 +1,4 @@
-import {
-  Box,
-  FolderTree,
-  Info,
-  Layers,
-  Maximize2,
-  Minimize2,
-  RotateCcw,
-  Upload,
-} from 'lucide-react'
+import ArxisIcon from '@/components/ui/ArxisIcon'
 
 interface ViewerToolbarProps {
   onUpload: () => void
@@ -37,7 +28,7 @@ export default function ViewerToolbar({
   return (
     <header className="viewer-toolbar">
       <div className="viewer-toolbar__title">
-        <Box size={17} strokeWidth={1.45} />
+        <ArxisIcon name="viewer" size={20} />
         <div>
           <h1>Viewer 3D</h1>
           <span>Visualização de modelos IFC</span>
@@ -52,7 +43,7 @@ export default function ViewerToolbar({
           aria-label="Abrir projetos e modelos"
           title="Projetos e modelos"
         >
-          <FolderTree size={18} strokeWidth={1.8} />
+          <ArxisIcon name="projects" size={18} />
         </button>
         <button
           // viewer-always: o botao precisa existir em TODO viewport. Sem classe
@@ -66,7 +57,7 @@ export default function ViewerToolbar({
           aria-label="Abrir cenários"
           title="Cenários"
         >
-          <Layers size={18} strokeWidth={1.8} />
+          <ArxisIcon name="layers" size={18} />
         </button>
         <button
           className="viewer-icon-button"
@@ -76,7 +67,7 @@ export default function ViewerToolbar({
           title={hasModel ? 'Redefinir visualização' : 'Abra um modelo para redefinir a visualização'}
           disabled={!hasModel}
         >
-          <RotateCcw size={18} strokeWidth={1.8} />
+          <ArxisIcon name="reset" size={18} />
         </button>
         {fullscreen !== null && (
           <button
@@ -87,7 +78,7 @@ export default function ViewerToolbar({
             title={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
             aria-pressed={fullscreen}
           >
-            {fullscreen ? <Minimize2 size={18} strokeWidth={1.8} /> : <Maximize2 size={18} strokeWidth={1.8} />}
+            <ArxisIcon name="fullscreen" size={18} />
           </button>
         )}
         <button
@@ -97,7 +88,7 @@ export default function ViewerToolbar({
           aria-label="Abrir informações"
           title="Informações"
         >
-          <Info size={18} strokeWidth={1.8} />
+          <ArxisIcon name="info" size={18} />
         </button>
         <button
           className="viewer-upload-button"
@@ -105,7 +96,7 @@ export default function ViewerToolbar({
           onClick={onUpload}
           disabled={uploading}
         >
-          <Upload size={18} strokeWidth={1.8} />
+          <ArxisIcon name="upload" size={18} />
           <span>{uploading ? 'Enviando…' : 'Enviar modelo IFC'}</span>
         </button>
       </div>

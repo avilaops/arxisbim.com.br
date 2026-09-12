@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import {
-  Home,
-  Clock3,
-  Box,
-  GitCompare,
-  ShieldCheck,
-  Settings,
-  PanelLeftOpen,
-  PanelLeftClose,
-  X,
-} from 'lucide-react'
+import ArxisIcon, { type ArxisIconName } from '@/components/ui/ArxisIcon'
 
 interface SidebarProps {
   collapsed: boolean
@@ -43,7 +33,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
   const isAdmin = user?.role === 'admin' || user?.role === 'owner'
   const isDashboard = location.pathname === '/dashboard' && location.hash !== '#recentes'
 
-  const NavItem = ({ href, icon: Icon, label, active = false }: { href: string; icon: any; label: string; active?: boolean }) => (
+  const NavItem = ({ href, icon, label, active = false }: { href: string; icon: ArxisIconName; label: string; active?: boolean }) => (
     <Link
       to={href}
       className="sidebar-item"
@@ -67,7 +57,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
       aria-current={active ? 'page' : undefined}
     >
       <span style={{ width: '15px', height: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={17} strokeWidth={1.45} aria-hidden="true" />
+        <ArxisIcon name={icon} size={18} />
       </span>
       <span className="sidebar-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
     </Link>
@@ -113,7 +103,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           onClick={onMobileClose}
           aria-label="Fechar menu"
         >
-          <X size={22} strokeWidth={1.75} aria-hidden="true" />
+        <ArxisIcon name="close" size={20} />
         </button>
       </div>
 
@@ -122,16 +112,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
 
       {/* Main nav */}
       <div style={{ padding: '12px 0 4px' }}>
-        <NavItem href="/dashboard" icon={Home} label="Página inicial" active={isDashboard} />
-        <NavItem href="/dashboard#recentes" icon={Clock3} label="Recentes" active={location.pathname === '/dashboard' && location.hash === '#recentes'} />
+        <NavItem href="/dashboard" icon="home" label="Página inicial" active={isDashboard} />
+        <NavItem href="/dashboard#recentes" icon="recent" label="Recentes" active={location.pathname === '/dashboard' && location.hash === '#recentes'} />
       </div>
 
       <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
         <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
           Workspace
         </div>
-        <NavItem href="/app" icon={Box} label="Viewer 3D" active={location.pathname === '/app'} />
-        <NavItem href="/app/compare" icon={GitCompare} label="Comparar cenários" active={location.pathname === '/app/compare'} />
+        <NavItem href="/app" icon="viewer" label="Viewer 3D" active={location.pathname === '/app'} />
+        <NavItem href="/app/compare" icon="compare" label="Comparar cenários" active={location.pathname === '/app/compare'} />
         {/* Planejamento 4D, Reunioes XR, Orcamento 5D e Consulta BIM sairam em
             08/09/2026: apontavam para /app#... e nada lia o hash. Voltam quando
             cada tela existir (S24/S26/S15/S31). */}
@@ -142,7 +132,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
             Ferramentas
           </div>
-          <NavItem href="/admin" icon={ShieldCheck} label="Admin" active={location.pathname === '/admin'} />
+          <NavItem href="/admin" icon="admin" label="Admin" active={location.pathname === '/admin'} />
         </div>
       )}
 
@@ -180,7 +170,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           }}
         >
           <span style={{ width: '15px', height: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Settings size={17} strokeWidth={1.45} />
+            <ArxisIcon name="account" size={18} />
           </span>
           <div className="sidebar-label" style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
             <span style={{ flex: 1, whiteSpace: 'nowrap' }}>Gerenciar conta</span>
@@ -287,9 +277,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         title={collapsed ? "Abrir menu" : "Recolher menu"}
       >
         {collapsed ? (
-          <PanelLeftOpen size={17} strokeWidth={1.5} />
+          <ArxisIcon name="menu" size={18} />
         ) : (
-          <PanelLeftClose size={17} strokeWidth={1.5} />
+          <ArxisIcon name="close" size={18} />
         )}
       </button>
     </nav>

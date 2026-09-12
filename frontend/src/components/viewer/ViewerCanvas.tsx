@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { AlertTriangle, Box, Loader2, Upload, X } from 'lucide-react'
+import { AlertTriangle, Loader2, X } from 'lucide-react'
+import ArxisIcon from '@/components/ui/ArxisIcon'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import type { CameraState } from '@/services/scenarios.service'
 import {
@@ -408,7 +409,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
           <div className="viewer-canvas__grid" aria-hidden="true" />
           <div className="viewer-empty-state">
             <div className="viewer-empty-state__icon">
-              <Box size={32} strokeWidth={1.45} />
+              <ArxisIcon name="viewer" size={32} />
             </div>
             <h2>Nenhum modelo selecionado</h2>
             <p>
@@ -422,7 +423,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
               onClick={onUpload}
               disabled={uploading}
             >
-              <Upload size={17} strokeWidth={1.45} />
+              <ArxisIcon name="upload" size={18} />
               <span>{uploading ? 'Enviando…' : 'Enviar modelo IFC'}</span>
             </button>
           </div>

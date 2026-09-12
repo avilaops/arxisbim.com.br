@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { HelpCircle, Menu } from 'lucide-react'
+import ArxisIcon from '@/components/ui/ArxisIcon'
 import UserMenu from './UserMenu'
 
 interface User {
@@ -48,7 +48,7 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
         aria-expanded={mobileNavOpen}
         aria-controls="app-sidebar"
       >
-        <Menu size={22} strokeWidth={1.75} aria-hidden="true" />
+        <ArxisIcon name="menu" size={21} />
       </button>
 
       {/* No mobile a marca vem para ca, porque a da sidebar fica escondida com
@@ -83,7 +83,7 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
           aria-label="Suporte"
           title="Suporte"
         >
-          <span style={{ display: 'inline-flex', alignItems: 'center' }}><HelpCircle size={16} strokeWidth={1.5} aria-hidden="true" /></span>
+        <span style={{ display: 'inline-flex', alignItems: 'center' }}><ArxisIcon name="support" size={17} /></span>
           <span className="topbar__link-text">Suporte</span>
         </a>
         <UserMenu user={user} />
