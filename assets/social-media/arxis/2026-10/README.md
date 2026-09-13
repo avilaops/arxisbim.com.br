@@ -12,3 +12,8 @@ As versões `raw` preservam os originais gerados. As versões `final` recebem a 
 
 - P15 — Como avaliar uma ferramenta BIM para sua equipe — carrossel 1080x1350 — still life tecnológico com comparação visual.
 - P16 — Vamos conversar sobre o seu próximo projeto? — estático 1080x1080 — fotografia humana de colaboração.
+
+- P17 — O que conferir na ficha de um elemento? — carrossel 1080x1350 — detalhe técnico com dados e stylus.
+- P18 — Exemplo prático: propriedades dos elementos — reel 1080x1920 — seção construtiva com destaque de propriedades.
+- P19 — Checklist: propriedades dos elementos — carrossel 1080x1350 — flat lay editorial de trabalho.
+- P20 — Qual propriedade você consulta primeiro? — estático 1080x1080 — pergunta comunitária com composição lúdica.
