@@ -1,0 +1,82 @@
+{
+  "created_at": "2026-09-12",
+  "batch": "Lote 01 - P01 - 2026-09-14 - Apresentação",
+  "status": "4 artes produzidas, revisadas e enviadas; sem agendamento ou publicação",
+  "sourceWorkbookUnchanged": true,
+  "imageGenerationMode": "image_gen integrado",
+  "collectionUrl": "https://drive.google.com/drive/folders/1jYokEDBz1XtPmcGgO5PZ--1vSJ8nqEfK",
+  "batchUrl": "https://drive.google.com/drive/folders/1Ix_bWHwIJqSvbeZzn6f2X_WoKBV1Jig3",
+  "originalsManifest": "../originais-drive.json",
+  "outputs": [
+    {
+      "file": "P01_2026-09-14_feed_v01.png",
+      "localPath": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/lote-01/finais/P01_2026-09-14_feed_v01.png",
+      "bytes": 432098,
+      "driveId": "1bcLZbNM2KSh8OOzFTFdSm66cekcsqSXV",
+      "url": "https://drive.google.com/file/d/1bcLZbNM2KSh8OOzFTFdSm66cekcsqSXV/view?usp=drivesdk",
+      "verified": true
+    },
+    {
+      "file": "P01_2026-09-14_story_09h_v01.png",
+      "localPath": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/lote-01/finais/P01_2026-09-14_story_09h_v01.png",
+      "bytes": 448557,
+      "driveId": "1M5eqYWX_YdAd2uCW9ktcpUC4BBgSHHD6",
+      "url": "https://drive.google.com/file/d/1M5eqYWX_YdAd2uCW9ktcpUC4BBgSHHD6/view?usp=drivesdk",
+      "verified": true
+    },
+    {
+      "file": "P01_2026-09-14_story_13h_v01.png",
+      "localPath": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/lote-01/finais/P01_2026-09-14_story_13h_v01.png",
+      "bytes": 446113,
+      "driveId": "18eDBn-yk_GX37IhMpz5i0QMmJ2uN2JV8",
+      "url": "https://drive.google.com/file/d/18eDBn-yk_GX37IhMpz5i0QMmJ2uN2JV8/view?usp=drivesdk",
+      "verified": true
+    },
+    {
+      "file": "P01_2026-09-14_story_19h_v01.png",
+      "localPath": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/lote-01/finais/P01_2026-09-14_story_19h_v01.png",
+      "bytes": 264895,
+      "driveId": "1FFpNvIFAsXzrb-jwknAR3Z9DcwoHltXi",
+      "url": "https://drive.google.com/file/d/1FFpNvIFAsXzrb-jwknAR3Z9DcwoHltXi/view?usp=drivesdk",
+      "verified": true
+    }
+  ],
+  "legendas": {
+    "id": "1m4kUnKi1duClk5aJmQsr8PhDqxepXlWq",
+    "title": "P01 - Legendas e orientação de publicação.md",
+    "mime_type": "text/markdown",
+    "size": "3619",
+    "url": "https://drive.google.com/file/d/1m4kUnKi1duClk5aJmQsr8PhDqxepXlWq/view?usp=drivesdk",
+    "file_or_folder": "file",
+    "created_time": "2026-09-12T06:52:33.756Z",
+    "modified_time": "2026-09-12T06:52:33.756Z",
+    "parent_ids": null,
+    "drive_id": null,
+    "current_user_can_share": null,
+    "has_augmented_permissions": null,
+    "shared": true,
+    "permissions": null,
+    "source_visibility_status": "access_not_verified",
+    "can_download": true,
+    "can_list_children": false
+  },
+  "editablePackage": {
+    "id": "1yTqxHxabNLV9Czvhjimekp8otE_dYXA1",
+    "title": "Arxis_P01_2026-09-14_Fontes_v01.zip",
+    "mime_type": "application/zip",
+    "size": "4949521",
+    "url": "https://drive.google.com/file/d/1yTqxHxabNLV9Czvhjimekp8otE_dYXA1/view?usp=drivesdk",
+    "file_or_folder": "file",
+    "created_time": null,
+    "modified_time": null,
+    "parent_ids": [
+      "1yPdwFjvJ0AhpUSGyqogs--U4y0S9NRxc"
+    ],
+    "drive_id": null,
+    "current_user_can_share": null,
+    "has_augmented_permissions": null,
+    "shared": null,
+    "permissions": null,
+    "source_visibility_status": "access_not_verified"
+  }
+}

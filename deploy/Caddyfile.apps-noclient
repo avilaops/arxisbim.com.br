@@ -107,6 +107,36 @@ n8n.avilaops.com {
 		header Cache-Control "public, max-age=300"
 		file_server
 	}
+	handle /avila-n8n-credentials.css {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle /avila-n8n-credentials.js {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle /avila-credential-icons/* {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+	handle /avila-modules.css {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle /avila-modules.js {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle /avila {
+		redir * /avila/ 308
+	}
+	handle_path /avila/* {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle_path /avila-api/* {
+		reverse_proxy 127.0.0.1:5679
+	}
 	handle @editor_html {
 		root * /opt/n8n/override
 		rewrite * /index.html

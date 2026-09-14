@@ -1,0 +1,167 @@
+{
+  "date": "2026-09-12",
+  "status": "completed",
+  "source_directory": "C:/Users/nicol/.codex/codex-remote-attachments/01a09455-0dcd-79a1-a644-960185956b23/773EB863-BF7A-4534-A0BD-4F900E4B6514",
+  "folders": {
+    "social_media": {
+      "id": "1U_pOOwDE9vkl9VtSZUYkWPTUnSEhVtOb"
+    },
+    "cronograma": {
+      "success": true,
+      "id": "1jYokEDBz1XtPmcGgO5PZ--1vSJ8nqEfK",
+      "url": "https://drive.google.com/drive/folders/1jYokEDBz1XtPmcGgO5PZ--1vSJ8nqEfK",
+      "title": "Cronograma 360 dias",
+      "parent_id": "1U_pOOwDE9vkl9VtSZUYkWPTUnSEhVtOb"
+    },
+    "planning": {
+      "success": true,
+      "id": "1eW_dDVTk03G65pxp-T8tNj4FnN2RwxDh",
+      "url": "https://drive.google.com/drive/folders/1eW_dDVTk03G65pxp-T8tNj4FnN2RwxDh",
+      "title": "00 - Planejamento",
+      "parent_id": "1jYokEDBz1XtPmcGgO5PZ--1vSJ8nqEfK"
+    },
+    "references": {
+      "success": true,
+      "id": "1pENMJSOEA5puV-o9gnTo0aeubltecj7B",
+      "url": "https://drive.google.com/drive/folders/1pENMJSOEA5puV-o9gnTo0aeubltecj7B",
+      "title": "00 - Referências originais",
+      "parent_id": "1jYokEDBz1XtPmcGgO5PZ--1vSJ8nqEfK"
+    },
+    "dated_references": {
+      "success": true,
+      "id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "url": "https://drive.google.com/drive/folders/1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "title": "2026-09-12 - Identidade e avatar Arxis",
+      "parent_id": "1pENMJSOEA5puV-o9gnTo0aeubltecj7B"
+    }
+  },
+  "files": [
+    {
+      "source_filename": "1-Arxis_Cronograma_360_dias_Multicanal.xlsx",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1GJ4tTQADj9hp10_tq68R1s-kAOxNVKFS",
+      "title": "Arxis_Cronograma_360_dias_Multicanal - Original.xlsx",
+      "file_name": "Arxis_Cronograma_360_dias_Multicanal - Original.xlsx",
+      "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "url": "https://docs.google.com/spreadsheets/d/1GJ4tTQADj9hp10_tq68R1s-kAOxNVKFS/edit?usp=drivesdk&ouid=107399217123356797420&rtpof=true&sd=true",
+      "parent_id": "1eW_dDVTk03G65pxp-T8tNj4FnN2RwxDh",
+      "expected_size": 155184,
+      "drive_size": "155184",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "2-Foto-2.jpg",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "10c3liN8XFsLlHpPE8WQR_Ueoied9-Q_0",
+      "title": "01 - Avatar Arxis com tablet - Foto 2 - Original.jpg",
+      "file_name": "01 - Avatar Arxis com tablet - Foto 2 - Original.jpg",
+      "mime_type": "image/jpeg",
+      "url": "https://drive.google.com/file/d/10c3liN8XFsLlHpPE8WQR_Ueoied9-Q_0/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 183017,
+      "drive_size": "183017",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "3-Foto-3.jpg",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1wfR3hxRAzerK60Ahsk6gtZ-n_HDMCIJ0",
+      "title": "02 - Avatar Arxis - Expressoes e poses - Foto 3 - Original.jpg",
+      "file_name": "02 - Avatar Arxis - Expressoes e poses - Foto 3 - Original.jpg",
+      "mime_type": "image/jpeg",
+      "url": "https://drive.google.com/file/d/1wfR3hxRAzerK60Ahsk6gtZ-n_HDMCIJ0/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 209020,
+      "drive_size": "209020",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "4-Foto-4.jpg",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1USSRRggACj-V1l1VRot-7Xl_HQY61P6a",
+      "title": "03 - Avatar Arxis - Retrato - Foto 4 - Original.jpg",
+      "file_name": "03 - Avatar Arxis - Retrato - Foto 4 - Original.jpg",
+      "mime_type": "image/jpeg",
+      "url": "https://drive.google.com/file/d/1USSRRggACj-V1l1VRot-7Xl_HQY61P6a/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 174832,
+      "drive_size": "174832",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "5-Foto-5.jpg",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1bcn_YBnB-pkCyYq7IN8DgDZRupNYpBDC",
+      "title": "04 - Logo Arxis - Simbolo - Foto 5 - Original.jpg",
+      "file_name": "04 - Logo Arxis - Simbolo - Foto 5 - Original.jpg",
+      "mime_type": "image/jpeg",
+      "url": "https://drive.google.com/file/d/1bcn_YBnB-pkCyYq7IN8DgDZRupNYpBDC/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 69601,
+      "drive_size": "69601",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "6-Foto-7.jpg",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1381aJuxPktjM5pdHtxvJU5cTswxBD4Yz",
+      "title": "05 - Identidade visual Arxis - Assinaturas da marca - Foto 7 - Original.jpg",
+      "file_name": "05 - Identidade visual Arxis - Assinaturas da marca - Foto 7 - Original.jpg",
+      "mime_type": "image/jpeg",
+      "url": "https://drive.google.com/file/d/1381aJuxPktjM5pdHtxvJU5cTswxBD4Yz/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 114360,
+      "drive_size": "114360",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "7-gemini_generated_video_ED601DD0.mp4",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1KTHOdchkxhpDoUVAhP91zWEgNJM7BFFs",
+      "title": "06 - Video Arxis - Gemini ED601DD0 - Original.mp4",
+      "file_name": "06 - Video Arxis - Gemini ED601DD0 - Original.mp4",
+      "mime_type": "video/mp4",
+      "url": "https://drive.google.com/file/d/1KTHOdchkxhpDoUVAhP91zWEgNJM7BFFs/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 7601892,
+      "drive_size": "7601892",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    },
+    {
+      "source_filename": "8-gemini_generated_video_01B648B6.mp4",
+      "accepted_input": "file_uri",
+      "success": true,
+      "id": "1a_x5TvI1i0_fB-9YVdUTEHMuZWk2cNj_",
+      "title": "07 - Video Arxis - Gemini 01B648B6 - Original.mp4",
+      "file_name": "07 - Video Arxis - Gemini 01B648B6 - Original.mp4",
+      "mime_type": "video/mp4",
+      "url": "https://drive.google.com/file/d/1a_x5TvI1i0_fB-9YVdUTEHMuZWk2cNj_/view?usp=drivesdk",
+      "parent_id": "1HefSPYoqRBTqaw_n53IIOkFyP1pDgu0V",
+      "expected_size": 1875865,
+      "drive_size": "1875865",
+      "verified_in_target_folder": true,
+      "verified_size": true
+    }
+  ],
+  "verification": {
+    "all_eight_uploaded": true,
+    "source_types_preserved": true,
+    "quota_failure": false,
+    "permissions_changed": false
+  },
+  "local_directory": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/originais"
+}
