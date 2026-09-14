@@ -17,3 +17,8 @@ As versões `raw` preservam os originais gerados. As versões `final` recebem a 
 - P18 — Exemplo prático: propriedades dos elementos — reel 1080x1920 — seção construtiva com destaque de propriedades.
 - P19 — Checklist: propriedades dos elementos — carrossel 1080x1350 — flat lay editorial de trabalho.
 - P20 — Qual propriedade você consulta primeiro? — estático 1080x1080 — pergunta comunitária com composição lúdica.
+
+- P21 — Como encontrar o detalhe certo no projeto? — carrossel 1080x1350 — localização visual com zoom técnico.
+- P22 — Exemplo prático: localização no modelo — reel 1080x1920 — alvo de navegação no modelo 3D.
+- P23 — Checklist: localização no modelo — carrossel 1080x1350 — mesa editorial com roteiro visual.
+- P24 — Como você indica um detalhe para a equipe? — estático 1080x1080 — colaboração com modelo holográfico.

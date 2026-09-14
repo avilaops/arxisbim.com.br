@@ -304,6 +304,66 @@
       "alt": "Arte Arxis sobre qual propriedade você consulta primeiro?",
       "type": "social-post",
       "brand": "Arxis"
+    },
+    {
+      "id": "P21",
+      "title": "Como encontrar o detalhe certo no projeto?",
+      "description": "Guia visual para localizar detalhes no modelo.",
+      "caption": "Encontre o detalhe certo no projeto sem perder o contexto.",
+      "hashtags": [
+        "#localizaçãoBIM",
+        "#modelo3D",
+        "#projetos"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P21-detalhe-certo-projeto-1080x1350.png",
+      "alt": "Arte Arxis sobre como encontrar o detalhe certo no projeto?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P22",
+      "title": "Exemplo prático: localização no modelo.",
+      "description": "Demonstração de navegação até um detalhe.",
+      "caption": "Do modelo inteiro ao detalhe certo, com precisão.",
+      "hashtags": [
+        "#BIM",
+        "#navegação3D",
+        "#arquitetura"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P22-localizacao-modelo-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre exemplo prático: localização no modelo.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P23",
+      "title": "Checklist: localização no modelo.",
+      "description": "Roteiro para localizar detalhes com clareza.",
+      "caption": "Use este checklist para indicar onde está o detalhe que a equipe precisa revisar.",
+      "hashtags": [
+        "#checklistBIM",
+        "#revisão",
+        "#construção"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P23-checklist-localizacao-1080x1350.png",
+      "alt": "Arte Arxis sobre checklist: localização no modelo.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P24",
+      "title": "Como você indica um detalhe para a equipe?",
+      "description": "Pergunta sobre comunicação em projetos.",
+      "caption": "Como sua equipe indica um detalhe para evitar interpretações diferentes?",
+      "hashtags": [
+        "#colaboração",
+        "#BIM",
+        "#equipe"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P24-indicar-detalhe-equipe-1080x1080.png",
+      "alt": "Arte Arxis sobre como você indica um detalhe para a equipe?",
+      "type": "social-post",
+      "brand": "Arxis"
     }
   ]
 }
