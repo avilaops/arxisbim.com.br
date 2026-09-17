@@ -164,6 +164,12 @@ do código:
 - **Sentry** — `VITE_SENTRY_*` não muda; conferir o filtro de origem se houver.
 - **Instagram / materiais de marketing** — `@arxis.bim` já fecha com o domínio
   novo; trocar o link da bio e as artes que mostram a URL.
+- **Monitor de saúde do `app.avilaops.com`** — em `src/lib/health/config.ts`, a
+  entrada `arxisvr` aponta para `https://arxisvr.avilaops.com/`. Trocar para
+  `https://arxisbim.com.br/` **depois** que o DNS estiver de pé (antes disso o
+  probe falha no DNS e a tela Saúde marca DOWN falso). A `key` continua
+  `arxisvr`: é ela que liga as leituras já gravadas ao serviço. Enquanto não for
+  trocada, o probe segue o 308 e continua verde, só medindo um salto a mais.
 
 ---
 
