@@ -64,15 +64,36 @@ variável falta. Para depurar, `CORS_ORIGIN=*` continua sendo o escape explícit
 | `www` | A | `204.168.249.111` | DNS only |
 | `api` | A | `204.168.249.111` | DNS only |
 
-DNS only (nuvem cinza), como os outros apps do `apps-noclient`: quem emite o
-certificado é o Caddy da máquina, e com o proxy laranja ligado antes do primeiro
-certificado o ACME não alcança o host.
+DNS only (nuvem cinza) **por escolha, não por impossibilidade**. O proxy laranja
+não impede o Caddy de emitir: a Cloudflare repassa o desafio HTTP-01 na porta 80,
+e `crm.avilaops.com` — que passa pelo proxy — é servido por este mesmo Caddy. O
+que não funciona atrás do laranja é o TLS-ALPN-01, porque a Cloudflare termina o
+TLS na borda; como o Caddy tenta os dois, o efeito prático é uma emissão mais
+lenta e com uma falha a mais no log.
 
-No registro.br, apontar os nameservers para os da Cloudflare e esperar a
-propagação. Conferir antes de seguir:
+A razão de começar cinza é diagnóstico, e vale para a janela do corte: `dig` e
+`curl` falam com a máquina, o IP no log do Caddy é o do visitante, e um erro de
+certificado só pode ser do Caddy — sem uma camada a mais para descartar antes. É
+como estão os outros apps do `apps-noclient`. Ligar o laranja depois, se houver
+motivo, é a etapa 7.
+
+Nameservers no registro.br: **já apontados para a Cloudflare** — conferido em
+17/09/2026, a zona responde por `donald.ns.cloudflare.com` e
+`dora.ns.cloudflare.com`. Falta só criar os três registros acima: hoje o apex não
+tem registro A, e `www` e `api` respondem NXDOMAIN.
+
+Conferir os dois níveis antes de seguir — resolução e alcance:
 
 ```bash
-dig +short arxisbim.com.br api.arxisbim.com.br    # os dois → 204.168.249.111
+# 1. os nomes resolvendo para a maquina
+dig +short arxisbim.com.br www.arxisbim.com.br api.arxisbim.com.br
+# os tres → 204.168.249.111
+
+# 2. 80 e 443 chegando na maquina pelo nome novo. Antes da etapa 2 o Caddy ainda
+# nao conhece esses hosts, entao um 404 dele ja prova que a requisicao chegou:
+# o que reprova e timeout ou conexao recusada.
+curl -sS -o /dev/null -w 'http %{http_code} via %{remote_ip}\n' http://arxisbim.com.br/
+nc -vz arxisbim.com.br 443
 ```
 
 ### 2. Caddy no servidor `apps-noclient`
@@ -80,9 +101,21 @@ dig +short arxisbim.com.br api.arxisbim.com.br    # os dois → 204.168.249.111
 Copiar `deploy/Caddyfile.apps-noclient` para `/etc/caddy/Caddyfile` e recarregar:
 
 ```bash
-caddy validate --config /etc/caddy/Caddyfile
-systemctl reload caddy
-journalctl -u caddy -n 50 --no-pager     # certificado dos 3 nomes novos
+caddy validate --config /etc/caddy/Caddyfile   # erro aqui: nao recarregue
+systemctl reload caddy                          # graceful, os outros apps seguem servindo
+journalctl -u caddy -n 50 --no-pager            # emissao dos 3 nomes novos
+```
+
+O `validate` antes do `reload` é o que protege os outros projetos da máquina
+(CRM, SMS, Alô Barbeiro). O `reload` do Caddy já recusa config inválida e mantém
+a anterior no ar — mas uma config **válida e errada** entra e derruba quem estava
+certo, e é isso que o `validate` mais um par de olhos no diff pegam antes.
+
+Conferir a emissão antes de seguir:
+
+```bash
+curl -sSI https://arxisbim.com.br/ | head -1     # 200, sem erro de TLS
+curl -sS -o /dev/null -w '%{ssl_verify_result}\n' https://api.arxisbim.com.br/health   # 0
 ```
 
 Só aplicar **depois** da etapa 1: o Caddy só emite certificado quando o ACME
@@ -170,6 +203,25 @@ do código:
   probe falha no DNS e a tela Saúde marca DOWN falso). A `key` continua
   `arxisvr`: é ela que liga as leituras já gravadas ao serviço. Enquanto não for
   trocada, o probe segue o 308 e continua verde, só medindo um salto a mais.
+
+### 7. Proxy laranja (opcional, só depois de tudo verde)
+
+Só faz sentido depois do certificado emitido e da conferência da etapa 5 passar.
+Se ligar:
+
+- O Caddy continua emitindo e renovando pelo HTTP-01, que atravessa o proxy — o
+  visitante é que passa a ver o certificado da Cloudflare.
+- SSL/TLS no painel tem de ficar em **Full (strict)**. Em *Flexible* a Cloudflare
+  fala HTTP com a origem e o app entra em laço de redirecionamento.
+- `api.arxisbim.com.br` é o host que pede atenção: o upload de IFC esbarra no
+  limite de corpo da Cloudflare (100 MB no plano gratuito) e o WebSocket precisa
+  continuar passando.
+- As faixas da Cloudflare já estão em `trusted_proxies` no Caddyfile, então
+  `{client_ip}` segue sendo o visitante — mesmo desenho do `crm.avilaops.com`.
+
+Sem motivo concreto (cache, WAF, esconder o IP de origem), não ligar: cinza é uma
+peça a menos entre o usuário e o app, e uma a menos para descartar quando algo
+quebrar.
 
 ---
 
