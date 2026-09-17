@@ -29,9 +29,10 @@ jobs:
           npm run build
         working-directory: frontend
         env:
-          VITE_API_URL: https://api.arxisvr.avilaops.com
-          VITE_WS_URL: wss://api.arxisvr.avilaops.com
-          VITE_WS_SERVER: wss://api.arxisvr.avilaops.com
+          VITE_API_URL: https://api.arxisbim.com.br
+          VITE_SITE_URL: https://arxisbim.com.br
+          VITE_WS_URL: wss://api.arxisbim.com.br
+          VITE_WS_SERVER: wss://api.arxisbim.com.br
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_SENTRY_ENVIRONMENT: production
           VITE_SENTRY_RELEASE: arxisvr-frontend@${{ github.sha }}
@@ -45,4 +46,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: frontend/dist
-          cname: arxisvr.avilaops.com
+          cname: arxisbim.com.br

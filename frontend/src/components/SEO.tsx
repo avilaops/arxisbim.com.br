@@ -1,3 +1,5 @@
+import { resolveCanonicalSiteUrl } from '../config/site.config'
+
 interface SEOProps {
   title: string
   description: string
@@ -11,7 +13,9 @@ interface SEOProps {
   noindex?: boolean
 }
 
-export const siteUrl = (import.meta.env.VITE_SITE_URL || 'https://arxisvr.avilaops.com').replace(/\/$/, '')
+// Canonical e og:url apontam sempre para o domínio próprio, mesmo quando o
+// host antigo serve a página.
+export const siteUrl = resolveCanonicalSiteUrl()
 
 export default function SEO({ title, description, keywords, path = '', image = '/images/editorial/arquitetura.webp', imageAlt = 'Arxis · clareza para visualizar, analisar e decidir', type = 'website', publishedTime, structuredData, noindex }: SEOProps) {
   const canonicalUrl = `${siteUrl}${path || '/'}`

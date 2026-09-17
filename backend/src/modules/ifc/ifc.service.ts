@@ -10,6 +10,7 @@ import { IfcValidationService } from './ifc-validation.service.js';
 import { webhookService } from './webhook.service.js';
 import { cacheService, CacheService } from './cache.service.js';
 import { NotificationService } from '../notifications/notifications.service.js';
+import { frontendUrl } from '../../core/config/domains.js';
 import { storage, buildIfcKey, StorageError } from '../../core/storage/index.js';
 import { randomUUID } from 'crypto';
 
@@ -570,7 +571,7 @@ export class IfcService {
 
       <div style="text-align:center;margin-top:40px">
         <p style="color:#aaaaaa;font-size:14px;margin-bottom:20px">Quer visualizar este modelo em 3D, simular o cronograma de obras 4D ou coordenar com sua equipe?</p>
-        <a href="https://arxisvr.avilaops.com/register" style="display:inline-block;padding:14px 28px;background:#007AFF;color:#ffffff;text-decoration:none;border-radius:24px;font-weight:600;font-size:14px">
+        <a href="${frontendUrl('/register')}" style="display:inline-block;padding:14px 28px;background:#007AFF;color:#ffffff;text-decoration:none;border-radius:24px;font-weight:600;font-size:14px">
           Criar Conta Grátis na Plataforma
         </a>
       </div>

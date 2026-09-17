@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { FRONTEND_URL, PRIVACY_EMAIL, frontendUrl } from '../config/domains.js';
 
 export interface EmailTemplate {
   id: string;
@@ -106,8 +107,8 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
   <tr><td style="padding:20px 40px;border-top:1px solid rgba(0,0,0,0.06);background:#F9F9F9;">
     <p style="font-size:12px;color:#aeaeb2;margin:0;line-height:1.6;">
       Arxis by AvilaOps · Plataforma BIM com IA e Realidade Estendida<br>
-      <a href="https://arxisvr.avilaops.com/lgpd" style="color:#aeaeb2;">Cancelar inscrição</a> ·
-      <a href="https://arxisvr.avilaops.com/privacy" style="color:#aeaeb2;">Política de Privacidade</a>
+      <a href="${frontendUrl('/lgpd')}" style="color:#aeaeb2;">Cancelar inscrição</a> ·
+      <a href="${frontendUrl('/privacy')}" style="color:#aeaeb2;">Política de Privacidade</a>
     </p>
   </td></tr>
 
@@ -119,7 +120,7 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
 }
 
 function buildTemplateContent(templateId: string, recipientName: string): { subject: string; html: string } {
-  const appUrl = process.env.URL || 'https://arxisvr.avilaops.com';
+  const appUrl = process.env.URL || FRONTEND_URL;
 
   switch (templateId) {
     case 'welcome':
@@ -248,7 +249,7 @@ export class EmailService {
           html,
           headers: {
             'X-Mailer': 'Arxis/1.1',
-            'List-Unsubscribe': `<mailto:privacidade@arxisvr.avilaops.com?subject=unsubscribe>`,
+            'List-Unsubscribe': `<mailto:${PRIVACY_EMAIL}?subject=unsubscribe>`,
           },
         });
         sent++;
