@@ -118,11 +118,7 @@ export default function LgpdPage() {
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
               <strong>Arxis</strong>
               <br />
-              CNPJ: 00.000.000/0000-00
-              <br />
               Email: lgpd@arxisvr.com
-              <br />
-              Telefone: +55 (11) XXXX-XXXX
             </p>
           </section>
 
