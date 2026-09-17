@@ -49,13 +49,18 @@ jobs:
         working-directory: backend
         run: npm run type-check
 
+      # npm, nao yarn: o frontend tem package-lock.json e nenhum yarn.lock, e o
+      # package.json da raiz declara "packageManager": "npm@11.16.0" — o yarn 1
+      # do runner le esse campo como "yarn@npm@11.16.0" e recusa instalar. Era
+      # o que deixava TODO PR vermelho neste passo (o do Dependabot #24 falhou
+      # igual em 14/09), antes de qualquer teste rodar.
       - name: Install frontend dependencies
         working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Build frontend (vite)
         working-directory: frontend
-        run: yarn build
+        run: npm run build
 
       - name: Install signaling-server dependencies
         working-directory: signaling-server
