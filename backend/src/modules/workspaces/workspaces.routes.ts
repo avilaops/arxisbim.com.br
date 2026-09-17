@@ -8,6 +8,7 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 import { AuthService } from '../../core/auth/auth.service.js';
 import { emailService } from '../../core/email/email.service.js';
 import { assertCanAddMember, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
+import { FRONTEND_URL } from '../../core/config/domains.js';
 
 const authService = new AuthService();
 
@@ -17,7 +18,6 @@ function getUser(req: FastifyRequest): AuthedUser | null {
 }
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://arxisvr.avilaops.com';
 
 function workspaceSlug(name: string): string {
   const base = name

@@ -4,6 +4,8 @@
  * Service para colaboração em tempo real multi-usuário
  */
 
+import { resolveWsUrl } from '../../config/site.config';
+
 import type {
   RoomOptions,
   UserSession,
@@ -207,9 +209,10 @@ export class MultiplayerRealtimeService {
     }
     this.emitConnectionState('connecting');
 
-    // Use env var — fallback to same-host port 3002 (signaling server)
+    // Env var manda; o default sai de site.config.ts (o WS é servido pelo
+    // mesmo host da API, não há signaling separado em produção).
     const wsBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_WS_URL)
-      || `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:3002`;
+      || resolveWsUrl();
     const wsUrl = wsBase;
 
     return new Promise((resolve, reject) => {

@@ -19,6 +19,12 @@ set -euo pipefail
 
 HOST="${ARXISVR_HOST:-204.168.249.111}"
 KEY="${ARXISVR_SSH_KEY:-$HOME/.ssh/hetzner_avilaops}"
+# Enderecos publicos. O canonico e arxisbim.com.br desde 17/09/2026: entra no
+# bundle (VITE_SITE_URL) e nas conferencias do fim do script.
+# Enquanto o DNS nao apontar, rode com ARXISVR_SITE_URL/ARXISVR_API_URL do
+# dominio antigo. Ver documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
+SITE_URL="${ARXISVR_SITE_URL:-https://arxisbim.com.br}"
+API_URL="${ARXISVR_API_URL:-https://api.arxisbim.com.br}"
 REMOTE=/opt/arxisvr
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -107,9 +113,12 @@ deploy_web() {
     (cd "$ROOT/frontend" && npm run typecheck) || { echo "    tipos com erro: deploy parado antes de empacotar"; return 1; }
   fi
   echo "==> [web] build local (Vite, ~1 min: nao vale o tar de 14 MB de dist mais o node_modules no servidor)"
-  # VITE_API_URL entra no bundle em tempo de build: sem isto o site publicado
-  # aponta para localhost e nenhuma tela carrega dado.
-  (cd "$ROOT/frontend" && VITE_API_URL=https://api.arxisvr.avilaops.com npm run build)
+  # VITE_SITE_URL entra no bundle em tempo de build (sitemap, robots, feed e
+  # canonical). A origem da API nao e mais fixada aqui: desde 17/09/2026 ela e
+  # resolvida em execucao por src/config/site.config.ts, para o mesmo bundle
+  # servir o dominio novo e o antigo. Para forcar uma origem (teste, staging):
+  # VITE_API_URL=... ./deploy/deploy-aplicacoes.sh web
+  (cd "$ROOT/frontend" && VITE_SITE_URL="$SITE_URL" npm run build)
 
   local bundle
   bundle="$(basename "$(ls "$ROOT"/frontend/dist/assets/pages-*.js | head -1)")"
@@ -127,7 +136,7 @@ deploy_web() {
 
   echo "==> [web] conferindo que o bundle PUBLICADO e o que acabei de construir"
   local publicado
-  publicado="$(curl -s --max-time 30 https://arxisvr.avilaops.com/ | grep -oE 'pages-[^"]*\.js' | head -1)"
+  publicado="$(curl -s --max-time 30 "$SITE_URL/" | grep -oE 'pages-[^"]*\.js' | head -1)"
   if [ "$bundle" != "$publicado" ]; then
     echo "[web] ABORTADO: publicado '$publicado', esperado '$bundle'." >&2
     return 1
@@ -145,12 +154,12 @@ esac
 echo
 echo "==> conferindo no ar"
 falhou=0
-for u in https://api.arxisvr.avilaops.com/health https://arxisvr.avilaops.com/ https://arxisvr.avilaops.com/validador https://arxisvr.avilaops.com/app/compare; do
+for u in "$API_URL/health" "$SITE_URL/" "$SITE_URL/validador" "$SITE_URL/app/compare"; do
   codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$u")"
   printf '  %-45s %s
 ' "$u" "$codigo"
   [ "$codigo" = "200" ] || falhou=1
 done
 # /health precisa dizer que o banco esta de pe: 200 com database:down foi o incidente de 09/09.
-curl -s --max-time 25 https://api.arxisvr.avilaops.com/health | grep -q '"database":"up"' && echo '  banco: up' || { echo '  banco: NAO esta up' >&2; falhou=1; }
+curl -s --max-time 25 "$API_URL/health" | grep -q '"database":"up"' && echo '  banco: up' || { echo '  banco: NAO esta up' >&2; falhou=1; }
 [ "$falhou" = 0 ] || { echo "deploy terminou, mas a conferencia publica falhou" >&2; exit 1; }

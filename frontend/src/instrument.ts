@@ -7,8 +7,10 @@ import {
 } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 
+import { resolveApiUrl } from './config/site.config'
+
 const dsn = import.meta.env.VITE_SENTRY_DSN
-const apiUrl = import.meta.env.VITE_API_URL || 'https://api.arxisvr.avilaops.com'
+const apiUrl = resolveApiUrl()
 
 function stripUrlQuery(value?: string): string | undefined {
   if (!value) return value

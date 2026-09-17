@@ -14,6 +14,11 @@
 set -euo pipefail
 
 HOST="${ARXISVR_HOST:-23.88.60.193}"
+# Enderecos publicos. O canonico e arxisbim.com.br desde 17/09/2026; enquanto o
+# DNS nao apontar, rode com ARXISVR_SITE_URL/ARXISVR_API_URL do dominio antigo.
+# Ver documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
+SITE_URL="${ARXISVR_SITE_URL:-https://arxisbim.com.br}"
+API_URL="${ARXISVR_API_URL:-https://api.arxisbim.com.br}"
 KEY="${ARXISVR_SSH_KEY:-$HOME/.ssh/hetzner_avilaops}"
 REMOTE=/opt/arxisvr
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -92,5 +97,5 @@ esac
 
 echo
 echo "==> conferindo no ar"
-curl -s -o /dev/null -w "  api  %{http_code}\n" --max-time 20 https://api.arxisvr.avilaops.com/health
-curl -s -o /dev/null -w "  site %{http_code}\n" --max-time 20 https://arxisvr.avilaops.com/validador
+curl -s -o /dev/null -w "  api  %{http_code}\n" --max-time 20 "$API_URL/health"
+curl -s -o /dev/null -w "  site %{http_code}\n" --max-time 20 "$SITE_URL/validador"

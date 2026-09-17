@@ -25,8 +25,10 @@
 
 set -uo pipefail
 
-API_URL=https://api.arxisvr.avilaops.com/health
-WEB_URL=https://arxisvr.avilaops.com/
+# Dominio canonico desde 17/09/2026 (arxisbim.com.br). Enquanto os dois
+# responderem, o vigia olha o canonico: e por ele que o usuario entra.
+API_URL="${ARXISVR_API_URL:-https://api.arxisbim.com.br}/health"
+WEB_URL="${ARXISVR_SITE_URL:-https://arxisbim.com.br}/"
 CONTAINER=arxisvr-api
 STATE_FILE=/var/lib/arxisvr_health_state
 DB_STRIKES_FILE=/var/lib/arxisvr_health_db_strikes

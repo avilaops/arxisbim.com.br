@@ -3,6 +3,7 @@ import type { Transporter } from 'nodemailer';
 import { Resend } from 'resend';
 import { observabilityService } from '../observability/service.js';
 import { enqueueEmail } from './email-queue.worker.js';
+import { FRONTEND_URL } from '../config/domains.js';
 
 /**
  * Email Service para Arxis
@@ -17,7 +18,7 @@ export class EmailService {
   private readonly fromAddress: string;
 
   constructor() {
-    this.frontendUrl = process.env.FRONTEND_URL || 'https://arxisvr.avilaops.com';
+    this.frontendUrl = FRONTEND_URL;
     this.fromAddress = process.env.EMAIL_FROM || 'onboarding@resend.dev';
   }
 

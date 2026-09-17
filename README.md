@@ -2,7 +2,17 @@
 
 Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINAPI integrado.
 
-**Produção:** [arxisvr.avilaops.com](https://arxisvr.avilaops.com) · API: `api.arxisvr.avilaops.com`
+**Produção:** [arxisbim.com.br](https://arxisbim.com.br) · API: `api.arxisbim.com.br`
+
+> **Domínio próprio desde 17/09/2026.** `arxisvr.avilaops.com` e
+> `api.arxisvr.avilaops.com` continuam respondendo durante a transição: o site
+> antigo redireciona (308) para o canônico, a API antiga serve o mesmo backend
+> sem redirecionar (3xx quebraria o preflight do CORS e o plugin do Revit).
+> Endereço público novo não se escreve à mão em lugar nenhum: frontend em
+> `frontend/src/config/site.config.ts`, backend em
+> `backend/src/core/config/domains.ts`. Runbook e pendências de DNS, OAuth,
+> webhook e e-mail em
+> `documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md`.
 
 ---
 
@@ -42,7 +52,8 @@ PostgreSQL (container arxisvr-db) · storage local em volume
 > entram no build. Antes de continuar qualquer sprint, ler
 > `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`. Foco único: **S12**.
 
-> **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
+> **Domínios canônicos:** o produto é `arxisbim.com.br`; a casa é
+> `avilaops.com`. Nunca usar `avila.inc`.
 
 ---
 
