@@ -6,6 +6,7 @@ interface ViewerToolbarProps {
   onToggleProjects: () => void
   onToggleProperties: () => void
   onToggleScenarios: () => void
+  onToggleCronograma: () => void
   /** Ha modelo aberto: sem ele, "Redefinir" nao tem o que redefinir. */
   hasModel: boolean
   onResetView: () => void
@@ -20,6 +21,7 @@ export default function ViewerToolbar({
   onToggleProjects,
   onToggleProperties,
   onToggleScenarios,
+  onToggleCronograma,
   hasModel,
   onResetView,
   fullscreen,
@@ -58,6 +60,17 @@ export default function ViewerToolbar({
           title="Cenários"
         >
           <ArxisIcon name="layers" size={18} />
+        </button>
+        <button
+          // Mesmo caso do botao de cenarios: precisa existir em todo viewport,
+          // senao o S26 fica invisivel no celular ou no desktop.
+          className="viewer-icon-button viewer-always"
+          type="button"
+          onClick={onToggleCronograma}
+          aria-label="Abrir cronograma 4D"
+          title="Cronograma 4D"
+        >
+          <ArxisIcon name="recent" size={18} />
         </button>
         <button
           className="viewer-icon-button"
