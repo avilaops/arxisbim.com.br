@@ -44,8 +44,11 @@ PostgreSQL (container arxisvr-db) · storage local em volume
 > `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de Postgres no
 > host, nada de mexer no Caddy sem necessidade medida.
 >
-> Deploy é **manual**: `./deploy/deploy.sh [api|web]`. Não há CI, porque a conta
-> do GitHub está bloqueada e nenhum Actions roda.
+> Deploy é **manual**: `./deploy/deploy.sh [api|web]` — CI verde não publica
+> nada. O Actions, esse **voltou a rodar** (o bloqueio por billing de 02/09 não
+> vale mais): `.github/workflows/ci.yml` barra merge com type-check e build dos
+> dois lados, mais os 358 testes do backend contra um Postgres de verdade. Ver
+> `documentation/CI-CD-ESTRATEGIA.md`.
 
 > **Estado do produto (02/09/2026):** o backend está à frente da interface. Os
 > quatro marcos ★ estão **zerados**, e 819 dos 867 arquivos do frontend não
