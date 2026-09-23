@@ -214,14 +214,26 @@ class VersionHistoryService {
       newValue: change.previousValue,
     }));
 
+    // O pai da reversão é a versão MAIS RECENTE do projeto, não a que está
+    // sendo revertida: `calculateNextVersion` numera a partir do pai, então
+    // reverter para 1.0.0 com o projeto em 1.0.1 criava uma segunda 1.0.1 —
+    // dois registros distintos com o mesmo número, e o histórico deixava de
+    // ser ordenável. A mudança revertida continua rastreável por
+    // `metadata.revertedFrom`.
+    // `getProjectVersions` ordena por timestamp, e versões criadas no mesmo
+    // milissegundo empatam — a maior numeração é o critério estável aqui.
+    const versaoAtual = this.getProjectVersions(version.projectId)
+      .reduce((maior, atual) => (compararVersoes(atual.version, maior.version) > 0 ? atual : maior), version);
+
     const revertedVersion = this.createVersion(
       version.projectId,
       `Revert to ${version.version}`,
       authorId,
       authorName,
       revertedChanges,
-      version.id
+      versaoAtual.id
     );
+    revertedVersion.metadata = { ...revertedVersion.metadata, revertedFrom: version.id };
 
     console.log('[VersionHistoryService] Reverted to version:', version.version);
     return revertedVersion;
@@ -351,3 +363,14 @@ export function getVersionHistoryService(): VersionHistoryService {
 }
 
 export default VersionHistoryService;
+
+/** Compara "1.0.10" com "1.0.9" por número, não por string. */
+function compararVersoes(a: string, b: string): number {
+  const partesA = a.split('.').map(Number);
+  const partesB = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(partesA.length, partesB.length); i++) {
+    const diferenca = (partesA[i] || 0) - (partesB[i] || 0);
+    if (diferenca !== 0) return diferenca;
+  }
+  return 0;
+}

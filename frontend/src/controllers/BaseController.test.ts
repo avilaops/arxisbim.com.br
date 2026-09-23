@@ -4,6 +4,7 @@
  */
 
 import BaseController from './BaseController';
+import { vi } from 'vitest';
 
 // Test subclass to expose protected methods
 class TestController extends BaseController {
@@ -90,14 +91,14 @@ describe('BaseController', () => {
 
   describe('Event Callbacks', () => {
     test('should set and call progress callback', () => {
-      const progressCallback = jest.fn();
+      const progressCallback = vi.fn();
       controller.setProgressCallback(progressCallback);
       controller.testEmitProgress(50, { context: 'test' });
       expect(progressCallback).toHaveBeenCalledWith(50, { context: 'test' });
     });
 
     test('should set and call error callback', () => {
-      const errorCallback = jest.fn();
+      const errorCallback = vi.fn();
       controller.setErrorCallback(errorCallback);
       const error = new Error('Test error');
       controller.testEmitError(error, { context: 'test' });
@@ -105,7 +106,7 @@ describe('BaseController', () => {
     });
 
     test('should set and call success callback', () => {
-      const successCallback = jest.fn();
+      const successCallback = vi.fn();
       controller.setSuccessCallback(successCallback);
       const result = { data: 'test' };
       controller.testEmitSuccess(result, { context: 'test' });
@@ -113,7 +114,7 @@ describe('BaseController', () => {
     });
 
     test('should set and call state change callback', () => {
-      const stateChangeCallback = jest.fn();
+      const stateChangeCallback = vi.fn();
       controller.setStateChangeCallback(stateChangeCallback);
       controller.testSetState({ loading: true });
       expect(stateChangeCallback).toHaveBeenCalled();
@@ -137,7 +138,7 @@ describe('BaseController', () => {
 
   describe('Execute Async', () => {
     test('should execute async operation successfully', async () => {
-      const successCallback = jest.fn();
+      const successCallback = vi.fn();
       controller.setSuccessCallback(successCallback);
 
       const result = await controller.testExecuteAsync(async () => {
@@ -150,7 +151,7 @@ describe('BaseController', () => {
     });
 
     test('should handle async operation error', async () => {
-      const errorCallback = jest.fn();
+      const errorCallback = vi.fn();
       controller.setErrorCallback(errorCallback);
 
       await expect(
@@ -219,7 +220,7 @@ describe('BaseController', () => {
 
   describe('Error Handling', () => {
     test('should convert string to Error', () => {
-      const errorCallback = jest.fn();
+      const errorCallback = vi.fn();
       controller.setErrorCallback(errorCallback);
 
       controller.testHandleError('String error');
@@ -232,7 +233,7 @@ describe('BaseController', () => {
     });
 
     test('should pass Error object as-is', () => {
-      const errorCallback = jest.fn();
+      const errorCallback = vi.fn();
       controller.setErrorCallback(errorCallback);
 
       const error = new Error('Test error');

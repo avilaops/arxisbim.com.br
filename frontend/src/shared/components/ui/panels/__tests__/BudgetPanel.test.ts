@@ -1,22 +1,3 @@
-  it('permite editar descrição inline e persiste no manager', async () => {
-    const panel = new BudgetPanel(container, { getTakeoffResult: () => null });
-    setInput(container, '#budget-name', 'Obra X');
-    container.querySelector<HTMLButtonElement>('#budget-create')!.click();
-    setInput(container, '#ci-desc', 'Cimento');
-    setInput(container, '#ci-unit', 'kg');
-    setInput(container, '#ci-qty', '20');
-    setInput(container, '#ci-price', '50');
-    container.querySelector<HTMLButtonElement>('#ci-add')!.click();
-    // Edita descrição inline
-    const input = container.querySelector<HTMLInputElement>('.ci-edit.ci-desc');
-    expect(input).not.toBeNull();
-    input!.value = 'Cimento CPV';
-    input!.dispatchEvent(new Event('blur'));
-    // Aguarda microtask para update
-    await new Promise((r) => setTimeout(r, 10));
-    const item = panel.getManager().list()[0].items[0];
-    expect(item.description).toBe('Cimento CPV');
-  });
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { BudgetPanel } from '../BudgetPanel';
 import type { TakeoffResult } from '../../../../../features/bim-4d/bim/5d';
@@ -85,7 +66,11 @@ describe('BudgetPanel', () => {
     const b = panel.getManager().list()[0];
     expect(b.items).toHaveLength(1);
     expect(b.items[0].totalPrice).toBe(5000);
-    expect(container.querySelector('.budget-panel__table tbody tr')?.textContent).toMatch(/Concreto/);
+    // A linha renderiza inputs de edição inline: a descrição está no `value`,
+    // não no texto da célula.
+    expect(
+      container.querySelector<HTMLInputElement>('.budget-panel__table tbody tr .ci-desc')?.value,
+    ).toBe('Concreto');
   });
 
   it('links selected element ids to the last added item', () => {
@@ -136,7 +121,9 @@ describe('BudgetPanel', () => {
     setInput(container, '#budget-name', 'B');
     container.querySelector<HTMLButtonElement>('#budget-create')!.click();
     panel.calculate();
-    expect(container.querySelector('.budget-panel__status')?.textContent).toMatch(/Takeoff/);
+    expect(container.querySelector('.budget-panel__status')?.textContent).toMatch(
+      /Gere os quantitativos antes de calcular/,
+    );
   });
 
   it('exportReport() forwards CSV through the downloader', () => {
@@ -161,5 +148,25 @@ describe('BudgetPanel', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].filename).toMatch(/^budget-report-.*\.csv$/);
     expect(calls[0].csv).toMatch(/item_id,description/);
+  });
+
+  it('permite editar descrição inline e persiste no manager', async () => {
+    const panel = new BudgetPanel(container, { getTakeoffResult: () => null });
+    setInput(container, '#budget-name', 'Obra X');
+    container.querySelector<HTMLButtonElement>('#budget-create')!.click();
+    setInput(container, '#ci-desc', 'Cimento');
+    setInput(container, '#ci-unit', 'kg');
+    setInput(container, '#ci-qty', '20');
+    setInput(container, '#ci-price', '50');
+    container.querySelector<HTMLButtonElement>('#ci-add')!.click();
+    // Edita descrição inline
+    const input = container.querySelector<HTMLInputElement>('.ci-edit.ci-desc');
+    expect(input).not.toBeNull();
+    input!.value = 'Cimento CPV';
+    input!.dispatchEvent(new Event('blur'));
+    // Aguarda microtask para update
+    await new Promise((r) => setTimeout(r, 10));
+    const item = panel.getManager().list()[0].items[0];
+    expect(item.description).toBe('Cimento CPV');
   });
 });

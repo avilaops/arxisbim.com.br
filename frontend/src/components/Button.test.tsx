@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Button } from './Button';
+import { vi } from 'vitest';
 
 describe('Button Component', () => {
   it('renders children correctly', () => {
@@ -9,21 +10,21 @@ describe('Button Component', () => {
   });
 
   it('calls onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<Button onClick={handleClick}>Click me</Button>);
     fireEvent.click(screen.getByText('Click me'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   it('does not call onClick when disabled', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<Button onClick={handleClick} disabled>Click me</Button>);
     fireEvent.click(screen.getByText('Click me'));
     expect(handleClick).not.toHaveBeenCalled();
   });
 
   it('does not call onClick when loading', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<Button onClick={handleClick} loading>Click me</Button>);
     fireEvent.click(screen.getByText('Click me'));
     expect(handleClick).not.toHaveBeenCalled();
