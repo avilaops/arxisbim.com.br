@@ -81,7 +81,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
   })
   const dismissTouchHelp = () => {
     setTouchHelpDismissed(true)
-    try { localStorage.setItem('arxisvr_viewer_touch_help', 'ok') } catch {}
+    try { localStorage.setItem('arxisvr_viewer_touch_help', 'ok') } catch { /* ignora: falha aqui não impede o fluxo */ }
   }
   const [loadingModel, setLoadingModel] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)

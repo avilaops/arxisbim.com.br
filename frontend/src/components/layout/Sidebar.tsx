@@ -23,7 +23,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
       if (userData) {
         setUser(JSON.parse(userData))
       }
-    } catch {}
+    } catch { /* ignora: falha aqui não impede o fluxo */ }
   }, [])
 
   useEffect(() => {
