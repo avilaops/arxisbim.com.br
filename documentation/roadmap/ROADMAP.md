@@ -9,9 +9,10 @@ foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-m
 aplicação publicada, não em teste de API. A cadeia da tese já anda até
 "comparar cenários visualmente".
 
-Próximo alvo: **S26 ★** (comparação temporal). Antes dele, a sequência acordada
-é type-check verde, classificar as 191 mil linhas órfãs e resolver os 11
-redirects. Ver `documentation/PENDENCIAS.md`.
+Próximo alvo: **S26 ★** (comparação temporal). O código foi entregue em
+19/09/2026 e o marco **continua zerado**: marco só cai com a prova em browser na
+aplicação publicada. Ver `documentation/sprints/S26-RESULT.md` e
+`documentation/PENDENCIAS.md`.
 
 **Infra congelada** (decisão de 02/09/2026). Produção roda em Docker no
 orquestrador `23.88.60.193`, com **Postgres 18.6**. A saída do Docker foi medida
@@ -48,7 +49,7 @@ A cadeia de cenários é o ativo intransferível.
 |---|---|---|---|---|
 | ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
 | ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
-| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** | Rota de backend existe (`scenario-comparison.routes.ts`). A UI (`src/timeline/`) está órfã. |
+| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** · código entregue 19/09/2026 | A tela existe agora: cronograma por cenário no viewer, régua de data pintando o modelo e split A\|B com `deltaDays`. Falta **só** a prova em browser na aplicação publicada, que é o que fecha um marco. Ver `documentation/sprints/S26-RESULT.md`. |
 | ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |
 
 **O viewer vivo** (`/app` → `Viewer3DPage`, 356 linhas) oferece quatro botões:
