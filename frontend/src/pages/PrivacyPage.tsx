@@ -44,8 +44,8 @@ export default function PrivacyPage() {
               1. Introdução
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A Arxis ("nós", "nosso", "nos", "Empresa") opera a plataforma Arxis
-              ("Plataforma"). Esta página informa você sobre nossa política de privacidade e
+              A Arxis (“nós”, “nosso”, “nos”, “Empresa”) opera a plataforma Arxis
+              (“Plataforma”). Esta página informa você sobre nossa política de privacidade e
               como tratamos seus dados pessoais quando você acessa e usa a Plataforma.
             </p>
           </section>

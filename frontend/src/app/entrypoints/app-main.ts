@@ -580,7 +580,7 @@ function updateModelInfoFromSelection(payload: any) {
         const s = box.getSize(new (window as any).THREE.Vector3());
         dims = { x: parseFloat(s.x.toFixed(2)), y: parseFloat(s.y.toFixed(2)), z: parseFloat(s.z.toFixed(2)) };
       }
-    } catch (_) {}
+    } catch (_) { /* ignora: falha aqui não impede o fluxo */ }
   }
 
   const volume = (dims.x * dims.y * dims.z).toFixed(2);

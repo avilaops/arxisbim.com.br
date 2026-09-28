@@ -753,11 +753,12 @@ private constructor() {
       case 'model.isolate.selected':
         // Isola selecionados
         return { success: true, message: 'Isolated selected objects' };
-      case 'model.hide.byClass':
+      case 'model.hide.byClass': {
         // Esconde por classe IFC
         const ifcClass = payload?.ifcClass;
         if (!ifcClass) {
           return { success: false, error: 'IFC class not specified' };
+      }
         }
         return { success: true, message: `Hidden objects of class: ${ifcClass}` };
       default:

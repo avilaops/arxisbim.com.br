@@ -88,7 +88,7 @@ export default function TermsPage() {
               5. Disclaimer de Responsabilidade
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A plataforma é fornecida "no estado em que se encontra" sem garantias de
+              A plataforma é fornecida “no estado em que se encontra” sem garantias de
               qualquer tipo, expressas ou implícitas. Arxis não garante que a plataforma
               será ininterrupta ou livre de erros.
             </p>

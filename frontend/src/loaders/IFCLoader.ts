@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-// @ts-ignore - web-ifc-three pode não ter tipos completos
+// @ts-expect-error - web-ifc-three pode não ter tipos completos
 import { IFCLoader as ThreeIFCLoader } from 'web-ifc-three';
 import { LODSystem } from '../systems/LODSystem';
 import { eventBus, EventType } from '../core';
@@ -49,7 +49,7 @@ export class IFCLoader {
     // 2. Desabilita workers explicitamente MÚLTIPLAS VEZES (bug em versões antigas)
     try {
       this.loader.ifcManager.useWebWorkers(false);
-      // @ts-ignore - Força worker=null (fallback)
+      // @ts-expect-error - Força worker=null (fallback)
       if (this.loader.ifcManager.worker) {
         this.loader.ifcManager.worker = null;
       }

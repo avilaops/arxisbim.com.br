@@ -16,7 +16,7 @@ export default function RegisterPage() {
   useEffect(() => {
     try {
       (window as any).arxis?.track('register_started');
-    } catch (e) {}
+    } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -46,7 +46,7 @@ export default function RegisterPage() {
       try {
         (window as any).arxis?.track('register_completed');
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
 
       // Se o servidor retornou requiresEmailVerification, mostrar mensagem
       if (result?.requiresEmailVerification) {

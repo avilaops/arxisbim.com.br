@@ -230,13 +230,14 @@ Respond naturally, professionally and concisely. Prioritize BIM coordination, mo
       case 'show_all':
         return { type: 'show_all' as any };
       
-      case 'screenshot':
+      case 'screenshot': {
         const quality = parts[1] || 'medium';
         return {
           type: 'take_screenshot' as any,
           quality: quality as any
         };
       
+      }
       case 'camera':
         if (parts[1]) {
           return {
