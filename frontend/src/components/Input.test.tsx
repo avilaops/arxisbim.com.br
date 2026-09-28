@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Input } from './Input';
+import { vi } from 'vitest';
 
 describe('Input Component', () => {
   it('renders correctly', () => {
@@ -14,7 +15,7 @@ describe('Input Component', () => {
   });
 
   it('calls onChange when value changes', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<Input onChange={handleChange} />);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'test' } });

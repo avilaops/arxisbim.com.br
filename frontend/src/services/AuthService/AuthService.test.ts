@@ -26,8 +26,18 @@ function getMockAuthService() {
     },
     getCurrentUser: () => authenticated ? user : null,
     getAccessToken: () => token,
+    async refreshToken() {
+      if (!authenticated) return null;
+      token = 'mock-token-refreshed';
+      return token;
+    },
   };
 }
+
+// ATENÇÃO: este arquivo exercita o dublê acima, não o `AuthService` real — o
+// método que faltava (`refreshToken`) derrubava a suíte sem dizer nada sobre a
+// implementação. Verde aqui não é cobertura de autenticação; reescrever contra
+// `AuthService.ts` é trabalho à parte.
 
 const getAuthService = getMockAuthService;
 
