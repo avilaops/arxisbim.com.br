@@ -1,18 +1,37 @@
 # CI/CD e Operações: ArxisVR
 
-**Última atualização:** 02/09/2026
+**Última atualização:** 19/09/2026
 
-> **Nada disto roda hoje.** A conta do GitHub da organização está bloqueada por
-> billing, então **nenhum Actions executa** (a mensagem só aparece nas
-> annotations, por isso passou despercebido). Foi assim que o site ficou 199
-> commits congelado no Cloudflare Pages sem ninguém notar, já que ele seguia
-> respondendo 200.
+> **O Actions voltou a rodar.** O bloqueio por billing que congelou tudo em
+> 02/09 não vale mais: o workflow `CI` executou e passou no PR #28 em
+> 19/09/2026. O aviso anterior ("nenhum Actions executa") ficava aqui e no
+> README, e induzia a não olhar para o CI — conferir o run antes de repetir a
+> afirmação.
 >
-> **Na prática, hoje:** deploy **manual** por `./deploy/deploy.sh [api|web]`,
-> em Docker no orquestrador `23.88.60.193`, com **Postgres 18.6**. Testes rodam
-> na máquina de quem desenvolve. Este documento descreve o desenho pretendido,
-> não o que acontece. Ver `documentation/DECISAO-saida-do-docker.md` e
+> **O que o CI barra hoje** (`.github/workflows/ci.yml`, três jobs):
+>
+> | Job | Bloqueia o merge | Só informa |
+> |---|---|---|
+> | Frontend | type-check, build | lint (100 erros), testes (17 de 76 arquivos vermelhos) |
+> | Backend | type-check, migrations, **testes (358)**, build, smoke em `/health/live` | — |
+> | Signaling | `node --check server.js` | — |
+>
+> Lint e testes do frontend nascem informativos de propósito: a `main` não está
+> verde neles, e portão que nasce vermelho ensina o time a ignorar CI. As duas
+> dívidas são da árvore órfã (dependências que nunca entraram no
+> `package.json`, casos ainda escritos para Jest), não do código que vai a
+> produção. Quando caírem, tira-se o `continue-on-error`.
+>
+> **Deploy continua manual:** `./deploy/deploy.sh [api|web]`, em Docker no
+> orquestrador `23.88.60.193`, com **Postgres 18.6**. CI verde não publica
+> nada. Ver `documentation/DECISAO-saida-do-docker.md` e
 > `AUDIT-2026-09-01-retomada.md`.
+>
+> **Testes do backend exigem banco.** O CI sobe um serviço Postgres 18.6 e
+> aplica as 60 migrations antes do `npm test` — sem isso 35 arquivos quebram em
+> `relation "tenants" does not exist`, e com credencial trocada os 75 morrem em
+> `password authentication failed`. Local: mesmo caminho, ou
+> `TEST_DATABASE_URL` apontando para outro banco de teste.
 
 ---
 
