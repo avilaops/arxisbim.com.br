@@ -5,22 +5,25 @@
 
 import { budgetService } from './BudgetService';
 import type { BudgetInput, TakeoffParams } from './types';
+import { vi } from 'vitest';
+// O `vi.mock` abaixo é içado: este import recebe o dublê, não o cliente real.
+import { api } from '../../api/client';
 
 // Mock the API client
-jest.mock('../../api/client', () => ({
+vi.mock('../../api/client', () => ({
   api: {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    downloadFile: jest.fn(),
-    uploadFile: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    downloadFile: vi.fn(),
+    uploadFile: vi.fn(),
   },
 }));
 
 describe('BudgetService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createBudget', () => {
@@ -40,8 +43,7 @@ describe('BudgetService', () => {
         version: 1,
       };
 
-      const { api } = require('../../api/client');
-      api.post.mockResolvedValue(mockBudget);
+      vi.mocked(api.post).mockResolvedValue(mockBudget);
 
       const input: BudgetInput = {
         projectId: 'project-123',
@@ -73,8 +75,7 @@ describe('BudgetService', () => {
         version: 1,
       };
 
-      const { api } = require('../../api/client');
-      api.get.mockResolvedValue(mockBudget);
+      vi.mocked(api.get).mockResolvedValue(mockBudget);
 
       const result = await budgetService.getBudget('budget-123');
 
@@ -100,8 +101,7 @@ describe('BudgetService', () => {
         version: 2,
       };
 
-      const { api } = require('../../api/client');
-      api.put.mockResolvedValue(mockBudget);
+      vi.mocked(api.put).mockResolvedValue(mockBudget);
 
       const result = await budgetService.updateBudget('budget-123', {
         name: 'Updated Budget',
@@ -116,8 +116,7 @@ describe('BudgetService', () => {
 
   describe('deleteBudget', () => {
     it('should delete a budget', async () => {
-      const { api } = require('../../api/client');
-      api.delete.mockResolvedValue(undefined);
+      vi.mocked(api.delete).mockResolvedValue(undefined);
 
       await budgetService.deleteBudget('budget-123');
 
@@ -144,8 +143,7 @@ describe('BudgetService', () => {
         },
       ];
 
-      const { api } = require('../../api/client');
-      api.get.mockResolvedValue(mockBudgets);
+      vi.mocked(api.get).mockResolvedValue(mockBudgets);
 
       const result = await budgetService.listBudgets({
         projectId: 'project-123',
@@ -185,8 +183,7 @@ describe('BudgetService', () => {
         calculatedAt: '2024-01-01T00:00:00Z',
       };
 
-      const { api } = require('../../api/client');
-      api.post.mockResolvedValue(mockTakeoff);
+      vi.mocked(api.post).mockResolvedValue(mockTakeoff);
 
       const params: TakeoffParams = {
         modelId: 'model-123',
@@ -206,15 +203,14 @@ describe('BudgetService', () => {
     it('should export budget in specified format', async () => {
       const mockBlob = new Blob(['test data'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-      const { api } = require('../../api/client');
       api.downloadFile.mockResolvedValue(mockBlob);
 
-      const result = await budgetService.exportBudget('budget-123', {
+      const result = await budgetService.exportBudget('123', {
         format: 'excel',
       });
 
       expect(api.downloadFile).toHaveBeenCalledWith(
-        '/api/v1/budgets/budget-123/export',
+        '/api/v1/budgets/123/export',
         'budget-123.xlsx',
         {
           headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
@@ -237,8 +233,7 @@ describe('BudgetService', () => {
         },
       ];
 
-      const { api } = require('../../api/client');
-      api.get.mockResolvedValue(mockHistory);
+      vi.mocked(api.get).mockResolvedValue(mockHistory);
 
       const result = await budgetService.getBudgetHistory('budget-123');
 
@@ -283,8 +278,7 @@ describe('BudgetService', () => {
         percentageDifference: 20,
       };
 
-      const { api } = require('../../api/client');
-      api.post.mockResolvedValue(mockSimulation);
+      vi.mocked(api.post).mockResolvedValue(mockSimulation);
 
       const result = await budgetService.simulateScenario('budget-123', {
         name: 'Simulated',
@@ -301,7 +295,6 @@ describe('BudgetService', () => {
     it('should attach document to budget', async () => {
       const mockUrl = 'https://example.com/document.pdf';
 
-      const { api } = require('../../api/client');
       api.uploadFile.mockResolvedValue(mockUrl);
 
       const mockFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
@@ -331,8 +324,7 @@ describe('BudgetService', () => {
         },
       ];
 
-      const { api } = require('../../api/client');
-      api.get.mockResolvedValue(mockAttachments);
+      vi.mocked(api.get).mockResolvedValue(mockAttachments);
 
       const result = await budgetService.listAttachments('budget-123');
 

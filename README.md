@@ -1,30 +1,62 @@
 # ArxisVR
 
-Plataforma de decisão baseada em modelos BIM — IFC nativo, cenários 4D/5D, SINAPI integrado.
+Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINAPI integrado.
 
-**Produção:** [arxisvr.avilaops.com](https://arxisvr.avilaops.com) · API: `api.arxisvr.avilaops.com`
+**Produção:** [arxisbim.com.br](https://arxisbim.com.br) · API: `api.arxisbim.com.br`
+
+> **Domínio próprio desde 17/09/2026.** `arxisvr.avilaops.com` e
+> `api.arxisvr.avilaops.com` continuam respondendo durante a transição: o site
+> antigo redireciona (308) para o canônico, a API antiga serve o mesmo backend
+> sem redirecionar (3xx quebraria o preflight do CORS e o plugin do Revit).
+> Endereço público novo não se escreve à mão em lugar nenhum: frontend em
+> `frontend/src/config/site.config.ts`, backend em
+> `backend/src/core/config/domains.ts`. Runbook e pendências de DNS, OAuth,
+> webhook e e-mail em
+> `documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md`.
 
 ---
 
 ## Arquitetura
 
 ```
-arxisvr.avilaops.com       (GitHub Pages)
+arxisvr.avilaops.com       (Cloudflare Pages, a sair)
 Frontend: Vite MPA + Three.js + IFC
 
         │ HTTPS / WSS
 
-api.arxisvr.avilaops.com   (Render — Fastify)
+api.arxisvr.avilaops.com   (Hetzner, servidor orquestrador, Fastify)
 Backend: auth · tenants · BIM · observability
 WebSocket (signaling/realtime: rooms, avatar_update, chat) no mesmo serviço
-PostgreSQL (Render managed) · R2 Storage
+PostgreSQL (container arxisvr-db) · storage local em volume
 ```
 
-> Só existem 2 serviços em produção: o frontend (GitHub Pages) e o backend
-> (Render). NÃO há serviço de signaling separado — o WebSocket é servido pelo
-> backend. O diretório `signaling-server/` é apenas dev local (porta 3002).
+> Só existem 2 serviços em produção: o frontend e o backend. NÃO há serviço de
+> signaling separado, o WebSocket é servido pelo backend. O diretório
+> `signaling-server/` é apenas dev local (porta 3002).
 
-> **Domínio canônico:** `avilaops.com`. Nunca usar `avila.inc`.
+> **O Render acabou.** Desde 01/09/2026 a API roda no servidor orquestrador
+> (`23.88.60.193`, o mesmo do n8n e da observabilidade), em `/opt/arxisvr`,
+> atrás do Caddy do stack de observabilidade. Ver `deploy/`.
+
+> **Infra congelada (02/09/2026).** Tudo em Docker, com **Postgres 18.6**. A
+> saída do Docker (PM2 + Postgres no host) foi medida e recusada: ela não
+> elimina o daemon, então o ganho de RAM é ~zero. Ver
+> `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de Postgres no
+> host, nada de mexer no Caddy sem necessidade medida.
+>
+> Deploy é **manual**: `./deploy/deploy.sh [api|web]` — CI verde não publica
+> nada. O Actions, esse **voltou a rodar** (o bloqueio por billing de 02/09 não
+> vale mais): `.github/workflows/ci.yml` barra merge com type-check e build dos
+> dois lados, mais os 358 testes do backend contra um Postgres de verdade. Ver
+> `documentation/CI-CD-ESTRATEGIA.md`.
+
+> **Estado do produto (02/09/2026):** o backend está à frente da interface. Os
+> quatro marcos ★ estão **zerados**, e 819 dos 867 arquivos do frontend não
+> entram no build. Antes de continuar qualquer sprint, ler
+> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`. Foco único: **S12**.
+
+> **Domínios canônicos:** o produto é `arxisbim.com.br`; a casa é
+> `avilaops.com`. Nunca usar `avila.inc`.
 
 ---
 
@@ -60,7 +92,10 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `VITE_API_URL` | `https://api.arxisvr.avilaops.com` |
 | `VITE_WS_URL` | `wss://api.arxisvr.avilaops.com` |
 
-### Backend (Render)
+### Backend
+
+Em produção ficam em `/opt/arxisvr/.env` no servidor orquestrador (chmod 600),
+lidos pelo compose. Não há painel de provedor.
 
 | Var | Descrição |
 |---|---|
@@ -74,10 +109,10 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 | `R2_BUCKET_NAME` | Bucket de modelos IFC |
 | `GOOGLE_CLIENT_ID` | OAuth Google |
 | `GITHUB_CLIENT_ID` | OAuth GitHub |
-| `STRIPE_SECRET_KEY` | Billing |
-| `STRIPE_WEBHOOK_SECRET` | Billing webhooks |
-
-> **CRÍTICO Render:** `PUT /env-vars` substitui TODAS as variáveis. Sempre enviar a lista completa.
+| `BILLING_PROVIDER` | `mercadopago` (padrão) ou `internal` (aprovação manual, sem cobrança) |
+| `MP_ACCESS_TOKEN` | Billing, access token da conta Mercado Pago da Avila Ops (assinaturas / preapproval) |
+| `MP_WEBHOOK_SECRET` | Billing, segredo da assinatura `x-signature` das notificações do Mercado Pago |
+| `BILLING_PROVIDER_SYNC_INTERVAL_MS` | Billing, cadência da sincronização com o Mercado Pago (padrão 6h; a notificação do MP não é garantida) |
 
 ---
 
@@ -85,11 +120,13 @@ Node: ver `.nvmrc` (20.x). Package manager: `npm`.
 
 | Serviço | Trigger | Como |
 |---|---|---|
-| Frontend | Push em `main` em `frontend/**` | GitHub Actions → GitHub Pages |
-| Backend | Push em `main` | Render auto-deploy |
-| Signaling | Manual | Render — sempre ligado |
+| Backend | Manual | `./deploy/deploy.sh` (tar por SSH, build no servidor, `docker compose up -d`) |
+| Frontend | Manual | Ainda no Cloudflare Pages, e o auto-deploy por GitHub Actions está parado desde 07/06/2026 porque a conta do GitHub está bloqueada por billing |
 
-Signaling no plano free dorme após 15 min inativo. Frontend envia ping a cada 25s.
+O backend vive em `/opt/arxisvr` no servidor orquestrador: `arxisvr-api` mais
+`arxisvr-db` (Postgres dedicado), sem porta publicada no host. Quem termina TLS
+é o Caddy do stack `/opt/observabilidade`, que entra na rede `arxisvr_default`.
+As migrations rodam sozinhas no boot.
 
 ---
 
@@ -112,7 +149,7 @@ Segurança: rate limit 10 req/min · bcrypt rounds 12 · JWT access 15min + refr
 
 ---
 
-## Multiplayer (WebSocket — signaling-server)
+## Multiplayer (WebSocket: signaling-server)
 
 | Client → Server | Campos |
 |---|---|
@@ -140,7 +177,7 @@ curl https://api.arxisvr.avilaops.com/health
 # 2. Último deploy frontend
 # → github.com/AvilaOps/arxisvr/actions
 
-# (O WebSocket/signaling é o próprio backend — coberto pelo check 1.
+# (O WebSocket/signaling é o próprio backend: coberto pelo check 1.
 #  Keep-alive externo: Cloudflare Worker arxisvr-keepalive, cron */10.)
 ```
 

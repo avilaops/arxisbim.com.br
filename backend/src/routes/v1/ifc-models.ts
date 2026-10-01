@@ -8,6 +8,7 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 import { z } from 'zod';
 import { recordUpload } from '../../core/observability/metrics.js';
 import { ifcProcessingQueue } from '../../modules/ifc/ifc-queue.service.js';
+import { assessIfcSchemaSupport } from '../../modules/ifc/ifc-schema-support.js';
 
 const updateIfcModelSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -142,6 +143,18 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
       }
 
       const fileBuffer = await data.toBuffer();
+
+      // Rejeita cedo esquemas que o pipeline (web-ifc) não processa — IFC2X2,
+      // anteriores ou sem FILE_SCHEMA — em vez de falhar no worker de geometria.
+      const schemaSupport = assessIfcSchemaSupport(fileBuffer);
+      if (!schemaSupport.supported) {
+        return reply.status(422).send({
+          error: schemaSupport.reason,
+          code: 'UNSUPPORTED_IFC_SCHEMA',
+          schema: schemaSupport.schema,
+        });
+      }
+
       const storageKey = `tenants/${project[0].tenantId}/${projectId}/${filename}`;
       const { size: fileSizeBytes } = await storageService.upload(storageKey, fileBuffer, {
         contentType: 'application/x-step'
@@ -155,7 +168,7 @@ export async function ifcModelRoutes(fastify: FastifyInstance) {
         originalName: filename,
         fileUrl,
         fileSizeBytes,
-        ifcType: 'IFC2X3',
+        ifcType: schemaSupport.normalized,
         discipline: 'architecture',
         phase: 'new',
         metadata: {

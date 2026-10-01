@@ -87,9 +87,12 @@ export class Toolbar {
   private selectTool(toolId: ToolType): void {
     // Casos especiais
     if (toolId === 'cost' as any) {
-      // Toggle do painel de custos
-      const { costManager } = require('../../../../../../src/viewer/CostManager.js');
-      costManager.togglePanel();
+      // Toggle do painel de custos. Import dinâmico no lugar do `require`:
+      // este é um módulo ESM, e o painel só precisa carregar quando alguém
+      // clica na ferramenta.
+      void import('../../../../viewer/CostManager').then(({ costManager }) => {
+        costManager.togglePanel();
+      });
       return;
     }
 

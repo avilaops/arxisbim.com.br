@@ -13,7 +13,7 @@ function getDb() {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL not configured');
     }
-    const client = postgres(process.env.DATABASE_URL);
+    const client = postgres(process.env.DATABASE_URL, { max: 3 });
     dbInstance = drizzle(client, { schema: { tenants } });
   }
   return dbInstance;

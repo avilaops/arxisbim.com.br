@@ -273,7 +273,7 @@ export class Pathfinding {
     );
     
     const key = this.getKey(snapped);
-    let node = this.grid.get(key);
+    const node = this.grid.get(key);
     
     if (node) return node;
     

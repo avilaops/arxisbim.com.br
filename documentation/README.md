@@ -1,4 +1,4 @@
-# Documentação — ArxisVR
+# Documentação: ArxisVR
 
 **Última atualização:** 11/06/2026
 
@@ -32,4 +32,4 @@ Cada arquivo registra: objetivo, critérios atendidos, arquivos alterados, decis
 1. **Atualizar o arquivo existente** quando uma decisão mudar. Registrar a mudança em `changelog.md`.
 2. **Não criar versões paralelas** (`roadmap_v2.md`, `vision_final.md`).
 3. **Não manter informações conflitantes** entre arquivos.
-4. **Sessões de trabalho e rascunhos** não vivem aqui — ficam no contexto da conversa.
+4. **Sessões de trabalho e rascunhos** não vivem aqui, ficam no contexto da conversa.

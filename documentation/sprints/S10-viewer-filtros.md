@@ -1,7 +1,9 @@
-# S10 · Viewer — Filtros e Visibilidade
+# S10 · Viewer: Filtros e Visibilidade
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Filtros por disciplina: FilterPanel orfao, nao entra no bundle.
 **Depende de:** S09 (viewer base), S07 (hierarquia espacial para filtro por pavimento)  
 **Bloqueia:** S12 (cenário salva estado de visibilidade)
 
@@ -11,13 +13,13 @@
 
 Toggle de visibilidade por disciplina, por pavimento e por tipo de elemento. Corte transversal navegável.
 
-> **Nota para o agente:** Este sprint **não existe para esconder objetos.** Ele existe para transformar configuração visual em estado serializável e reproduzível — a base para cenários (S12) salvarem "o que está visível", não só "de onde se olha". Toda decisão deve favorecer serialização, granularidade e independência do motor gráfico antes de favorecer conveniência de implementação.
+> **Nota para o agente:** Este sprint **não existe para esconder objetos.** Ele existe para transformar configuração visual em estado serializável e reproduzível, a base para cenários (S12) salvarem "o que está visível", não só "de onde se olha". Toda decisão deve favorecer serialização, granularidade e independência do motor gráfico antes de favorecer conveniência de implementação.
 
 ---
 
 ## Fora de Escopo
 
-O objetivo é: filtrar → cortar → salvar estado → restaurar estado. Pertencem a sprints futuros — **não implementar aqui**:
+O objetivo é: filtrar → cortar → salvar estado → restaurar estado. Pertencem a sprints futuros, **não implementar aqui**:
 
 - Comparação de cenários (S18)
 - Persistência de visibilidade no servidor / colaboração (estado é local à sessão)

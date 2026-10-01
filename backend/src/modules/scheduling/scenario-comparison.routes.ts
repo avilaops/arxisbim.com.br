@@ -1,10 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../shared/database/db.js';
 import { scenarios } from '../../shared/database/schema/scenarios.js';
-import { schedules, activities, activityPredecessors, activityElements } from '../../shared/database/schema/scheduling.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { schedules } from '../../shared/database/schema/scheduling.js';
+import { projects } from '../../shared/database/schema/projects.js';
+import { eq, and } from 'drizzle-orm';
 import { authenticateRequest } from '../../core/auth/middleware.js';
-import { CPMService, parseUTCDate, diffDays } from './cpm.service.js';
+import { parseUTCDate, diffDays } from './cpm.service.js';
+import { calcularCronograma, calcularCronogramaDoCenario } from './schedule-cpm.service.js';
 
 export async function scenarioComparisonRoutes(fastify: FastifyInstance) {
   const auth = { preHandler: authenticateRequest };
@@ -27,110 +29,8 @@ export async function scenarioComparisonRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: 'One or both scenarios not found' });
       }
 
-      // Helper to load schedule and run CPM
-      const getScenarioScheduleData = async (scenarioId: string) => {
-        const [sched] = await db.select().from(schedules)
-          .where(eq(schedules.scenarioId, scenarioId))
-          .orderBy(desc(schedules.createdAt))
-          .limit(1);
-
-        if (!sched) return null;
-
-        // Fetch activities
-        const acts = await db.select().from(activities)
-          .where(eq(activities.scheduleId, sched.id))
-          .orderBy(activities.plannedStart);
-
-        if (acts.length === 0) {
-          return {
-            id: sched.id,
-            name: sched.name,
-            startDate: sched.startDate,
-            completionDate: sched.startDate,
-            activities: []
-          };
-        }
-
-        const actIds = acts.map(act => act.id);
-
-        // Fetch predecessors
-        const predecessors = await db.select().from(activityPredecessors)
-          .innerJoin(activities, eq(activityPredecessors.activityId, activities.id))
-          .where(eq(activities.scheduleId, sched.id));
-
-        const cpmPredecessors = predecessors.map(p => ({
-          activityId: p.activity_predecessors.activityId,
-          predecessorId: p.activity_predecessors.predecessorId,
-          lagDays: p.activity_predecessors.lagDays || 0,
-          type: (p.activity_predecessors.type || 'FS') as 'FS' | 'SS' | 'FF' | 'SF'
-        }));
-
-        // Fetch element links
-        const elementLinks = await db.select().from(activityElements)
-          .innerJoin(activities, eq(activityElements.activityId, activities.id))
-          .where(eq(activities.scheduleId, sched.id));
-
-        // Group elements and predecessors by activity ID
-        const elementMap = new Map<string, any[]>();
-        for (const el of elementLinks) {
-          const actId = el.activity_elements.activityId;
-          if (!elementMap.has(actId)) elementMap.set(actId, []);
-          elementMap.get(actId)!.push({
-            globalId: el.activity_elements.globalId,
-            stateDuring: el.activity_elements.stateDuring
-          });
-        }
-
-        const predecessorMap = new Map<string, any[]>();
-        for (const p of predecessors) {
-          const actId = p.activity_predecessors.activityId;
-          if (!predecessorMap.has(actId)) predecessorMap.set(actId, []);
-          predecessorMap.get(actId)!.push({
-            predecessorId: p.activity_predecessors.predecessorId,
-            lagDays: p.activity_predecessors.lagDays,
-            type: p.activity_predecessors.type
-          });
-        }
-
-        // Prepare input activities for CPM
-        const cpmInputActivities = acts.map(act => ({
-          id: act.id,
-          name: act.name,
-          plannedStart: act.plannedStart,
-          plannedEnd: act.plannedEnd,
-          durationDays: act.durationDays
-        }));
-
-        // Calculate CPM
-        const { activities: cpmActivities, completionDate } = CPMService.calculate(
-          cpmInputActivities,
-          cpmPredecessors,
-          sched.startDate
-        );
-
-        // Merge original activity details + resolved elements + predecessors + CPM dates
-        const finalActivities = acts.map(act => {
-          const cpmAct = cpmActivities.find(c => c.id === act.id);
-          return {
-            ...act,
-            earlyStart: cpmAct ? cpmAct.earlyStart : act.plannedStart,
-            earlyFinish: cpmAct ? cpmAct.earlyFinish : act.plannedEnd,
-            elements: elementMap.get(act.id) || [],
-            predecessors: predecessorMap.get(act.id) || []
-          };
-        });
-
-        return {
-          id: sched.id,
-          name: sched.name,
-          startDate: sched.startDate,
-          completionDate,
-          activities: finalActivities
-        };
-      };
-
-      const scheduleDataA = await getScenarioScheduleData(a);
-      const scheduleDataB = await getScenarioScheduleData(b);
+      const scheduleDataA = await calcularCronogramaDoCenario(a);
+      const scheduleDataB = await calcularCronogramaDoCenario(b);
 
       let deltaDays: number | null = null;
       if (scheduleDataA && scheduleDataB) {
@@ -155,6 +55,35 @@ export async function scenarioComparisonRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error(error);
       return reply.status(500).send({ error: 'Failed to calculate timeline comparison', details: String(error) });
+    }
+  });
+
+  // CPM de UM cronograma. A régua de tempo do viewer precisa das mesmas datas
+  // que a comparação usa: sem o forward pass, encadear duas atividades não
+  // moveria nada na tela e a dependência pareceria não ter efeito.
+  fastify.get('/schedules/:scheduleId/cpm', auth, async (request, reply) => {
+    const { tenantId } = request.user as any;
+    const { scheduleId } = request.params as { scheduleId: string };
+
+    try {
+      const [permitido] = await db.select({ id: schedules.id }).from(schedules)
+        .innerJoin(projects, eq(schedules.projectId, projects.id))
+        .where(and(eq(schedules.id, scheduleId), eq(projects.tenantId, tenantId)))
+        .limit(1);
+
+      if (!permitido) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
+
+      const calculado = await calcularCronograma(scheduleId);
+      if (!calculado) {
+        return reply.status(404).send({ error: 'Schedule not found' });
+      }
+
+      return reply.send(calculado);
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.status(500).send({ error: 'Failed to calculate schedule' });
     }
   });
 }

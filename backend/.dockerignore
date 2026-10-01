@@ -1,0 +1,17 @@
+# Sem isto o `COPY . .` leva o .env local para dentro da imagem e ele vence a
+# configuração do compose no boot, que foi exatamente como o Cifra quebrou.
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+coverage
+logs
+uploads
+tests
+*.log
+.git
+.vscode
+Dockerfile
+.dockerignore

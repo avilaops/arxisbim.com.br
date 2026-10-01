@@ -1,7 +1,9 @@
-# S08 · Parser IFC — Geometria
+# S08 · Parser IFC: Geometria
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Geometria renderiza no /app.
 **Depende de:** S07 (estrutura e IFCElement com expressIDs)  
 **Bloqueia:** S09 (viewer precisa de geometria para renderizar)
 
@@ -17,7 +19,7 @@ Extrair geometria de cada IfcProduct e convertê-la para Three.js BufferGeometry
 
 ## Fora de Escopo
 
-O objetivo é: modelo carregado → visualmente correto → performance aceitável. Pertencem a sprints futuros — **não implementar aqui**:
+O objetivo é: modelo carregado → visualmente correto → performance aceitável. Pertencem a sprints futuros, **não implementar aqui**:
 
 - Streaming de geometria (preparar estrutura, não implementar)
 - Texturas PBR / renderização fotorrealista
@@ -33,8 +35,8 @@ O objetivo é: modelo carregado → visualmente correto → performance aceitáv
 
 A estratégia de geometria escolhida aqui determina o limite de tamanho de modelo que o viewer aguenta. Há dois caminhos:
 
-1. **Tudo em memória** — simples, quebra em modelos > 50 MB
-2. **Streaming + LOD** — complexo, escala para modelos de 500 MB
+1. **Tudo em memória**, simples, quebra em modelos > 50 MB
+2. **Streaming + LOD**, complexo, escala para modelos de 500 MB
 
 O ArxisVR precisa do caminho 2 para obras reais (grandes construtoras têm modelos de 200–500 MB). Mas implementar streaming no S08 é over-engineering. A decisão correta é: **implementar estrutura preparada para streaming agora, sem implementar streaming ainda**.
 
@@ -53,7 +55,7 @@ Instancing (InstancedMesh) é crítico para modelos com muitos elementos repetid
 | Nível de detalhe | LOD simples (full / simplified) no S08 | LOD avançado entra no S23 |
 | Materiais | Material por tipo IFC (IfcWall = cinza, IfcBeam = bege) | Visual informativo sem textura |
 | Bounds | BoundingBox **e BoundingSphere** por elemento e por modelo | Sphere usado por Three.js em frustum culling, framing e raycasting |
-| Separação de camadas | `ModelLoader` carrega assets; serviços IFC entendem BIM; Viewer conecta os dois | `ModelLoader` não pode conter lógica BIM — protege S13/S19/S22/S27 do acoplamento ao Three.js |
+| Separação de camadas | `ModelLoader` carrega assets; serviços IFC entendem BIM; Viewer conecta os dois | `ModelLoader` não pode conter lógica BIM, protege S13/S19/S22/S27 do acoplamento ao Three.js |
 
 ---
 

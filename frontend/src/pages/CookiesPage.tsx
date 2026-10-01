@@ -11,8 +11,8 @@ export default function CookiesPage() {
       }}
     >
       <SEO
-        title="Política de Cookies — ArxisVR"
-        description="Leia a Política de Cookies do ArxisVR para saber como e por que utilizamos cookies e tecnologias de rastreamento em nossa plataforma."
+        title="Política de Cookies — Arxis"
+        description="Leia a Política de Cookies do Arxis para saber como e por que utilizamos cookies e tecnologias de rastreamento em nossa plataforma."
         path="/cookies"
       />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>

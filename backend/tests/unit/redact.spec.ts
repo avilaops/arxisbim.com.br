@@ -8,7 +8,8 @@ describe('redactSensitive', () => {
       user: { password: 'hunter2', accessToken: 'x', name: 'Ana' },
       cookie: 'sid=1',
       apiKey: 'k',
-      stripeSecret: 'sk_live_123',
+      mpAccessToken: 'APP_USR-123',
+      note: 'token APP_USR-1234567890123456-082612-abcdef0123456789-2944732714 no log',
     });
     expect(out.Authorization).toBe(REDACTED);
     expect(out.user.password).toBe(REDACTED);
@@ -16,7 +17,8 @@ describe('redactSensitive', () => {
     expect(out.user.name).toBe('Ana'); // não-sensível preservado
     expect(out.cookie).toBe(REDACTED);
     expect(out.apiKey).toBe(REDACTED);
-    expect(out.stripeSecret).toBe(REDACTED);
+    expect(out.mpAccessToken).toBe(REDACTED);
+    expect(out.note).toBe(REDACTED); // valor com cara de token do Mercado Pago, sob chave inócua
   });
 
   it('masks sensitive VALUES under innocuous keys (presigned URL, db url, bearer)', () => {

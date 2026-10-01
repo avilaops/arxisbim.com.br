@@ -11,7 +11,7 @@ import {
 } from '../../../shared/database/schema/observability.js';
 import { users } from '../../../shared/database/schema/tenants.js';
 
-const client = postgres(process.env.DATABASE_URL!);
+const client = postgres(process.env.DATABASE_URL!, { max: 3 });
 const db = drizzle(client);
 
 interface MetricsQuery {

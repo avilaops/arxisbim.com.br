@@ -487,7 +487,7 @@ export class MarkerCalibration extends EventTarget {
     avgPosition.divideScalar(this.positionBuffer.length);
 
     // Média de rotação (SLERP iterativo)
-    let avgQuaternion = this.rotationBuffer[0].clone();
+    const avgQuaternion = this.rotationBuffer[0].clone();
     for (let i = 1; i < this.rotationBuffer.length; i++) {
       avgQuaternion.slerp(this.rotationBuffer[i], 1.0 / (i + 1));
     }

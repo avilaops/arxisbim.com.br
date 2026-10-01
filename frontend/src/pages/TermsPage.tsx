@@ -11,8 +11,8 @@ export default function TermsPage() {
       }}
     >
       <SEO
-        title="Termos de Serviço — ArxisVR"
-        description="Consulte os Termos de Serviço do ArxisVR para conhecer as regras, obrigações e termos legais de uso da nossa plataforma BIM e de realidade virtual."
+        title="Termos de Serviço — Arxis"
+        description="Consulte os Termos de Serviço do Arxis para conhecer as regras, obrigações e termos legais de uso da nossa plataforma BIM e de realidade virtual."
         path="/terms"
       />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -44,7 +44,7 @@ export default function TermsPage() {
               1. Aceitação dos Termos
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              Ao acessar e usar a plataforma ArxisVR, você concorda em estar vinculado a estes
+              Ao acessar e usar a plataforma Arxis, você concorda em estar vinculado a estes
               termos de serviço. Se você não concordar com qualquer parte destes termos, você
               não pode usar a plataforma.
             </p>
@@ -78,7 +78,7 @@ export default function TermsPage() {
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
               Você mantém todos os direitos sobre o conteúdo que você carrega. Ao carregar
-              conteúdo, você concede à ArxisVR uma licença para usar esse conteúdo no
+              conteúdo, você concede à Arxis uma licença para usar esse conteúdo no
               fornecimento de nossos serviços.
             </p>
           </section>
@@ -88,8 +88,8 @@ export default function TermsPage() {
               5. Disclaimer de Responsabilidade
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A plataforma é fornecida "no estado em que se encontra" sem garantias de
-              qualquer tipo, expressas ou implícitas. ArxisVR não garante que a plataforma
+              A plataforma é fornecida “no estado em que se encontra” sem garantias de
+              qualquer tipo, expressas ou implícitas. Arxis não garante que a plataforma
               será ininterrupta ou livre de erros.
             </p>
           </section>
@@ -99,7 +99,7 @@ export default function TermsPage() {
               6. Limitação de Responsabilidade
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              Em nenhum caso ArxisVR será responsável por quaisquer danos indiretos,
+              Em nenhum caso Arxis será responsável por quaisquer danos indiretos,
               incidentais, especiais, consequentes ou punitivos resultantes do seu uso ou
               incapacidade de usar a plataforma.
             </p>
@@ -110,7 +110,7 @@ export default function TermsPage() {
               7. Modificações dos Termos
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              ArxisVR reserva o direito de modificar estes termos a qualquer momento. O uso
+              Arxis reserva o direito de modificar estes termos a qualquer momento. O uso
               contínuo da plataforma após as modificações constitui sua aceitação dos novos
               termos.
             </p>

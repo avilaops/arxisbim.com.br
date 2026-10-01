@@ -1,0 +1,699 @@
+{
+  "source": "C:\\Users\\nicol\\.codex\\codex-remote-attachments\\01a09455-0dcd-79a1-a644-960185956b23\\773EB863-BF7A-4534-A0BD-4F900E4B6514\\1-Arxis_Cronograma_360_dias_Multicanal.xlsx",
+  "period": "2026-09-14 a 2026-09-20",
+  "recommended_first_batch": "P01 feed plus Stories 2026-09-14 (4 images)",
+  "sheets": [
+    {
+      "name": "Calendário",
+      "rows": 218,
+      "columns": 16,
+      "headers": {
+        "B8": "ID",
+        "C8": "Data",
+        "D8": "Dia",
+        "E8": "Hora",
+        "F8": "Formato",
+        "G8": "Tema",
+        "H8": "Objetivo",
+        "I8": "Chamada para ação",
+        "J8": "Status Instagram",
+        "K8": "Status Facebook",
+        "L8": "Distribuição",
+        "M8": "Status LinkedIn",
+        "N8": "Status TikTok",
+        "O8": "Status YouTube Shorts",
+        "P8": "Responsável"
+      }
+    },
+    {
+      "name": "Roteiros",
+      "rows": 1502,
+      "columns": 5,
+      "headers": {
+        "B8": "ID",
+        "C8": "Bloco",
+        "D8": "Conteúdo"
+      }
+    },
+    {
+      "name": "Stories",
+      "rows": 268,
+      "columns": 8,
+      "headers": {
+        "B8": "Data",
+        "C8": "Tema",
+        "D8": "9h · Pergunta ou abertura",
+        "E8": "13h · Explicação ou exemplo",
+        "F8": "19h · Ação ou continuação",
+        "G8": "Quadros"
+      }
+    },
+    {
+      "name": "Direção",
+      "rows": 80,
+      "columns": 4,
+      "headers": {
+        "B8": "Item",
+        "C8": "Orientação"
+      }
+    },
+    {
+      "name": "Produção mensal",
+      "rows": 220,
+      "columns": 16,
+      "headers": {
+        "B8": "Mês",
+        "C8": "ID",
+        "D8": "Data prevista",
+        "E8": "Formato",
+        "F8": "Tema",
+        "G8": "Responsável",
+        "H8": "Arte e capa",
+        "I8": "Vídeo",
+        "J8": "Revisão",
+        "K8": "Aprovação",
+        "L8": "Agendamento",
+        "M8": "Publicação",
+        "N8": "Link dos arquivos",
+        "O8": "Observações"
+      }
+    }
+  ],
+  "extracts": [
+    {
+      "sheet": "Calendário",
+      "rows": [
+        {
+          "B9": "P01",
+          "C9": "2026-09-14 12:00:00",
+          "D9": "Seg",
+          "E9": "12:00:00",
+          "F9": "Estático",
+          "G9": "Conheça a Arxis: visualize, analise,\ndecida.",
+          "H9": "Apresentar a marca",
+          "I9": "Siga a Arxis",
+          "J9": "Planejada",
+          "K9": "Planejada",
+          "L9": "IG feed · FB · LinkedIn (imagem)",
+          "M9": "Planejada",
+          "N9": "Não se aplica",
+          "O9": "Não se aplica"
+        },
+        {
+          "B10": "P02",
+          "C10": "2026-09-16 12:00:00",
+          "D10": "Qua",
+          "E10": "18:30:00",
+          "F10": "Reel",
+          "G10": "BIM em 30 segundos: o que há por trás do\nmodelo?",
+          "H10": "Atrair público\ninteressado",
+          "I10": "Salve para consultar",
+          "J10": "Planejada",
+          "K10": "Planejada",
+          "L10": "IG Reels · FB · TikTok · YouTube Shorts · LinkedIn (vídeo)",
+          "M10": "Planejada",
+          "N10": "Planejada",
+          "O10": "Planejada"
+        },
+        {
+          "B11": "P03",
+          "C11": "2026-09-18 12:00:00",
+          "D11": "Sex",
+          "E11": "12:00:00",
+          "F11": "Carrossel",
+          "G11": "Modelo 3D e informação: o que você\nprecisa conferir?",
+          "H11": "Ensinar e gerar\nsalvamentos",
+          "I11": "Salve o checklist",
+          "J11": "Planejada",
+          "K11": "Planejada",
+          "L11": "IG feed · FB · LinkedIn (PDF nativo)",
+          "M11": "Planejada",
+          "N11": "Não se aplica",
+          "O11": "Não se aplica"
+        },
+        {
+          "B12": "P04",
+          "C12": "2026-09-19 12:00:00",
+          "D12": "Sáb",
+          "E12": "10:00:00",
+          "F12": "Estático",
+          "G12": "Qual é o maior gargalo na sua rotina de\nprojetos?",
+          "H12": "Ouvir o público",
+          "I12": "Conte sua dificuldade",
+          "J12": "Planejada",
+          "K12": "Planejada",
+          "L12": "IG feed · FB · LinkedIn (imagem)",
+          "M12": "Planejada",
+          "N12": "Não se aplica",
+          "O12": "Não se aplica"
+        }
+      ]
+    },
+    {
+      "sheet": "Roteiros",
+      "rows": [
+        {
+          "B9": "P01",
+          "C9": "Título da arte",
+          "D9": "Visualize.\nAnalise.\nDecida."
+        },
+        {
+          "B10": "P01",
+          "C10": "Roteiro",
+          "D10": "Peça única. Título em três linhas. Apoio: Tecnologia para projetos mais inteligentes. Rodapé: @arxis.bim. Esta será uma das publicações de apresentação para manter em destaque no perfil."
+        },
+        {
+          "B11": "P01",
+          "C11": "Direção visual",
+          "D11": "Usar a referência com fachada e fundo claro. Logo no alto, arquitetura à direita e laranja apenas em pontos e linha de apoio. Reduzir os textos secundários para leitura no celular."
+        },
+        {
+          "B12": "P01",
+          "C12": "Legenda Instagram",
+          "D12": "Prazer, somos a Arxis.\n\nBIM e construção digital com foco nas informações que ajudam você a entender um projeto e tomar decisões. Por aqui, vamos conversar sobre modelos, dados, alternativas e os desafios de quem projeta e constrói.\n\nTecnologia para projetos mais inteligentes. Visualize. Analise. Decida.\n\nSiga @arxis.bim e acompanhe essa jornada.\n\n#Arxis #BIM #ConstrucaoDigital"
+        },
+        {
+          "B13": "P01",
+          "C13": "Legenda Facebook",
+          "D13": "Conheça a Arxis: BIM e construção digital para quem quer entender melhor seus projetos e tomar decisões com mais clareza.\n\nNesta página, vamos compartilhar conceitos, exemplos e conversas sobre o dia a dia de quem projeta e constrói.\n\nAcompanhe a Arxis. Visualize. Analise. Decida."
+        },
+        {
+          "B14": "P01",
+          "C14": "Legenda LinkedIn",
+          "D14": "Conheça a Arxis: BIM e construção digital para quem quer entender melhor seus projetos e tomar decisões com mais clareza.\n\nPor aqui, vamos compartilhar conceitos, exemplos e conversas sobre o dia a dia de quem projeta e constrói.\n\nAcompanhe a Arxis. Visualize. Analise. Decida.\n\n#BIM #ConstrucaoDigital #Engenharia #Arxis"
+        },
+        {
+          "B15": "P01",
+          "C15": "Produção",
+          "D15": "Adaptar a arte de apresentação fornecida. Usar a marca original. Não copiar telefone, e-mail ou domínio ilustrativos dos cartões de visita."
+        },
+        {
+          "B16": "P02",
+          "C16": "Título da arte",
+          "D16": "O que existe\npor trás de um modelo?"
+        },
+        {
+          "B17": "P02",
+          "C17": "Roteiro",
+          "D17": "0 a 3 s: mostrar uma parede no modelo e perguntar: O que você precisa saber sobre ela?\n3 a 10 s: destacar geometria, material e identificação em cartões simples.\n10 a 22 s: narrar: BIM envolve criar e gerenciar informações da construção. O modelo ajuda a dar contexto a esses dados.\n22 a 30 s: fechar com: Qual informação faz diferença no seu trabalho? Salve este vídeo."
+        },
+        {
+          "B18": "P02",
+          "C18": "Direção visual",
+          "D18": "Animação didática com um único elemento e rótulos legíveis. Fundo branco, elemento azul e destaques laranja. Identificar o material como exemplo ilustrativo. Legendar a fala."
+        },
+        {
+          "B19": "P02",
+          "C19": "Legenda Instagram",
+          "D19": "Uma parede pode ser representada pela sua forma e por informações como identificação e material.\n\nBIM envolve criar e gerenciar informações da construção ao longo do seu ciclo de vida. O valor do exemplo está em relacionar o elemento ao que a equipe precisa saber.\n\nQual informação você consulta primeiro em um projeto? Salve este vídeo para voltar ao conceito.\n\n#Arxis #BIM #Engenharia"
+        },
+        {
+          "B20": "P02",
+          "C20": "Legenda Facebook",
+          "D20": "O que há por trás de um modelo BIM?\n\nAlém da forma, um elemento pode ter dados que ajudam a equipe a entender o projeto. Neste exemplo ilustrativo, mostramos identificação e material de uma parede.\n\nQual informação costuma fazer falta na sua rotina?"
+        },
+        {
+          "B21": "P02",
+          "C21": "Legenda LinkedIn",
+          "D21": "O que há por trás de um modelo BIM?\n\nAlém da forma, um elemento pode ter dados que ajudam a equipe a entender o projeto. Neste exemplo ilustrativo, mostramos identificação e material de uma parede.\n\nQual informação costuma fazer falta na sua rotina?\n\n#BIM #ConstrucaoDigital #Engenharia #Arxis"
+        },
+        {
+          "B22": "P02",
+          "C22": "Descrição TikTok / Shorts",
+          "D22": "O que existe\npor trás de um modelo?\n\nUma parede pode ser representada pela sua forma e por informações como identificação e material.\n\n#BIM #Engenharia #Arquitetura #ConstrucaoDigital #Arxis"
+        },
+        {
+          "B23": "P02",
+          "C23": "Produção",
+          "D23": "Produzir uma animação conceitual. Não apresentar os cartões como interface ou função disponível da Arxis. Referência técnica: Autodesk, What is BIM."
+        },
+        {
+          "B24": "P03",
+          "C24": "Título da arte",
+          "D24": "O modelo que você vê.\nA informação que precisa."
+        },
+        {
+          "B25": "P03",
+          "C25": "Roteiro",
+          "D25": "1. Capa.\n2. Geometria: o que está representado?\n3. Identificação: qual é o elemento?\n4. Propriedades: quais dados foram preenchidos?\n5. Contexto: qual versão e finalidade do modelo?\n6. Fecho: antes de decidir, confira a informação que sustenta a leitura. Salve este checklist."
+        },
+        {
+          "B26": "P03",
+          "C26": "Direção visual",
+          "D26": "Seis páginas. Uma pergunta por página. Repetir o mesmo elemento de exemplo com poucos rótulos, mantendo o título sempre na mesma posição."
+        },
+        {
+          "B27": "P03",
+          "C27": "Legenda Instagram",
+          "D27": "Antes de usar um modelo para uma decisão, vale conferir quatro pontos: geometria, identificação, propriedades e contexto.\n\nOs dados disponíveis dependem de como o modelo foi preparado e do que foi exigido para aquela entrega. Use as perguntas deste carrossel na sua próxima revisão.\n\nSalve o checklist e compartilhe com quem participa da análise.\n\n#Arxis #BIM #Projetos"
+        },
+        {
+          "B28": "P03",
+          "C28": "Legenda Facebook",
+          "D28": "Na próxima revisão de um modelo, confira: o que está representado, como os elementos são identificados, quais propriedades estão preenchidas e qual versão está em uso.\n\nAs imagens trazem quatro perguntas para orientar essa conversa. Qual delas sua equipe já usa?"
+        },
+        {
+          "B29": "P03",
+          "C29": "Legenda LinkedIn",
+          "D29": "Na próxima revisão de um modelo, confira: o que está representado, como os elementos são identificados, quais propriedades estão preenchidas e qual versão está em uso.\n\nAs imagens trazem quatro perguntas para orientar essa conversa. Qual delas sua equipe já usa?\n\n#BIM #ConstrucaoDigital #Engenharia #Arxis"
+        },
+        {
+          "B30": "P03",
+          "C30": "Produção",
+          "D30": "Seis imagens numeradas. No Facebook, publicar a sequência como post com várias imagens e incluir a ideia central na legenda. Modelo ilustrativo, sem dados de clientes."
+        },
+        {
+          "B31": "P04",
+          "C31": "Título da arte",
+          "D31": "Onde seu projeto\nperde clareza?"
+        },
+        {
+          "B32": "P04",
+          "C32": "Roteiro",
+          "D32": "Peça única com a pergunta principal. Apoio curto: Versões, informações ou comunicação? A conversa continua na legenda."
+        },
+        {
+          "B33": "P04",
+          "C33": "Direção visual",
+          "D33": "Composição tipográfica em fundo branco. Três termos em linhas curtas. Símbolo pequeno e um detalhe laranja. Não usar outro prédio como elemento principal."
+        },
+        {
+          "B34": "P04",
+          "C34": "Legenda Instagram",
+          "D34": "Na sua rotina, o que mais atrapalha o entendimento de um projeto?\n\nEncontrar a versão certa, localizar uma informação ou alinhar a equipe?\n\nConte uma situação nos comentários, sem expor dados do projeto. As respostas vão orientar os próximos conteúdos da Arxis.\n\n#Arxis #GestaoDeProjetos #ConstrucaoDigital"
+        },
+        {
+          "B35": "P04",
+          "C35": "Legenda Facebook",
+          "D35": "Qual é o maior gargalo na sua rotina de projetos: versões, informações ou comunicação?\n\nConte uma situação que você gostaria de resolver. Vamos usar as dúvidas recebidas para escolher os próximos temas da página."
+        },
+        {
+          "B36": "P04",
+          "C36": "Legenda LinkedIn",
+          "D36": "Qual é o maior gargalo na sua rotina de projetos: versões, informações ou comunicação?\n\nConte uma situação que você gostaria de resolver. Vamos usar as dúvidas recebidas para escolher os próximos temas do perfil.\n\n#BIM #ConstrucaoDigital #Engenharia #Arxis"
+        },
+        {
+          "B37": "P04",
+          "C37": "Produção",
+          "D37": "Criar card simples. Reservar um momento após a publicação para responder aos comentários. Não usar respostas futuras como depoimentos de clientes."
+        }
+      ]
+    },
+    {
+      "sheet": "Stories",
+      "rows": [
+        {
+          "B9": "2026-09-14 12:00:00",
+          "C9": "Apresentação",
+          "D9": "Conheça a Arxis. Visualize. Analise.\nDecida.",
+          "E9": "Por aqui: BIM, projetos e construção digital\nem linguagem prática.",
+          "F9": "Você atua em arquitetura, engenharia ou\nobras? Responda e se apresente.",
+          "G9": 3
+        },
+        {
+          "B10": "2026-09-15 12:00:00",
+          "C10": "Ouvir o público",
+          "D10": "Qual etapa ocupa mais o seu dia:\nprojeto ou execução?",
+          "E10": "Nos dois contextos, vale saber de onde vem a\ninformação usada na decisão.",
+          "F10": "Conte uma dificuldade da sua rotina para\nvirar tema por aqui.",
+          "G10": 3
+        },
+        {
+          "B11": "2026-09-16 12:00:00",
+          "C11": "BIM sem complicar",
+          "D11": "Quando você pensa em BIM, qual palavra\nvem primeiro?",
+          "E11": "Exemplo: uma parede pode ter forma,\nidentificação e material.",
+          "F11": "O Reel de hoje explica o conceito em 30\nsegundos. Veja e mande sua dúvida.",
+          "G11": 3
+        },
+        {
+          "B12": "2026-09-17 12:00:00",
+          "C12": "Informação do\nelemento",
+          "D12": "Antes de analisar uma porta, o que você\nprecisa saber?",
+          "E12": "Exemplo ilustrativo: identificação, dimensões\ne contexto de uso.",
+          "F12": "Qual dado você sente falta ao receber um\nmodelo? Responda por mensagem.",
+          "G12": 3
+        },
+        {
+          "B13": "2026-09-18 12:00:00",
+          "C13": "Checklist de\nleitura",
+          "D13": "Você sabe qual versão do modelo está\nanalisando?",
+          "E13": "Confira geometria, identificação, propriedades\ne contexto.",
+          "F13": "O carrossel de hoje reúne essas perguntas.\nSalve para a próxima revisão.",
+          "G13": 3
+        }
+      ]
+    },
+    {
+      "sheet": "Direção",
+      "rows": [
+        {
+          "B9": "Objetivo do ciclo",
+          "C9": "Apresentar a Arxis, desenvolver uma sequência educativa sobre BIM e construção digital e abrir conversas com contexto ao longo de 360 dias. O primeiro ciclo de quatro semanas foi preservado."
+        },
+        {
+          "B10": "Período proposto",
+          "C10": "14/09/2026 a 08/09/2027, contando início e fim: 360 dias corridos. O período contém 206 datas de feed e 258 dias de Stories. As demais datas seguem a cadência de descanso e preparação."
+        },
+        {
+          "B11": "Público prioritário",
+          "C11": "Arquitetos, engenheiros, coordenadores BIM e responsáveis por projetos e obras. Falar com situações da rotina e explicar siglas na primeira ocorrência."
+        },
+        {
+          "B12": "Marca",
+          "C12": "Arxis"
+        },
+        {
+          "B13": "Nome do perfil",
+          "C13": "Arxis | BIM e Construção Digital"
+        },
+        {
+          "B14": "Instagram",
+          "C14": "@arxis.bim"
+        },
+        {
+          "B15": "Site principal informado",
+          "C15": "https://arxisbim.com.br"
+        },
+        {
+          "B16": "App informado",
+          "C16": "https://app.arxisbim.com.br"
+        },
+        {
+          "B17": "API informada",
+          "C17": "https://api.arxisbim.com.br"
+        },
+        {
+          "B18": "Destino das chamadas",
+          "C18": "Instagram: mensagem no Direct. Facebook: mensagem à página. LinkedIn: mensagem no perfil da Arxis. TikTok e YouTube: comentário ou link do perfil. Todos os canais convergem para o WhatsApp comercial da Arxis como destino final da conversa. Usar uma única palavra-chave de DM em todos os canais e definir a oferta (demo, lista de espera ou beta) antes da primeira publicação."
+        },
+        {
+          "B19": "Dados dos mockups",
+          "C19": "Substituir arxis.com, nome@arxis.com, nomes e telefones ilustrativos pelos dados confirmados. App e API são referências de organização dos canais. Nas artes comerciais, priorizar perfil e site principal."
+        },
+        {
+          "B20": "Assinatura",
+          "C20": "Visualize. Analise. Decida. Usar Tecnologia para projetos mais inteligentes como frase institucional de apoio, sem repetir as duas assinaturas em toda peça."
+        },
+        {
+          "B21": "Azul tecnologia",
+          "C21": "#0E6B8F. Cor de destaque para títulos secundários, números e elementos do modelo."
+        },
+        {
+          "B22": "Azul marinho",
+          "C22": "#1E2D3D. Texto principal, logo e peças de posicionamento."
+        },
+        {
+          "B23": "Laranja",
+          "C23": "#F36B21. Usar em pontos, linhas, foco visual e chamadas curtas. Evitar texto pequeno laranja sobre branco."
+        },
+        {
+          "B24": "Cinza claro",
+          "C24": "#E5E7EB. Divisórias e fundos secundários."
+        },
+        {
+          "B25": "Cinza escuro",
+          "C25": "#4B5563. Texto de apoio."
+        },
+        {
+          "B26": "Tipografia nas artes",
+          "C26": "Montserrat, conforme o guia fornecido. Títulos em peso forte, textos de apoio em peso regular. Usar a arte original do logotipo, sem redigitar ou reconstruir suas letras."
+        },
+        {
+          "B27": "Composição",
+          "C27": "Priorizar fundo branco e espaço livre. Uma mensagem principal por peça. Alternar arquitetura, exemplos técnicos, pessoas e tipografia para que o feed não dependa da mesma fachada."
+        },
+        {
+          "B28": "Cinco templates",
+          "C28": "1. Apresentação da marca. 2. Checklist em carrossel. 3. Exemplo técnico ilustrativo. 4. Capa de Reel e gravação. 5. Pergunta ou convite à conversa. Manter posição de logo e ritmo de títulos consistentes."
+        },
+        {
+          "B29": "Formatos de produção",
+          "C29": "Adotar como padrão editorial: feed e carrosséis em 1080 × 1350 px (4:5), Reels e Stories em 1080 × 1920 px (9:16). São escolhas de produção deste plano, não uma lista de limites das plataformas. Conferir o recorte da capa e a prévia em cada rede."
+        },
+        {
+          "B30": "Leitura no celular",
+          "C30": "Títulos curtos, de preferência até duas ou três linhas. Texto de apoio breve por página. Manter elementos importantes afastados das bordas e dos controles sobrepostos. Legendar falas e conferir o resultado com o som desligado."
+        },
+        {
+          "B31": "Instagram",
+          "C31": "Publicar carrosséis na ordem indicada. Reels com capa e legendas. Hashtags propostas são um conjunto inicial, sem promessa de alcance. Manter o link do perfil atualizado depois de validar o site."
+        },
+        {
+          "B32": "Facebook",
+          "C32": "Reels podem reaproveitar o arquivo vertical. Carrosséis devem virar publicações com várias imagens numeradas, com a ideia central também na legenda. Conferir a ordem na prévia. Nos Stories, se um recurso interativo não estiver disponível, transformar em pergunta para resposta por mensagem."
+        },
+        {
+          "B33": "LinkedIn",
+          "C33": "Canal de decisão: sócios, coordenadores BIM e gestores de obra. Não é canal de produção, é repost: o carrossel de segunda vira documento PDF nativo (1080 × 1350 px, mesmas páginas), o Reel vai como vídeo nativo e o estático vai como imagem. Legenda própria na aba Roteiros, sem @ do Instagram e com até 4 hashtags. Publicar no perfil da empresa e compartilhar no perfil pessoal do fundador para alcance orgânico. Tempo estimado: 5 a 10 minutos por semana."
+        },
+        {
+          "B34": "TikTok",
+          "C34": "Canal de alcance: republicar o Reel de quarta sem alteração, com a descrição curta da aba Roteiros. Não produzir nada exclusivo na base; conteúdo nativo do TikTok (tendências, bastidores) entra apenas pela reunião semanal. Manter legendas embutidas no vídeo, pois a maioria assiste sem som."
+        },
+        {
+          "B35": "YouTube Shorts",
+          "C35": "Republicar o mesmo Reel vertical como Short, com título igual ao título da arte e a descrição TikTok / Shorts. Serve para alimentar o canal principal com frequência enquanto os vídeos longos são produzidos."
+        },
+        {
+          "B36": "YouTube (canal educacional)",
+          "C36": "Pilar educacional de longo prazo, fora da base de 360 dias: vídeos de 8 a 15 minutos aprofundando o tema de cada mês editorial (12 vídeos/ano, um por mês). Os quatro Reels do mês servem de roteiro e material bruto. Definir tema, gravação e publicação na reunião semanal; publicar ao fim de cada mês editorial. É o canal onde o produto pode aparecer com mais profundidade e onde o conteúdo continua sendo encontrado por busca depois de publicado."
+        },
+        {
+          "B37": "Fluxo de distribuição",
+          "C37": "Produzir uma vez para o Instagram (1080 × 1350 feed, 1080 × 1920 vídeo). Redistribuir na mesma semana: Facebook (espelho automático), LinkedIn (PDF ou vídeo nativo), TikTok e YouTube Shorts (Reel sem alteração). Converter no WhatsApp. Ordem de prioridade se faltar tempo: Instagram, LinkedIn, TikTok, Shorts, Facebook."
+        },
+        {
+          "B38": "Cadência do feed",
+          "C38": "Segunda e sexta às 12h, quarta às 18h30 e sábado às 10h. Total de 206 pautas base: 102 carrosséis, 52 Reels e 52 estáticos. Cada pauta possui legenda para Instagram e Facebook. Horários de Brasília (America/Sao_Paulo, UTC−3), propostos para teste."
+        },
+        {
+          "B39": "Cadência de Stories",
+          "C39": "Três quadros por dia de segunda a sexta: 9h, 13h e 19h. Total de 258 sequências e 774 quadros base, para adaptar às duas redes. Sábado e domingo sem Stories obrigatórios. Feriados não recebem exceção automática nesta proposta."
+        },
+        {
+          "B40": "Semana 1",
+          "C40": "Apresentar a marca e ensinar o básico. Destacar P01 e P03 no perfil depois de publicados, se o recurso estiver disponível."
+        },
+        {
+          "B41": "Semana 2",
+          "C41": "Tratar dificuldades de revisão, mostrar um exemplo prático e oferecer um checklist."
+        },
+        {
+          "B42": "Semana 3",
+          "C42": "Explicar critérios de alternativas, registro de cenários e troca de informações."
+        },
+        {
+          "B43": "Semana 4",
+          "C43": "Trazer o tema para a rotina do público, responder uma dúvida e convidar à conversa. P16 pode compor o conjunto de publicações em destaque."
+        },
+        {
+          "B44": "Produção em lote",
+          "C44": "Na sexta anterior, preparar a próxima semana. Na revisão mensal, ajustar as quatro semanas seguintes conforme dúvidas recebidas, disponibilidade de recursos e oferta atual. O período de 360 dias serve como base editorial; produzir e revisar os materiais em lotes mensais. Use a aba Produção mensal para acompanhar cada lote, filtrando a coluna Mês."
+        },
+        {
+          "B45": "Uso de telas reais",
+          "C45": "P06 e P10 mantêm o status Falta gravar e suas alternativas didáticas. Os exemplos posteriores podem ser produzidos em cartões, desenhos ou modelos autorizados. Para exibir a Arxis como demonstração, confirmar o recurso e gravar o fluxo vigente na data de produção."
+        },
+        {
+          "B46": "Representação do produto",
+          "C46": "Imagens de arquitetura fornecidas são referências visuais. Não apresentá-las como obras de clientes ou como resultado exportado pelo software. Telas conceituais devem ser identificadas como ilustração. Não anunciar comparação automática, custos, IA, 4D/5D, integrações ou compatibilidade sem confirmação."
+        },
+        {
+          "B47": "Conversas comerciais",
+          "C47": "Responder a mensagens com uma pergunta sobre área de atuação, tipo de projeto e dificuldade principal. Usar PROJETO, MODELO e CENÁRIO apenas para organizar a entrada das conversas. Registrar um mesmo contato uma vez ao contar oportunidades."
+        },
+        {
+          "B48": "Programação das publicações",
+          "C48": "As datas são planejamento editorial. Os estados Agendado e Publicado só devem ser preenchidos após a ação em cada rede. Usar as opções disponíveis no Meta Business Suite no momento da programação, sem pressupor que todo o período pode ser agendado de uma vez. Instagram, Facebook, LinkedIn, TikTok e YouTube Shorts têm controles independentes no Calendário."
+        },
+        {
+          "B49": "Revisão após duas semanas",
+          "C49": "Primeira revisão em 28/09/2026. Depois, comparar mensalmente cada rede e formato. Observar alcance, salvamentos, compartilhamentos, respostas e mensagens com contexto. Nos vídeos, observar tempo assistido e retenção quando disponíveis. Escolher um ajuste por vez."
+        },
+        {
+          "B50": "Ajuste do segundo ciclo",
+          "C50": "Revisar as pautas antes de iniciar cada mês editorial. Usar perguntas reais e evidências disponíveis para selecionar exemplos. Se faltarem dados para comparar horários, manter o teste sem declarar um vencedor. Encerramento do plano em 08/09/2027, com revisão do próximo ciclo."
+        },
+        {
+          "B51": "Critério de conversa qualificada",
+          "C51": "Contato que informa área ou função, contexto do projeto e uma necessidade concreta. Curtidas e novos seguidores ajudam a acompanhar a presença, mas não substituem esse registro. Nenhuma meta numérica foi inventada."
+        },
+        {
+          "B52": "Fonte da identidade",
+          "C52": "Dados e sete imagens enviados nesta conversa em 11/09/2026. Paleta e tipografia lidas do quadro de identidade visual. Os dados textuais atuais prevalecem sobre contatos ilustrativos das imagens."
+        },
+        {
+          "B53": "Fonte técnica: BIM",
+          "C53": "https://www.autodesk.com/solutions/aec/bim"
+        },
+        {
+          "B54": "Fonte técnica: openBIM",
+          "C54": "https://www.buildingsmart.org/about/openbim/"
+        },
+        {
+          "B55": "Fonte de operação: Meta",
+          "C55": "https://www.facebook.com/metaforbusiness/posts/learn-how-you-can-use-meta-business-suite-to-create-schedule-and-manage-your-con/1236721411828895/"
+        },
+        {
+          "B56": "Consulta das referências",
+          "C56": "11/09/2026. Autodesk apoia a definição educativa de BIM. buildingSMART apoia os conceitos de openBIM, IFC e BCF. A referência Meta descreve criação, programação e acompanhamento de conteúdo. Revalidar detalhes de plataformas e do produto durante a produção mensal."
+        },
+        {
+          "B57": "Mês editorial 1",
+          "C57": "14/09/2026 a 13/10/2026. Marca e fundamentos de BIM."
+        },
+        {
+          "B58": "Mês editorial 2",
+          "C58": "14/10/2026 a 13/11/2026. Leitura do modelo e controle de versões."
+        },
+        {
+          "B59": "Mês editorial 3",
+          "C59": "14/11/2026 a 13/12/2026. Pendências, prioridades e organização de arquivos."
+        },
+        {
+          "B60": "Mês editorial 4",
+          "C60": "14/12/2026 a 13/01/2027. Decisões, responsabilidades e primeiras alternativas."
+        },
+        {
+          "B61": "Mês editorial 5",
+          "C61": "14/01/2027 a 13/02/2027. Cenários, premissas e requisitos de informação."
+        },
+        {
+          "B62": "Mês editorial 6",
+          "C62": "14/02/2027 a 13/03/2027. Qualidade dos dados e introdução à interoperabilidade."
+        },
+        {
+          "B63": "Mês editorial 7",
+          "C63": "14/03/2027 a 13/04/2027. Troca de modelos e preparação da execução."
+        },
+        {
+          "B64": "Mês editorial 8",
+          "C64": "14/04/2027 a 13/05/2027. Interfaces, quantidades e comunicação visual."
+        },
+        {
+          "B65": "Mês editorial 9",
+          "C65": "14/05/2027 a 13/06/2027. Colaboração, campo e primeiros pilotos."
+        },
+        {
+          "B66": "Mês editorial 10",
+          "C66": "14/06/2027 a 13/07/2027. Avaliação de ferramentas e preparação da entrega."
+        },
+        {
+          "B67": "Mês editorial 11",
+          "C67": "14/07/2027 a 13/08/2027. Operação, aprendizados e evidências."
+        },
+        {
+          "B68": "Mês editorial 12",
+          "C68": "14/08/2027 a 08/09/2027. Perguntas recorrentes, revisão e próximos avanços."
+        },
+        {
+          "B69": "Lógica semanal",
+          "C69": "Segunda: conceito e contexto. Quarta: exemplo em vídeo. Sexta: checklist de aplicação. Sábado: pergunta à comunidade ou conversa comercial. Os formatos aprofundam o assunto da semana por ângulos diferentes. Manter a sequência semanal quando ela atravessar a virada do mês."
+        },
+        {
+          "B70": "Datas sem publicação",
+          "C70": "Terças e quintas têm apenas Stories. Sábados têm feed. Domingos ficam sem publicação obrigatória. A última semana termina na quarta-feira, 08/09/2027, para respeitar exatamente os 360 dias solicitados."
+        },
+        {
+          "B71": "Revisão de sazonalidade",
+          "C71": "Não foram inventadas datas comemorativas, eventos, promoções ou lançamentos. Se surgir uma pauta real, substituir um conteúdo da semana e manter o histórico da alteração no controle de publicação."
+        },
+        {
+          "B72": "Exemplos e evidências",
+          "C72": "Os modelos, números e casos descritos como ilustrativos são materiais didáticos. Só usar a expressão caso de cliente, depoimento ou resultado da Arxis quando houver material real e autorização de uso."
+        },
+        {
+          "B73": "Fonte técnica: IFC",
+          "C73": "https://www.buildingsmart.org/standards/bsi-standards/industry-foundation-classes/"
+        },
+        {
+          "B74": "Fonte técnica: BCF",
+          "C74": "https://www.buildingsmart.org/standards/bsi-standards/bim-collaboration-format/"
+        },
+        {
+          "B75": "Estado inicial das pautas",
+          "C75": "Planejada indica que a pauta está definida, mas o material ainda precisa ser produzido. O estado anterior Pauta pronta foi substituído. P06 e P10 continuam como Falta gravar. Os estados existentes foram preservados nas demais situações."
+        },
+        {
+          "B76": "Status por canal",
+          "C76": "Atualize cada rede separadamente no Calendário. Os controles antes combinados de TikTok e YouTube Shorts foram separados e começam com o mesmo estado anterior. Não se aplica identifica os formatos fora da distribuição prevista para aquela rede."
+        },
+        {
+          "B77": "Controle de produção mensal",
+          "C77": "Na aba Produção mensal, filtre Mês para executar o lote. Cada linha representa um ID da base de 360 dias. Os 13 meses civis incluem setembro de 2026 e setembro de 2027 parciais; os 12 meses editoriais da estratégia permanecem iguais."
+        },
+        {
+          "B78": "Campos de produção",
+          "C78": "Preencha Arte e capa, Vídeo, Revisão e Aprovação nas células amarelas. Insira o link dos arquivos finais e observações na mesma linha. O responsável é informado no Calendário e aparece automaticamente pelo ID."
+        },
+        {
+          "B79": "Leitura do andamento",
+          "C79": "Agendamento soma os canais marcados como Agendado ou Publicado. Publicação conta apenas Publicado. O total exclui TikTok ou Shorts quando estiverem como Não se aplica. As contagens vêm do Calendário; atualizar uma rede não altera as outras."
+        },
+        {
+          "B80": "Fechamento do lote mensal",
+          "C80": "Antes de agendar, confira os materiais e marque revisão e aprovação conforme o trabalho concluído. Depois, registre o andamento em cada rede no Calendário. A nova aba organiza a produção; ela não publica nem agenda conteúdos nas plataformas."
+        }
+      ]
+    },
+    {
+      "sheet": "Produção mensal",
+      "rows": [
+        {
+          "B9": "2026-09",
+          "C9": "P01",
+          "D9": "2026-09-14 12:00:00",
+          "E9": "Estático",
+          "F9": "Conheça a Arxis: visualize, analise,\ndecida.",
+          "H9": "Não iniciada",
+          "I9": "Não se aplica",
+          "J9": "Pendente",
+          "K9": "Pendente",
+          "L9": "0 de 3",
+          "M9": "0 de 3"
+        },
+        {
+          "B10": "2026-09",
+          "C10": "P02",
+          "D10": "2026-09-16 12:00:00",
+          "E10": "Reel",
+          "F10": "BIM em 30 segundos: o que há por trás do\nmodelo?",
+          "H10": "Não iniciada",
+          "I10": "Não iniciado",
+          "J10": "Pendente",
+          "K10": "Pendente",
+          "L10": "0 de 5",
+          "M10": "0 de 5"
+        },
+        {
+          "B11": "2026-09",
+          "C11": "P03",
+          "D11": "2026-09-18 12:00:00",
+          "E11": "Carrossel",
+          "F11": "Modelo 3D e informação: o que você\nprecisa conferir?",
+          "H11": "Não iniciada",
+          "I11": "Não se aplica",
+          "J11": "Pendente",
+          "K11": "Pendente",
+          "L11": "0 de 3",
+          "M11": "0 de 3"
+        },
+        {
+          "B12": "2026-09",
+          "C12": "P04",
+          "D12": "2026-09-19 12:00:00",
+          "E12": "Estático",
+          "F12": "Qual é o maior gargalo na sua rotina de\nprojetos?",
+          "H12": "Não iniciada",
+          "I12": "Não se aplica",
+          "J12": "Pendente",
+          "K12": "Pendente",
+          "L12": "0 de 3",
+          "M12": "0 de 3"
+        }
+      ]
+    }
+  ],
+  "local_source": "D:/avilaops.com/ArxisVR.avilaops.com/assets/social-media/cronograma-360-dias/2026-09-12/originais/1-Arxis_Cronograma_360_dias_Multicanal.xlsx"
+}

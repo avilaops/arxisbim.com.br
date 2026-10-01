@@ -1,7 +1,9 @@
 # S26 ★ · Primeira Comparação Temporal de Cenários
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário** · ★ **MARCO ZERADO**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — MARCO. Rota existe; src/timeline/ orfao.
 **Depende de:** S25 (schedules), S18 (split-view)  
 **Bloqueia:** S27 (animação completa), S30 (comparação financeira usa duração por cenário)
 
@@ -13,13 +15,13 @@
 
 Slider de data que anima a construção. Split-view A|B mostra diferença de prazo. Data de conclusão calculada por cenário. Atraso em cascata para sucessoras.
 
-> **Nota para o agente:** Primeiro momento de **4D real** — não animação bonita, mas ferramenta de decisão de cronograma. Reusa o `SplitView` do S18 (não reescrever). O algoritmo correto de propagação é CPM (topological sort + forward pass), nunca recálculo ingênuo a cada mudança — isso não escala para 500 atividades. Datas pré-computadas no backend.
+> **Nota para o agente:** Primeiro momento de **4D real**, não animação bonita, mas ferramenta de decisão de cronograma. Reusa o `SplitView` do S18 (não reescrever). O algoritmo correto de propagação é CPM (topological sort + forward pass), nunca recálculo ingênuo a cada mudança, isso não escala para 500 atividades. Datas pré-computadas no backend.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Animação contínua play/pause completa (S27)
 - Import MS Project / Primavera (S28)
@@ -99,7 +101,7 @@ frontend/src/
 
 ## Telemetria de produto
 
-Marco crítico — medir adoção: `timeline_comparison_opened`, `timeline_scrubbed`, `delta_days_viewed`.
+Marco crítico, medir adoção: `timeline_comparison_opened`, `timeline_scrubbed`, `delta_days_viewed`.
 
 ## Definição de validado
 

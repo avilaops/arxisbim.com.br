@@ -52,7 +52,7 @@ export class LoginModal {
           margin: 0 0 10px 0;
           font-size: 28px;
           font-weight: 700;
-        " class="modal-title">ArxisVR Login</h2>
+        " class="modal-title">Arxis Login</h2>
         
         <p style="
           color: #999;
@@ -362,7 +362,7 @@ export class LoginModal {
       submitButton.textContent = 'Criar conta';
       toggleButton.textContent = 'Já tenho uma conta';
     } else {
-      title.textContent = 'ArxisVR Login';
+      title.textContent = 'Arxis Login';
       subtitle.textContent = 'Entre para acessar seus projetos BIM';
       nameGroup.style.display = 'none';
       submitButton.textContent = 'Entrar';

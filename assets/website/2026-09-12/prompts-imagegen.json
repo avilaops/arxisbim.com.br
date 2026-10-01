@@ -1,0 +1,19 @@
+{
+  "mode": "image_gen built-in",
+  "date": "2026-09-12",
+  "prompts": [
+    {
+      "name": "ifc",
+      "prompt": "Create a premium architectural editorial illustration for a Portuguese BIM platform blog, landscape 1536x1024. Topic: IFC as open exchange of a building model between disciplines. An elegant architectural exploded axonometric building on a warm off-white seamless background, three coordinated layers slightly separated vertically: structural navy steel frame, white architectural shell and teal glazing, precise thin orange MEP pipework. All aligned to the same underlying floor plan, subtle dotted connector lines imply information continuity. Physical scale model photography quality, sophisticated very clean composition, natural studio lighting, quiet shadows, exceptionally beautiful material details. Palette white, petrol teal #0E6B8F, ink navy #1E2D3D, small orange #F36B21 accents. Main model centered with generous breathing room. No text, no letters, no logos, no interface, no arrows, no watermarks. This is a conceptual architectural illustration, not a software screenshot."
+    },
+    {
+      "name": "revisao",
+      "prompt": "Create a premium architectural editorial photograph for a BIM blog, landscape 1536x1024. Topic: careful review of a building model before making project decisions. View from a high oblique angle across an immaculate pale stone desk with a small beautiful white architectural scale model of a modern courtyard house, rolled technical drawings, a navy pencil and small teal architectural ruler. Two adult architects hands only enter subtly from opposite edges, one points at the junction between a structural beam and facade while another holds a translucent pale teal model floorplate for careful comparison. Precision and collaboration, thoughtful human work. Bright editorial studio daylight, rich soft shadow detail, petrol teal #0E6B8F and tiny burnt orange #F36B21 accents, ink navy #1E2D3D stationery, lots of clean negative space. No text, no letters, no logos, no screens, no watermarks. Natural realistic proportions, no clutter."
+    }
+  ],
+  "references": "User-provided logo and avatar preserved from assets/social-media/cronograma-360-dias/2026-09-12/originais; architecture and BIM model from lote-01.",
+  "output": {
+    "ifc": "originais/ifc.png",
+    "revisao": "originais/revisao.png"
+  }
+}

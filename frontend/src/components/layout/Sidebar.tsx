@@ -1,25 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import {
-  Home,
-  Clock3,
-  Box,
-  CalendarDays,
-  Users,
-  CircleDollarSign,
-  Search,
-  ShieldCheck,
-  Settings,
-  PanelLeftOpen,
-  PanelLeftClose,
-} from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import ArxisIcon, { type ArxisIconName } from '@/components/ui/ArxisIcon'
 
 interface SidebarProps {
   collapsed: boolean
   onToggle: (collapsed: boolean) => void
+  /** Drawer mobile aberto (estado separado do "recolhida" do desktop). */
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
   const [manageOpen, setManageOpen] = useState(() => {
     return localStorage.getItem('arxisvr_manage_open') === '1'
   })
@@ -32,7 +23,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       if (userData) {
         setUser(JSON.parse(userData))
       }
-    } catch {}
+    } catch { /* ignora: falha aqui não impede o fluxo */ }
   }, [])
 
   useEffect(() => {
@@ -40,11 +31,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   }, [manageOpen])
 
   const isAdmin = user?.role === 'admin' || user?.role === 'owner'
-  const isDashboard = location.pathname === '/dashboard'
+  const isDashboard = location.pathname === '/dashboard' && location.hash !== '#recentes'
 
-  const NavItem = ({ href, icon: Icon, label, active = false }: { href: string; icon: any; label: string; active?: boolean }) => (
-    <a
-      href={href}
+  const NavItem = ({ href, icon, label, active = false }: { href: string; icon: ArxisIconName; label: string; active?: boolean }) => (
+    <Link
+      to={href}
       className="sidebar-item"
       title={collapsed ? label : undefined}
       style={{
@@ -62,17 +53,22 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }}
       onMouseEnter={(e) => !active && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
       onMouseLeave={(e) => !active && (e.currentTarget.style.background = 'transparent')}
+      onClick={onMobileClose}
+      aria-current={active ? 'page' : undefined}
     >
       <span style={{ width: '15px', height: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={17} strokeWidth={1.45} />
+        <ArxisIcon name={icon} size={18} />
       </span>
       <span className="sidebar-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
-    </a>
+    </Link>
   )
 
   return (
     <nav
+      id="app-sidebar"
       className="sidebar"
+      aria-label="Menu principal"
+      data-mobile-open={mobileOpen}
       style={{
         background: 'var(--c-surface)',
         borderRight: '1px solid var(--c-border)',
@@ -83,10 +79,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }}
     >
       {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '48px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
-        <a
+      <div className="sidebar-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '48px', borderBottom: '1px solid var(--c-border)', flexShrink: 0 }}>
+        <Link
           className="sidebar-brand"
-          href="/dashboard"
+          to="/dashboard"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -96,61 +92,49 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             letterSpacing: '-0.2px',
           }}
         >
-          <img src="/logo-icon.svg" alt="" style={{ width: '22px', height: '22px' }} />
-          <span className="brand-name">ArxisVR</span>
-        </a>
+          <img src="/images/brand/arxis-icon-192.png" alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <span className="brand-name">Arxis</span>
+        </Link>
+        {/* So no mobile (CSS): o "Recolher menu" do rodape e semantica de
+            desktop e ficava a 1.500px de distancia do polegar. */}
+        <button
+          type="button"
+          className="sidebar-close-mobile"
+          onClick={onMobileClose}
+          aria-label="Fechar menu"
+        >
+        <ArxisIcon name="close" size={20} />
+        </button>
       </div>
 
-      {/* Search */}
-      <div
-        className="sidebar-search"
-        style={{
-          margin: '10px 10px 4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'var(--c-surface2)',
-          border: '1px solid var(--c-border)',
-          borderRadius: 'var(--r)',
-          padding: '0 10px',
-          height: '30px',
-          color: 'var(--c-text3)',
-          fontSize: '12px',
-          cursor: 'text',
-          flexShrink: 0,
-          transition: 'border-color .12s',
-        }}
-      >
-        <span style={{ display: 'inline-flex', alignItems: 'center' }}><Search size={14} strokeWidth={1.5} /></span>
-        <span style={{ flex: 1, whiteSpace: 'nowrap' }}>Pesquisa...</span>
-        <kbd style={{ fontSize: '10px', padding: '1px 4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--c-border)', borderRadius: '3px', color: 'var(--c-text3)' }}>
-          Ctrl K
-        </kbd>
-      </div>
+      {/* A "busca" que ficava aqui era um <div> com "Ctrl K" sem input nem
+          handler. Saiu em 08/09/2026; command palette e feature futura. */}
 
       {/* Main nav */}
       <div style={{ padding: '12px 0 4px' }}>
-        <NavItem href="/dashboard" icon={Home} label="Página inicial" active={isDashboard} />
-        <NavItem href="/dashboard#recentes" icon={Clock3} label="Recentes" />
+        <NavItem href="/dashboard" icon="home" label="Página inicial" active={isDashboard} />
+        <NavItem href="/dashboard#recentes" icon="recent" label="Recentes" active={location.pathname === '/dashboard' && location.hash === '#recentes'} />
       </div>
 
       <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
         <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
           Workspace
         </div>
-        <NavItem href="/app" icon={Box} label="Viewer 3D" />
-        <NavItem href="/app#bim4d" icon={CalendarDays} label="Planejamento 4D" />
-        <NavItem href="/app#meetings" icon={Users} label="Reuniões XR" />
+        <NavItem href="/app" icon="viewer" label="Viewer 3D" active={location.pathname === '/app'} />
+        <NavItem href="/app/compare" icon="compare" label="Comparar cenários" active={location.pathname === '/app/compare'} />
+        {/* Planejamento 4D, Reunioes XR, Orcamento 5D e Consulta BIM sairam em
+            08/09/2026: apontavam para /app#... e nada lia o hash. Voltam quando
+            cada tela existir (S24/S26/S15/S31). */}
       </div>
 
-      <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
-        <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
-          Ferramentas
+      {isAdmin && (
+        <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
+          <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
+            Ferramentas
+          </div>
+          <NavItem href="/admin" icon="admin" label="Admin" active={location.pathname === '/admin'} />
         </div>
-        <NavItem href="/app#cost" icon={CircleDollarSign} label="Orçamento 5D" />
-        <NavItem href="/app#query" icon={Search} label="Consulta BIM" />
-        {isAdmin && <NavItem href="/admin" icon={ShieldCheck} label="Admin" />}
-      </div>
+      )}
 
       <div style={{ borderBottom: '1px solid var(--c-border)', margin: '4px 0' }}></div>
 
@@ -186,7 +170,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           }}
         >
           <span style={{ width: '15px', height: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Settings size={17} strokeWidth={1.45} />
+            <ArxisIcon name="account" size={18} />
           </span>
           <div className="sidebar-label" style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
             <span style={{ flex: 1, whiteSpace: 'nowrap' }}>Gerenciar conta</span>
@@ -209,8 +193,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {manageOpen && (
           <div className="sidebar-submenu" style={{ display: 'flex', flexDirection: 'column', background: 'var(--c-surface)', borderTop: '1px solid var(--c-border)', borderBottom: '1px solid var(--c-border)', padding: '4px 0' }}>
-            <a
-              href="/account#members"
+            <Link
+              to="/account?tab=members"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -231,9 +216,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               }}
             >
               Membros
-            </a>
-            <a
-              href="/account#billing"
+            </Link>
+            <Link
+              to="/account?tab=billing"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -254,9 +240,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               }}
             >
               Plano & Cobrança
-            </a>
-            <a
-              href="/account#tokens"
+            </Link>
+            <Link
+              to="/account?tab=tokens"
+              onClick={onMobileClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -277,7 +264,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               }}
             >
               Tokens de API
-            </a>
+            </Link>
           </div>
         )}
       </div>
@@ -290,9 +277,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         title={collapsed ? "Abrir menu" : "Recolher menu"}
       >
         {collapsed ? (
-          <PanelLeftOpen size={17} strokeWidth={1.5} />
+          <ArxisIcon name="menu" size={18} />
         ) : (
-          <PanelLeftClose size={17} strokeWidth={1.5} />
+          <ArxisIcon name="menu" size={18} />
         )}
       </button>
     </nav>

@@ -276,7 +276,7 @@ export class IssuesPanel {
   }
 
   private getFilteredIssues(): Issue[] {
-    let filtered = this.issues.filter(issue => {
+    const filtered = this.issues.filter(issue => {
       if (this.filterStatus !== 'all' && issue.status !== this.filterStatus) return false;
       if (this.filterPriority !== 'all' && issue.priority !== this.filterPriority) return false;
       return true;
@@ -287,9 +287,10 @@ export class IssuesPanel {
       switch (this.sortBy) {
         case 'date':
           return b.createdAt - a.createdAt;
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
           return priorityOrder[a.priority] - priorityOrder[b.priority];
+        }
         case 'status':
           return a.status.localeCompare(b.status);
         case 'title':

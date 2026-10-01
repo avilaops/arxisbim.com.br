@@ -11,8 +11,8 @@ export default function PrivacyPage() {
       }}
     >
       <SEO
-        title="Política de Privacidade — ArxisVR"
-        description="Leia a Política de Privacidade do ArxisVR para entender como coletamos, usamos e protegemos seus dados e informações cadastrais."
+        title="Política de Privacidade — Arxis"
+        description="Leia a Política de Privacidade do Arxis para entender como coletamos, usamos e protegemos seus dados e informações cadastrais."
         path="/privacy"
       />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -44,8 +44,8 @@ export default function PrivacyPage() {
               1. Introdução
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A ArxisVR ("nós", "nosso", "nos", "Empresa") opera a plataforma ArxisVR
-              ("Plataforma"). Esta página informa você sobre nossa política de privacidade e
+              A Arxis (“nós”, “nosso”, “nos”, “Empresa”) opera a plataforma Arxis
+              (“Plataforma”). Esta página informa você sobre nossa política de privacidade e
               como tratamos seus dados pessoais quando você acessa e usa a Plataforma.
             </p>
           </section>

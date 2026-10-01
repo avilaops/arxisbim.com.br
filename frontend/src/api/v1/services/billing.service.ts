@@ -28,6 +28,17 @@ export interface BillingPlan {
   };
 }
 
+/** Cadastro de cartão iniciado no Mercado Pago e ainda não concluído. */
+export interface PendingCheckout {
+  id: string;
+  plan: BillingPlanTier;
+  billingCycle: BillingCycle;
+  checkoutUrl: string | null;
+  amountCents: number;
+  createdAt: string;
+  expiresAt: string;
+}
+
 export interface CurrentBillingResponse {
   tenantId: string;
   tenantName: string;
@@ -41,6 +52,7 @@ export interface CurrentBillingResponse {
     currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
     trialEndsAt: string | null;
+    gracePeriodExpiresAt: string | null;
     cancelAtPeriodEnd: boolean;
     provider: string;
     providerCustomerId: string | null;
@@ -48,6 +60,7 @@ export interface CurrentBillingResponse {
     features: string[];
     limits: BillingPlanLimits;
   };
+  pendingCheckout: PendingCheckout | null;
   usage: {
     users: number;
     projects: number;
@@ -72,6 +85,7 @@ export interface CheckoutResponse {
   checkoutUrl: string | null;
   provider: string;
   mode: 'internal_manual' | 'external_provider';
+  reused?: boolean;
 }
 
 export interface PortalRequest {
@@ -81,12 +95,21 @@ export interface PortalRequest {
 export interface PortalResponse {
   provider: string;
   portalUrl: string;
-  mode: 'internal_portal' | 'external_provider_portal' | 'no_subscription';
+  mode: 'internal_portal' | 'no_subscription';
   returnUrl?: string;
+  pendingCheckoutUrl?: string | null;
 }
 
 export interface BillingHistoryResponse {
   invoices: Array<Record<string, any>>;
+}
+
+export interface SyncResponse {
+  synced: boolean;
+  reason?: string;
+  subscriptions: number;
+  charges: number;
+  billing: CurrentBillingResponse;
 }
 
 export class BillingService {
@@ -122,6 +145,34 @@ export class BillingService {
   async getHistory(): Promise<BillingHistoryResponse> {
     const client = getAPIClient();
     const response = await client.get<BillingHistoryResponse>(`${this.endpoint}/history`);
+    return response.data;
+  }
+
+  /**
+   * Relê a assinatura no Mercado Pago. Chamar quando o cliente volta da
+   * página do cartão: o plano ativa na hora, sem esperar a notificação.
+   */
+  async sync(): Promise<SyncResponse> {
+    const client = getAPIClient();
+    const response = await client.post<SyncResponse>(`${this.endpoint}/sync`, {});
+    return response.data;
+  }
+
+  async pauseSubscription(): Promise<CurrentBillingResponse> {
+    const client = getAPIClient();
+    const response = await client.post<CurrentBillingResponse>(`${this.endpoint}/subscription/pause`, {});
+    return response.data;
+  }
+
+  async resumeSubscription(): Promise<CurrentBillingResponse> {
+    const client = getAPIClient();
+    const response = await client.post<CurrentBillingResponse>(`${this.endpoint}/subscription/resume`, {});
+    return response.data;
+  }
+
+  async cancelSubscription(): Promise<CurrentBillingResponse> {
+    const client = getAPIClient();
+    const response = await client.post<CurrentBillingResponse>(`${this.endpoint}/subscription/cancel`, {});
     return response.data;
   }
 }

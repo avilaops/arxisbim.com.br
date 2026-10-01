@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 192" role="img" aria-labelledby="arxis-lockup-title">
+  <title id="arxis-lockup-title">Arxis</title>
+
+  <!-- Simbolo: tracado a partir de /images/brand/arxis-logo.jpg (folha de marca oficial) -->
+  <g fill-rule="evenodd">
+    <path fill="#167692" d="M117.1 8.9 122.3 56.3v13.8L55.9 140l-41.4-.9L99 29.6l17.3-19.9Z"/>
+    <path fill="#203346" d="m118.9 9.7 59.5 65.6-.9 38.8-54.3-44.8-4.3-58.6Z"/>
+    <path fill="#203346" d="m126.6 83.9 50.9 44.9V184l-50-34.5-.9-64.7Z"/>
+    <path fill="#f36b21" d="m116.3 102 .8 72.5-37.9-25.9v-18.1L116.3 102Z"/>
+  </g>
+
+  <!-- Wordmark ARXIS: caixa alta 86 (y 53-139), haste 18 -->
+  <g fill="none" stroke="#203346" stroke-width="15" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M232 139 265 53"/><path d="M298 139 265 53"/>
+    <path d="M324 139V53"/><path d="M324 53h26a22 22 0 0 1 0 44h-26"/><path d="m352 97 38 42"/>
+    <path d="M416 53 482 139"/>
+    <path d="M508 139V53"/>
+    <path d="M600 74.5A21.5 21.5 0 0 0 578.5 53h-23a21.5 21.5 0 0 0 0 43h23a21.5 21.5 0 0 1 0 43h-23A21.5 21.5 0 0 1 534 117.5"/>
+  </g>
+  <path fill="none" stroke="#f36b21" stroke-width="15" stroke-linecap="butt" d="M482 53 416 139"/>
+</svg>

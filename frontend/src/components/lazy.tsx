@@ -18,11 +18,16 @@ export function withLazy<P extends object>(
 ): ComponentType<P> {
   const LazyComponent = lazy(importFn);
 
-  return (props: P) => (
+  const ComponenteComSuspense = (props: P) => (
     <Suspense fallback={fallback}>
       <LazyComponent {...props} />
     </Suspense>
   );
+  // Sem displayName o React DevTools e as stacks de erro mostram só
+  // "Anonymous" para tudo que passar por este HOC.
+  ComponenteComSuspense.displayName = 'withLazy(Componente)';
+
+  return ComponenteComSuspense;
 }
 
 /**

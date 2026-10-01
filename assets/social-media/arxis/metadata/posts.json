@@ -1,0 +1,369 @@
+{
+  "brand": "Arxis",
+  "site": "https://arxisvr.avilaops.com",
+  "generatedAt": "2026-09-13",
+  "posts": [
+    {
+      "id": "P01",
+      "title": "Conheça a Arxis: visualize, analise e decida.",
+      "description": "Apresentação da Arxis para equipes de arquitetura, engenharia e construção.",
+      "caption": "Visualize, analise e decida com mais clareza usando informação BIM organizada.",
+      "hashtags": [
+        "#arxis",
+        "#BIM",
+        "#construçãodigital",
+        "#visualização3D"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P01-arxis-apresentacao-1080x1080.png",
+      "alt": "Arte Arxis sobre conheça a arxis: visualize, analise e decida.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P02",
+      "title": "BIM em 30 segundos: o que há por trás do modelo?",
+      "description": "Explicação visual do BIM para quem quer entender o modelo além da geometria.",
+      "caption": "BIM vai além de uma imagem 3D: cada elemento carrega contexto para apoiar decisões.",
+      "hashtags": [
+        "#BIM",
+        "#modelo3D",
+        "#arquitetura",
+        "#engenharia"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P02-bim-em-30-segundos-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre bim em 30 segundos: o que há por trás do modelo?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P03",
+      "title": "Modelo 3D e informação: o que você precisa conferir?",
+      "description": "Guia visual para revisar um modelo BIM com mais segurança.",
+      "caption": "Antes de olhar só para a forma, confira a informação que sustenta o modelo.",
+      "hashtags": [
+        "#modeloBIM",
+        "#revisãodeprojeto",
+        "#IFC"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P03-modelo-3d-informacao-carrossel-1080x1350.png",
+      "alt": "Arte Arxis sobre modelo 3d e informação: o que você precisa conferir?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P04",
+      "title": "Qual é o maior gargalo na sua rotina de projetos?",
+      "description": "Post de identificação sobre gargalos em projetos digitais.",
+      "caption": "Onde sua equipe perde mais tempo: informação, revisão, comunicação ou decisão?",
+      "hashtags": [
+        "#gestãodeprojetos",
+        "#BIM",
+        "#arquitetura"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P04-gargalo-rotina-meme-1080x1080.png",
+      "alt": "Arte Arxis sobre qual é o maior gargalo na sua rotina de projetos?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P05",
+      "title": "Antes de aprovar uma alteração, faça cinco perguntas.",
+      "description": "Checklist para revisar alterações em modelos e projetos.",
+      "caption": "Cinco perguntas simples ajudam a aprovar mudanças com contexto e menos retrabalho.",
+      "hashtags": [
+        "#checklistBIM",
+        "#revisão",
+        "#construção"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P05-cinco-perguntas-revisao-1080x1350.png",
+      "alt": "Arte Arxis sobre antes de aprovar uma alteração, faça cinco perguntas.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P06",
+      "title": "Um detalhe que muda sua leitura do projeto.",
+      "description": "Exemplo prático de como um detalhe altera a interpretação de um modelo.",
+      "caption": "Um detalhe bem contextualizado pode mudar a leitura de todo o projeto.",
+      "hashtags": [
+        "#projeto3D",
+        "#BIM",
+        "#análise"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P06-detalhe-muda-leitura-1080x1920.png",
+      "alt": "Arte Arxis sobre um detalhe que muda sua leitura do projeto.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P07",
+      "title": "Sete itens para uma reunião de projeto mais clara.",
+      "description": "Checklist para reuniões de projeto mais objetivas.",
+      "caption": "Leve contexto, decisões e próximos passos para a mesma mesa.",
+      "hashtags": [
+        "#reuniãodeprojeto",
+        "#colaboração",
+        "#BIM"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P07-reuniao-projeto-clara-1080x1080.png",
+      "alt": "Arte Arxis sobre sete itens para uma reunião de projeto mais clara.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P08",
+      "title": "Quem confirma a informação antes da decisão?",
+      "description": "Posicionamento sobre responsabilidade e confiança na informação.",
+      "caption": "Decisões melhores começam quando alguém consegue confirmar a informação certa.",
+      "hashtags": [
+        "#gestãodainformação",
+        "#BIM",
+        "#decisão"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P08-quem-confirma-informacao-1080x1080.png",
+      "alt": "Arte Arxis sobre quem confirma a informação antes da decisão?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P09",
+      "title": "Como avaliar duas alternativas de projeto.",
+      "description": "Introdução à comparação de cenários de projeto.",
+      "caption": "Compare alternativas com critérios claros antes de escolher um caminho.",
+      "hashtags": [
+        "#cenários",
+        "#alternativasdeprojeto",
+        "#BIM"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P09-duas-alternativas-projeto-1080x1350.png",
+      "alt": "Arte Arxis sobre como avaliar duas alternativas de projeto.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P10",
+      "title": "Como registrar uma alternativa para retomar depois.",
+      "description": "Demonstração do conceito de cenário em projetos.",
+      "caption": "Registre uma alternativa, preserve o contexto e retome a análise quando precisar.",
+      "hashtags": [
+        "#cenáriosBIM",
+        "#histórico",
+        "#decisão"
+      ],
+      "asset": "assets/social-media/arxis/2026-09/final/P10-cenario-alternativa-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre como registrar uma alternativa para retomar depois.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P11",
+      "title": "openBIM: por que falar sobre troca de informações?",
+      "description": "Conteúdo educativo sobre interoperabilidade.",
+      "caption": "Projetos conectados dependem de troca de informações compreensível entre ferramentas e equipes.",
+      "hashtags": [
+        "#openBIM",
+        "#IFC",
+        "#interoperabilidade"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P11-openbim-troca-informacoes-1080x1350.png",
+      "alt": "Arte Arxis sobre openbim: por que falar sobre troca de informações?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P12",
+      "title": "Três perguntas que revelam falta de contexto.",
+      "description": "Post de identificação sobre decisões sem contexto suficiente.",
+      "caption": "Se a resposta depende de adivinhação, ainda falta contexto para decidir.",
+      "hashtags": [
+        "#informaçãoBIM",
+        "#contexto",
+        "#projeto"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P12-tres-perguntas-contexto-1080x1080.png",
+      "alt": "Arte Arxis sobre três perguntas que revelam falta de contexto.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P13",
+      "title": "Comece por uma pergunta do seu projeto.",
+      "description": "Aplicação prática para aproximar BIM da rotina.",
+      "caption": "Uma boa pergunta transforma o modelo em uma conversa útil sobre o projeto.",
+      "hashtags": [
+        "#BIMnaprática",
+        "#projeto",
+        "#análise"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P13-comece-por-uma-pergunta-1080x1350.png",
+      "alt": "Arte Arxis sobre comece por uma pergunta do seu projeto.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P14",
+      "title": "Uma dúvida da rotina: por onde começar a análise?",
+      "description": "Conteúdo de proximidade para responder dúvidas reais.",
+      "caption": "Comece pelo objetivo da análise, depois encontre a informação que sustenta a resposta.",
+      "hashtags": [
+        "#análiseBIM",
+        "#rotinadeprojetos",
+        "#construção"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P14-duvida-por-onde-comecar-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre uma dúvida da rotina: por onde começar a análise?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P15",
+      "title": "Como avaliar uma ferramenta BIM para sua equipe.",
+      "description": "Critérios para avaliar uma ferramenta BIM.",
+      "caption": "A melhor ferramenta é a que ajuda sua equipe a encontrar, comparar e decidir com clareza.",
+      "hashtags": [
+        "#ferramentaBIM",
+        "#equipe",
+        "#tecnologia"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P15-avaliar-ferramenta-bim-1080x1350.png",
+      "alt": "Arte Arxis sobre como avaliar uma ferramenta bim para sua equipe.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P16",
+      "title": "Vamos conversar sobre o seu próximo projeto?",
+      "description": "Convite comercial para conversar sobre novos projetos.",
+      "caption": "Conte o que você está projetando e descubra como a Arxis pode organizar a análise.",
+      "hashtags": [
+        "#Arxis",
+        "#projeto",
+        "#BIM"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P16-proximo-projeto-1080x1080.png",
+      "alt": "Arte Arxis sobre vamos conversar sobre o seu próximo projeto?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P17",
+      "title": "O que conferir na ficha de um elemento?",
+      "description": "Guia sobre propriedades de elementos BIM.",
+      "caption": "Nome, categoria, material e dimensões: confira o que dá contexto ao elemento.",
+      "hashtags": [
+        "#propriedadesBIM",
+        "#elementos",
+        "#IFC"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P17-ficha-elemento-1080x1350.png",
+      "alt": "Arte Arxis sobre o que conferir na ficha de um elemento?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P18",
+      "title": "Exemplo prático: propriedades dos elementos.",
+      "description": "Demonstração visual de propriedades em um modelo.",
+      "caption": "Quando as propriedades aparecem no contexto, o detalhe deixa de ser só geometria.",
+      "hashtags": [
+        "#propriedadesdeelementos",
+        "#BIM",
+        "#modelo"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P18-propriedades-elementos-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre exemplo prático: propriedades dos elementos.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P19",
+      "title": "Checklist: propriedades dos elementos.",
+      "description": "Roteiro de trabalho para conferir propriedades.",
+      "caption": "Use este checklist para revisar propriedades antes de comparar ou aprovar.",
+      "hashtags": [
+        "#checklist",
+        "#propriedadesBIM",
+        "#revisão"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P19-checklist-propriedades-1080x1350.png",
+      "alt": "Arte Arxis sobre checklist: propriedades dos elementos.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P20",
+      "title": "Qual propriedade você consulta primeiro?",
+      "description": "Pergunta para ouvir a comunidade BIM.",
+      "caption": "Na sua rotina, qual propriedade você consulta primeiro para entender um elemento?",
+      "hashtags": [
+        "#comunidadeBIM",
+        "#propriedades",
+        "#arquitetura"
+      ],
+      "asset": "assets/social-media/arxis/2026-10/final/P20-propriedade-primeiro-1080x1080.png",
+      "alt": "Arte Arxis sobre qual propriedade você consulta primeiro?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P21",
+      "title": "Como encontrar o detalhe certo no projeto?",
+      "description": "Guia visual para localizar detalhes no modelo.",
+      "caption": "Encontre o detalhe certo no projeto sem perder o contexto.",
+      "hashtags": [
+        "#localizaçãoBIM",
+        "#modelo3D",
+        "#projetos"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P21-detalhe-certo-projeto-1080x1350.png",
+      "alt": "Arte Arxis sobre como encontrar o detalhe certo no projeto?",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P22",
+      "title": "Exemplo prático: localização no modelo.",
+      "description": "Demonstração de navegação até um detalhe.",
+      "caption": "Do modelo inteiro ao detalhe certo, com precisão.",
+      "hashtags": [
+        "#BIM",
+        "#navegação3D",
+        "#arquitetura"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P22-localizacao-modelo-reel-1080x1920.png",
+      "alt": "Arte Arxis sobre exemplo prático: localização no modelo.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P23",
+      "title": "Checklist: localização no modelo.",
+      "description": "Roteiro para localizar detalhes com clareza.",
+      "caption": "Use este checklist para indicar onde está o detalhe que a equipe precisa revisar.",
+      "hashtags": [
+        "#checklistBIM",
+        "#revisão",
+        "#construção"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P23-checklist-localizacao-1080x1350.png",
+      "alt": "Arte Arxis sobre checklist: localização no modelo.",
+      "type": "social-post",
+      "brand": "Arxis"
+    },
+    {
+      "id": "P24",
+      "title": "Como você indica um detalhe para a equipe?",
+      "description": "Pergunta sobre comunicação em projetos.",
+      "caption": "Como sua equipe indica um detalhe para evitar interpretações diferentes?",
+      "hashtags": [
+        "#colaboração",
+        "#BIM",
+        "#equipe"
+      ],
+      "asset": "social-media/arxis/2026-10/final/P24-indicar-detalhe-equipe-1080x1080.png",
+      "alt": "Arte Arxis sobre como você indica um detalhe para a equipe?",
+      "type": "social-post",
+      "brand": "Arxis"
+    }
+  ]
+}

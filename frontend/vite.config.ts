@@ -59,15 +59,16 @@ export default defineConfig({
         clientsClaim: true,
       },
       manifest: {
-        name: 'ArxisVR — Plataforma BIM',
-        short_name: 'ArxisVR',
-        description: 'BIM com Copilot de IA e Realidade Estendida no navegador',
-        theme_color: '#0D1117',
-        background_color: '#0D1117',
+        name: 'Arxis — Plataforma BIM',
+        short_name: 'Arxis',
+        description: 'Visualize modelos BIM. Analise possibilidades. Decida com clareza.',
+        theme_color: '#0E6B8F',
+        background_color: '#FFFFFF',
         display: 'standalone',
         start_url: '/dashboard',
         icons: [
-          { src: '/logo.svg', sizes: 'any', type: 'image/svg+xml' },
+          { src: '/images/brand/arxis-icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/images/brand/arxis-icon-512.png', sizes: '512x512', type: 'image/png' },
         ],
       },
     }),
@@ -166,11 +167,11 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
     },

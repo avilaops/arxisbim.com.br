@@ -38,6 +38,11 @@ export interface BillingPlanDefinition {
   limits: BillingPlanLimits;
 }
 
+/**
+ * Planos do ArxisVR. O valor vai direto para a assinatura no provedor
+ * (Mercado Pago cobra o `transaction_amount` informado) — não existe
+ * catálogo de preços externo para manter em sincronia.
+ */
 export const BILLING_PLANS: Record<BillingPlanTier, BillingPlanDefinition> = {
   free: {
     tier: 'free',
@@ -164,47 +169,6 @@ export function toTenantSubscription(plan: BillingPlanTier) {
     arEnabled: definition.features.includes('ar_mode'),
     federationEnabled: definition.features.includes('federation'),
   };
-}
-
-export function getPlanPriceId(plan: BillingPlanTier, billingCycle: BillingCycle): string | null {
-  const envMap: Record<BillingPlanTier, Record<BillingCycle, string | undefined>> = {
-    free: {
-      monthly: process.env.STRIPE_PRICE_FREE_MONTHLY,
-      yearly: process.env.STRIPE_PRICE_FREE_YEARLY,
-    },
-    starter: {
-      monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
-      yearly: process.env.STRIPE_PRICE_STARTER_YEARLY,
-    },
-    professional: {
-      monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
-      yearly: process.env.STRIPE_PRICE_PRO_YEARLY,
-    },
-    enterprise: {
-      monthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY,
-      yearly: process.env.STRIPE_PRICE_BUSINESS_YEARLY,
-    },
-  };
-
-  return envMap[plan][billingCycle] ?? null;
-}
-
-export function inferPlanFromPriceId(priceId: string | undefined | null): BillingPlanTier | null {
-  if (!priceId) return null;
-
-  const pairs: Array<[BillingPlanTier, string | undefined]> = [
-    ['free', process.env.STRIPE_PRICE_FREE_MONTHLY],
-    ['free', process.env.STRIPE_PRICE_FREE_YEARLY],
-    ['starter', process.env.STRIPE_PRICE_STARTER_MONTHLY],
-    ['starter', process.env.STRIPE_PRICE_STARTER_YEARLY],
-    ['professional', process.env.STRIPE_PRICE_PRO_MONTHLY],
-    ['professional', process.env.STRIPE_PRICE_PRO_YEARLY],
-    ['enterprise', process.env.STRIPE_PRICE_BUSINESS_MONTHLY],
-    ['enterprise', process.env.STRIPE_PRICE_BUSINESS_YEARLY],
-  ];
-
-  const found = pairs.find(([, configuredPriceId]) => configuredPriceId === priceId);
-  return found ? found[0] : null;
 }
 
 export function getPlanEntitlements(plan: BillingPlanTier): Record<string, { isEnabled: boolean; numericValue?: number }> {

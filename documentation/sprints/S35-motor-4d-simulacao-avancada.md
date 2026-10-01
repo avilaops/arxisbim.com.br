@@ -97,28 +97,28 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 
 ## Critérios de aceite
 
-- [x] Importação de arquivos MPP (MS Project XML) e XER (Primavera) com hierarquia de tarefas completa — `schedule-import.service.ts` (parseMSPXml/parseP6Xer)
-- [x] Auto-mapeamento de elementos BIM vinculando pelo menos 75% das tarefas estruturais básicas automaticamente — `schedule-matcher.service.ts` + `POST /schedules/:id/auto-match` (tipo IFC + pavimento + similaridade de nome)
-- [x] Simulação visual alterando cores/transparências dos elementos com base na timeline — `SimulationEngine` + `ElementStateRenderer` (troca de material em lote sobre malhas em cache; estados not_started/active/delayed/complete)
-- [x] Visualização "Planejado vs. Realizado" lado a lado — `mountSchedule4DSplit` reusa `SplitView` (scissor + stateRendererA/B + camera sync): viewport esquerdo = modo `planned`, direito = `actual` (desvio em vermelho via `delayed`); legendas Planejado/Realizado
-- [x] Clique em uma tarefa do Gantt foca a câmera nos elementos vinculados — `GanttTimeline.onTaskClick` → `Schedule4DController.focusOnElements` (esfera envolvente combinada via ElementIndex)
+- [x] Importação de arquivos MPP (MS Project XML) e XER (Primavera) com hierarquia de tarefas completa, `schedule-import.service.ts` (parseMSPXml/parseP6Xer)
+- [x] Auto-mapeamento de elementos BIM vinculando pelo menos 75% das tarefas estruturais básicas automaticamente, `schedule-matcher.service.ts` + `POST /schedules/:id/auto-match` (tipo IFC + pavimento + similaridade de nome)
+- [x] Simulação visual alterando cores/transparências dos elementos com base na timeline, `SimulationEngine` + `ElementStateRenderer` (troca de material em lote sobre malhas em cache; estados not_started/active/delayed/complete)
+- [x] Visualização "Planejado vs. Realizado" lado a lado, `mountSchedule4DSplit` reusa `SplitView` (scissor + stateRendererA/B + camera sync): viewport esquerdo = modo `planned`, direito = `actual` (desvio em vermelho via `delayed`); legendas Planejado/Realizado
+- [x] Clique em uma tarefa do Gantt foca a câmera nos elementos vinculados, `GanttTimeline.onTaskClick` → `Schedule4DController.focusOnElements` (esfera envolvente combinada via ElementIndex)
 
 ## Implementação
 
 **Backend** (`backend/src/modules/scheduling/`)
-- `schedule-matcher.service.ts` — motor puro de auto-mapeamento (dicionário PT→IFC, extração de pavimento, Jaccard+Levenshtein). 16 testes (`tests/unit/schedule-matcher.spec.ts`).
-- `scheduling.routes.ts` — rota `POST /api/v1/schedules/:scheduleId/auto-match` (threshold/maxElementsPerActivity/persist).
+- `schedule-matcher.service.ts` - motor puro de auto-mapeamento (dicionário PT→IFC, extração de pavimento, Jaccard+Levenshtein). 16 testes (`tests/unit/schedule-matcher.spec.ts`).
+- `scheduling.routes.ts` - rota `POST /api/v1/schedules/:scheduleId/auto-match` (threshold/maxElementsPerActivity/persist).
 
 **Frontend** (`frontend/src/viewer/scheduling/`)
-- `SimulationEngine.ts` — estado físico por elemento na data simulada, modos planejado×realizado, detecção de atraso.
-- `GanttTimeline.ts` — Gantt interativo (barras planejada/realizada, cursor, clique→câmera/seek).
-- `SimulationControls.ts` — play/pause/velocidade/início/fim + toggle Planejado×Realizado.
-- `Schedule4DController.ts` — orquestrador timeline→engine→renderer+gantt; foco de câmera por esfera combinada.
-- `mountSchedule4D.ts` — wiring ponta-a-ponta (busca tarefas via API, liga TimelineController + componentes + cena).
-- `mountSchedule4DSplit.ts` — comparação Planejado×Realizado lado a lado sobre o `SplitView` (computeSplitFrames puro injeta os 2 mapas a cada data).
-- `viewer4dBridge.ts` — cola com a UI: lookup globalId→esfera a partir da cena, foco de câmera, overlay (controles+Gantt), legendas split e hooks globais `window.__startSchedule4D` / `__startSchedule4DSplit`.
-- `ElementStateRenderer.ts` — estado/cor `delayed` (vermelho) adicionado.
-- `api/v1/services/scheduling.service.ts` — `getConstructionTasks` / `autoMatch`.
+- `SimulationEngine.ts` - estado físico por elemento na data simulada, modos planejado×realizado, detecção de atraso.
+- `GanttTimeline.ts` - Gantt interativo (barras planejada/realizada, cursor, clique→câmera/seek).
+- `SimulationControls.ts` - play/pause/velocidade/início/fim + toggle Planejado×Realizado.
+- `Schedule4DController.ts` - orquestrador timeline→engine→renderer+gantt; foco de câmera por esfera combinada.
+- `mountSchedule4D.ts` - wiring ponta-a-ponta (busca tarefas via API, liga TimelineController + componentes + cena).
+- `mountSchedule4DSplit.ts` - comparação Planejado×Realizado lado a lado sobre o `SplitView` (computeSplitFrames puro injeta os 2 mapas a cada data).
+- `viewer4dBridge.ts` - cola com a UI: lookup globalId→esfera a partir da cena, foco de câmera, overlay (controles+Gantt), legendas split e hooks globais `window.__startSchedule4D` / `__startSchedule4DSplit`.
+- `ElementStateRenderer.ts` - estado/cor `delayed` (vermelho) adicionado.
+- `api/v1/services/scheduling.service.ts` - `getConstructionTasks` / `autoMatch`.
 - CSS em `styles/app.css` (`.gantt-timeline`, `.sim-controls`, `.schedule-4d-overlay`).
 
 **Integração na UI:** botões por cronograma no `SchedulingPanel.js` → "🎬 Simular 4D" (`window.__startSchedule4D`) e "⇆ Planejado×Realizado" (`window.__startSchedule4DSplit`), registrados em `app-main.ts`. Rodam auto-match, abrem overlay com Gantt+controles sobre o viewer e aplicam as cores na cena (modo único ou split lado a lado).

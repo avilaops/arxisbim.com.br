@@ -1,14 +1,32 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
 import ApiTokensPage from './account/ApiTokenspage'
 import ApiDocumentationPage from './account/ApiDocumentationPage'
+import BillingPage from './account/BillingPage'
+import MembersPage from './account/MembersPage'
+
+const TABS = ['members', 'billing', 'tokens', 'docs', 'audit', 'settings']
+
+/** Aba pedida na URL: o submenu da sidebar e o retorno do cartão do Mercado
+ *  Pago chegam com ?tab=billing. */
+function tabFromSearch(search: string): string {
+  const tab = new URLSearchParams(search).get('tab')
+  return TABS.includes(tab ?? '') ? (tab as string) : 'members'
+}
 
 export default function AccountPage() {
   const navigate = useNavigate()
+  const { search } = useLocation()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('members')
+  const [activeTab, setActiveTab] = useState(() => tabFromSearch(search))
+
+  // Com a sidebar navegando sem recarregar, a pagina fica montada e precisa
+  // seguir a troca de ?tab= (Membros -> Plano & Cobranca no mesmo /account).
+  useEffect(() => {
+    setActiveTab(tabFromSearch(search))
+  }, [search])
 
   useEffect(() => {
     const checkAuth = () => {
@@ -27,6 +45,11 @@ export default function AccountPage() {
 
     checkAuth()
   }, [navigate])
+
+  // `arxisvr_tenant_id` é resquício do app antigo; serve de rede se a sessão
+  // atual foi criada por um fluxo que não gravou o tenant no objeto do usuário.
+  const tenantId: string | null =
+    user?.tenantId ?? user?.tenant_id ?? localStorage.getItem('arxisvr_tenant_id') ?? null
 
   if (loading) {
     return (
@@ -93,154 +116,9 @@ export default function AccountPage() {
         </div>
 
         {/* Content */}
-        {activeTab === 'members' && (
-          <div
-            style={{
-              background: 'var(--c-surface2)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 'var(--r)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
-                Membros da organização
-              </h3>
-              <button
-                style={{
-                  padding: '6px 12px',
-                  background: 'var(--c-blue)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 'var(--r)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                + Adicionar membro
-              </button>
-            </div>
-            <div>
-              {[
-                { name: user?.name || 'Você', email: user?.email, role: 'owner', joined: 'Hoje' },
-                { name: 'Maria Santos', email: 'maria@example.com', role: 'admin', joined: '5 dias atrás' },
-                { name: 'Carlos Oliveira', email: 'carlos@example.com', role: 'member', joined: '2 semanas atrás' },
-              ].map((member, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 14px',
-                    borderBottom: idx < 2 ? '1px solid var(--c-border)' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#fff',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {member.name.charAt(0)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
-                      {member.name}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
-                      {member.email}
-                    </div>
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--c-text2)', textTransform: 'capitalize' }}>
-                      {member.role}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--c-text3)' }}>
-                      {member.joined}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === 'members' && <MembersPage tenantId={tenantId} />}
 
-        {activeTab === 'billing' && (
-          <div
-            style={{
-              background: 'var(--c-surface2)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 'var(--r)',
-              padding: '20px',
-            }}
-          >
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)', marginBottom: '16px' }}>
-              Plano atual
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: 'var(--c-text2)', marginBottom: '4px' }}>
-                  Plano
-                </div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)' }}>
-                  Free
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: 'var(--c-text2)', marginBottom: '4px' }}>
-                  Status
-                </div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-green)' }}>
-                  Ativo
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: 'var(--c-text2)', marginBottom: '4px' }}>
-                  Projetos
-                </div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)' }}>
-                  3 / 3
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: 'var(--c-text2)', marginBottom: '4px' }}>
-                  Armazenamento
-                </div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)' }}>
-                  2.1 / 5 GB
-                </div>
-              </div>
-            </div>
-            <button
-              style={{
-                marginTop: '20px',
-                padding: '10px 16px',
-                background: 'var(--c-blue)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--r)',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              Fazer upgrade para Professional
-            </button>
-          </div>
-        )}
+        {activeTab === 'billing' && <BillingPage />}
 
         {activeTab === 'tokens' && <ApiTokensPage />}
 

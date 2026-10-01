@@ -1,13 +1,13 @@
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import { reconcileSchema } from './core/db/schema-reconciler.js';
+import { API_URL, resolveCorsOrigins } from './core/config/domains.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
 // @fastify/static removed — frontend now served by Cloudflare Pages
-import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -41,6 +41,7 @@ import { PINO_REDACT_PATHS, REDACTED } from './core/observability/redact.js';
 import { recordRequest } from './core/observability/metrics.js';
 import { filesRoutes } from './modules/files/files.routes.js';
 import { modelsRoutes } from './modules/models/models.routes.js';
+import { revitExportsRoutes } from './modules/revit-exports/revit-exports.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
@@ -71,6 +72,7 @@ import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
 import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
 import { createUsageReconcileWorker } from './modules/billing/usage-reconcile.worker.js';
+import { createBillingSyncWorker } from './modules/billing/billing-sync.worker.js';
 import { observabilityService, logger, fastifyCombinedStream } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
@@ -193,7 +195,7 @@ async function checkWebSocketSignaling(): Promise<boolean> {
   try {
     // O WebSocket (signaling/realtime) é servido pelo próprio backend — não há
     // serviço de signaling separado. Checa a saúde do próprio backend.
-    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://api.arxisvr.avilaops.com/health';
+    const signalingUrl = process.env.SIGNALING_HEALTH_URL || `${API_URL}/health`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(signalingUrl, { signal: controller.signal });
@@ -269,18 +271,18 @@ const billingRetryWorker = createBillingRetryWorker({
   intervalMs: BILLING_RETRY_INTERVAL_MS,
   batchSize: BILLING_RETRY_BATCH_SIZE,
   logger: server.log,
-  // Single sweep drives three jobs: Stripe event retries, the local
+  // Single sweep drives four jobs: provider event retries, the local
   // failed_webhooks dead-letter, and trial/subscription expiry. Counts are
   // merged so worker health/stats reflect all of them.
-  processDueStripeRetries: async (tenantId?: string, limit?: number) => {
-    const stripeRetries = await BillingService.processDueStripeRetries(tenantId, limit);
+  processDueRetries: async (tenantId?: string, limit?: number) => {
+    const providerRetries = await BillingService.processDueProviderRetries(tenantId, limit);
     const failedWebhooks = await BillingService.processFailedWebhooks(limit);
     const trials = await BillingService.expireDueTrials();
     const grace = await BillingService.expireGracePeriods();
     return {
-      processed: stripeRetries.processed + failedWebhooks.processed + trials.expired + grace.expired,
-      succeeded: stripeRetries.succeeded + failedWebhooks.succeeded + trials.expired + grace.expired,
-      failed: stripeRetries.failed + failedWebhooks.failed,
+      processed: providerRetries.processed + failedWebhooks.processed + trials.expired + grace.expired,
+      succeeded: providerRetries.succeeded + failedWebhooks.succeeded + trials.expired + grace.expired,
+      failed: providerRetries.failed + failedWebhooks.failed,
     };
   },
   onSweepSuccess: async (result, context) => {
@@ -330,6 +332,14 @@ const usageReconcileWorker = createUsageReconcileWorker({
   reconcileAllUsage: (limit?: number) => BillingService.reconcileAllUsage(limit),
 });
 
+const billingSyncWorker = createBillingSyncWorker({
+  // Espelha assinaturas e cobranças do Mercado Pago no banco. O webhook do MP
+  // não é garantido (URL única por conta), então esta varredura é a rede.
+  intervalMs: Math.max(15 * 60 * 1000, Number(process.env.BILLING_PROVIDER_SYNC_INTERVAL_MS || 6 * 60 * 60 * 1000)), // default 6h
+  logger: server.log,
+  syncProviderSubscriptions: (limit?: number) => BillingService.syncProviderSubscriptions(limit),
+});
+
 const authCleanupWorker = createAuthCleanupWorker({
   intervalMs: 6 * 60 * 60 * 1000, // 6h
   logger: server.log,
@@ -349,7 +359,9 @@ const analyticsCleanupWorker = createAnalyticsCleanupWorker({
 
 // CORS
 await server.register(cors, {
-  origin: process.env.CORS_ORIGIN?.split(',') || '*',
+  // Allowlist em core/config/domains.ts: os dois domínios do produto durante a
+  // transição para arxisbim.com.br. `CORS_ORIGIN` continua mandando.
+  origin: resolveCorsOrigins(),
   credentials: true,
   // Declarar métodos/headers explicitamente — preflight de DELETE/PATCH estava
   // sendo bloqueado quando origin é específico + credentials.
@@ -386,13 +398,6 @@ await server.register(multipart, {
     fileSize: MAX_UPLOAD_MB * 1024 * 1024,
     files: 1, // 1 file per request
   },
-} as any);
-
-await server.register(fastifyRawBody, {
-  field: 'rawBody',
-  global: false,
-  encoding: 'utf8',
-  runFirst: true,
 } as any);
 
 // Frontend is now served by Cloudflare Pages — backend is API-only.
@@ -672,6 +677,7 @@ await server.register(scenarioRoutes, { prefix: '/api/v1' });
 await server.register(storageRoutes, { prefix: '/api/v1/storage' });
 await server.register(filesRoutes, { prefix: '/api/v1' });
 await server.register(modelsRoutes, { prefix: '/api/v1' });
+await server.register(revitExportsRoutes, { prefix: '/api/v1' });
 await server.register(clashDetectionRoutes, { prefix: '/api/v1/clash-detection' });
 await server.register(bimQueryRoutes);
 await server.register(glbExportRoutes);
@@ -702,6 +708,7 @@ signals.forEach((signal: NodeJS.Signals) => {
     try {
       billingRetryWorker.stop();
       usageReconcileWorker.stop();
+      billingSyncWorker.stop();
       authCleanupWorker.stop();
       emailQueueWorker.stop();
       await server.close();
@@ -748,6 +755,7 @@ try {
 
   // Initialize usage reconcile worker (runs every 24h)
   usageReconcileWorker.start();
+  billingSyncWorker.start();
 
   // Initialize auth cleanup worker (runs every 6h)
   authCleanupWorker.start();
@@ -767,21 +775,9 @@ try {
   const notificationsGateway = new NotificationsGateway(server.server);
   server.log.info('🔌 WebSocket Gateways initialized (Meetings + Notifications)');
   
-  // Keep-alive: Render free tier dorme após 15 min sem tráfego. O serviço se
-  // auto-pinga a cada 14 min na URL pública → sempre há tráfego → não dorme
-  // (sem depender de máquina do dev nem de pinger externo). Só em produção.
-  const selfUrl = process.env.RENDER_EXTERNAL_URL
-    || process.env.PUBLIC_URL
-    || (process.env.NODE_ENV === 'production' ? 'https://api.arxisvr.avilaops.com' : '');
-  if (selfUrl) {
-    const KEEPALIVE_MS = 14 * 60 * 1000;
-    setInterval(() => {
-      fetch(`${selfUrl.replace(/\/$/, '')}/health`)
-        .then((r) => server.log.info(`💓 keep-alive ping ${r.status}`))
-        .catch((e) => server.log.warn(`keep-alive falhou: ${e?.message || e}`));
-    }, KEEPALIVE_MS).unref?.();
-    server.log.info(`💓 Keep-alive ativo (ping /health a cada 14 min em ${selfUrl})`);
-  }
+  // (Não há keep-alive. Ele existia porque o free tier do Render hibernava
+  // após 15 min sem tráfego; no Hetzner o container fica de pé e se auto-pingar
+  // só gastaria log e CPU.)
 
   server.log.info(`🚀 ArxisVR Backend API running at http://${HOST}:${PORT}`);
   server.log.info(`📊 Health check: http://${HOST}:${PORT}/health`);

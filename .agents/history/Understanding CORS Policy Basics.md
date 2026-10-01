@@ -17,7 +17,7 @@ Mecanismo de segurança do browser. Controla quais domínios podem acessar recur
 **Como funciona:**
 1. Browser envia request com header `Origin`
 2. Servidor responde com headers `Access-Control-Allow-*`
-3. Browser verifica — se permitido, entrega resposta; senão, bloqueia
+3. Browser verifica, se permitido, entrega resposta; senão, bloqueia
 
 **Headers principais:**
 | Header | Função |
@@ -118,7 +118,7 @@ Já está configurado corretamente por ambiente:
 
 **Resumo:** Dev e produção estão certos. 
 
-Único ponto de atenção: `.env.staging` usa `example.com` — quando subir staging real, precisa trocar pro domínio verdadeiro. Tem domínio de staging definido já?
+Único ponto de atenção: `.env.staging` usa `example.com` - quando subir staging real, precisa trocar pro domínio verdadeiro. Tem domínio de staging definido já?
 
 ### User Input
 
@@ -144,16 +144,16 @@ Backend ancorado em:
 
 | Config | Valor | Fonte |
 |---|---|---|
-| **Host** | `0.0.0.0` | [index.ts L93](file:///d:/arxisvr/backend/src/index.ts#L93) — `process.env.HOST \|\| '0.0.0.0'` |
-| **Porta** | `3001` | [index.ts L92](file:///d:/arxisvr/backend/src/index.ts#L92) — `process.env.PORT \|\| '3001'` |
+| **Host** | `0.0.0.0` | [index.ts L93](file:///d:/arxisvr/backend/src/index.ts#L93), `process.env.HOST \|\| '0.0.0.0'` |
+| **Porta** | `3001` | [index.ts L92](file:///d:/arxisvr/backend/src/index.ts#L92), `process.env.PORT \|\| '3001'` |
 | **Listen** | `server.listen({ port: PORT, host: HOST })` | [index.ts L717](file:///d:/arxisvr/backend/src/index.ts#L717) |
-| **Produção** | `https://api.arxisvr.avilaops.com` | [index.ts L748](file:///d:/arxisvr/backend/src/index.ts#L748) — keep-alive fallback |
+| **Produção** | `https://api.arxisvr.avilaops.com` | [index.ts L748](file:///d:/arxisvr/backend/src/index.ts#L748), keep-alive fallback |
 
 **Resumo da arquitetura:**
 - **Dev local:** `http://0.0.0.0:3001` (acessível como `http://localhost:3001`)
 - **Produção:** Render hospeda em `https://api.arxisvr.avilaops.com` (Render injeta `PORT` via env)
 - **WebSocket:** mesmo servidor, path `/socket.io/` (Meetings + Notifications gateways)
-- **Frontend:** servido separado pelo Cloudflare Pages — backend é API-only (L388)
+- **Frontend:** servido separado pelo Cloudflare Pages, backend é API-only (L388)
 
 `PORT` e `HOST` não estão explicitamente no `.env`, usam defaults. Render sobrescreve `PORT` automaticamente no deploy.
 
@@ -206,13 +206,13 @@ então quero que voce altere o .env.local e o .env.production para que fique cor
 
 ### Planner Response
 
-Ambos já têm `PORT` e `HOST`. Mas produção precisa ajuste — Render injeta `PORT` dinamicamente, então hardcodar `3001` pode conflitar. E `BACKEND_URL` está faltando (usado no OAuth callbacks).
+Ambos já têm `PORT` e `HOST`. Mas produção precisa ajuste, Render injeta `PORT` dinamicamente, então hardcodar `3001` pode conflitar. E `BACKEND_URL` está faltando (usado no OAuth callbacks).
 
 *Edited relevant file*
 
 ### Planner Response
 
-Agora `.env.local` — já está correto, mas vou adicionar `BACKEND_URL` pra consistência:
+Agora `.env.local` - já está correto, mas vou adicionar `BACKEND_URL` pra consistência:
 
 *Edited relevant file*
 
@@ -261,14 +261,14 @@ Entendido. Ordem de carregamento:
 **Problema:** `backend/.env` com `override: true` **sempre ganha**. Os `.env.local` e `.env.production` da raiz são **praticamente ignorados** quando existe a mesma variável no `backend/.env`.
 
 Isso é **bagunça acidental**. Deveria ser:
-- **Raiz:** `.env.local` pra dev, `.env.production` pra prod — fonte da verdade
+- **Raiz:** `.env.local` pra dev, `.env.production` pra prod, fonte da verdade
 - **`backend/.env`:** não deveria existir, ou ser apenas overrides específicos do backend
 
 `backend/.env` é basicamente uma cópia incompleta do `.env.local`. Duplicação que causa confusão e bugs silenciosos (edita num lugar, valor vem do outro).
 
 Quer que eu unifique? Sugiro:
 1. Deletar `backend/.env` 
-2. Ajustar `env.ts` pra carregar só da raiz (`override: false` pra `.env.production`, depois `.env.local` com `override: true` — local ganha em dev)
+2. Ajustar `env.ts` pra carregar só da raiz (`override: false` pra `.env.production`, depois `.env.local` com `override: true` - local ganha em dev)
 3. Backend passa a ler tudo da raiz, sem duplicação
 
 ### User Input
@@ -320,8 +320,8 @@ Vou verificar quem mais referencia o `.env` raiz:
 Quadro completo. Agora executo:
 
 1. **Mesclar** vars exclusivas do `backend/.env` no `.env.local`
-2. **Reescrever** `env.ts` — carregar só da raiz
-3. **Atualizar** `signaling-server/server.js` — apontar pra `.env.local` ao invés de `.env`
+2. **Reescrever** `env.ts` - carregar só da raiz
+3. **Atualizar** `signaling-server/server.js` - apontar pra `.env.local` ao invés de `.env`
 4. **Deletar** `backend/.env` e `.env` raiz
 
 ### User Input
@@ -397,20 +397,20 @@ Remover o debug log que sobrou no `index.ts`:
 Feito. Resumo do que foi feito:
 
 **Deletados:**
-- `/.env` (raiz) — duplicata do `.env.local`
-- `/backend/.env` — duplicata com override que causava confusão
+- `/.env` (raiz), duplicata do `.env.local`
+- `/backend/.env` - duplicata com override que causava confusão
 
 **Mantidos:**
-- `/.env.local` — **fonte única para dev** (mesclado com vars exclusivas do `backend/.env`: R2, billing, auth config, storage driver)
-- `/.env.production` — produção
-- `/.env.example` — template (commitável)
-- `/.env.staging` — staging
-- `/backend/.env.test` — testes (carregado separadamente pelo vitest)
+- `/.env.local` - **fonte única para dev** (mesclado com vars exclusivas do `backend/.env`: R2, billing, auth config, storage driver)
+- `/.env.production` - produção
+- `/.env.example` - template (commitável)
+- `/.env.staging` - staging
+- `/backend/.env.test` - testes (carregado separadamente pelo vitest)
 
 **Alterados:**
-- [env.ts](file:///d:/arxisvr/backend/src/env.ts) — simplificado: carrega **um** arquivo da raiz (`.env.local` ou `.env.production` conforme `NODE_ENV`)
-- [signaling-server/server.js](file:///d:/arxisvr/signaling-server/server.js#L16) — aponta pra `.env.local` ao invés de `.env`
-- [index.ts](file:///d:/arxisvr/backend/src/index.ts#L100) — removido `console.log` de debug do CORS
+- [env.ts](file:///d:/arxisvr/backend/src/env.ts), simplificado: carrega **um** arquivo da raiz (`.env.local` ou `.env.production` conforme `NODE_ENV`)
+- [signaling-server/server.js](file:///d:/arxisvr/signaling-server/server.js#L16), aponta pra `.env.local` ao invés de `.env`
+- [index.ts](file:///d:/arxisvr/backend/src/index.ts#L100), removido `console.log` de debug do CORS
 
 ### User Input
 
@@ -431,7 +431,7 @@ Três ambientes, três propósitos:
 | **Quem usa** | Só dev | QA, PM, validação interna | Clientes finais |
 | **Deploy** | `npm run dev` (hot reload) | Script `deploy-to-staging.sh` | Push na `main` → auto-deploy Render |
 | **Erros OK?** | Sim, normal | Aceitável (pra descobrir antes de prod) | **Não** |
-| **Stripe** | Test keys (`sk_test_*`) | Test keys | **Live keys** (`sk_live_*`) — dinheiro real |
+| **Stripe** | Test keys (`sk_test_*`) | Test keys | **Live keys** (`sk_live_*`), dinheiro real |
 | **Email** | SMTP local/mailhog | Resend (teste) | Resend (produção) |
 | **Storage** | R2 (dev bucket) | R2 ou local | R2 (prod bucket) |
 
@@ -444,7 +444,7 @@ Dev (tua máquina) → Staging (validação) → Prod (clientes)
 
 **Analogia:** Dev = cozinha de teste. Staging = degustação interna. Prod = restaurante aberto ao público.
 
-No teu caso, staging parece **não estar ativo** — `.env.staging` tem domínios `example.com` placeholder e script `deploy-to-staging.sh` aponta pra VPS genérica. Prod no Render e dev local estão funcionando.
+No teu caso, staging parece **não estar ativo**, `.env.staging` tem domínios `example.com` placeholder e script `deploy-to-staging.sh` aponta pra VPS genérica. Prod no Render e dev local estão funcionando.
 
 ### User Input
 
@@ -460,7 +460,7 @@ Staging existe só como **esqueleto**. Tudo placeholder, nada ativo:
 
 | Arquivo | Conteúdo | Veredicto |
 |---|---|---|
-| `.env.staging` | Domínios `example.com` — nunca preenchido | 🗑️ Lixo |
+| `.env.staging` | Domínios `example.com` - nunca preenchido | 🗑️ Lixo |
 | `deploy/deploy-to-staging.sh` | Script genérico, VPS hardcoded | 🗑️ Nunca usado |
 | `deploy/preflight-checklist.sh` | Referencia staging como opção | Menção genérica |
 | `deploy/rollback.sh` | Referencia staging como opção | Menção genérica |
@@ -470,7 +470,7 @@ Staging existe só como **esqueleto**. Tudo placeholder, nada ativo:
 
 **Nada funcional.** Tudo foi gerado "pra quando precisar" mas nunca configurado.
 
-Quer que eu delete `.env.staging` e `deploy/deploy-to-staging.sh`? Os outros scripts de deploy (`rollback.sh`, `health-check.sh`, `preflight-checklist.sh`) mencionam staging como opção mas servem pra prod também — deixaria.
+Quer que eu delete `.env.staging` e `deploy/deploy-to-staging.sh`? Os outros scripts de deploy (`rollback.sh`, `health-check.sh`, `preflight-checklist.sh`) mencionam staging como opção mas servem pra prod também, deixaria.
 
 ### User Input
 
@@ -502,7 +502,7 @@ Grep case-insensitive não achou nada nos outros scripts. A busca anterior prova
 
 ### Planner Response
 
-Menções só nos QA tests (inofensivas — `STAGING_URL` é variável que faz fallback pra `localhost:3001`). Não preciso alterar esses — são genéricos.
+Menções só nos QA tests (inofensivas, `STAGING_URL` é variável que faz fallback pra `localhost:3001`). Não preciso alterar esses, são genéricos.
 
 Agora deletar os dois arquivos staging-específicos:
 
@@ -527,16 +527,16 @@ Já não existia. Verificação final:
 Limpo. Resumo:
 
 **Deletados:**
-- `.env.staging` — placeholder nunca usado
-- `deploy/deploy-to-staging.sh` — script nunca ativo
+- `.env.staging` - placeholder nunca usado
+- `deploy/deploy-to-staging.sh` - script nunca ativo
 
-**Resultado final — env files:**
-- `.env.local` — dev
-- `.env.production` — prod
-- `.env.example` — template (commitável)
-- `backend/.env.test` — testes
+**Resultado final, env files:**
+- `.env.local` - dev
+- `.env.production` - prod
+- `.env.example` - template (commitável)
+- `backend/.env.test` - testes
 
-**Deploy scripts restantes** (`health-check.sh`, `rollback.sh`, `preflight-checklist.sh`, `init-database.sql`) — sem menção a staging, servem pra prod.
+**Deploy scripts restantes** (`health-check.sh`, `rollback.sh`, `preflight-checklist.sh`, `init-database.sql`), sem menção a staging, servem pra prod.
 
 ### User Input
 
@@ -610,8 +610,8 @@ Para VS Code/Copilot, cria assim:
 
 - 📋 **Ver logs** em tempo real
 - 📊 **Métricas** (CPU, memória, tráfego)
-- 🚀 **Deploys** — histórico e trigger
-- 🗄️ **Database** — queries diretas no Postgres
+- 🚀 **Deploys**, histórico e trigger
+- 🗄️ **Database**, queries diretas no Postgres
 - ⚙️ **Gerenciar** serviços
 
 ## 4. Reiniciar editor
@@ -691,7 +691,7 @@ Write-Host "Claude Desktop MCP config updated"`*
 
 ### Planner Response
 
-Agora Antigravity. O formato pode ser diferente — vou verificar:
+Agora Antigravity. O formato pode ser diferente, vou verificar:
 
 *Searched web for Antigravity IDE MCP configuration file location format google deepmind*
 
@@ -726,9 +726,9 @@ Tudo configurado. Resumo:
 
 **MCPs configurados em todos:**
 - **Render** → `https://mcp.render.com/mcp` (autenticado com API key)
-- **Sentry** → `https://mcp.sentry.dev/mcp` (OAuth — vai pedir login no browser na primeira vez)
+- **Sentry** → `https://mcp.sentry.dev/mcp` (OAuth, vai pedir login no browser na primeira vez)
 
 **Próximos passos pra ativar:**
 1. **Reiniciar** VS Code, Claude Desktop e Antigravity
-2. **Sentry**: na primeira vez que usar, vai abrir browser pedindo login na tua conta Sentry — autoriza e pronto
+2. **Sentry**: na primeira vez que usar, vai abrir browser pedindo login na tua conta Sentry, autoriza e pronto
 3. **Render** já funciona direto (API key embutida)

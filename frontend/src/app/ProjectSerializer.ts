@@ -161,7 +161,7 @@ export class ProjectSerializer {
         description: '',
         created: Date.now(),
         modified: Date.now(),
-        author: 'ArxisVR',
+        author: 'Arxis',
         projectVersion: this.currentVersion,
         versionHistory: this.versionHistory
       },
@@ -212,7 +212,7 @@ export class ProjectSerializer {
     scene: THREE.Scene,
     camera: THREE.Camera,
     description: string,
-    author: string = 'ArxisVR',
+    author: string = 'Arxis',
     changes: VersionChange[] = []
   ): ProjectVersion {
     // Incrementa versão

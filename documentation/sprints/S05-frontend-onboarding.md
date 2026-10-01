@@ -1,7 +1,9 @@
-# S05 · Frontend — Onboarding e Dashboard
+# S05 · Frontend: Onboarding e Dashboard
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Dashboard e onboarding no ar.
 **Depende de:** S01 (auth), S03 (projetos), S04 (billing)  
 **Bloqueia:** S09 (viewer precisar de shell de navegação)
 
@@ -17,7 +19,7 @@ Primeiro contato do usuário com o produto. Fluxo de criação de conta → dash
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Viewer IFC (S09)
 - Comparação de cenários (S18, S30)
@@ -39,7 +41,7 @@ Novo usuário deve conseguir:
 
 em **menos de 2 minutos, sem documentação e sem suporte.**
 
-(Substitui a métrica vaga de "< 3 cliques" — mensurável e centrada em valor, não em cliques.)
+(Substitui a métrica vaga de "< 3 cliques", mensurável e centrada em valor, não em cliques.)
 
 ---
 
@@ -104,11 +106,11 @@ frontend/src/
 
 ### Regra do Shell
 
-`Shell.ts` é **apenas layout**. Não pode importar `projects`, `models`, `billing` nem `scenarios`. Qualquer dado é injetado via children/props — nunca buscado dentro do Shell.
+`Shell.ts` é **apenas layout**. Não pode importar `projects`, `models`, `billing` nem `scenarios`. Qualquer dado é injetado via children/props, nunca buscado dentro do Shell.
 
 ---
 
-## Empty state — copy
+## Empty state: copy
 
 ```
 "Transforme seu modelo BIM em cenários de prazo e custo."
@@ -116,7 +118,7 @@ frontend/src/
 [Botão primário: "Fazer upload de modelo IFC"]
 ```
 
-O empty state vende **valor (IFC → decisão)**, não a ação de upload. É a primeira coisa que um cliente enterprise vê numa demo — precisa comunicar a tese do produto.
+O empty state vende **valor (IFC → decisão)**, não a ação de upload. É a primeira coisa que um cliente enterprise vê numa demo, precisa comunicar a tese do produto.
 
 ---
 

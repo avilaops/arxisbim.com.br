@@ -4,6 +4,8 @@
  * Service para colaboração em tempo real multi-usuário
  */
 
+import { resolveWsUrl } from '../../config/site.config';
+
 import type {
   RoomOptions,
   UserSession,
@@ -31,7 +33,7 @@ export class MultiplayerRealtimeService {
   private static readonly MAX_RECONNECT_ATTEMPTS = 5;
   private static readonly RECONNECT_DELAY = 2000;
   private static lastConnectArgs: { roomId: string; user: UserSession & { accessToken?: string } } | null = null;
-  /** Keepalive: ping a cada 25s para evitar sleep do Render free tier */
+  /** Ping a cada 25s para a conexão não ser derrubada por ociosidade. */
   private static keepaliveTimer: ReturnType<typeof setInterval> | null = null;
 
   // Event callbacks
@@ -207,9 +209,10 @@ export class MultiplayerRealtimeService {
     }
     this.emitConnectionState('connecting');
 
-    // Use env var — fallback to same-host port 3002 (signaling server)
+    // Env var manda; o default sai de site.config.ts (o WS é servido pelo
+    // mesmo host da API, não há signaling separado em produção).
     const wsBase = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_WS_URL)
-      || `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:3002`;
+      || resolveWsUrl();
     const wsUrl = wsBase;
 
     return new Promise((resolve, reject) => {
@@ -219,7 +222,9 @@ export class MultiplayerRealtimeService {
         console.log('[Multiplayer] WebSocket connected to', wsUrl);
         this.reconnectAttempts = 0;
 
-        // Keepalive: ping a cada 25s para não dormir no Render free
+        // Ping a cada 25s. Nasceu para não dormir no free tier do Render, que
+        // não existe mais, mas continua ganhando o lugar: sem tráfego o Caddy
+        // derruba a conexão ociosa e o usuário perde a sala sem aviso.
         if (this.keepaliveTimer) clearInterval(this.keepaliveTimer);
         this.keepaliveTimer = setInterval(() => {
           if (this.socket?.readyState === WebSocket.OPEN) {

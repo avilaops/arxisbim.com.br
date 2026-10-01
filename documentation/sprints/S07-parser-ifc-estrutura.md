@@ -1,7 +1,9 @@
-# S07 · Parser IFC — Estrutura Base
+# S07 · Parser IFC: Estrutura Base
 
 **Fase:** IFC Core  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Parser usado pelo upload.
 **Depende de:** S02 (storage para ler arquivo), S03 (model_version ID)  
 **Bloqueia:** S08 (geometria), S11 (pipeline assíncrono), S13 (propriedades)
 
@@ -9,7 +11,7 @@
 
 ## Objetivo
 
-Extrair a hierarquia espacial e o grafo de entidades de qualquer arquivo IFC. Sem geometria ainda — apenas estrutura e metadados.
+Extrair a hierarquia espacial e o grafo de entidades de qualquer arquivo IFC. Sem geometria ainda, apenas estrutura e metadados.
 
 > **Nota para o agente:** Este sprint **não existe para visualizar modelos.** Ele existe para transformar um arquivo IFC em um modelo de domínio estável do ArxisVR. Toda decisão deve favorecer consistência, extensibilidade e independência do parser subjacente antes de favorecer conveniência de implementação.
 
@@ -17,7 +19,7 @@ Extrair a hierarquia espacial e o grafo de entidades de qualquer arquivo IFC. Se
 
 ## Fora de Escopo
 
-O objetivo é **entender a estrutura, não desenhar o modelo.** Pertencem a sprints futuros — **não implementar aqui**:
+O objetivo é **entender a estrutura, não desenhar o modelo.** Pertencem a sprints futuros, **não implementar aqui**:
 
 - Renderização / meshes / materiais / texturas (S08)
 - Quantitativos (S20)
@@ -55,7 +57,7 @@ A estrutura de dados retornada pelo parser precisa ser projetada para ser persis
 
 ```typescript
 interface IFCStructure {
-  version: 1                  // versão do DTO — protege compat. futura (S13, S19)
+  version: 1                  // versão do DTO, protege compat. futura (S13, S19)
   schema: 'IFC2X3' | 'IFC4' | 'IFC4X3'
   projectName: string
   units: { length: string; area: string; volume: string }
@@ -63,8 +65,8 @@ interface IFCStructure {
   elements: IFCElement[]
   stats: {
     totalElements: number
-    byType: Record<string, number>        // { IfcWall: 423, IfcBeam: 88, ... }
-    byDiscipline: Record<string, number>  // { architecture: 1200, structure: 840, mep: 620 } — heurística inicial
+    byType: Record<string, number>        // { IfcWall: 423, IfcBeam: 88 ... }
+    byDiscipline: Record<string, number>  // { architecture: 1200, structure: 840, mep: 620 } - heurística inicial
     boundingBox: BoundingBox              // OBRIGATÓRIO
   }
 }
@@ -80,7 +82,7 @@ interface IFCElement {
 }
 ```
 
-> O JSONB persistido é **cache do parse**. A fonte de verdade é sempre o IFC original no storage — em caso de divergência, re-parse a partir do arquivo.
+> O JSONB persistido é **cache do parse**. A fonte de verdade é sempre o IFC original no storage, em caso de divergência, re-parse a partir do arquivo.
 
 ---
 

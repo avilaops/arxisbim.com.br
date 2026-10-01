@@ -183,11 +183,11 @@ Invoke-RestMethod -Uri "https://sentry.io/api/0/projects/avilaops/arxisvr/issues
 ```
 
 **Campos principais:**
-- `title` — descrição do erro
-- `count` — quantas vezes ocorreu
-- `lastSeen` — horário do último evento
-- `level` — erro / warning / info
-- `status` — resolved / unresolved
+- `title` - descrição do erro
+- `count` - quantas vezes ocorreu
+- `lastSeen` - horário do último evento
+- `level` - erro / warning / info
+- `status` - resolved / unresolved
 
 ### 3. Consultar Eventos de Uma Issue
 

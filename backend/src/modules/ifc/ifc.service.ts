@@ -5,10 +5,12 @@ import { leads } from '../../shared/database/schema/leads.js';
 import { emailService } from '../../core/email/email.service.js';
 import type { UploadIfcMetadataInput, UpdateIfcMetadataInput } from './ifc.schemas.js';
 import { IfcProcessingService } from './ifc-processing.service.js';
+import { assertIfcSchemaSupported } from './ifc-schema-support.js';
 import { IfcValidationService } from './ifc-validation.service.js';
 import { webhookService } from './webhook.service.js';
 import { cacheService, CacheService } from './cache.service.js';
 import { NotificationService } from '../notifications/notifications.service.js';
+import { frontendUrl } from '../../core/config/domains.js';
 import { storage, buildIfcKey, StorageError } from '../../core/storage/index.js';
 import { randomUUID } from 'crypto';
 
@@ -59,6 +61,9 @@ export class IfcService {
     if (!validation.valid) {
       throw new Error(`Invalid IFC file: ${validation.errors.join(', ')}`);
     }
+
+    // Rejeita esquemas fora do suporte do pipeline (IFC2X2 e anteriores) — 422
+    assertIfcSchemaSupported(fileBuffer);
 
     // Extract metadata from IFC file
     const extractedMetadata = await this.processingService.extractMetadata(fileBuffer);
@@ -516,12 +521,12 @@ export class IfcService {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatório de Qualidade IFC — ArxisVR</title>
+  <title>Relatório de Qualidade IFC — Arxis</title>
 </head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#ffffff;margin:0;padding:32px 0">
   <div style="max-width:600px;margin:0 auto;background:#111111;border:1px solid #222222;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
     <div style="background:linear-gradient(135deg,#007AFF,#C4B5F4);padding:40px;text-align:center">
-      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;letter-spacing:-0.5px">ArxisVR</h1>
+      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;letter-spacing:-0.5px">Arxis</h1>
       <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:15px">Relatório de Diagnóstico de Qualidade BIM</p>
     </div>
     
@@ -566,14 +571,14 @@ export class IfcService {
 
       <div style="text-align:center;margin-top:40px">
         <p style="color:#aaaaaa;font-size:14px;margin-bottom:20px">Quer visualizar este modelo em 3D, simular o cronograma de obras 4D ou coordenar com sua equipe?</p>
-        <a href="https://arxisvr.avilaops.com/register" style="display:inline-block;padding:14px 28px;background:#007AFF;color:#ffffff;text-decoration:none;border-radius:24px;font-weight:600;font-size:14px">
+        <a href="${frontendUrl('/register')}" style="display:inline-block;padding:14px 28px;background:#007AFF;color:#ffffff;text-decoration:none;border-radius:24px;font-weight:600;font-size:14px">
           Criar Conta Grátis na Plataforma
         </a>
       </div>
     </div>
     
     <div style="background:#0a0a0a;padding:24px;text-align:center;border-top:1px solid #222222;font-size:12px;color:#555555">
-      © 2026 ArxisVR by AvilaOps. Todos os direitos reservados.
+      © 2026 Arxis by AvilaOps. Todos os direitos reservados.
     </div>
   </div>
 </body>

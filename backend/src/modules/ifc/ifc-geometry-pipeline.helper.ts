@@ -26,15 +26,20 @@ export async function processModelGeometry(
     }
 
     // 2. Set status to processing
+    //
+    // O status vai nas COLUNAS `status` e `processing_error` da tabela, nao
+    // dentro do jsonb `metadata`. Antes ia nos dois lugares errados: o tipo de
+    // `metadata` nao tem `status` nem `error` (por isso os erros de
+    // type-check), e ninguem lia `metadata.status` em lugar nenhum, entao
+    // aquele valor era gravado e nunca consultado. Quem le de verdade e a
+    // coluna `status`, que ja existe desde a migration 053.
     const currentMetadata = model.metadata || {};
     await tx
       .update(ifcModels)
       .set({
-        metadata: {
-          ...currentMetadata,
-          status: 'processing',
-          error: null,
-        },
+        status: 'processing',
+        processingError: null,
+        processingStartedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(ifcModels.id, ifcModelId));
@@ -43,7 +48,13 @@ export async function processModelGeometry(
       // 3. Download the IFC buffer from storage
       const storage = getStorage();
       const fileBuffer = await storage.download(model.fileUrl);
-      const arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
+      // `.buffer` de um Buffer do Node e tipado como ArrayBuffer |
+      // SharedArrayBuffer, e o parser so aceita ArrayBuffer. Na pratica nunca e
+      // compartilhado (vem de leitura de arquivo/rede), mas o TS nao tem como
+      // saber. `new Uint8Array(...).buffer` copia os bytes e devolve um
+      // ArrayBuffer de verdade, o que resolve os 5 erros de type-check sem
+      // `as any` escondendo o problema. A copia ja acontecia antes, no slice.
+      const arrayBuffer: ArrayBuffer = new Uint8Array(fileBuffer).buffer;
 
       // 4. Parse structural containment and elements
       const parser = new IfcParserStructureService();
@@ -113,10 +124,13 @@ export async function processModelGeometry(
       await tx
         .update(ifcModels)
         .set({
+          status: 'ready',
+          processingError: null,
+          processingCompletedAt: new Date(),
+          // O metadata continua guardando o que é do MODELO (esquema, contagem,
+          // limites). O que é do PROCESSAMENTO saiu daqui para as colunas.
           metadata: {
             ...currentMetadata,
-            status: 'ready',
-            error: null,
             elements: structure.elements.length,
             schema: structure.schema,
             application: structure.projectName,
@@ -135,11 +149,9 @@ export async function processModelGeometry(
       await tx
         .update(ifcModels)
         .set({
-          metadata: {
-            ...currentMetadata,
-            status: 'failed',
-            error: error.message || String(error),
-          },
+          status: 'failed',
+          processingError: error.message || String(error),
+          processingCompletedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(ifcModels.id, ifcModelId));

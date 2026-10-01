@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import { dashboardService, type DashboardData } from '@/services/dashboard.service'
@@ -68,8 +68,16 @@ function statusLabel(status: string): { label: string; color: string } {
     under_review: { label: 'Em revisão', color: '#a855f7' },
     completed: { label: 'Finalizado', color: '#6b7280' },
     archived: { label: 'Arquivado', color: '#6b7280' },
+    // Estados derivados da versao ativa do modelo (projects.service):
+    // sem modelo, enviando, processando, pronto, falhou.
+    empty: { label: 'Sem modelo', color: '#6b7280' },
+    uploading: { label: 'Enviando', color: '#f59e0b' },
+    processing: { label: 'Processando', color: '#3b82f6' },
+    ready: { label: 'Pronto', color: '#22c55e' },
+    failed: { label: 'Falhou', color: '#ef4444' },
   }
-  return map[status] || { label: status, color: '#6b7280' }
+  // Valor desconhecido nunca vai cru para a tela: o usuario nao le enum.
+  return map[status] || { label: 'Sem status', color: '#6b7280' }
 }
 
 // ── Skeleton pulse ──────────────────────────────────────────
@@ -96,6 +104,7 @@ function Skeleton({ width, height, borderRadius = 6 }: { width: string | number;
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const { hash } = useLocation()
   const [user, setUser] = useState<any>(null)
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -109,6 +118,14 @@ export default function DashboardPage() {
   const redirectedRef = useRef(false)
 
   // Auth check
+  // "Recentes" no menu e /dashboard#recentes: o conteudo rola dentro do .main,
+  // nao da janela, entao o browser nao rola sozinho ate o id.
+  useEffect(() => {
+    if (hash !== '#recentes') return
+    const alvo = document.getElementById('recentes')
+    if (alvo) alvo.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [hash, data])
+
   useEffect(() => {
     if (redirectedRef.current) return
     try {
@@ -236,9 +253,9 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <style>{pulseKeyframes}</style>
-      <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
+      <div className="dash-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         {/* Page header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+        <div className="dash-head" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <div style={{ fontSize: '11px', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>
               Bem-vindo de volta
@@ -249,15 +266,13 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
+              className="dash-cta"
               onClick={() => setCreateOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                height: '30px',
-                padding: '0 12px',
                 borderRadius: 'var(--r)',
-                fontSize: '12px',
                 fontWeight: 500,
                 color: 'var(--c-text2)',
                 background: 'var(--c-surface2)',
@@ -311,7 +326,7 @@ export default function DashboardPage() {
         )}
 
         {/* Analytics cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        <div className="dash-kpis" style={{ display: 'grid', gap: '10px' }}>
           {loading
             ? [0, 1, 2].map((i) => (
                 <div
@@ -366,6 +381,7 @@ export default function DashboardPage() {
 
         {/* Recent projects */}
         <div
+          id="recentes"
           style={{
             background: 'var(--c-surface2)',
             border: '1px solid var(--c-border)',
@@ -388,13 +404,12 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => void showAllProjects()}
+              className="dash-link"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '12px',
                 color: 'var(--c-blue)',
-                padding: '4px 8px',
                 borderRadius: 'var(--r)',
                 border: '1px solid rgba(59,130,246,0.25)',
                 transition: 'background .12s',

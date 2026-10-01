@@ -1,5 +1,11 @@
 # SPRINT-11-RESULT · Processamento Assíncrono + Observabilidade IFC
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **sim**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
+
 > Artefato pós-execução. Evidência coletada na sessão.
 
 **Sprint:** S11 · Processamento Assíncrono
@@ -13,13 +19,13 @@ Pipeline operacional **reutilizável** (spec: infra genérica, não específica 
 
 ## Arquivos
 
-- `shared/pipeline/stage-pipeline.ts` — **novo.** Runner genérico: ordem, timeout/etapa, retry 3x backoff exponencial, recorder/logger/metric injetáveis. Reusado por S20/S28/cenários.
-- `shared/database/schema/processing.ts` + `migrations/040_model_processing_runs.sql` — **novo.** Histórico durável por etapa.
-- `modules/ifc/ifc-pipeline.types.ts` — **novo.** `ProcessingStage` (6 etapas), `ModelStatus` (negócio), `STAGE_TIMEOUT_MS`.
-- `modules/ifc/ifc-pipeline.ts` — **novo.** Orquestra dedup + status + métricas `ifc_jobs_*`.
-- `modules/ifc/ifc-pipeline.recorder.ts` — **novo.** Impl drizzle (`DbStageRecorder`, `DrizzleModelStatusStore`).
+- `shared/pipeline/stage-pipeline.ts` - **novo.** Runner genérico: ordem, timeout/etapa, retry 3x backoff exponencial, recorder/logger/metric injetáveis. Reusado por S20/S28/cenários.
+- `shared/database/schema/processing.ts` + `migrations/040_model_processing_runs.sql` - **novo.** Histórico durável por etapa.
+- `modules/ifc/ifc-pipeline.types.ts` - **novo.** `ProcessingStage` (6 etapas), `ModelStatus` (negócio), `STAGE_TIMEOUT_MS`.
+- `modules/ifc/ifc-pipeline.ts` - **novo.** Orquestra dedup + status + métricas `ifc_jobs_*`.
+- `modules/ifc/ifc-pipeline.recorder.ts` - **novo.** Impl drizzle (`DbStageRecorder`, `DrizzleModelStatusStore`).
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|
@@ -33,14 +39,14 @@ Pipeline operacional **reutilizável** (spec: infra genérica, não específica 
 | Log JSON com `stage` + `duration_ms` por etapa | ✅ | `logger.info({stage,duration_ms})` no runner |
 | Build e lint | ✅ | tsc 0, 9 testes verdes |
 | `POST /models` 202 < 100ms | 🟡 infra | enfileira + retorna; precisa do worker/rota |
-| `GET /models/:id/status` SSE + polling 5s | 🟡 infra | rota HTTP — precisa Redis/transporte |
+| `GET /models/:id/status` SSE + polling 5s | 🟡 infra | rota HTTP, precisa Redis/transporte |
 | 5 uploads simultâneos sem perda / 200MB sem timeout | 🟡 infra | BullMQ+Redis (processos separados) |
 
-## Aberto (infra — precisa Redis)
+## Aberto (infra: precisa Redis)
 
 - BullMQ queue + worker (processo separado) consumindo `runPipeline`. Fallback síncrono em dev (spec) é trivial sobre o orquestrador.
 - Rota `GET /models/:id/status` (SSE + polling 5s).
-- Factory das 6 stages reais ligando `IfcParserStructureService` + `IfcGeometryPipelineService` (atual `buildGeometry` já faz serialize_glb+upload_glb juntos — separar p/ granularidade plena é refinamento).
+- Factory das 6 stages reais ligando `IfcParserStructureService` + `IfcGeometryPipelineService` (atual `buildGeometry` já faz serialize_glb+upload_glb juntos, separar p/ granularidade plena é refinamento).
 - Pool de workers do S07/S08: spec usa **processos separados** (BullMQ) → isolamento por processo cobre o "worker frio"; thread-pool intra-processo vira refinamento de perf.
 
 ## Schema/migrations (mantra)

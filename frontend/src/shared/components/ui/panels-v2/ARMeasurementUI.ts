@@ -228,7 +228,7 @@ export class ARMeasurementUI {
     const points = this.currentMeasurement.points;
     
     switch (this.mode) {
-      case 'distance':
+      case 'distance': {
         const p1 = points[0];
         const p2 = points[points.length - 1];
         this.currentMeasurement.value = Math.sqrt(
@@ -237,6 +237,7 @@ export class ARMeasurementUI {
           Math.pow(p2.z - p1.z, 2)
         );
         break;
+      }
       case 'area':
       case 'volume':
       case 'angle':

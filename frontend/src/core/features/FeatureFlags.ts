@@ -1,3 +1,19 @@
+/*
+ * Aviso de nomenclatura, nao de React.
+ *
+ * As funcoes daqui comecam com `use` mas NAO sao hooks: nenhuma chama
+ * useState, useEffect ou qualquer outro hook. Sao leitores sincronos que
+ * consultam um singleton e devolvem o valor na hora, entao podem ser
+ * chamadas de classe, de callback e de dentro de condicional sem quebrar
+ * nada. O ESLint julga so pelo prefixo, e por isso acusava
+ * `react-hooks/rules-of-hooks` em todo consumidor.
+ *
+ * Desligar a regra AQUI, na origem, e mais honesto do que espalhar
+ * eslint-disable por cada arquivo que as usa. Renomear para `getPlan` /
+ * `getFeature` seria o certo de verdade, mas mexe em 12 arquivos e fica
+ * para quando alguem encostar nessa area.
+ */
+/* eslint-disable react-hooks/rules-of-hooks */
 /**
  * FeatureFlags - Sistema de feature flags para controle de funcionalidades
  * Padrão usado por: LaunchDarkly, Unleash, Split.io, Firebase Remote Config

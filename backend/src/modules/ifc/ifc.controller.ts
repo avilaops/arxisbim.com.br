@@ -8,6 +8,7 @@ import {
 } from './ifc.schemas.js';
 import { ZodError } from 'zod';
 import { assertFileWithinPlan, assertStorageWithinPlan, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
+import { UnsupportedIfcSchemaError } from './ifc-schema-support.js';
 
 type AuthenticatedRequest = FastifyRequest & {
   user: {
@@ -93,9 +94,17 @@ export class IfcController {
       }
 
       if (error instanceof ZodError) {
-        return reply.code(400).send({ 
-          error: 'Validation error', 
-          details: error.issues 
+        return reply.code(400).send({
+          error: 'Validation error',
+          details: error.issues
+        });
+      }
+
+      if (error instanceof UnsupportedIfcSchemaError) {
+        return reply.code(error.statusCode).send({
+          error: error.message,
+          code: error.code,
+          schema: error.assessment.schema,
         });
       }
       throw error;
