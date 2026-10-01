@@ -17,6 +17,8 @@ export const createPortalSchema = z.object({
 export const changePlanSchema = z.object({
   plan: billingPlanSchema,
   billingCycle: billingCycleSchema,
+  /** Workspace alvo. Só o super-admin chega nesta rota; omitido, vale o dele. */
+  tenantId: z.string().min(1).max(255).optional(),
   status: z.enum(['trialing', 'active', 'past_due', 'grace_period', 'suspended', 'canceled', 'incomplete', 'unpaid']).default('active'),
   provider: z.string().min(1).max(50).default('internal'),
   providerSubscriptionId: z.string().max(255).optional(),

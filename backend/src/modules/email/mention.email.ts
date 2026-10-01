@@ -11,7 +11,7 @@ export function buildMentionEmailHtml(
 <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f5f7fa;margin:0;padding:32px 0">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">
     <div style="background:linear-gradient(135deg,#2563EB,#7C3AED);padding:32px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:24px;letter-spacing:-0.5px">ArxisVR</h1>
+      <h1 style="color:#fff;margin:0;font-size:24px;letter-spacing:-0.5px">Arxis</h1>
       <p style="color:rgba(255,255,255,.8);margin:8px 0 0;font-size:14px">Notificação de Menção</p>
     </div>
     <div style="padding:32px">

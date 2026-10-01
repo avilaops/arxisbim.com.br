@@ -175,15 +175,17 @@ export class AdvancedThemeSelector extends ThemeSelector {
         case 'name':
           return a.name.localeCompare(b.name);
         
-        case 'date':
+        case 'date': {
           const dateA = a.metadata?.createdAt || '';
           const dateB = b.metadata?.createdAt || '';
           return dateB.localeCompare(dateA);
+        }
         
-        case 'custom':
+        case 'custom': {
           const isCustomA = a.id.startsWith('custom-') ? 0 : 1;
           const isCustomB = b.id.startsWith('custom-') ? 0 : 1;
           return isCustomA - isCustomB;
+        }
         
         default:
           return 0;

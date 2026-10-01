@@ -49,7 +49,7 @@ export function createEmailQueueWorker(options: EmailQueueWorkerOptions) {
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
-      const from = `ArxisVR <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`;
+      const from = `Arxis <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`;
       return async (to: string, subject: string, html: string) => {
         const { error } = await resend.emails.send({ from, to, subject, html });
         if (error) throw new Error(error.message);
@@ -62,7 +62,7 @@ export function createEmailQueueWorker(options: EmailQueueWorkerOptions) {
     if (host && user && pass) {
       const port = parseInt(process.env.SMTP_PORT || '587', 10);
       const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
-      const from = `"ArxisVR" <${process.env.EMAIL_FROM || user}>`;
+      const from = `"Arxis" <${process.env.EMAIL_FROM || user}>`;
       return async (to: string, subject: string, html: string) => {
         await transporter.sendMail({ from, to, subject, html });
       };

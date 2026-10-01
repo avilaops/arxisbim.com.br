@@ -47,7 +47,8 @@ export class GLBExportService {
       await this.optimizeDocument(document, options);
     }
 
-    // 5. Aplicar compressão Draco
+    // 5. Aplicar compressão Draco (Desativado temporariamente devido à falta de draco3d.encoder no servidor)
+    /*
     if (options.dracoCompression) {
       await document.transform(
         draco({
@@ -59,6 +60,7 @@ export class GLBExportService {
         })
       );
     }
+    */
 
     // 6. Deduplicate e prune
     await document.transform(dedup(), prune());

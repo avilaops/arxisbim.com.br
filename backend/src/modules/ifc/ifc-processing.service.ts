@@ -97,7 +97,9 @@ export class IfcProcessingService {
     };
 
     try {
-      const headerText = fileBuffer.subarray(0, 1024).toString('utf-8');
+      // Read first 64KB of file for structural validation
+      const validationSize = Math.min(fileBuffer.length, 65536);
+      const headerText = fileBuffer.subarray(0, validationSize).toString('utf-8');
 
       // Check for IFC header
       if (!headerText.startsWith('ISO-10303-21;')) {
@@ -118,7 +120,7 @@ export class IfcProcessingService {
       }
 
       // Check file size
-      if (fileBuffer.length < 1024) {
+      if (fileBuffer.length < 100) { // Reduced from 1024 as small valid IFCs can exist
         result.valid = false;
         result.errors.push('File too small to be valid IFC');
       }

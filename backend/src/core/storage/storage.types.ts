@@ -27,8 +27,7 @@ import type { Readable } from 'node:stream';
  * For local storage, the key is resolved relative to UPLOAD_DIR.
  * For S3, the key is the object key inside S3_BUCKET.
  *
- * Backwards-compat: legacy absolute filesystem paths
- * (e.g. "D:\\AvilaOps\\...\\uploads\\ifc\\xyz.ifc") are still accepted
+ * Backwards-compat: legacy absolute filesystem paths are still accepted
  * by the local driver and resolved via path.basename().
  */
 export type StorageKey = string;
@@ -102,10 +101,24 @@ export interface StorageService {
   presignPut(key: StorageKey, opts?: PresignOptions): Promise<string>;
 }
 
+/**
+ * Codigos de erro do storage.
+ *
+ * `INVALID_ARGUMENT` e o que o driver local usa para recusar path traversal e
+ * caminho absoluto. Ele ja era lancado desde sempre, mas faltava no tipo, o que
+ * dava 3 dos 9 erros de type-check que passaram meses invisiveis (o build usa
+ * esbuild, que remove tipos sem checar).
+ */
+export type StorageErrorCode =
+  | 'NOT_FOUND'
+  | 'ACCESS_DENIED'
+  | 'INVALID_ARGUMENT'
+  | 'UNKNOWN';
+
 export class StorageError extends Error {
   constructor(
     message: string,
-    public readonly code: 'NOT_FOUND' | 'ACCESS_DENIED' | 'UNKNOWN',
+    public readonly code: StorageErrorCode,
     public readonly cause?: unknown
   ) {
     super(message);

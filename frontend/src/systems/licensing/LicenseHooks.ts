@@ -1,3 +1,19 @@
+/*
+ * Aviso de nomenclatura, nao de React.
+ *
+ * As funcoes daqui comecam com `use` mas NAO sao hooks: nenhuma chama
+ * useState, useEffect ou qualquer outro hook. Sao leitores sincronos que
+ * consultam um singleton e devolvem o valor na hora, entao podem ser
+ * chamadas de classe, de callback e de dentro de condicional sem quebrar
+ * nada. O ESLint julga so pelo prefixo, e por isso acusava
+ * `react-hooks/rules-of-hooks` em todo consumidor.
+ *
+ * Desligar a regra AQUI, na origem, e mais honesto do que espalhar
+ * eslint-disable por cada arquivo que as usa. Renomear para `getPlan` /
+ * `getFeature` seria o certo de verdade, mas mexe em 12 arquivos e fica
+ * para quando alguem encostar nessa area.
+ */
+/* eslint-disable react-hooks/rules-of-hooks */
 /**
  * Hooks React/TS para gerenciamento de features no frontend
  */
@@ -107,7 +123,7 @@ export function withFeature<P extends object>(
   requiredFeatures: Feature[],
   FallbackComponent?: React.ComponentType<{ missingFeatures: Feature[] }>
 ): React.ComponentType<P> {
-  return (props: P) => {
+  const ComponenteComLicenca = (props: P) => {
     const { allAvailable, missing } = useFeatures(requiredFeatures);
 
     if (allAvailable) {
@@ -120,6 +136,11 @@ export function withFeature<P extends object>(
 
     return null;
   };
+  // Sem displayName o componente embrulhado vira "Anonymous" no DevTools e nas
+  // stacks — justo quando se está investigando por que a feature sumiu.
+  ComponenteComLicenca.displayName = `withFeature(${Component.displayName || Component.name || 'Componente'})`;
+
+  return ComponenteComLicenca;
 }
 
 /**

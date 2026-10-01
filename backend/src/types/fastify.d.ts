@@ -15,8 +15,7 @@ declare module 'fastify' {
       tenantId: string;
       userId: string;
     };
-    startTime?: number;
-    rawBody?: string;
+    startTime?: number;
   }
 
   interface FastifyInstance {

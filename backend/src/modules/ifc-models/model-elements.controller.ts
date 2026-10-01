@@ -4,12 +4,22 @@ import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
-function getDb() {
+// Um pool por modulo, criado na primeira chamada. Ate 09/09/2026 isto abria
+// um `postgres()` NOVO a cada requisicao e nunca o fechava: cada chamada
+// deixava uma conexao ociosa no servidor ate o Postgres esgotar os 100 slots
+// ("remaining connection slots are reserved") e derrubar todos os apps da
+// maquina. O incidente de 09/09 foi este vazamento.
+let dbCache: ReturnType<typeof criarDb> | null = null;
+function criarDb() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL not configured');
   }
-  const client = postgres(process.env.DATABASE_URL);
+  const client = postgres(process.env.DATABASE_URL, { max: 4 });
   return drizzle(client, { schema: { modelElements, ifcModels } });
+}
+function getDb() {
+  if (!dbCache) dbCache = criarDb();
+  return dbCache;
 }
 
 export async function getModelElementsHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -134,5 +144,43 @@ export async function deleteModelElementHandler(request: FastifyRequest, reply: 
     reply.code(204).send();
   } catch (error) {
     reply.code(500).send({ error: 'Erro ao deletar elemento', details: String(error) });
+  }
+}
+
+export async function getModelElementByExpressIdHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { tenantId } = request.user as any;
+    const { modelId, expressId } = request.params as any;
+    if (!modelId || !expressId) {
+      return reply.code(400).send({ error: 'modelId e expressId são obrigatórios' });
+    }
+    const expressIdInt = parseInt(expressId, 10);
+    if (isNaN(expressIdInt)) {
+      return reply.code(400).send({ error: 'expressId deve ser um número inteiro' });
+    }
+
+    const db = getDb();
+
+    // Verify the IFC model belongs to the user's tenant
+    const [model] = await db.select({ id: ifcModels.id }).from(ifcModels).where(
+      and(eq(ifcModels.id, modelId), eq(ifcModels.tenantId, tenantId))
+    ).limit(1);
+
+    if (!model) {
+      return reply.code(404).send({ error: 'IFC model não encontrado ou sem acesso' });
+    }
+
+    // Query using the composite index
+    const [element] = await db.select().from(modelElements).where(
+      and(eq(modelElements.ifcModelId, modelId), eq(modelElements.expressId, expressIdInt))
+    ).limit(1);
+
+    if (!element) {
+      return reply.code(404).send({ error: 'Elemento não encontrado' });
+    }
+
+    reply.send(element);
+  } catch (error) {
+    reply.code(500).send({ error: 'Erro ao buscar elemento', details: String(error) });
   }
 }

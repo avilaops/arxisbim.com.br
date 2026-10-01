@@ -8,9 +8,9 @@ const mockUser = {
 
 const canManageBilling = vi.fn();
 const getWebhookOpsStatus = vi.fn();
-const listFailedStripeEvents = vi.fn();
-const reprocessStripeEvent = vi.fn();
-const processDueStripeRetries = vi.fn();
+const listFailedProviderEvents = vi.fn();
+const reprocessProviderEvent = vi.fn();
+const processDueProviderRetries = vi.fn();
 
 vi.mock('../../src/core/auth/middleware.js', () => ({
   authenticateRequest: async (request: any) => {
@@ -29,9 +29,9 @@ vi.mock('../../src/modules/billing/billing.service.js', () => ({
     listPlans: vi.fn(() => []),
     canManageBilling,
     getWebhookOpsStatus,
-    listFailedStripeEvents,
-    reprocessStripeEvent,
-    processDueStripeRetries,
+    listFailedProviderEvents,
+    reprocessProviderEvent,
+    processDueProviderRetries,
   },
 }));
 
@@ -79,7 +79,7 @@ describe('Billing Ops endpoints', () => {
   });
 
   it('GET /api/v1/billing/webhook/failed-events should clamp limit and return events', async () => {
-    listFailedStripeEvents.mockResolvedValue([
+    listFailedProviderEvents.mockResolvedValue([
       { eventId: 'evt_1', retryCount: 2, status: 'failed' },
     ]);
 
@@ -89,7 +89,7 @@ describe('Billing Ops endpoints', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(listFailedStripeEvents).toHaveBeenCalledWith(mockUser.tenantId, 100);
+    expect(listFailedProviderEvents).toHaveBeenCalledWith(mockUser.tenantId, 100);
 
     const body = response.json();
     expect(Array.isArray(body.events)).toBe(true);
@@ -97,7 +97,7 @@ describe('Billing Ops endpoints', () => {
   });
 
   it('POST /api/v1/billing/webhook/reprocess/:eventId should reprocess one event', async () => {
-    reprocessStripeEvent.mockResolvedValue({ reprocessed: true, eventId: 'evt_42' });
+    reprocessProviderEvent.mockResolvedValue({ reprocessed: true, eventId: 'evt_42' });
 
     const response = await server.inject({
       method: 'POST',
@@ -105,7 +105,7 @@ describe('Billing Ops endpoints', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(reprocessStripeEvent).toHaveBeenCalledWith('evt_42', mockUser.tenantId);
+    expect(reprocessProviderEvent).toHaveBeenCalledWith('evt_42', mockUser.tenantId);
 
     const body = response.json();
     expect(body.reprocessed).toBe(true);
@@ -113,7 +113,7 @@ describe('Billing Ops endpoints', () => {
   });
 
   it('POST /api/v1/billing/webhook/retry-due should process batch with normalized limit', async () => {
-    processDueStripeRetries.mockResolvedValue({
+    processDueProviderRetries.mockResolvedValue({
       processed: 2,
       succeeded: 2,
       failed: 0,
@@ -129,7 +129,7 @@ describe('Billing Ops endpoints', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(processDueStripeRetries).toHaveBeenCalledWith(mockUser.tenantId, 1);
+    expect(processDueProviderRetries).toHaveBeenCalledWith(mockUser.tenantId, 1);
 
     const body = response.json();
     expect(body.processed).toBe(2);

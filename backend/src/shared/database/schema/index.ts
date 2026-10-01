@@ -65,3 +65,6 @@ export * from './comments.js';
 // Sharing and Permissions (S17)
 export * from './sharing.js';
 
+// Lead Capture (Marketing/Prospecting)
+export * from './leads.js';
+

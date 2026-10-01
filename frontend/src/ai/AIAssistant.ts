@@ -78,7 +78,7 @@ export class AIAssistant {
 
   private constructor() {
     console.log('AI Assistant initialized');
-    this.addSystemMessage('Olá! Sou o assistente BIM do ArxisVR. Como posso apoiar sua revisão?');
+    this.addSystemMessage('Olá! Sou o assistente BIM do Arxis. Como posso apoiar sua revisão?');
   }
 
   static getInstance(): AIAssistant {

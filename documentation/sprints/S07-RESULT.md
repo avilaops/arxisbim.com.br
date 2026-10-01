@@ -1,8 +1,14 @@
-# SPRINT-07-RESULT · Parser IFC — Estrutura Base
+# SPRINT-07-RESULT · Parser IFC: Estrutura Base
+
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **sim**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
 
 > Artefato de memória pós-execução. Evidência verificável coletada na sessão de fechamento.
 
-**Sprint:** S07 · Parser IFC — Estrutura Base
+**Sprint:** S07 · Parser IFC, Estrutura Base
 **Status:** Concluído (núcleo + utopia mensurável). Pool de workers fica para S11.
 **Data de fechamento:** 2026-06-13
 **Commits:** `345e344`, `c4e5707`, `8872e91`, `3542bba`, `646d754`
@@ -11,17 +17,17 @@
 
 ## Objetivo (entregue?)
 
-Transformar qualquer arquivo IFC num modelo de domínio estável (`IFCStructure`) — hierarquia espacial, grafo de entidades, stats e bounding box. Sem geometria de render. **Entregue e validado em 3 schemas reais.**
+Transformar qualquer arquivo IFC num modelo de domínio estável (`IFCStructure`), hierarquia espacial, grafo de entidades, stats e bounding box. Sem geometria de render. **Entregue e validado em 3 schemas reais.**
 
 ## Arquivos
 
-- `src/modules/ifc/ifc-structure.dto.ts` — **novo.** DTO `IFCStructure` versionado (`version:1`); doc: bbox sempre metros, `units` = autoria.
-- `src/modules/ifc/ifc-structure.builder.ts` — **novo.** Helpers puros: `classifyDiscipline`, `buildStats`, `createBBoxAccumulator` (bbox in-place, zero alloc/vértice), `mergeBoundingBox`, `boundingBoxFromPoints`.
-- `src/modules/ifc/ifc-parser.worker.ts` — **novo.** web-ifc (WASM) em `worker_threads`: schema, árvore espacial, enumeração completa por `GetLineIDsWithType`, bbox geométrico via `StreamAllMeshes`, dedup GlobalId, units do `IfcUnitAssignment`.
-- `src/modules/ifc/ifc-parser-structure.service.ts` — **novo.** Spawna worker, timeout 60s, ArrayBuffer transferível, handlers `error`/`exit`, logs formato S06.
+- `src/modules/ifc/ifc-structure.dto.ts` - **novo.** DTO `IFCStructure` versionado (`version:1`); doc: bbox sempre metros, `units` = autoria.
+- `src/modules/ifc/ifc-structure.builder.ts` - **novo.** Helpers puros: `classifyDiscipline`, `buildStats`, `createBBoxAccumulator` (bbox in-place, zero alloc/vértice), `mergeBoundingBox`, `boundingBoxFromPoints`.
+- `src/modules/ifc/ifc-parser.worker.ts` - **novo.** web-ifc (WASM) em `worker_threads`: schema, árvore espacial, enumeração completa por `GetLineIDsWithType`, bbox geométrico via `StreamAllMeshes`, dedup GlobalId, units do `IfcUnitAssignment`.
+- `src/modules/ifc/ifc-parser-structure.service.ts` - **novo.** Spawna worker, timeout 60s, ArrayBuffer transferível, handlers `error`/`exit`, logs formato S06.
 - `web-ifc@0.0.77` adicionado ao backend.
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|

@@ -27,7 +27,11 @@ export class IfcParseError extends Error {
 }
 
 function workerUrl(): URL {
-  // Em prod o worker compilado fica ao lado deste service (dist/modules/ifc/).
+  const isTs = import.meta.url.endsWith('.ts') || import.meta.url.includes('/src/');
+  if (isTs) {
+    const base = import.meta.url.replace('/src/', '/dist/').replace('.ts', '.js');
+    return new URL('./ifc-parser.worker.js', base);
+  }
   return new URL('./ifc-parser.worker.js', import.meta.url);
 }
 
@@ -100,8 +104,8 @@ export class IfcParserStructureService {
         reject(new IfcParseError('IFC_WORKER_EXIT', `worker saiu com código ${code} antes de responder`));
       });
 
-      // ArrayBuffer transferível: evita copiar o arquivo inteiro p/ o worker.
-      worker.postMessage(req, [req.buffer]);
+      // Use structured clone instead of transfer list to keep the buffer available in the main thread
+      worker.postMessage(req);
     });
   }
 }

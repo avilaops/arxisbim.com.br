@@ -266,7 +266,7 @@ export default function CreateApiTokenModal({
               Criar acesso de integração
             </h2>
             <p style={{ color: C.muted, fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
-              Conecte o ArxisVR a uma ferramenta externa.<br />
+              Conecte o Arxis a uma ferramenta externa.<br />
               Escolha somente os acessos necessários.
             </p>
           </div>

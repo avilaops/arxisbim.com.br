@@ -8,6 +8,7 @@ import {
 } from './ifc.schemas.js';
 import { ZodError } from 'zod';
 import { assertFileWithinPlan, assertStorageWithinPlan, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
+import { UnsupportedIfcSchemaError } from './ifc-schema-support.js';
 
 type AuthenticatedRequest = FastifyRequest & {
   user: {
@@ -93,9 +94,17 @@ export class IfcController {
       }
 
       if (error instanceof ZodError) {
-        return reply.code(400).send({ 
-          error: 'Validation error', 
-          details: error.issues 
+        return reply.code(400).send({
+          error: 'Validation error',
+          details: error.issues
+        });
+      }
+
+      if (error instanceof UnsupportedIfcSchemaError) {
+        return reply.code(error.statusCode).send({
+          error: error.message,
+          code: error.code,
+          schema: error.assessment.schema,
         });
       }
       throw error;
@@ -332,5 +341,42 @@ export class IfcController {
     const results = await this.ifcService.batchDeleteIfcs(ids, user.tenantId);
 
     return reply.send(results);
+  }
+
+  /**
+   * Public IFC validation and lead capture
+   * POST /api/v1/ifc/public-check
+   */
+  async checkPublicIfc(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const data = await (request as any).file();
+      if (!data) {
+        return reply.code(400).send({ error: 'Nenhum arquivo enviado.' });
+      }
+
+      const name = (data.fields as any).name?.value;
+      const email = (data.fields as any).email?.value;
+      const company = (data.fields as any).company?.value;
+
+      if (!name || !email) {
+        return reply.code(400).send({ error: 'Nome e E-mail são obrigatórios.' });
+      }
+
+      const fileBuffer = await data.toBuffer();
+      const filename = data.filename || 'modelo.ifc';
+
+      const result = await this.ifcService.checkPublicIfc(
+        fileBuffer,
+        filename,
+        email,
+        name,
+        company || ''
+      );
+
+      return reply.code(200).send(result);
+    } catch (error: any) {
+      console.error('[checkPublicIfc] error:', error);
+      return reply.code(500).send({ error: error.message || 'Erro interno ao processar arquivo.' });
+    }
   }
 }

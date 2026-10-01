@@ -18,7 +18,7 @@ describe('billing retry worker', () => {
     vi.useFakeTimers();
 
     const onSweepSuccess = vi.fn();
-    const processDueStripeRetries = vi.fn().mockResolvedValue({
+    const processDueRetries = vi.fn().mockResolvedValue({
       processed: 1,
       succeeded: 1,
       failed: 0,
@@ -30,15 +30,15 @@ describe('billing retry worker', () => {
       intervalMs: 1000,
       batchSize: 7,
       logger,
-      processDueStripeRetries,
+      processDueRetries,
       onSweepSuccess,
     });
 
     worker.start();
     await vi.advanceTimersByTimeAsync(0);
 
-    expect(processDueStripeRetries).toHaveBeenCalledTimes(1);
-    expect(processDueStripeRetries).toHaveBeenLastCalledWith(undefined, 7);
+    expect(processDueRetries).toHaveBeenCalledTimes(1);
+    expect(processDueRetries).toHaveBeenLastCalledWith(undefined, 7);
     expect(onSweepSuccess).toHaveBeenCalledTimes(1);
 
     const statusAfterFirstRun = worker.getStatus();
@@ -50,7 +50,7 @@ describe('billing retry worker', () => {
 
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(processDueStripeRetries).toHaveBeenCalledTimes(2);
+    expect(processDueRetries).toHaveBeenCalledTimes(2);
     expect(worker.isStarted()).toBe(true);
 
     worker.stop();
@@ -66,7 +66,7 @@ describe('billing retry worker', () => {
       resolveFirstRun = resolve;
     });
 
-    const processDueStripeRetries = vi
+    const processDueRetries = vi
       .fn()
       .mockReturnValueOnce(firstRunPromise)
       .mockResolvedValue({ processed: 0, succeeded: 0, failed: 0 });
@@ -78,19 +78,19 @@ describe('billing retry worker', () => {
       intervalMs: 1000,
       batchSize: 5,
       logger,
-      processDueStripeRetries,
+      processDueRetries,
     });
 
     worker.start();
     await vi.advanceTimersByTimeAsync(0);
 
-    expect(processDueStripeRetries).toHaveBeenCalledTimes(1);
+    expect(processDueRetries).toHaveBeenCalledTimes(1);
     expect(worker.isRunning()).toBe(true);
 
     await vi.advanceTimersByTimeAsync(3000);
 
     // still one call because first run has not resolved yet
-    expect(processDueStripeRetries).toHaveBeenCalledTimes(1);
+    expect(processDueRetries).toHaveBeenCalledTimes(1);
 
     resolveFirstRun?.();
     await Promise.resolve();
@@ -99,7 +99,7 @@ describe('billing retry worker', () => {
     expect(worker.isRunning()).toBe(false);
 
     await vi.advanceTimersByTimeAsync(1000);
-    expect(processDueStripeRetries).toHaveBeenCalledTimes(2);
+    expect(processDueRetries).toHaveBeenCalledTimes(2);
 
     worker.stop();
   });
@@ -107,7 +107,7 @@ describe('billing retry worker', () => {
   it('stays idle when disabled', async () => {
     vi.useFakeTimers();
 
-    const processDueStripeRetries = vi.fn().mockResolvedValue({
+    const processDueRetries = vi.fn().mockResolvedValue({
       processed: 0,
       succeeded: 0,
       failed: 0,
@@ -119,13 +119,13 @@ describe('billing retry worker', () => {
       intervalMs: 1000,
       batchSize: 3,
       logger,
-      processDueStripeRetries,
+      processDueRetries,
     });
 
     worker.start();
     await vi.advanceTimersByTimeAsync(5000);
 
-    expect(processDueStripeRetries).not.toHaveBeenCalled();
+    expect(processDueRetries).not.toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith('Billing retry worker disabled by env');
     expect(worker.isStarted()).toBe(false);
   });
@@ -134,7 +134,7 @@ describe('billing retry worker', () => {
     vi.useFakeTimers();
 
     const onSweepError = vi.fn();
-    const processDueStripeRetries = vi.fn().mockRejectedValue(new Error('retry boom'));
+    const processDueRetries = vi.fn().mockRejectedValue(new Error('retry boom'));
     const logger = createLogger();
 
     const worker = createBillingRetryWorker({
@@ -142,7 +142,7 @@ describe('billing retry worker', () => {
       intervalMs: 1000,
       batchSize: 3,
       logger,
-      processDueStripeRetries,
+      processDueRetries,
       onSweepError,
     });
 

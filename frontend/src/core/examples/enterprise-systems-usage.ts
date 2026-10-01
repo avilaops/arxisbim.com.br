@@ -1,3 +1,6 @@
+// Arquivo de exemplo, nao entra no bundle. `useFeatureFlag` tambem nao e hook
+// de React: e leitura sincrona do singleton de flags (ver core/features).
+/* eslint-disable react-hooks/rules-of-hooks */
 /**
  * Enterprise Systems Usage Examples
  * Demonstra como usar os sistemas de nível mundial implementados

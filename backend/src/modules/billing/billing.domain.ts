@@ -1,4 +1,5 @@
 import type { BillingStatus } from '../../shared/database/schema/billing.js';
+import type { ProviderSubscriptionStatus } from './providers/billing-provider.js';
 
 export const BILLING_STATUS_TRANSITIONS: Record<BillingStatus, BillingStatus[]> = {
   trialing: ['active', 'past_due', 'grace_period', 'canceled', 'incomplete', 'unpaid'],
@@ -11,14 +12,23 @@ export const BILLING_STATUS_TRANSITIONS: Record<BillingStatus, BillingStatus[]> 
   unpaid: ['active', 'canceled', 'suspended'],
 };
 
-export const STRIPE_WEBHOOK_EVENTS = {
-  checkoutCompleted: 'checkout.session.completed',
-  subscriptionCreated: 'customer.subscription.created',
-  subscriptionUpdated: 'customer.subscription.updated',
-  subscriptionDeleted: 'customer.subscription.deleted',
-  invoicePaid: 'invoice.paid',
-  invoicePaymentFailed: 'invoice.payment_failed',
+/**
+ * Tópicos de notificação do provedor de cobrança (Mercado Pago):
+ * - assinatura: estado do preapproval mudou (autorizada, pausada, cancelada)
+ * - cobrança: uma parcela recorrente foi processada (aprovada ou recusada)
+ */
+export const PROVIDER_WEBHOOK_TOPICS = {
+  subscription: 'subscription_preapproval',
+  charge: 'subscription_authorized_payment',
 } as const;
+
+/** Estado da assinatura no provedor → estado da assinatura no ArxisVR. */
+export const PROVIDER_STATUS_MAP: Record<ProviderSubscriptionStatus, BillingStatus> = {
+  pending: 'incomplete',
+  authorized: 'active',
+  paused: 'suspended',
+  cancelled: 'canceled',
+};
 
 export const BILLING_ENTITLEMENT_KEYS = {
   maxUsers: 'max_users',

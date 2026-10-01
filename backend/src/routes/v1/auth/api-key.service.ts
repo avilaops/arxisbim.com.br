@@ -35,7 +35,7 @@ export class ApiKeyService {
   private db;
 
   constructor() {
-    const client = postgres(process.env.DATABASE_URL!);
+    const client = postgres(process.env.DATABASE_URL!, { max: 3 });
     this.db = drizzle(client, { schema: { apiKeys } });
   }
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-// @ts-ignore - web-ifc-three pode não ter tipos completos
+// @ts-expect-error - web-ifc-three pode não ter tipos completos
 import { IFCLoader as ThreeIFCLoader } from 'web-ifc-three';
 import { LODSystem } from '../systems/LODSystem';
 import { LayerManager } from '../systems/layers/LayerManager';
@@ -23,23 +23,23 @@ export class IFCLoader {
     this.lodSystem = lodSystem;
     this.layerManager = layerManager || null;
     this.loader = new ThreeIFCLoader();
-    
+
     this.setupLoader();
   }
 
   private setupLoader(): void {
     // Define o caminho dos arquivos WASM - usando local
     this.loader.ifcManager.setWasmPath('/wasm/');
-    
+
     // Disable workers para evitar erros 404
     this.loader.ifcManager.useWebWorkers(false);
-    
+
     // Otimizações de memória
     this.loader.ifcManager.applyWebIfcConfig({
       COORDINATE_TO_ORIGIN: true, // Centraliza modelo na origem
       USE_FAST_BOOLS: true, // Usa operações booleanas rápidas
     });
-    
+
     console.log('✅ IFCLoader configured: WASM=/wasm/, Workers=DISABLED');
   }
 
@@ -47,24 +47,26 @@ export class IFCLoader {
    * Carrega arquivo IFC
    */
   public async loadIFC(file: File): Promise<void> {
-    return new Promise(async (resolve, reject) => {
+    // O await do sniff de versão sai de dentro do executor: executor `async`
+    // engole rejeição (o try/catch dele não alcança os callbacks assíncronos
+    // que ele registra), então a promise ficava pendurada para sempre quando
+    // a validação falhava depois do load.
+    const ifcVersion = await this.detectIFCVersion(file);
+    console.log(`📋 Detectada versão IFC: ${ifcVersion}`);
+
+    if (!this.isSupportedIFCVersion(ifcVersion)) {
+      throw new Error(`Versão IFC não suportada: ${ifcVersion}. Suportadas: IFC2X3, IFC4, IFC4X3`);
+    }
+
+    return new Promise((resolve, reject) => {
       try {
-        // Detecta versão IFC antes do carregamento
-        const ifcVersion = await this.detectIFCVersion(file);
-        console.log(`📋 Detectada versão IFC: ${ifcVersion}`);
-        
-        // Valida suporte à versão
-        if (!this.isSupportedIFCVersion(ifcVersion)) {
-          throw new Error(`Versão IFC não suportada: ${ifcVersion}. Suportadas: IFC2X3, IFC4, IFC4X3`);
-        }
-        
         const url = URL.createObjectURL(file);
-        
+
         // Callback de progresso
         const onProgress = (event: ProgressEvent) => {
           const progress = (event.loaded / event.total) * 100;
           this.updateLoadingProgress(progress);
-          
+
           const callback = this.loadingCallbacks.get(file.name);
           if (callback) callback(progress);
         };
@@ -79,25 +81,35 @@ export class IFCLoader {
         // Carrega o modelo
         this.loader.load(
           url,
-          async (model) => {
-            console.log('✅ IFC carregado com sucesso!');
-            
-            // Valida schema IFC
-            const isValid = await this.validateIFCSchema(ifcVersion);
-            if (!isValid) {
-              console.warn('⚠️ Modelo IFC pode ter problemas de conformidade');
-            }
+          (model) => {
+            // Callback do loader não é awaited por ninguém: qualquer rejeição
+            // aqui dentro vira unhandled rejection e a promise externa nunca
+            // sai do lugar. Por isso o próprio callback fecha o ciclo.
+            void (async () => {
+              try {
+                console.log('✅ IFC carregado com sucesso!');
 
-            // Verifica compliance OpenBIM
-            const complianceResult = await this.checkOpenBIMCompliance(ifcVersion);
-            if (!complianceResult.compliant) {
-              console.warn('⚠️ Modelo IFC não está totalmente compliant com OpenBIM');
-              console.warn('📋 Issues:', complianceResult.issues);
-            }
-            
-            this.processLoadedModel(model, ifcVersion);
-            URL.revokeObjectURL(url);
-            resolve();
+                // Valida schema IFC
+                const isValid = await this.validateIFCSchema(ifcVersion);
+                if (!isValid) {
+                  console.warn('⚠️ Modelo IFC pode ter problemas de conformidade');
+                }
+
+                // Verifica compliance OpenBIM
+                const complianceResult = await this.checkOpenBIMCompliance(ifcVersion);
+                if (!complianceResult.compliant) {
+                  console.warn('⚠️ Modelo IFC não está totalmente compliant com OpenBIM');
+                  console.warn('📋 Issues:', complianceResult.issues);
+                }
+
+                this.processLoadedModel(model, ifcVersion);
+                URL.revokeObjectURL(url);
+                resolve();
+              } catch (erro) {
+                URL.revokeObjectURL(url);
+                reject(erro);
+              }
+            })();
           },
           onProgress,
           onError
@@ -115,24 +127,24 @@ export class IFCLoader {
     // Obtém o modelID do modelo carregado
     const modelID = (model as any).modelID || this.currentModelID;
     console.log(`📋 Modelo IFC carregado - ID: ${modelID}`);
-    
+
     // Cria layers automáticos por tipo IFC se LayerManager disponível
     const layersByType = new Map<string, string>();
-    
+
     // Armazena modelID e expressID em todos os meshes
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         // Armazena IDs no userData para acesso posterior
         child.userData.modelID = modelID;
-        
+
         // Copia expressID se existir
         if ((child as any).expressID) {
           child.userData.expressID = (child as any).expressID;
-          
+
           // Se tem LayerManager, organiza por tipo
           if (this.layerManager) {
             const ifcType = this.detectIFCType(child);
-            
+
             // Cria layer para este tipo se não existe
             if (!layersByType.has(ifcType)) {
               const layer = this.layerManager.createLayer({
@@ -142,50 +154,54 @@ export class IFCLoader {
                 color: LayerManager.getDefaultColorForType(ifcType as IFCElementType),
                 visible: true,
                 locked: false,
-                plotable: true
+                plotable: true,
               });
               layersByType.set(ifcType, layer.id);
               console.log(`   ✅ Layer criado: ${ifcType}`);
             }
-            
+
             // Adiciona objeto ao layer
             const layerId = layersByType.get(ifcType)!;
             this.layerManager.addObjectToLayer(child, layerId);
           }
-          
-          console.log(`   Mesh ${child.name || 'sem nome'} - expressID: ${child.userData.expressID}`);
+
+          console.log(
+            `   Mesh ${child.name || 'sem nome'} - expressID: ${child.userData.expressID}`
+          );
         }
       }
     });
-    
+
     // Otimiza geometrias
     this.optimizeGeometries(model);
-    
+
     // Adiciona à cena
     this.scene.add(model);
     this.loadedModels.push(model);
-    
+
     // Incrementa modelID para próximo modelo
     this.currentModelID++;
-    
+
     // Registra no sistema LOD
     this.lodSystem.registerModel(model);
-    
+
     // Calcula bounding box para centralizar visualização
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    
+
     console.log('📦 Dimensões do modelo (escala 1:1):');
     console.log(`   Largura: ${size.x.toFixed(2)}m`);
     console.log(`   Altura: ${size.y.toFixed(2)}m`);
     console.log(`   Profundidade: ${size.z.toFixed(2)}m`);
-    console.log(`   Centro: (${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)})`);
-    
+    console.log(
+      `   Centro: (${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)})`
+    );
+
     if (this.layerManager) {
       console.log(`📚 ${layersByType.size} layers criados automaticamente`);
     }
-    
+
     // Atualiza UI
     this.updateModelInfo(model);
   }
@@ -196,18 +212,18 @@ export class IFCLoader {
   private detectIFCType(object: THREE.Object3D): string {
     // Tenta detectar pelo nome
     const name = object.name.toUpperCase();
-    
+
     for (const type of Object.values(IFCElementType)) {
       if (name.includes(type)) {
         return type;
       }
     }
-    
+
     // Tenta detectar pelo userData
     if (object.userData.ifcType) {
       return object.userData.ifcType;
     }
-    
+
     return IFCElementType.OTHER;
   }
 
@@ -215,16 +231,22 @@ export class IFCLoader {
    * Obtém categoria para tipo IFC
    */
   private getCategoryForType(type: string): string {
-    const structural = [IFCElementType.WALL, IFCElementType.SLAB, IFCElementType.BEAM, IFCElementType.COLUMN, IFCElementType.ROOF];
+    const structural = [
+      IFCElementType.WALL,
+      IFCElementType.SLAB,
+      IFCElementType.BEAM,
+      IFCElementType.COLUMN,
+      IFCElementType.ROOF,
+    ];
     const openings = [IFCElementType.DOOR, IFCElementType.WINDOW];
     const circulation = [IFCElementType.STAIR, IFCElementType.RAILING];
-    
+
     if (structural.includes(type as IFCElementType)) return 'Estrutura';
     if (openings.includes(type as IFCElementType)) return 'Aberturas';
     if (circulation.includes(type as IFCElementType)) return 'Circulação';
     if (type === IFCElementType.FURNITURE) return 'Mobiliário';
     if (type === IFCElementType.SPACE) return 'Espaços';
-    
+
     return 'Outros';
   }
 
@@ -263,7 +285,7 @@ export class IFCLoader {
         // Otimiza material
         if (child.material) {
           if (Array.isArray(child.material)) {
-            child.material.forEach(mat => this.optimizeMaterial(mat));
+            child.material.forEach((mat) => this.optimizeMaterial(mat));
           } else {
             this.optimizeMaterial(child.material);
           }
@@ -285,7 +307,7 @@ export class IFCLoader {
       material.roughness = 0.7;
       material.metalness = 0.1;
       material.envMapIntensity = 1.0;
-      
+
       // Habilita flat shading para objetos arquitetônicos (opcional)
       // material.flatShading = true;
     }
@@ -312,10 +334,10 @@ export class IFCLoader {
   public async getAllProperties(modelID: number, expressID: number): Promise<any> {
     try {
       console.log(`🔍 Buscando TODAS propriedades - ModelID: ${modelID}, ExpressID: ${expressID}`);
-      
+
       // Obtém propriedades básicas
       const properties = await this.loader.ifcManager.getItemProperties(modelID, expressID, true);
-      
+
       // Tenta obter Psets (Property Sets)
       try {
         const psets = await this.loader.ifcManager.getPropertySets(modelID, expressID, true);
@@ -326,7 +348,7 @@ export class IFCLoader {
       } catch (e) {
         console.warn('Nenhum Pset encontrado para este elemento');
       }
-      
+
       // Tenta obter tipo do elemento
       try {
         const type = await this.loader.ifcManager.getTypeProperties(modelID, expressID, true);
@@ -337,7 +359,7 @@ export class IFCLoader {
       } catch (e) {
         console.warn('Tipo do elemento não encontrado');
       }
-      
+
       console.log('✅ Todas propriedades carregadas:', properties);
       return properties;
     } catch (error) {
@@ -420,13 +442,13 @@ export class IFCLoader {
     if (index > -1) {
       this.loadedModels.splice(index, 1);
     }
-    
+
     // Limpa recursos
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.geometry.dispose();
         if (Array.isArray(child.material)) {
-          child.material.forEach(mat => mat.dispose());
+          child.material.forEach((mat) => mat.dispose());
         } else {
           child.material.dispose();
         }
@@ -438,7 +460,7 @@ export class IFCLoader {
    * Remove todos os modelos
    */
   public clear(): void {
-    this.loadedModels.forEach(model => this.removeModel(model));
+    this.loadedModels.forEach((model) => this.removeModel(model));
     this.loadedModels = [];
   }
 
@@ -452,7 +474,7 @@ export class IFCLoader {
         try {
           const content = event.target?.result as string;
           const lines = content.split('\n');
-          
+
           // Procura pela linha HEADER
           for (const line of lines) {
             if (line.includes('FILE_SCHEMA')) {
@@ -468,7 +490,7 @@ export class IFCLoader {
               }
             }
           }
-          
+
           // Se não encontrou, assume IFC4 como padrão
           resolve('IFC4');
         } catch (error) {
@@ -476,7 +498,7 @@ export class IFCLoader {
         }
       };
       reader.onerror = () => reject(new Error('Erro ao ler arquivo IFC'));
-      
+
       // Lê apenas o início do arquivo para detectar versão
       const blob = file.slice(0, 1024 * 10); // 10KB deve ser suficiente
       reader.readAsText(blob);
@@ -490,22 +512,22 @@ export class IFCLoader {
     try {
       // Verifica se há elementos básicos no modelo
       const spatialStructure = await this.loader.ifcManager.getSpatialStructure(0);
-      
+
       if (!spatialStructure || spatialStructure.children.length === 0) {
         console.warn('⚠️ Estrutura espacial IFC vazia ou inválida');
         return false;
       }
-      
+
       // Verifica se há pelo menos um projeto
-      const projects = spatialStructure.children.filter((child: any) => 
-        child.type === 'IFCPROJECT'
+      const projects = spatialStructure.children.filter(
+        (child: any) => child.type === 'IFCPROJECT'
       );
-      
+
       if (projects.length === 0) {
         console.warn('⚠️ Nenhum projeto IFC encontrado');
         return false;
       }
-      
+
       console.log(`✅ Schema IFC validado: ${projects.length} projeto(s) encontrado(s)`);
       return true;
     } catch (error) {
@@ -517,9 +539,11 @@ export class IFCLoader {
   /**
    * Verifica compliance OpenBIM do modelo
    */
-  private async checkOpenBIMCompliance(ifcVersion: string): Promise<{ compliant: boolean; issues: string[] }> {
+  private async checkOpenBIMCompliance(
+    ifcVersion: string
+  ): Promise<{ compliant: boolean; issues: string[] }> {
     const issues: string[] = [];
-    
+
     try {
       // 1. Verifica estrutura espacial
       const spatialStructure = await this.loader.ifcManager.getSpatialStructure(0);
@@ -528,8 +552,8 @@ export class IFCLoader {
       }
 
       // 2. Verifica presença de projeto
-      const projects = spatialStructure.children.filter((child: any) => 
-        child.type === 'IFCPROJECT'
+      const projects = spatialStructure.children.filter(
+        (child: any) => child.type === 'IFCPROJECT'
       );
       if (projects.length === 0) {
         issues.push('Nenhum projeto IFC (IFCPROJECT) encontrado');
@@ -548,7 +572,7 @@ export class IFCLoader {
       issues.push(...relationshipIssues);
 
       const compliant = issues.length === 0;
-      
+
       console.log(`🔍 OpenBIM Compliance check: ${compliant ? 'PASSOU' : 'FALHOU'}`);
       if (!compliant) {
         console.log('📋 Issues encontrados:', issues);
@@ -566,7 +590,7 @@ export class IFCLoader {
    */
   private async validateGeometryCompliance(): Promise<string[]> {
     const issues: string[] = [];
-    
+
     // Verifica se há meshes com geometria válida
     let totalMeshes = 0;
     let invalidMeshes = 0;
@@ -574,7 +598,7 @@ export class IFCLoader {
     this.scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         totalMeshes++;
-        
+
         if (!child.geometry) {
           invalidMeshes++;
           issues.push(`Mesh sem geometria: ${child.name}`);
@@ -597,12 +621,12 @@ export class IFCLoader {
    */
   private async validatePropertyCompliance(): Promise<string[]> {
     const issues: string[] = [];
-    
+
     // Verifica se elementos têm propriedades básicas
     this.scene.traverse((child) => {
       if (child instanceof THREE.Mesh && (child as any).expressID) {
         const expressID = (child as any).expressID;
-        
+
         // Tenta obter propriedades básicas
         try {
           const properties = this.loader.ifcManager.getItemProperties(0, expressID, false);
@@ -623,11 +647,11 @@ export class IFCLoader {
    */
   private async validateRelationshipCompliance(): Promise<string[]> {
     const issues: string[] = [];
-    
+
     try {
       // Verifica estrutura de agregação
       const spatialStructure = await this.loader.ifcManager.getSpatialStructure(0);
-      
+
       const validateNode = (node: any, path: string = ''): void => {
         if (!node.children || node.children.length === 0) {
           // Nó folha deve ter elementos relacionados
@@ -659,18 +683,18 @@ export class IFCLoader {
    */
   public async generateComplianceReport(ifcVersion: string): Promise<string> {
     const complianceResult = await this.checkOpenBIMCompliance(ifcVersion);
-    
+
     const report = {
       timestamp: new Date().toISOString(),
       ifcVersion,
       compliant: complianceResult.compliant,
       totalIssues: complianceResult.issues.length,
       issues: complianceResult.issues,
-      modelStats: this.getModelStatistics()
+      modelStats: this.getModelStatistics(),
     };
 
     // Gera relatório HTML
-    let html = `
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -705,8 +729,9 @@ export class IFCLoader {
 
     <div class="issues">
         <h2>Issues Found (${report.totalIssues})</h2>
-        ${report.issues.length > 0 
-            ? report.issues.map(issue => `<div class="issue">${issue}</div>`).join('')
+        ${
+          report.issues.length > 0
+            ? report.issues.map((issue) => `<div class="issue">${issue}</div>`).join('')
             : '<p>No issues found - model is fully compliant!</p>'
         }
     </div>
@@ -728,14 +753,14 @@ export class IFCLoader {
     this.scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         meshes++;
-        
+
         if (child.geometry.index) {
           triangles += child.geometry.index.count / 3;
         }
-        
+
         // Conta materiais únicos
         if (Array.isArray(child.material)) {
-          child.material.forEach(mat => materialSet.add(mat.uuid));
+          child.material.forEach((mat) => materialSet.add(mat.uuid));
         } else if (child.material) {
           materialSet.add(child.material.uuid);
         }

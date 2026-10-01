@@ -1,4 +1,4 @@
-# Negócio — ArxisVR
+# Negócio: ArxisVR
 
 **Última atualização:** 11/06/2026
 
@@ -19,9 +19,9 @@
 - AR global até 2028: **US$ 97 bilhões**
 - Construção civil Brasil: **R$ 400+ bilhões/ano**
 
-### Brasil — Vantagem Específica
+### Brasil: Vantagem Específica
 - **Decreto 10.306/2020**: entrega conjunta de BIM 4D + 5D obrigatória em obras públicas federais
-- **SINAPI**: sistema de referência de preços da CEF, usado em toda licitação pública — nenhum software estrangeiro integra nativamente
+- **SINAPI**: sistema de referência de preços da CEF, usado em toda licitação pública, nenhum software estrangeiro integra nativamente
 - LATAM em estágio "single study" de adoção: mercado sem ferramenta local dominante
 
 ---
@@ -105,11 +105,11 @@ Nenhum produto no mercado conecta: **IFC nativo + cenários + 4D + 5D com SINAPI
 
 ## Vantagens Competitivas
 
-1. **SINAPI nativo** — diferencial regulatório indefensável por players estrangeiros
-2. **Motor de cenários** — posicionamento de categoria, não de feature
-3. **SaaS em BRL** — sem conversão, sem cartão internacional, com NF-e
-4. **IFC open standard** — sem lock-in de plataforma (Autodesk cobra por ecosistema)
-5. **Cadeia completa** — único fluxo IFC → cenário → 4D → 5D → decisão
+1. **SINAPI nativo**, diferencial regulatório indefensável por players estrangeiros
+2. **Motor de cenários**, posicionamento de categoria, não de feature
+3. **SaaS em BRL**, sem conversão, sem cartão internacional, com NF-e
+4. **IFC open standard**, sem lock-in de plataforma (Autodesk cobra por ecosistema)
+5. **Cadeia completa**, único fluxo IFC → cenário → 4D → 5D → decisão
 
 ---
 
@@ -126,9 +126,9 @@ Nenhum produto no mercado conecta: **IFC nativo + cenários + 4D + 5D com SINAPI
 
 ## Fontes
 
-- Business Research Company — BIM Market Report 2026
-- Mordor Intelligence — BIM Market 2031
-- Fortune Business Insights — BIM Software Market 2034
-- CRAYDL — Digital Twin Construction 2026
-- Decreto 10.306/2020 — Governo Federal Brasileiro
-- buildingSMART International — IFC Standards 2026
+- Business Research Company, BIM Market Report 2026
+- Mordor Intelligence, BIM Market 2031
+- Fortune Business Insights, BIM Software Market 2034
+- CRAYDL, Digital Twin Construction 2026
+- Decreto 10.306/2020, Governo Federal Brasileiro
+- buildingSMART International, IFC Standards 2026

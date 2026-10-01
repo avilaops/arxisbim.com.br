@@ -1,3 +1,5 @@
+import { resolveApiBaseUrl } from './apiBaseUrl';
+
 export interface ApiConfig {
   /** Base URL do backend Arxis.Core */
   baseUrl: string;
@@ -6,7 +8,7 @@ export interface ApiConfig {
 }
 
 export const apiConfig: ApiConfig = {
-  baseUrl: import.meta.env.VITE_ARXIS_CORE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseUrl: import.meta.env.VITE_ARXIS_CORE_URL || resolveApiBaseUrl(),
   timeout: 15_000
 };
 

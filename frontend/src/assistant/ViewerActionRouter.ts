@@ -493,7 +493,7 @@ export class ViewerActionRouter {
       const state = appController.getState();
       const report: any = {
         timestamp: new Date().toISOString(),
-        projectName: 'ArxisVR Project',
+        projectName: 'Arxis Project',
         scene: {
           objectCount: 0,
           visibleCount: 0
@@ -527,7 +527,7 @@ export class ViewerActionRouter {
           break;
         
         case 'md':
-          content = `# ArxisVR Report\n\n**Generated:** ${report.timestamp}\n\n## Scene\n- Total Objects: ${report.scene.objectCount}\n- Visible: ${report.scene.visibleCount}\n\n## Camera\n- Position: ${report.camera.position.join(', ')}\n\n## Selection\n${report.selection.map((s: any) => `- ${s.name || s.uuid} (${s.type})`).join('\n')}`;
+          content = `# Arxis Report\n\n**Generated:** ${report.timestamp}\n\n## Scene\n- Total Objects: ${report.scene.objectCount}\n- Visible: ${report.scene.visibleCount}\n\n## Camera\n- Position: ${report.camera.position.join(', ')}\n\n## Selection\n${report.selection.map((s: any) => `- ${s.name || s.uuid} (${s.type})`).join('\n')}`;
           filename = `arxisvr-report-${Date.now()}.md`;
           mimeType = 'text/markdown';
           break;

@@ -58,6 +58,29 @@ describe('ifc-parser.worker · parse() em modelos reais (multi-schema)', () => {
     }, 60_000);
   }
 
+  it('IFC2X2 → ok:false com UNSUPPORTED_IFC_SCHEMA antes do OpenModel', async () => {
+    const ifc2x2 = [
+      'ISO-10303-21;',
+      'HEADER;',
+      "FILE_DESCRIPTION((''),'2;1');",
+      "FILE_NAME('m.ifc','2026-01-01T00:00:00',(''),(''),'','','');",
+      "FILE_SCHEMA(('IFC2X2_FINAL'));",
+      'ENDSEC;',
+      'DATA;',
+      'ENDSEC;',
+      'END-ISO-10303-21;',
+    ].join('\n');
+    const res = await parse({
+      buffer: new TextEncoder().encode(ifc2x2).buffer,
+      modelVersionId: 'mv-2x2',
+      reqId: 'req-2x2',
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.errorType).toBe('UNSUPPORTED_IFC_SCHEMA');
+    expect(res.message).toMatch(/IFC2X2_FINAL/);
+  }, 60_000);
+
   it('arquivo inválido → não lança (ok:false com errorType, ou estrutura vazia)', async () => {
     const garbage = new TextEncoder().encode('isto não é um IFC').buffer;
     const res = await parse({ buffer: garbage, modelVersionId: 'mv-x', reqId: 'req-x' });

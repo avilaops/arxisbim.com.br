@@ -6,7 +6,7 @@ import Fastify from 'fastify';
 import { billingRoutes } from '../../src/modules/billing/billing.routes.js';
 import { db } from '../../src/shared/database/db.js';
 import { tenants, users } from '../../src/shared/database/schema/tenants.js';
-import { billingSubscriptions, stripeEvents } from '../../src/shared/database/schema/billing.js';
+import { billingSubscriptions, billingProviderEvents } from '../../src/shared/database/schema/billing.js';
 import { eq, count } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -45,14 +45,14 @@ describe('S04: Webhooks — Idempotency + Dead-Letter', () => {
       plan: 'starter',
       billingCycle: 'monthly' as const,
       status: 'active' as const,
-      provider: 'stripe',
+      provider: 'internal',
       providerSubscriptionId: `sub_${randomUUID()}`,
     };
 
     // Record event first (idempotency check)
-    const [recorded] = await db.insert(stripeEvents).values({
+    const [recorded] = await db.insert(billingProviderEvents).values({
       eventId,
-      eventType: 'customer.subscription.updated',
+      eventType: 'subscription.updated',
       tenantId,
       status: 'received',
       rawEvent: payload,

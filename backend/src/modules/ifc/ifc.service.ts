@@ -1,12 +1,16 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '../../shared/database/db.js';
 import { ifcModels } from '../../shared/database/schema/projects.js';
+import { leads } from '../../shared/database/schema/leads.js';
+import { emailService } from '../../core/email/email.service.js';
 import type { UploadIfcMetadataInput, UpdateIfcMetadataInput } from './ifc.schemas.js';
 import { IfcProcessingService } from './ifc-processing.service.js';
+import { assertIfcSchemaSupported } from './ifc-schema-support.js';
 import { IfcValidationService } from './ifc-validation.service.js';
 import { webhookService } from './webhook.service.js';
 import { cacheService, CacheService } from './cache.service.js';
 import { NotificationService } from '../notifications/notifications.service.js';
+import { frontendUrl } from '../../core/config/domains.js';
 import { storage, buildIfcKey, StorageError } from '../../core/storage/index.js';
 import { randomUUID } from 'crypto';
 
@@ -57,6 +61,9 @@ export class IfcService {
     if (!validation.valid) {
       throw new Error(`Invalid IFC file: ${validation.errors.join(', ')}`);
     }
+
+    // Rejeita esquemas fora do suporte do pipeline (IFC2X2 e anteriores) — 422
+    assertIfcSchemaSupported(fileBuffer);
 
     // Extract metadata from IFC file
     const extractedMetadata = await this.processingService.extractMetadata(fileBuffer);
@@ -430,4 +437,168 @@ export class IfcService {
 
     return csv;
   }
+
+  /**
+   * Check public IFC file for lead capture
+   */
+  async checkPublicIfc(
+    fileBuffer: Buffer,
+    filename: string,
+    email: string,
+    name: string,
+    company: string
+  ) {
+    // 1. Basic validation
+    const structureResult = this.processingService.validateIfcStructure(fileBuffer);
+    const extractedMetadata = await this.processingService.extractMetadata(fileBuffer);
+    const ifcType = extractedMetadata.schema || 'IFC2X3';
+    
+    // 2. Score calculation (similar to validateService logic)
+    const scores = {
+      metadata: 0,
+      documentation: 0,
+      fileQuality: 0,
+      overall: 0,
+    };
+
+    // Metadata checks
+    let metadataChecks = 0;
+    let metadataPassed = 0;
+    metadataChecks++; if (extractedMetadata.schema) metadataPassed++;
+    metadataChecks++; if (extractedMetadata.projectName) metadataPassed++;
+    metadataChecks++; if (extractedMetadata.author) metadataPassed++;
+    metadataChecks++; if (extractedMetadata.elementCount && extractedMetadata.elementCount > 0) metadataPassed++;
+    scores.metadata = metadataChecks > 0 ? (metadataPassed / metadataChecks) * 100 : 0;
+
+    // Documentation checks
+    let docChecks = 0;
+    let docPassed = 0;
+    docChecks++; if (extractedMetadata.projectName && extractedMetadata.projectName.length > 5) docPassed++;
+    docChecks++; if (extractedMetadata.author && extractedMetadata.author.length > 3) docPassed++;
+    scores.documentation = docChecks > 0 ? (docPassed / docChecks) * 100 : 0;
+
+    // File quality checks
+    let qualityChecks = 0;
+    let qualityPassed = 0;
+    qualityChecks++; if (ifcType) qualityPassed++;
+    qualityChecks++; if (fileBuffer.length < 50 * 1024 * 1024) qualityPassed++; // under 50MB
+    scores.fileQuality = qualityChecks > 0 ? (qualityPassed / qualityChecks) * 100 : 0;
+
+    // Overall score
+    scores.overall = (scores.metadata + scores.documentation + scores.fileQuality) / 3;
+    const grade = scores.overall >= 80 ? 'A' : scores.overall >= 60 ? 'B' : scores.overall >= 40 ? 'C' : 'D';
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+    if (scores.metadata < 60) recommendations.push('Adicione mais metadados ao projeto no seu software de modelagem (autor, descrição, nome do projeto).');
+    if (!extractedMetadata.author) recommendations.push('Defina a propriedade de autor do arquivo para melhor rastreabilidade.');
+    if (fileBuffer.length > 50 * 1024 * 1024) recommendations.push('Considere otimizar o tamanho do arquivo IFC exportando apenas entidades visíveis ou usando compressão.');
+    if (structureResult.errors.length > 0) {
+      recommendations.push(...structureResult.errors.map(e => `Erro estrutural: ${e}`));
+    }
+
+    const fileSizeStr = `${(fileBuffer.length / (1024 * 1024)).toFixed(2)} MB`;
+
+    // 3. Save to database table `leads`
+    const [leadRecord] = await db
+      .insert(leads)
+      .values({
+        id: randomUUID(),
+        name,
+        email,
+        company,
+        ifcFileName: filename,
+        ifcFileSize: fileSizeStr,
+        grade,
+        scoreOverall: scores.overall.toFixed(0),
+      })
+      .returning();
+
+    // 4. Send HTML report email to lead
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório de Qualidade IFC — Arxis</title>
+</head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0a;color:#ffffff;margin:0;padding:32px 0">
+  <div style="max-width:600px;margin:0 auto;background:#111111;border:1px solid #222222;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
+    <div style="background:linear-gradient(135deg,#007AFF,#C4B5F4);padding:40px;text-align:center">
+      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:700;letter-spacing:-0.5px">Arxis</h1>
+      <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:15px">Relatório de Diagnóstico de Qualidade BIM</p>
+    </div>
+    
+    <div style="padding:40px">
+      <h2 style="margin:0 0 16px;color:#ffffff;font-size:20px;font-weight:600">Olá, ${name}!</h2>
+      <p style="color:#aaaaaa;margin:0 0 32px;line-height:1.6;font-size:15px">
+        Analisamos com sucesso o arquivo <strong>${filename}</strong>. Abaixo está a pontuação de integridade do seu modelo IFC para uso em simulação 4D/5D e Realidade Imersiva no navegador.
+      </p>
+
+      <div style="background:#1a1a1a;border-radius:12px;padding:24px;margin-bottom:32px;text-align:center;border:1px solid #333333">
+        <div style="font-size:13px;color:#888888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Nota de Qualidade</div>
+        <div style="font-size:72px;font-weight:800;color:#007AFF;margin:0;line-height:1">${grade}</div>
+        <div style="font-size:15px;color:#aaaaaa;margin-top:8px">Pontuação Geral: <strong>${scores.overall.toFixed(0)}/100</strong></div>
+      </div>
+
+      <h3 style="color:#ffffff;font-size:16px;margin:0 0 12px;border-bottom:1px solid #222222;padding-bottom:8px">Métricas Detalhadas</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:32px;color:#aaaaaa;font-size:14px">
+        <tr>
+          <td style="padding:8px 0;font-weight:500;color:#ffffff">Tamanho do Arquivo</td>
+          <td style="padding:8px 0;text-align:right">${fileSizeStr}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-weight:500;color:#ffffff">Versão do Esquema IFC</td>
+          <td style="padding:8px 0;text-align:right">${ifcType}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-weight:500;color:#ffffff">Qualidade de Metadados</td>
+          <td style="padding:8px 0;text-align:right">${scores.metadata.toFixed(0)}%</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-weight:500;color:#ffffff">Qualidade de Arquivo</td>
+          <td style="padding:8px 0;text-align:right">${scores.fileQuality.toFixed(0)}%</td>
+        </tr>
+      </table>
+
+      ${recommendations.length > 0 ? `
+        <h3 style="color:#ffffff;font-size:16px;margin:0 0 12px;border-bottom:1px solid #222222;padding-bottom:8px">Recomendações de Melhoria</h3>
+        <ul style="color:#aaaaaa;padding-left:20px;margin:0 0 32px;line-height:1.6;font-size:14px">
+          ${recommendations.map(r => `<li style="margin-bottom:8px">${r}</li>`).join('')}
+        </ul>
+      ` : ''}
+
+      <div style="text-align:center;margin-top:40px">
+        <p style="color:#aaaaaa;font-size:14px;margin-bottom:20px">Quer visualizar este modelo em 3D, simular o cronograma de obras 4D ou coordenar com sua equipe?</p>
+        <a href="${frontendUrl('/register')}" style="display:inline-block;padding:14px 28px;background:#007AFF;color:#ffffff;text-decoration:none;border-radius:24px;font-weight:600;font-size:14px">
+          Criar Conta Grátis na Plataforma
+        </a>
+      </div>
+    </div>
+    
+    <div style="background:#0a0a0a;padding:24px;text-align:center;border-top:1px solid #222222;font-size:12px;color:#555555">
+      © 2026 Arxis by AvilaOps. Todos os direitos reservados.
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    // Dispara o email de forma assíncrona
+    emailService.sendCustomEmail(
+      email,
+      `Relatório de Qualidade IFC do seu projeto — ${filename}`,
+      emailHtml,
+      ''
+    ).catch(err => console.error('[public-ifc] email trigger failed:', err));
+
+    return {
+      name,
+      filename,
+      grade,
+      score: scores.overall.toFixed(0),
+    };
+  }
 }
+

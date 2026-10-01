@@ -64,8 +64,10 @@ describe('SchedulerService', () => {
       const callback = vi.fn();
       service.scheduleOnce('Test', 1000, callback);
 
-      vi.advanceTimersByTime(1000);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Com fake timers ligados, o `setTimeout` do await nunca dispararia: o
+      // teste ficava pendurado até o timeout de 5 s. `advanceTimersByTimeAsync`
+      // avança o relógio e drena a fila de microtasks.
+      await vi.advanceTimersByTimeAsync(1000);
 
       expect(callback).toHaveBeenCalled();
     });

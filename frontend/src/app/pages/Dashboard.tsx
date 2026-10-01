@@ -95,7 +95,7 @@ function ProjectsCard({ projects, loading }: { projects: Project[]; loading: boo
           <span className="lc__title">Projetos</span>
           <span className="lc__badge">{list.length}</span>
         </div>
-        <a className="lc__action" href="/app.html">+ Novo</a>
+        <a className="lc__action" href="/app">+ Novo</a>
       </div>
       {loading
         ? [1, 2, 3, 4].map(i => <SkRow key={i} />)
@@ -103,7 +103,7 @@ function ProjectsCard({ projects, loading }: { projects: Project[]; loading: boo
           ? <div className="lc__empty"><span className="lc__empty-ico">📁</span>Nenhum projeto</div>
           : list.map(p => (
             <div key={p.id} className="lc__row"
-              onClick={() => { localStorage.setItem('arxisvr_project_id', p.id); location.href = `/app.html?projectId=${p.id}`; }}>
+              onClick={() => { localStorage.setItem('arxisvr_project_id', p.id); location.href = `/app?projectId=${p.id}`; }}>
               <div className="lc__row-ico">🏗️</div>
               <div className="lc__row-body">
                 <div className="lc__row-name">{p.name}</div>
@@ -130,7 +130,7 @@ function ModelsCard({ projects, loading }: { projects: Project[]; loading: boole
           <span className="lc__title">Modelos IFC</span>
           <span className="lc__badge">{list.length}</span>
         </div>
-        <a className="lc__action" href="/app.html?action=upload">+ Importar</a>
+        <a className="lc__action" href="/app?action=upload">+ Importar</a>
       </div>
       {loading
         ? [1, 2, 3].map(i => <SkRow key={i} />)
@@ -138,7 +138,7 @@ function ModelsCard({ projects, loading }: { projects: Project[]; loading: boole
           ? <div className="lc__empty"><span className="lc__empty-ico">📦</span>Nenhum modelo</div>
           : list.map((p, i) => (
             <div key={p.id} className="lc__row"
-              onClick={() => { localStorage.setItem('arxisvr_project_id', p.id); location.href = `/app.html?projectId=${p.id}`; }}>
+              onClick={() => { localStorage.setItem('arxisvr_project_id', p.id); location.href = `/app?projectId=${p.id}`; }}>
               <div className="lc__row-ico">📦</div>
               <div className="lc__row-body">
                 <div className="lc__row-name">{p.name}.ifc</div>
@@ -168,7 +168,7 @@ function CollabCard() {
         <div className="lc__head-left">
           <span className="lc__title">Colaboração</span>
         </div>
-        <a className="lc__action" href="/app.html#meetings">+ Convidar</a>
+        <a className="lc__action" href="/app#meetings">+ Convidar</a>
       </div>
       <div className="lc__stat">
         {stats.map((s, i) => (
@@ -224,10 +224,10 @@ function ActivityCard({ projects }: { projects: Project[] }) {
 
 /* ── next steps ─────────────────────────────────────────────────────────── */
 const STEPS = [
-  { ico: '📂', text: 'Importe seu primeiro modelo IFC para começar', href: '/app.html?action=upload' },
-  { ico: '👥', text: 'Convide colaboradores para o workspace', href: '/app.html#collab' },
-  { ico: '📅', text: 'Configure o cronograma 4D do projeto', href: '/app.html#bim4d' },
-  { ico: '🥽', text: 'Habilite reuniões XR para revisões imersivas', href: '/app.html#meetings' },
+  { ico: '📂', text: 'Importe seu primeiro modelo IFC para começar', href: '/app?action=upload' },
+  { ico: '👥', text: 'Convide colaboradores para o workspace', href: '/app#collab' },
+  { ico: '📅', text: 'Configure o cronograma 4D do projeto', href: '/app#bim4d' },
+  { ico: '🥽', text: 'Habilite reuniões XR para revisões imersivas', href: '/app#meetings' },
 ];
 
 function NextStepsCard() {
@@ -259,7 +259,7 @@ export default function Dashboard() {
       const u = JSON.parse(localStorage.getItem('arxisvr_user') || 'null');
       if (u?.tenantName) setTenant(u.tenantName);
       else if (u?.name)  setTenant(u.name);
-    } catch {}
+    } catch { /* ignora: falha aqui não impede o fluxo */ }
   }, []);
 
   useEffect(() => {
@@ -293,7 +293,7 @@ export default function Dashboard() {
           <button type="button" className="btn">
             📅 Últimas 24 horas
           </button>
-          <a className="btn btn--primary" href="/app.html?action=upload">
+          <a className="btn btn--primary" href="/app?action=upload">
             + Importar IFC
           </a>
         </div>

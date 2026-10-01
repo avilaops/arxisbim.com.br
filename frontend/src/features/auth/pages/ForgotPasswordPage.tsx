@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       <section className="auth-card slide-in">
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
-          <h1 className="auth-title">ArxisVR</h1>
+          <h1 className="auth-title">Arxis</h1>
           <p className="auth-subtitle">Redefinição de senha</p>
         </div>
 
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
               <br />
               Verifique também a pasta de spam.
             </p>
-            <a className="auth-link" href="/login.html">
+            <a className="auth-link" href="/login">
               Voltar para o login
             </a>
           </div>
@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
 
             <p className="auth-footer-text">
               Lembrou a senha?{' '}
-              <a className="auth-link" href="/login.html">
+              <a className="auth-link" href="/login">
                 Entrar
               </a>
             </p>

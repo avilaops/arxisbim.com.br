@@ -1,0 +1,25 @@
+# Arxis
+
+> Arxis é uma plataforma brasileira para visualizar, analisar e decidir sobre projetos de arquitetura, engenharia e construção com informação BIM organizada.
+
+## Site
+
+- Página pública: https://arxisbim.com.br/
+- Plataforma: https://arxisbim.com.br/app
+- Instagram: https://www.instagram.com/arxis.bim
+
+## Temas
+
+- BIM, IFC e interoperabilidade
+- Visualização 3D e revisão de projetos
+- Comparação de alternativas e cenários
+- Propriedades de elementos e contexto de informação
+- Colaboração entre equipes de arquitetura, engenharia e construção
+
+## Linguagem de marca
+
+Use “Arxis” como nome visível. A marca fala com clareza, precisão, tecnologia e proximidade humana. Evite apresentar “ArxisVR” como nome comercial.
+
+## Conteúdo editorial
+
+As pautas, descrições, textos alternativos e hashtags das artes sociais estão em `assets/social-media/arxis/metadata/posts.json`. As prévias mensais estão em `assets/social-media/arxis/previews/`.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>ArxisVR</Name>
+    <Assembly>ArxisVR.RevitPlugin.dll</Assembly>
+    <AddInId>8C6BE2B5-9F7D-4B8C-9A6F-3D8E9F2C5D7E</AddInId>
+    <FullClassName>ArxisVR.RevitPlugin.ArxisVRApplication</FullClassName>
+    <VendorId>AVILAOPS</VendorId>
+    <VendorDescription>AvilaOps — arxisvr.avilaops.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>

@@ -205,11 +205,11 @@ Invoke-RestMethod -Uri "https://sentry.io/api/0/projects/avilaops/arxisvr/issues
 ```
 
 **Campos úteis:**
-- `title` — título do erro
-- `count` — quantas vezes ocorreu
-- `lastSeen` — último horário
-- `level` — error / warning / info
-- `status` — resolved / unresolved
+- `title` - título do erro
+- `count` - quantas vezes ocorreu
+- `lastSeen` - último horário
+- `level` - error / warning / info
+- `status` - resolved / unresolved
 
 ### 3. Consultar eventos de uma issue
 
@@ -287,7 +287,7 @@ Error: TypeError: Cannot read property 'email' of undefined
 
 ```bash
 # .env.local
-SENTRY_DSN=  # Vazio — não captura (opcional)
+SENTRY_DSN=  # Vazio, não captura (opcional)
 NODE_ENV=development
 ```
 
@@ -407,7 +407,7 @@ Sentry desativado. Backend não envia erros. Use em **dev** apenas.
 # 2. Cole em .env.local
 # 3. npm run dev
 # 4. Trigger um erro
-# 5. Vá para Sentry — deve aparecer
+# 5. Vá para Sentry: deve aparecer
 ```
 
 ### "Erro 401 na API?"

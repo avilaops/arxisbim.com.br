@@ -485,7 +485,7 @@ class AuthModal {
       // Vai para a página de auth canônica (login.html) — usa a API de produção
       // correta e o fluxo OAuth. Evita o modal inline (que apontava p/ localhost).
       document.getElementById('auth-login')?.addEventListener('click', () => {
-        window.location.href = '/login.html';
+        window.location.href = '/login';
       });
     }
   }

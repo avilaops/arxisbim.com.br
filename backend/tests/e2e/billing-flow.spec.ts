@@ -37,7 +37,7 @@ describe('S04.1: Checkout & Portal flow', () => {
   let prevProvider: string | undefined;
 
   beforeAll(async () => {
-    // Force internal provider so a paid checkout does not call the Stripe API.
+    // Force internal provider so a paid checkout does not call the Mercado Pago API.
     prevProvider = process.env.BILLING_PROVIDER;
     process.env.BILLING_PROVIDER = 'internal';
 

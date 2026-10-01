@@ -347,9 +347,10 @@ export class SelectionFilters {
       case FilterOperator.LESS_THAN:
         return Number(value) < Number(filterValue);
       
-      case FilterOperator.IN_RANGE:
+      case FilterOperator.IN_RANGE: {
         const num = Number(value);
         return Array.isArray(filterValue) && num >= filterValue[0] && num <= filterValue[1];
+      }
       
       case FilterOperator.EXISTS:
         return value !== undefined && value !== null;
