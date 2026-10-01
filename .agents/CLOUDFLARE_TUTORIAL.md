@@ -1,4 +1,4 @@
-# Cloudflare API — Tutorial Completo
+# Cloudflare API: Tutorial Completo
 
 ## Índice
 1. [Visão Geral das Chaves](#1-visão-geral-das-chaves)
@@ -79,20 +79,20 @@ Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/user/tokens/verify"
 
 **Resumo**: Esse token serve para gerenciar **Workers** e **ler zonas**. NÃO tem permissão para DNS, cache purge, SSL, WAF, etc.
 
-### Global API Key (`.env.production` — `CLOUDFLARE_API_GLOBAL_KEY`)
+### Global API Key (`.env.production`: `CLOUDFLARE_API_GLOBAL_KEY`)
 
 | Permissão | Tipo | O que faz |
 |---|---|---|
 | `#zone:read` / `#zone:edit` | 👑 Admin | Criar/editar/deletar zonas completas |
 | `#dns_records:read` / `#dns_records:edit` | 👑 Admin | CRUD completo de registros DNS |
 | `#ssl:edit` | 👑 Admin | Gerenciar certificados SSL/TLS |
-| `#waf:read` / `#waf:edit` | 👑 Admin | Web Application Firewall — regras de segurança |
+| `#waf:read` / `#waf:edit` | 👑 Admin | Web Application Firewall, regras de segurança |
 | `#cache_purge:edit` | 👑 Admin | Limpar cache de CDN |
 | `#worker:read` / `#worker:edit` | 👑 Admin | CRUD de Workers |
 | `#r2_bucket:read` / `#r2_bucket:edit` | 👑 Admin | Gerenciar buckets R2 (Object Storage) |
 | `#r2_bucket_item:read` / `#r2_bucket_item:edit` | 👑 Admin | Ler/escrever objetos dentro dos buckets R2 |
 | `#analytics:read` | 🔍 Leitura | Ver analytics de tráfego |
-| `#logs:read` / `#logs:edit` | 👑 Admin | Logpush — enviar logs para destinos externos |
+| `#logs:read` / `#logs:edit` | 👑 Admin | Logpush, enviar logs para destinos externos |
 | `#lb:read` / `#lb:edit` | 👑 Admin | Load Balancers |
 | `#stream:read` / `#stream:edit` | 👑 Admin | Cloudflare Stream (vídeos) |
 | `#image:read` / `#image:edit` | 👑 Admin | Cloudflare Images |
@@ -205,7 +205,7 @@ Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/accounts/$accountId
 
 ## 7. DNS
 
-⚠️ **Requer Global API Key** — token do `.env.local` NÃO tem permissão DNS.
+⚠️ **Requer Global API Key**, token do `.env.local` NÃO tem permissão DNS.
 
 ### Listar registros DNS de uma zona
 ```powershell
@@ -355,8 +355,8 @@ tuitecnologia.com.br   → e66dba4702e34be1cbf94c3193a2c051
 ```
 
 ### Tokens ativos
-- `CLOUDFLARE_TOKEN` — token scoped (worker + zone:read)
-- `CLOUDFLARE_API_GLOBAL_KEY` — acesso total (usar só quando necessário)
+- `CLOUDFLARE_TOKEN` - token scoped (worker + zone:read)
+- `CLOUDFLARE_API_GLOBAL_KEY` - acesso total (usar só quando necessário)
 
 ---
 
@@ -375,7 +375,7 @@ min_tls_version  : 1.0
 
 ---
 
-### Tipo A — Domínio com email Porkbun (avila.inc, avilaops.com)
+### Tipo A: Domínio com email Porkbun (avila.inc, avilaops.com)
 ```
 # GitHub Pages (apex)
 A     <dominio>  185.199.108.153  proxied=false
@@ -386,7 +386,7 @@ A     <dominio>  185.199.111.153  proxied=false
 # www → backend Render ou GitHub Pages
 CNAME www.<dominio>  <projeto>.onrender.com  proxied=false
 
-# Email — Porkbun forwarding
+# Email: Porkbun forwarding
 MX    <dominio>  fwd1.porkbun.com  priority=10
 MX    <dominio>  fwd2.porkbun.com  priority=20
 TXT   <dominio>  "v=spf1 include:_spf.porkbun.com ~all"
@@ -395,7 +395,7 @@ TXT   _dmarc.<dominio>  "v=DMARC1; p=none; rua=mailto:nicolas@avila.inc"
 
 ---
 
-### Tipo B — Domínio sem email (arcsat.com.br, gabrielarincao.com.br, griffedaprata.com.br)
+### Tipo B: Domínio sem email (arcsat.com.br, gabrielarincao.com.br, griffedaprata.com.br)
 ```
 # GitHub Pages (apex)
 A     <dominio>  185.199.108.153  proxied=false
@@ -406,7 +406,7 @@ A     <dominio>  185.199.111.153  proxied=false
 # www → GitHub Pages
 CNAME www.<dominio>  avilaops.github.io  proxied=false
 
-# Sem email — bloquear explicitamente (RFC 7505)
+# Sem email: bloquear explicitamente (RFC 7505)
 MX    <dominio>  .  priority=0
 TXT   <dominio>  "v=spf1 -all"
 TXT   _dmarc.<dominio>  "v=DMARC1; p=reject; rua=mailto:nicolas@avila.inc"
@@ -414,7 +414,7 @@ TXT   _dmarc.<dominio>  "v=DMARC1; p=reject; rua=mailto:nicolas@avila.inc"
 
 ---
 
-### Tipo C — Domínio com Cloudflare Email Routing (tuitecnologia.com.br)
+### Tipo C: Domínio com Cloudflare Email Routing (tuitecnologia.com.br)
 ```
 # GitHub Pages (apex)
 A     <dominio>  185.199.108.153  proxied=false
@@ -425,7 +425,7 @@ A     <dominio>  185.199.111.153  proxied=false
 # www → GitHub Pages
 CNAME www.<dominio>  avilaops.github.io  proxied=false
 
-# Email — Cloudflare Email Routing (configurado pelo dashboard)
+# Email: Cloudflare Email Routing (configurado pelo dashboard)
 MX    <dominio>  route1.mx.cloudflare.net
 MX    <dominio>  route2.mx.cloudflare.net
 MX    <dominio>  route3.mx.cloudflare.net
@@ -501,7 +501,7 @@ $alerts.result.PSObject.Properties | ForEach-Object {
 ## 12. Cloudflare One (Zero Trust)
 
 Cloudflare One é a plataforma de segurança Zero Trust da Cloudflare.
-Conta atual: **avilaops** — Plano **Zero Trust Free**.
+Conta atual: **avilaops**, Plano **Zero Trust Free**.
 
 ### O que inclui
 

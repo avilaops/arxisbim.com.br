@@ -23,7 +23,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18.6
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
@@ -54,11 +54,11 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Build frontend (vite)
         working-directory: frontend
-        run: yarn build
+        run: npm run build
 
       - name: Upload backend source maps to Sentry
         if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
@@ -69,8 +69,8 @@ jobs:
           SENTRY_PROJECT: arxisvr
           SENTRY_RELEASE: arxisvr-backend@${{ github.sha }}
         run: |
-          yarn sentry-cli sourcemaps inject ../backend/dist
-          yarn sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ../backend/dist
+          npx sentry-cli sourcemaps inject ../backend/dist
+          npx sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ../backend/dist
 
       - name: Install signaling-server dependencies
         working-directory: signaling-server

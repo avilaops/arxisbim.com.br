@@ -252,7 +252,7 @@ function registerFileHandlers(): void {
       const projectData = projectSerializer.serialize(
         sceneManager.scene,
         cameraSystem.camera,
-        'ArxisVR Project'
+        'Arxis Project'
       );
       
       // Salva em arquivo
@@ -275,7 +275,7 @@ function registerFileHandlers(): void {
       console.log('Save as...');
       
       // Prompt para nome do projeto
-      const projectName = prompt('Nome do projeto:', 'Projeto ArxisVR');
+      const projectName = prompt('Nome do projeto:', 'Projeto Arxis');
       if (!projectName) return;
       
       // Obtém referências da cena
@@ -1207,7 +1207,7 @@ function registerNetworkHandlers(): void {
   commandRegistry.register(
     { id: CommandId.NET_CREATE_ROOM, label: 'Criar sala', category: 'network' },
     async (payload?: CommandPayload) => {
-      const roomName = payload?.roomName || prompt('Nome da sala:', 'Sala ArxisVR');
+      const roomName = payload?.roomName || prompt('Nome da sala:', 'Sala Arxis');
       if (!roomName) return;
       eventBus.emit(EventType.NET_CREATE_ROOM_REQUESTED, { roomName });
     }

@@ -1,0 +1,106 @@
+[
+  {
+    "id": "feed",
+    "file": "P01_2026-09-14_feed_v01.png",
+    "width": 1080,
+    "height": 1350,
+    "fontLoaded": true,
+    "fontFamily": "Montserrat, sans-serif",
+    "bodyWidth": 1080,
+    "bodyHeight": 1350,
+    "images": [
+      {
+        "src": "assets/logo-original.jpg",
+        "loaded": true,
+        "width": 1280,
+        "height": 960
+      },
+      {
+        "src": "assets/arquitetura.png",
+        "loaded": true,
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "id": "story-09h",
+    "file": "P01_2026-09-14_story_09h_v01.png",
+    "width": 1080,
+    "height": 1920,
+    "fontLoaded": true,
+    "fontFamily": "Montserrat, sans-serif",
+    "bodyWidth": 1080,
+    "bodyHeight": 1920,
+    "images": [
+      {
+        "src": "assets/logo-original.jpg",
+        "loaded": true,
+        "width": 1280,
+        "height": 960
+      },
+      {
+        "src": "assets/avatar-original.jpg",
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "id": "story-13h",
+    "file": "P01_2026-09-14_story_13h_v01.png",
+    "width": 1080,
+    "height": 1920,
+    "fontLoaded": true,
+    "fontFamily": "Montserrat, sans-serif",
+    "bodyWidth": 1080,
+    "bodyHeight": 1920,
+    "images": [
+      {
+        "src": "assets/logo-original.jpg",
+        "loaded": true,
+        "width": 1280,
+        "height": 960
+      },
+      {
+        "src": "assets/modelo-bim.png",
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  },
+  {
+    "id": "story-19h",
+    "file": "P01_2026-09-14_story_19h_v01.png",
+    "width": 1080,
+    "height": 1920,
+    "fontLoaded": true,
+    "fontFamily": "Montserrat, sans-serif",
+    "bodyWidth": 1080,
+    "bodyHeight": 1920,
+    "images": [
+      {
+        "src": "assets/logo-original.jpg",
+        "loaded": true,
+        "width": 1280,
+        "height": 960
+      },
+      {
+        "src": "assets/avatar-conversa.png",
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "overflow": [],
+    "errors": []
+  }
+]

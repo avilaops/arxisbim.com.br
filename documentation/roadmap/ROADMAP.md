@@ -1,8 +1,23 @@
-# ROADMAP — ArxisVR
+# ROADMAP: ArxisVR
 
-**Última atualização:** 11/06/2026
-**Versão:** 3.0 — 32 sprints atômicos
-**Status:** Fundação SaaS funcional · Iniciando IFC Core
+**Última atualização:** 04/09/2026 (S12 e S18 ★ atingidos; infra congelada)
+**Versão:** 3.0, 32 sprints atômicos
+**Status:** Backend à frente da interface. Os 4 marcos ★ estão zerados: o que
+foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-morto.md`.
+
+**S12 ★ (03/09) e S18 ★ (04/09) atingidos**, os dois provados em browser real na
+aplicação publicada, não em teste de API. A cadeia da tese já anda até
+"comparar cenários visualmente".
+
+Próximo alvo: **S26 ★** (comparação temporal). O código foi entregue em
+19/09/2026 e o marco **continua zerado**: marco só cai com a prova em browser na
+aplicação publicada. Ver `documentation/sprints/S26-RESULT.md` e
+`documentation/PENDENCIAS.md`.
+
+**Infra congelada** (decisão de 02/09/2026). Produção roda em Docker no
+orquestrador `23.88.60.193`, com **Postgres 18.6**. A saída do Docker foi medida
+e recusada: `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de
+Postgres no host, nada de mexer no Caddy sem necessidade medida.
 
 ---
 
@@ -21,26 +36,50 @@ A cadeia de cenários é o ativo intransferível.
 
 ---
 
-## Marcos Críticos — Não Movem
+## Marcos Críticos: Não Movem
 
-| Marco | Sprint | Valida |
-|---|---|---|
-| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" |
-| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" |
-| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" |
-| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" |
+> **Dois dos quatro marcos caíram**, os dois provados em browser real: S12 em
+> 03/09/2026 e S18 em 04/09/2026. Faltam S26 e S30 (auditoria de 02/09/2026,
+> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`). Nenhum foi
+> atingido. Marco só cai quando o usuário consegue fazer aquilo na tela, e
+> hoje nenhum consegue: o backend existe, a interface não é alcançada pelo
+> build. Não remarque nenhum sem abrir a aplicação e fazer o fluxo.
+
+| Marco | Sprint | Valida | Estado | Por quê |
+|---|---|---|---|---|
+| ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
+| ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
+| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** · código entregue 19/09/2026 | A tela existe agora: cronograma por cenário no viewer, régua de data pintando o modelo e split A\|B com `deltaDays`. Falta **só** a prova em browser na aplicação publicada, que é o que fecha um marco. Ver `documentation/sprints/S26-RESULT.md`. |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |
+
+**O viewer vivo** (`/app` → `Viewer3DPage`, 356 linhas) oferece quatro botões:
+projetos e modelos, redefinir visualização, tela cheia e informações. É todo o
+alcance da interface hoje.
 
 ---
 
-## Definition of Done — Global
+## Definition of Done: Global
 
 Todo sprint só é concluído quando:
+
+- [ ] **A funcionalidade é acionável por um fluxo que o usuário alcança.**
+      Este critério é o primeiro porque foi o único que faltava: em 02/09/2026
+      sete sprints tinham backend pronto e nenhum chegava ao usuário.
+      Entrar no bundle é **necessário, não suficiente**: dá para importar um
+      módulo em qualquer canto e ele passa a compilar sem que ninguém consiga
+      chegar nele. A prova é o caminho inteiro:
+
+      ```
+      rota/tela → ação do usuário → API → persistência → retorno visual
+      ```
 
 - [ ] Build passa
 - [ ] Lint passa
 - [ ] Testes passam
 - [ ] Sem regressões conhecidas em sprints anteriores
-- [ ] Demo de até 5 minutos disponível
+- [ ] Demo de até 5 minutos disponível, feita na aplicação publicada
+- [ ] **Para sprint ★: teste em browser real**, na aplicação publicada, com
+      recarga de página. Teste de API não fecha um marco.
 
 ---
 
@@ -57,7 +96,7 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 1 — Fundação SaaS · S01–S06
+## FASE 1: Fundação SaaS · S01–S06
 
 ### S01 · Auth e multi-tenant base
 - Register → login → logout funcionam
@@ -71,19 +110,19 @@ S29–S32  Cenários + Release → ★ S30
 - Arquivo isolado por tenant
 - Erro claro em tipo inválido
 
-### S03 · Modelo de dados — Projetos
+### S03 · Modelo de dados: Projetos
 - POST /projects cria projeto
 - POST /projects/:id/models faz upload vinculado
 - Listagem com paginação
 - Soft-delete preserva histórico
 
 ### S04 · Billing e planos
-- Checkout Stripe funciona em test mode
+- Assinatura no Mercado Pago funciona com credencial de teste
 - Webhook ativa plano no banco
 - Upload bloqueado se limite de modelos atingido
 - Downgrade preserva dados, bloqueia novas entradas
 
-### S05 · Frontend — Onboarding e dashboard
+### S05 · Frontend: Onboarding e dashboard
 - Usuário novo faz onboarding em < 3 cliques
 - Dashboard lista projetos com status
 - Upload com barra de progresso
@@ -97,27 +136,27 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 2 — IFC Core · S07–S12
+## FASE 2: IFC Core · S07–S12
 
-### S07 · Parser IFC — estrutura base
+### S07 · Parser IFC: estrutura base
 - Parser lê IFC 2x3 e IFC 4.x sem crash
 - Hierarquia espacial extraída como JSON
 - Teste com 5 modelos de referência buildingSMART
 - Parsing de 50 MB em < 10 segundos
 
-### S08 · Parser IFC — geometria
+### S08 · Parser IFC: geometria
 - Modelo visível no canvas após parse
 - Cada IfcProduct vira mesh identificável
 - FPS estável em modelo de 10.000 elementos
 - Nenhum elemento sumindo ou invertido
 
-### S09 · Viewer — navegação e câmera
+### S09 · Viewer: navegação e câmera
 - Navegação suave em touch e mouse
 - Clique seleciona elemento e destaca
 - Preset de câmera reorienta em < 300ms
 - Reset de câmera reseta corretamente
 
-### S10 · Viewer — filtros e visibilidade
+### S10 · Viewer: filtros e visibilidade
 - Toggle por disciplina oculta/mostra em < 100ms
 - Corte transversal navegável
 - Isolamento de pavimento funciona
@@ -140,7 +179,7 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 3 — Metadados BIM · S13–S17
+## FASE 3: Metadados BIM · S13–S17
 
 ### S13 · Extração de propriedades IFC
 - Clique em elemento abre painel de props
@@ -174,7 +213,7 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 4 — 5D BIM · S18–S24
+## FASE 4: 5D BIM · S18–S24
 
 ### S18 ★ · Primeira comparação visual de cenários
 - Split-view A|B sincroniza câmera
@@ -220,9 +259,9 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 5 — 4D BIM · S25–S28
+## FASE 5: 4D BIM · S25–S28
 
-### S25 · Modelo de dados 4D — atividades
+### S25 · Modelo de dados 4D: atividades
 - Import de CSV com colunas: id, nome, início, fim, predecessores
 - Vínculo atividade ↔ GUID IFC salvo
 - API retorna schedule completo de um projeto
@@ -248,9 +287,9 @@ S29–S32  Cenários + Release → ★ S30
 
 ---
 
-## FASE 6 — Cenários Avançados + Release · S29–S32
+## FASE 6: Cenários Avançados + Release · S29–S32
 
-### S29 · Motor de cenários — branching completo
+### S29 · Motor de cenários: branching completo
 - Clone de cenário preserva todos os dados
 - Edição de cronograma por cenário sem afetar base
 - Histórico com rollback
@@ -268,7 +307,7 @@ S29–S32  Cenários + Release → ★ S30
 - Link de apresentação abre em browser sem login
 - Export para PDF com screenshots automáticos
 
-### S32 · Release Candidate — hardening
+### S32 · Release Candidate: hardening
 - 100 usuários simultâneos sem degradação
 - Penetration test básico sem vulnerabilidades críticas
 - API docs publicada em /docs

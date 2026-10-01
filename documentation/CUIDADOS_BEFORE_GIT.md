@@ -1,4 +1,4 @@
-# Cuidados Antes de Commit/Push — ArxisVR
+# Cuidados Antes de Commit/Push: ArxisVR
 
 **Última atualização:** 11/06/2026
 
@@ -21,7 +21,7 @@
 
 ---
 
-## Variáveis de ambiente — regra crítica
+## Variáveis de ambiente: regra crítica
 
 Nunca commitar:
 - `.env`
@@ -34,7 +34,7 @@ Verificar `.gitignore` antes de `git add .`.
 
 ---
 
-## Render — atenção especial
+## Render: atenção especial
 
 `PUT /v1/services/{id}/env-vars` **apaga todas as variáveis existentes** e substitui pela lista enviada.
 

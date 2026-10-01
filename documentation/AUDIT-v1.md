@@ -1,4 +1,4 @@
-# Auditoria APIs v1 — drizzle / zod / migrations / schemas / queries
+# Auditoria APIs v1: drizzle / zod / migrations / schemas / queries
 
 Data: 2026-06-12. Escopo: superfície `/api/v1` registrada em `backend/src/index.ts`.
 
@@ -22,11 +22,11 @@ Sem buracos de segurança em rotas **vivas**. Todas as rotas registradas têm au
 - **drizzle**: 100% dos queries via drizzle. Zero `sql.unsafe`/raw (sem injection).
 - **tenant scoping**: rotas vivas filtram por `tenantId` (direto ou via join `project.tenantId`).
 - **storage** (`core/storage/storage.routes.ts`): auth + `isKeyAllowedForTenant` (`tenants/${tenantId}/`).
-- **analytics `/track`**: ingest público anônimo, clamp por campo + filtro — padrão correto, não usa zod de propósito.
+- **analytics `/track`**: ingest público anônimo, clamp por campo + filtro, padrão correto, não usa zod de propósito.
 - **workspaces**: checagens manuais (`!name`, `email.includes('@')`).
 - **schema↔DB**: 62 tabelas, todas batem (após mig 039).
 
-## Débito de código morto (NÃO removido — risco de barrel exports)
+## Débito de código morto (NÃO removido: risco de barrel exports)
 
 Route files duplicados, não-registrados (versão viva entre parênteses):
 
@@ -40,8 +40,8 @@ Risco: edição no arquivo errado, confusão. Remover requer destrinchar `module
 
 ## Migrations pendentes em prod
 
-`037` (grace_period), `038` (storage_bytes bigint), `039` (workspaces) — auto-aplicam no boot via `runMigrations()`. Pendentes até deploy.
+`037` (grace_period), `038` (storage_bytes bigint), `039` (workspaces), auto-aplicam no boot via `runMigrations()`. Pendentes até deploy.
 
 ## Bloqueio
 
-Deploy Render travado (autoDeploy não dispara — billing). 5 commits em `main` esperando build manual.
+Deploy Render travado (autoDeploy não dispara, billing). 5 commits em `main` esperando build manual.

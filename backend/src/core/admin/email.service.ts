@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { FRONTEND_URL, PRIVACY_EMAIL, frontendUrl } from '../config/domains.js';
 
 export interface EmailTemplate {
   id: string;
@@ -20,28 +21,28 @@ const TEMPLATES: EmailTemplate[] = [
   {
     id: 'welcome',
     name: 'Boas-vindas',
-    subject: 'Bem-vindo ao ArxisVR — sua plataforma BIM está pronta',
+    subject: 'Bem-vindo ao Arxis — sua plataforma BIM está pronta',
     description: 'Enviado automaticamente ao criar conta. Apresenta a plataforma e links para começar.',
     category: 'welcome',
   },
   {
     id: 'trial_ending',
     name: 'Trial expirando',
-    subject: 'Seu período gratuito termina em 3 dias — aproveite o ArxisVR Professional',
+    subject: 'Seu período gratuito termina em 3 dias — aproveite o Arxis Professional',
     description: 'Lembra o usuário que o trial está acabando e incentiva upgrade.',
     category: 'billing',
   },
   {
     id: 'upgrade_cta',
     name: 'Convite para upgrade',
-    subject: 'Desbloqueie VR/AR, BIM 5D e muito mais no ArxisVR Professional',
+    subject: 'Desbloqueie VR/AR, BIM 5D e muito mais no Arxis Professional',
     description: 'Campanha de upsell para usuários do plano Free.',
     category: 'marketing',
   },
   {
     id: 'new_feature',
     name: 'Nova funcionalidade',
-    subject: 'Novidade no ArxisVR: [FUNCIONALIDADE]',
+    subject: 'Novidade no Arxis: [FUNCIONALIDADE]',
     description: 'Anúncio de nova feature para toda a base.',
     category: 'product',
   },
@@ -55,7 +56,7 @@ const TEMPLATES: EmailTemplate[] = [
   {
     id: 'invoice_paid',
     name: 'Fatura paga',
-    subject: 'Recibo de pagamento — ArxisVR',
+    subject: 'Recibo de pagamento — Arxis',
     description: 'Confirmação de pagamento com link para a fatura.',
     category: 'billing',
   },
@@ -88,7 +89,7 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
         <td>
           <div style="display:inline-flex;align-items:center;gap:8px;">
             <div style="width:28px;height:28px;background:#000;border-radius:50%;display:inline-block;vertical-align:middle;"></div>
-            <span style="font-size:18px;font-weight:700;color:#000;vertical-align:middle;margin-left:8px;">ArxisVR</span>
+            <span style="font-size:18px;font-weight:700;color:#000;vertical-align:middle;margin-left:8px;">Arxis</span>
           </div>
         </td>
       </tr>
@@ -105,9 +106,9 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
   <!-- Footer -->
   <tr><td style="padding:20px 40px;border-top:1px solid rgba(0,0,0,0.06);background:#F9F9F9;">
     <p style="font-size:12px;color:#aeaeb2;margin:0;line-height:1.6;">
-      ArxisVR by AvilaOps · Plataforma BIM com IA e Realidade Estendida<br>
-      <a href="https://arxisvr.avilaops.com/lgpd.html" style="color:#aeaeb2;">Cancelar inscrição</a> ·
-      <a href="https://arxisvr.avilaops.com/privacy.html" style="color:#aeaeb2;">Política de Privacidade</a>
+      Arxis by AvilaOps · Plataforma BIM com IA e Realidade Estendida<br>
+      <a href="${frontendUrl('/lgpd')}" style="color:#aeaeb2;">Cancelar inscrição</a> ·
+      <a href="${frontendUrl('/privacy')}" style="color:#aeaeb2;">Política de Privacidade</a>
     </p>
   </td></tr>
 
@@ -119,24 +120,24 @@ function buildHtml(opts: { name: string; subject: string; body: string; cta?: { 
 }
 
 function buildTemplateContent(templateId: string, recipientName: string): { subject: string; html: string } {
-  const appUrl = process.env.URL || 'https://arxisvr.avilaops.com';
+  const appUrl = process.env.URL || FRONTEND_URL;
 
   switch (templateId) {
     case 'welcome':
       return {
-        subject: 'Bem-vindo ao ArxisVR — sua plataforma BIM está pronta',
+        subject: 'Bem-vindo ao Arxis — sua plataforma BIM está pronta',
         html: buildHtml({
           name: recipientName,
-          subject: 'Bem-vindo ao ArxisVR',
-          body: `<p>Sua conta na plataforma <strong>ArxisVR</strong> foi criada com sucesso!</p>
-<p>O ArxisVR é a plataforma BIM com Copilot de IA e Realidade Estendida. Você pode:</p>
+          subject: 'Bem-vindo ao Arxis',
+          body: `<p>Sua conta na plataforma <strong>Arxis</strong> foi criada com sucesso!</p>
+<p>O Arxis é a plataforma BIM com Copilot de IA e Realidade Estendida. Você pode:</p>
 <ul style="padding-left:20px;margin:12px 0;">
   <li style="margin-bottom:8px;">📐 Fazer upload de modelos IFC e visualizar em escala 1:1</li>
   <li style="margin-bottom:8px;">🤖 Usar o Copilot IA com <strong>Ctrl+K</strong> para coordenação BIM</li>
   <li style="margin-bottom:8px;">⏱️ Simular o cronograma 4D vinculado ao modelo</li>
   <li style="margin-bottom:8px;">🥽 Entrar em VR/AR no navegador, sem instalação</li>
 </ul>`,
-          cta: { label: 'Abrir a plataforma →', url: `${appUrl}/app.html` },
+          cta: { label: 'Abrir a plataforma →', url: `${appUrl}/app` },
         }),
       };
 
@@ -146,10 +147,10 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
         html: buildHtml({
           name: recipientName,
           subject: 'Trial expirando',
-          body: `<p>Seu acesso ao plano gratuito do ArxisVR termina em <strong>3 dias</strong>.</p>
+          body: `<p>Seu acesso ao plano gratuito do Arxis termina em <strong>3 dias</strong>.</p>
 <p>Para continuar com BIM 4D/5D, VR/AR e projetos ilimitados, faça upgrade para o plano <strong>Professional por R$ 499/mês</strong>.</p>
 <p>Seus projetos e modelos IFC serão preservados.</p>`,
-          cta: { label: 'Fazer upgrade agora', url: `${appUrl}/register.html#pricing` },
+          cta: { label: 'Fazer upgrade agora', url: `${appUrl}/register#pricing` },
         }),
       };
 
@@ -159,7 +160,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
         html: buildHtml({
           name: recipientName,
           subject: 'Convite para upgrade',
-          body: `<p>Você está no plano <strong>Free</strong> do ArxisVR. Com o <strong>Professional</strong>, você desbloqueia:</p>
+          body: `<p>Você está no plano <strong>Free</strong> do Arxis. Com o <strong>Professional</strong>, você desbloqueia:</p>
 <ul style="padding-left:20px;margin:12px 0;">
   <li style="margin-bottom:8px;">✅ Projetos ilimitados</li>
   <li style="margin-bottom:8px;">✅ BIM 4D completo + BIM 5D quantitativos</li>
@@ -174,13 +175,13 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
 
     case 'new_feature':
       return {
-        subject: 'Novidade no ArxisVR',
+        subject: 'Novidade no Arxis',
         html: buildHtml({
           name: recipientName,
           subject: 'Nova funcionalidade',
-          body: `<p>Temos uma novidade para você no <strong>ArxisVR</strong>!</p>
+          body: `<p>Temos uma novidade para você no <strong>Arxis</strong>!</p>
 <p>Continue acompanhando as atualizações da plataforma — estamos sempre melhorando para você.</p>`,
-          cta: { label: 'Ver o que há de novo', url: `${appUrl}/app.html` },
+          cta: { label: 'Ver o que há de novo', url: `${appUrl}/app` },
         }),
       };
 
@@ -190,20 +191,20 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
         html: buildHtml({
           name: recipientName,
           subject: 'Reativação',
-          body: `<p>Percebemos que você não acessa o ArxisVR há alguns dias.</p>
+          body: `<p>Percebemos que você não acessa o Arxis há alguns dias.</p>
 <p>Seus projetos e modelos IFC estão todos lá, esperando por você. Que tal continuar de onde parou?</p>`,
-          cta: { label: 'Voltar ao ArxisVR', url: `${appUrl}/app.html` },
+          cta: { label: 'Voltar ao Arxis', url: `${appUrl}/app` },
         }),
       };
 
     default:
       return {
-        subject: 'ArxisVR — Atualização',
+        subject: 'Arxis — Atualização',
         html: buildHtml({
           name: recipientName,
-          subject: 'Mensagem ArxisVR',
-          body: `<p>Obrigado por usar o ArxisVR!</p>`,
-          cta: { label: 'Acessar plataforma', url: `${appUrl}/app.html` },
+          subject: 'Mensagem Arxis',
+          body: `<p>Obrigado por usar o Arxis!</p>`,
+          cta: { label: 'Acessar plataforma', url: `${appUrl}/app` },
         }),
       };
   }
@@ -242,13 +243,13 @@ export class EmailService {
           : content.html;
 
         await this.transporter.sendMail({
-          from: `"ArxisVR" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
+          from: `"Arxis" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
           to: `${recipient.name} <${recipient.email}>`,
           subject: finalSubject,
           html,
           headers: {
-            'X-Mailer': 'ArxisVR/1.1',
-            'List-Unsubscribe': `<mailto:privacidade@arxisvr.avilaops.com?subject=unsubscribe>`,
+            'X-Mailer': 'Arxis/1.1',
+            'List-Unsubscribe': `<mailto:${PRIVACY_EMAIL}?subject=unsubscribe>`,
           },
         });
         sent++;
@@ -263,7 +264,7 @@ export class EmailService {
   async sendTransactional(to: string, name: string, templateId: string): Promise<void> {
     const content = buildTemplateContent(templateId, name);
     await this.transporter.sendMail({
-      from: `"ArxisVR" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
+      from: `"Arxis" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
       to: `${name} <${to}>`,
       subject: content.subject,
       html: content.html,

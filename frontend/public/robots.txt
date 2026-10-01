@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /lgpd
+Disallow: /dashboard
+Disallow: /app
+Disallow: /admin
+Disallow: /account
+Disallow: /ar-calibration
+Disallow: /oauth-callback
+
+Sitemap: https://arxisbim.com.br/sitemap.xml

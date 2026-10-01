@@ -1,14 +1,14 @@
-import { and, desc, eq, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { db } from '../../shared/database/index.js';
 import {
   billingCheckoutSessions,
   billingInvoices,
   billingPayments,
+  billingProviderEvents,
   billingSubscriptions,
   failedWebhooks,
   ifcModels,
   projects,
-  stripeEvents,
   tenantEntitlements,
   tenantUsage,
   tenants,
@@ -22,15 +22,20 @@ import {
   BILLING_PLANS,
   getPlanAmountCents,
   getPlanEntitlements,
-  getPlanPriceId,
-  inferPlanFromPriceId,
   normalizePlan,
   toTenantSubscription,
 } from './billing.plans.js';
 import { billingWebhookSchema } from './billing.schemas.js';
 import type { BillingWebhookInput, ChangePlanInput, CreateCheckoutInput, CreatePortalInput } from './billing.schemas.js';
-import { STRIPE_WEBHOOK_EVENTS } from './billing.domain.js';
-import { StripeBillingProvider } from './providers/stripe-billing.provider.js';
+import { PROVIDER_STATUS_MAP, PROVIDER_WEBHOOK_TOPICS } from './billing.domain.js';
+import type {
+  BillingProvider,
+  ProviderCharge,
+  ProviderNotification,
+  ProviderNotificationSignature,
+  ProviderSubscription,
+} from './providers/billing-provider.js';
+import { MercadoPagoBillingProvider } from './providers/mercadopago-billing.provider.js';
 import { FiscalService } from './fiscal.service.js';
 import { emailService } from '../../core/email/email.service.js';
 
@@ -39,8 +44,13 @@ const DEFAULT_TRIAL_DAYS = 14;
 const MAX_WEBHOOK_RETRY_ATTEMPTS = 8;
 const WEBHOOK_RETRY_BASE_MINUTES = 5;
 const GRACE_PERIOD_DAYS = Math.max(1, Number(process.env.BILLING_GRACE_PERIOD_DAYS || 7));
+/** Quanto tempo o link de cadastro do cartão continua válido no nosso lado. */
+const PROVIDER_CHECKOUT_DAYS = 7;
+const PROVIDER_NAME = 'mercadopago';
+const EXTERNAL_REFERENCE_PREFIX = 'arxisvr';
 
-let stripeProviderSingleton: StripeBillingProvider | null = null;
+let providerSingleton: BillingProvider | null = null;
+let providerOverride: BillingProvider | null | undefined;
 
 function addDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -63,22 +73,57 @@ function getAppBaseUrl(): string {
 }
 
 function getConfiguredProvider(): string {
-  return process.env.BILLING_PROVIDER || 'stripe';
+  return process.env.BILLING_PROVIDER || PROVIDER_NAME;
 }
 
-function getStripeProvider(): StripeBillingProvider | null {
-  if (getConfiguredProvider() !== 'stripe') return null;
-  if (stripeProviderSingleton) return stripeProviderSingleton;
+/**
+ * Provedor de cobrança configurado, ou null quando a cobrança externa está
+ * desligada (BILLING_PROVIDER=internal) ou sem credenciais.
+ */
+function getProvider(): BillingProvider | null {
+  if (providerOverride !== undefined) return providerOverride;
+  if (getConfiguredProvider() !== PROVIDER_NAME) return null;
+  if (providerSingleton) return providerSingleton;
 
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const accessToken = process.env.MP_ACCESS_TOKEN;
+  // O segredo do webhook só existe depois de cadastrar a URL no painel do MP, e
+  // serve para UMA coisa: conferir a assinatura da notificação que chega. Exigir
+  // ele aqui derrubava também o que não depende dele (abrir assinatura, ler
+  // cobranças, sincronizar), ou seja, sem o segredo não se vendia nada. Quando
+  // faltar, `verifyMercadoPagoSignature` recusa toda notificação — que é o
+  // comportamento seguro — e o estado continua chegando pela sincronização.
+  const webhookSecret = process.env.MP_WEBHOOK_SECRET ?? '';
 
-  if (!secretKey || !webhookSecret) {
+  if (!accessToken) {
     return null;
   }
 
-  stripeProviderSingleton = new StripeBillingProvider(secretKey, webhookSecret);
-  return stripeProviderSingleton;
+  providerSingleton = new MercadoPagoBillingProvider(accessToken, webhookSecret);
+  return providerSingleton;
+}
+
+function requireProvider(): BillingProvider {
+  const provider = getProvider();
+  if (!provider) {
+    throw new Error('Provedor de cobrança configurado mas MP_ACCESS_TOKEN está ausente');
+  }
+  return provider;
+}
+
+function buildExternalReference(tenantId: string, plan: BillingPlanTier, billingCycle: BillingCycle): string {
+  return `${EXTERNAL_REFERENCE_PREFIX}:${tenantId}:${plan}:${billingCycle}`;
+}
+
+/** Lê do fim para o começo: tenantId pode conter ':', plano e ciclo não. */
+function parseExternalReference(reference: string | null | undefined): { tenantId: string; plan: BillingPlanTier; billingCycle: BillingCycle } | null {
+  if (!reference || !reference.startsWith(`${EXTERNAL_REFERENCE_PREFIX}:`)) return null;
+  const parts = reference.split(':');
+  if (parts.length < 4) return null;
+  const billingCycle = parts.pop() as BillingCycle;
+  const plan = normalizePlan(parts.pop());
+  const tenantId = parts.slice(1).join(':');
+  if (!tenantId || (billingCycle !== 'monthly' && billingCycle !== 'yearly')) return null;
+  return { tenantId, plan, billingCycle };
 }
 
 async function getSingleCount(table: any, tenantId: string): Promise<number> {
@@ -113,6 +158,7 @@ function serializeSubscription(row: typeof billingSubscriptions.$inferSelect | n
     currentPeriodStart: row?.currentPeriodStart?.toISOString() ?? null,
     currentPeriodEnd: row?.currentPeriodEnd?.toISOString() ?? null,
     trialEndsAt: row?.trialEndsAt?.toISOString() ?? null,
+    gracePeriodExpiresAt: row?.gracePeriodExpiresAt?.toISOString() ?? null,
     cancelAtPeriodEnd: row?.cancelAtPeriodEnd ?? false,
     provider: row?.provider ?? 'internal',
     providerCustomerId: row?.providerCustomerId ?? null,
@@ -124,42 +170,6 @@ function serializeSubscription(row: typeof billingSubscriptions.$inferSelect | n
 
 function addTrialDays(from = new Date(), days = DEFAULT_TRIAL_DAYS): Date {
   return addDays(from, days);
-}
-
-function mapStripeStatus(status: string | undefined): BillingStatus {
-  if (!status) return 'incomplete';
-  switch (status) {
-    case 'trialing':
-      return 'trialing';
-    case 'active':
-      return 'active';
-    case 'past_due':
-      return 'past_due';
-    case 'unpaid':
-      return 'unpaid';
-    case 'canceled':
-      return 'canceled';
-    case 'incomplete':
-    case 'incomplete_expired':
-      return 'incomplete';
-    default:
-      return 'incomplete';
-  }
-}
-
-function extractTenantIdFromStripeEvent(event: Record<string, any>): string | undefined {
-  const object = event?.data?.object;
-  if (!object) return undefined;
-
-  if (object?.metadata?.tenantId) {
-    return object.metadata.tenantId;
-  }
-
-  if (object?.subscription_details?.metadata?.tenantId) {
-    return object.subscription_details.metadata.tenantId;
-  }
-
-  return undefined;
 }
 
 function computeNextRetryAt(retryCount: number): Date | null {
@@ -202,54 +212,49 @@ async function syncTenantEntitlements(tenantId: string, plan: BillingPlanTier, s
   }
 }
 
-async function resolveTenantByProvider(subscriptionId?: string | null, customerId?: string | null): Promise<string | null> {
-  if (subscriptionId) {
-    const [bySubscription] = await db
-      .select({ tenantId: billingSubscriptions.tenantId })
-      .from(billingSubscriptions)
-      .where(eq(billingSubscriptions.providerSubscriptionId, subscriptionId))
-      .limit(1);
-
-    if (bySubscription?.tenantId) return bySubscription.tenantId;
-  }
-
-  if (customerId) {
-    const [byCustomer] = await db
-      .select({ tenantId: billingSubscriptions.tenantId })
-      .from(billingSubscriptions)
-      .where(eq(billingSubscriptions.providerCustomerId, customerId))
-      .limit(1);
-
-    if (byCustomer?.tenantId) return byCustomer.tenantId;
-  }
-
-  return null;
+async function findSubscriptionByProviderId(providerSubscriptionId: string) {
+  const [row] = await db
+    .select()
+    .from(billingSubscriptions)
+    .where(eq(billingSubscriptions.providerSubscriptionId, providerSubscriptionId))
+    .limit(1);
+  return row ?? null;
 }
 
-async function markStripeEventProcessed(eventId: string) {
+async function findCheckoutSessionByProviderId(providerSessionId: string) {
+  const [row] = await db
+    .select()
+    .from(billingCheckoutSessions)
+    .where(eq(billingCheckoutSessions.providerSessionId, providerSessionId))
+    .limit(1);
+  return row ?? null;
+}
+
+async function markProviderEventProcessed(eventId: string, tenantId?: string | null) {
   await db
-    .update(stripeEvents)
+    .update(billingProviderEvents)
     .set({
       status: 'processed',
       processedAt: new Date(),
       nextRetryAt: null,
       errorMessage: null,
+      ...(tenantId ? { tenantId } : {}),
       updatedAt: new Date(),
     } as any)
-    .where(eq(stripeEvents.eventId, eventId));
+    .where(eq(billingProviderEvents.eventId, eventId));
 }
 
-async function markStripeEventFailed(eventId: string, errorMessage: string) {
+async function markProviderEventFailed(eventId: string, errorMessage: string) {
   const [event] = await db
     .select()
-    .from(stripeEvents)
-    .where(eq(stripeEvents.eventId, eventId))
+    .from(billingProviderEvents)
+    .where(eq(billingProviderEvents.eventId, eventId))
     .limit(1);
 
   const nextRetryAt = computeNextRetryAt((event?.retryCount ?? 0) + 1);
 
   await db
-    .update(stripeEvents)
+    .update(billingProviderEvents)
     .set({
       status: 'failed',
       failedAt: new Date(),
@@ -258,10 +263,25 @@ async function markStripeEventFailed(eventId: string, errorMessage: string) {
       errorMessage,
       updatedAt: new Date(),
     } as any)
-    .where(eq(stripeEvents.eventId, eventId));
+    .where(eq(billingProviderEvents.eventId, eventId));
 }
 
+type ApplyResult = { handled: boolean; reason: string; tenantId?: string; changed?: boolean };
+
 export class BillingService {
+  /**
+   * Troca o provedor em tempo de execução. Só para testes: permite exercitar
+   * o fluxo completo (checkout → notificação → assinatura ativa) sem tocar
+   * na API do Mercado Pago. `undefined` volta ao comportamento normal.
+   */
+  static useProvider(provider: BillingProvider | null | undefined) {
+    providerOverride = provider;
+  }
+
+  static providerName(): string {
+    return getProvider()?.providerName ?? getConfiguredProvider();
+  }
+
   static async initializeTenantFreeTier(tenantId: string) {
     const [existingSubscription] = await db
       .select({ id: billingSubscriptions.id })
@@ -334,6 +354,34 @@ export class BillingService {
     }));
   }
 
+  /** Último checkout do provedor ainda aguardando o cadastro do cartão. */
+  static async getPendingCheckout(tenantId: string) {
+    const [session] = await db
+      .select()
+      .from(billingCheckoutSessions)
+      .where(and(
+        eq(billingCheckoutSessions.tenantId, tenantId),
+        eq(billingCheckoutSessions.status, 'pending'),
+        eq(billingCheckoutSessions.provider, PROVIDER_NAME),
+        isNotNull(billingCheckoutSessions.providerSessionId),
+        gt(billingCheckoutSessions.expiresAt, new Date()),
+      ))
+      .orderBy(desc(billingCheckoutSessions.createdAt))
+      .limit(1);
+
+    if (!session) return null;
+
+    return {
+      id: session.id,
+      plan: session.plan,
+      billingCycle: session.billingCycle,
+      checkoutUrl: session.checkoutUrl,
+      amountCents: session.amountCents,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+    };
+  }
+
   static async getCurrent(tenantId: string) {
     const [tenant] = await db
       .select()
@@ -373,6 +421,7 @@ export class BillingService {
       tenantId,
       tenantName: tenant.name,
       subscription: serialized,
+      pendingCheckout: await this.getPendingCheckout(tenantId),
       usage,
       overLimit: {
         users: serialized.limits.maxUsers !== -1 && usage.users > serialized.limits.maxUsers,
@@ -382,15 +431,22 @@ export class BillingService {
     };
   }
 
+  /**
+   * Inicia a assinatura de um plano.
+   *
+   * Plano pago com provedor configurado: cria a assinatura no Mercado Pago e
+   * devolve o link onde o cliente cadastra o cartão. O plano só muda quando o
+   * provedor confirma a autorização (notificação ou sincronização) — até lá a
+   * sessão fica `pending` e é reaproveitada se o cliente clicar de novo.
+   */
   static async createCheckoutSession(tenantId: string, userId: string, input: CreateCheckoutInput) {
     const plan = input.plan as BillingPlanTier;
     const billingCycle = input.billingCycle as BillingCycle;
     const amountCents = getPlanAmountCents(plan, billingCycle);
     const provider = getConfiguredProvider();
     const appUrl = getAppBaseUrl();
-    const expiresAt = addDays(new Date(), 1);
-    const successUrl = input.successUrl ?? `${appUrl}/app.html?billing=success`;
-    const cancelUrl = input.cancelUrl ?? `${appUrl}/app.html?billing=cancel`;
+    const successUrl = input.successUrl ?? `${appUrl}/account?tab=billing&billing=success`;
+    const cancelUrl = input.cancelUrl ?? `${appUrl}/account?tab=billing&billing=cancel`;
 
     const [currentSubscription] = await db
       .select()
@@ -398,39 +454,63 @@ export class BillingService {
       .where(eq(billingSubscriptions.tenantId, tenantId))
       .limit(1);
 
+    let expiresAt = addDays(new Date(), 1);
     let providerSessionId: string | null = null;
-    let checkoutUrl: string | null = `${appUrl}/app.html?billingCheckout=pending&plan=${plan}&cycle=${billingCycle}`;
+    let checkoutUrl: string | null = `${appUrl}/account?tab=billing&billingCheckout=pending&plan=${plan}&cycle=${billingCycle}`;
     let providerCustomerId = currentSubscription?.providerCustomerId ?? null;
-    let providerSubscriptionId: string | null = null;
-    let providerPriceId: string | null = null;
+    let providerMode = provider === 'internal' ? 'manual-approval' : `${provider}-subscription`;
 
-    if (provider === 'stripe' && amountCents > 0) {
-      const stripeProvider = getStripeProvider();
-      if (!stripeProvider) {
-        throw new Error('Stripe provider is configured but STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET is missing');
+    if (provider === PROVIDER_NAME && amountCents > 0) {
+      const billingProvider = requireProvider();
+
+      // Já existe um link pendente para o mesmo plano? Reaproveita em vez de
+      // abrir outra assinatura no provedor.
+      const pending = await this.getPendingCheckout(tenantId);
+      if (pending && pending.plan === plan && pending.billingCycle === billingCycle && pending.checkoutUrl) {
+        const [session] = await db
+          .select()
+          .from(billingCheckoutSessions)
+          .where(eq(billingCheckoutSessions.id, pending.id))
+          .limit(1);
+
+        return {
+          session,
+          checkoutUrl: pending.checkoutUrl,
+          provider,
+          mode: 'external_provider',
+          reused: true,
+        };
       }
 
-      providerPriceId = getPlanPriceId(plan, billingCycle);
-      if (!providerPriceId) {
-        throw new Error(`Missing Stripe Price ID for plan ${plan} and cycle ${billingCycle}`);
+      const [requester] = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!requester?.email) {
+        throw new Error('Usuário sem e-mail: o provedor precisa do e-mail do pagador');
       }
 
-      const checkout = await stripeProvider.createCheckoutSession({
+      const definition = BILLING_PLANS[plan];
+      const subscription = await billingProvider.createSubscription({
         tenantId,
         userId,
         plan,
         billingCycle,
-        priceId: providerPriceId,
-        successUrl,
-        cancelUrl,
-        customerId: providerCustomerId,
+        amountCents,
+        currency: DEFAULT_CURRENCY,
+        reason: `Arxis · ${definition.name} (${billingCycle === 'yearly' ? 'anual' : 'mensal'})`,
+        payerEmail: requester.email,
+        externalReference: buildExternalReference(tenantId, plan, billingCycle),
+        backUrl: successUrl,
       });
 
-      providerSessionId = checkout.sessionId;
-      checkoutUrl = checkout.checkoutUrl;
-      providerCustomerId = checkout.customerId ?? providerCustomerId;
-      providerSubscriptionId = checkout.subscriptionId ?? null;
-      providerPriceId = checkout.priceId ?? providerPriceId;
+      providerSessionId = subscription.id;
+      checkoutUrl = subscription.checkoutUrl;
+      providerCustomerId = subscription.payerId ?? providerCustomerId;
+      providerMode = 'mercadopago-preapproval';
+      expiresAt = addDays(new Date(), PROVIDER_CHECKOUT_DAYS);
     }
 
     const [session] = await db
@@ -451,10 +531,8 @@ export class BillingService {
         expiresAt,
         completedAt: amountCents === 0 ? new Date() : null,
         metadata: {
-          providerMode: provider === 'internal' ? 'manual-approval' : 'stripe-checkout',
-          providerPriceId,
+          providerMode,
           providerCustomerId,
-          providerSubscriptionId,
         },
       } as any)
       .returning();
@@ -466,8 +544,6 @@ export class BillingService {
         status: 'active',
         provider,
         providerCustomerId: providerCustomerId ?? undefined,
-        providerSubscriptionId: providerSubscriptionId ?? undefined,
-        providerPriceId: providerPriceId ?? undefined,
       });
     }
 
@@ -479,9 +555,15 @@ export class BillingService {
     };
   }
 
+  /**
+   * "Portal" de assinatura. O Mercado Pago não tem portal do cliente: a gestão
+   * (pausar, retomar, cancelar, trocar de plano) é feita na nossa própria tela,
+   * pelas rotas /subscription/*. Devolvemos a URL interna e, se houver cadastro
+   * de cartão pendente, o link para concluir.
+   */
   static async createPortalSession(tenantId: string, _userId: string, input: CreatePortalInput) {
     const appUrl = getAppBaseUrl();
-    const returnUrl = input.returnUrl ?? `${appUrl}/app.html?billing=overview`;
+    const returnUrl = input.returnUrl ?? `${appUrl}/account?tab=billing`;
 
     const [subscription] = await db
       .select()
@@ -497,39 +579,28 @@ export class BillingService {
       };
     }
 
-    if (subscription.provider === 'stripe' && subscription.providerCustomerId) {
-      const stripeProvider = getStripeProvider();
-      if (!stripeProvider) {
-        throw new Error('Stripe provider is configured but STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET is missing');
-      }
-
-      const portal = await stripeProvider.createPortalSession({
-        customerId: subscription.providerCustomerId,
-        returnUrl,
-      });
-
-      return {
-        provider: subscription.provider,
-        portalUrl: portal.portalUrl,
-        mode: 'external_provider_portal',
-        returnUrl,
-      };
-    }
+    const pending = await this.getPendingCheckout(tenantId);
 
     return {
       provider: subscription.provider,
-      portalUrl: `${appUrl}/app.html?billing=manage`,
-      mode: subscription.provider === 'internal' ? 'internal_portal' : 'external_provider_portal',
+      portalUrl: `${appUrl}/account?tab=billing`,
+      mode: 'internal_portal',
       returnUrl,
+      pendingCheckoutUrl: pending?.checkoutUrl ?? null,
     };
   }
 
-  static async changePlan(tenantId: string, input: ChangePlanInput) {
+  static async changePlan(
+    tenantId: string,
+    input: ChangePlanInput,
+    options: { createInvoice?: boolean; currentPeriodStart?: Date } = {},
+  ) {
     const plan = input.plan as BillingPlanTier;
     const billingCycle = input.billingCycle as BillingCycle;
     const now = new Date();
     const amountCents = getPlanAmountCents(plan, billingCycle);
-    const currentPeriodEnd = input.currentPeriodEnd ? new Date(input.currentPeriodEnd) : addPeriod(now, billingCycle);
+    const currentPeriodStart = options.currentPeriodStart ?? now;
+    const currentPeriodEnd = input.currentPeriodEnd ? new Date(input.currentPeriodEnd) : addPeriod(currentPeriodStart, billingCycle);
 
     const values = {
       tenantId,
@@ -538,7 +609,7 @@ export class BillingService {
       billingCycle,
       currency: DEFAULT_CURRENCY,
       amountCents,
-      currentPeriodStart: now,
+      currentPeriodStart,
       currentPeriodEnd,
       provider: input.provider,
       providerCustomerId: input.providerCustomerId,
@@ -580,7 +651,9 @@ export class BillingService {
 
     await syncTenantEntitlements(tenantId, plan, subscription.providerSubscriptionId ?? subscription.providerPriceId ?? plan);
 
-    if (amountCents > 0) {
+    // Fatura "em aberto" só faz sentido quando a cobrança é manual (provider
+    // interno). Com provedor, a fatura real chega como cobrança dele.
+    if (amountCents > 0 && (options.createInvoice ?? true)) {
       await db.insert(billingInvoices).values({
         tenantId,
         subscriptionId: subscription.id,
@@ -606,29 +679,554 @@ export class BillingService {
       .limit(limit);
   }
 
+  // ---------------------------------------------------------------------------
+  // Gestão da assinatura no provedor (pausar / retomar / cancelar)
+  // ---------------------------------------------------------------------------
+
+  private static async requireProviderSubscription(tenantId: string) {
+    const [subscription] = await db
+      .select()
+      .from(billingSubscriptions)
+      .where(eq(billingSubscriptions.tenantId, tenantId))
+      .limit(1);
+
+    if (!subscription || subscription.provider !== PROVIDER_NAME || !subscription.providerSubscriptionId) {
+      throw new Error('Este workspace não tem assinatura no provedor de cobrança');
+    }
+
+    return subscription;
+  }
+
+  static async pauseSubscription(tenantId: string) {
+    const subscription = await this.requireProviderSubscription(tenantId);
+    const updated = await requireProvider().setSubscriptionStatus(subscription.providerSubscriptionId!, 'paused');
+    await this.applyProviderSubscription(updated);
+    return this.getCurrent(tenantId);
+  }
+
+  static async resumeSubscription(tenantId: string) {
+    const subscription = await this.requireProviderSubscription(tenantId);
+    const updated = await requireProvider().setSubscriptionStatus(subscription.providerSubscriptionId!, 'authorized');
+    await this.applyProviderSubscription(updated);
+    return this.getCurrent(tenantId);
+  }
+
+  static async cancelSubscription(tenantId: string) {
+    const subscription = await this.requireProviderSubscription(tenantId);
+    const updated = await requireProvider().setSubscriptionStatus(subscription.providerSubscriptionId!, 'cancelled');
+    await this.applyProviderSubscription(updated);
+    return this.getCurrent(tenantId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sincronização com o provedor
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Relê no provedor tudo que este tenant tem lá — cadastros pendentes e a
+   * assinatura ativa com suas cobranças — e espelha no banco. É o que o
+   * front chama quando o cliente volta da página do cartão, e o que a rotina
+   * periódica roda para todo mundo.
+   */
+  static async syncTenantSubscription(tenantId: string) {
+    const provider = getProvider();
+    if (!provider) {
+      return { synced: false, reason: 'provider_not_configured', subscriptions: 0, charges: 0 };
+    }
+
+    let subscriptionsSynced = 0;
+    let chargesApplied = 0;
+    const providerIds = new Set<string>();
+
+    const pendingSessions = await db
+      .select({ providerSessionId: billingCheckoutSessions.providerSessionId })
+      .from(billingCheckoutSessions)
+      .where(and(
+        eq(billingCheckoutSessions.tenantId, tenantId),
+        eq(billingCheckoutSessions.status, 'pending'),
+        eq(billingCheckoutSessions.provider, PROVIDER_NAME),
+        isNotNull(billingCheckoutSessions.providerSessionId),
+        gt(billingCheckoutSessions.expiresAt, addDays(new Date(), -30)),
+      ));
+
+    for (const session of pendingSessions) {
+      if (session.providerSessionId) providerIds.add(session.providerSessionId);
+    }
+
+    const [subscription] = await db
+      .select()
+      .from(billingSubscriptions)
+      .where(eq(billingSubscriptions.tenantId, tenantId))
+      .limit(1);
+
+    if (subscription?.provider === PROVIDER_NAME && subscription.providerSubscriptionId) {
+      providerIds.add(subscription.providerSubscriptionId);
+    }
+
+    for (const providerId of providerIds) {
+      const remote = await provider.getSubscription(providerId);
+      await this.applyProviderSubscription(remote);
+      subscriptionsSynced += 1;
+
+      if (remote.status === 'pending') continue;
+
+      const charges = await provider.listCharges(providerId);
+      for (const charge of charges) {
+        const result = await this.applyProviderCharge(charge);
+        if (result.changed) chargesApplied += 1;
+      }
+    }
+
+    return { synced: true, subscriptions: subscriptionsSynced, charges: chargesApplied };
+  }
+
+  /**
+   * Varredura periódica: sincroniza todo tenant com assinatura ou cadastro
+   * pendente no provedor. Falha de um não derruba os outros.
+   */
+  static async syncProviderSubscriptions(limit = 200) {
+    const provider = getProvider();
+    if (!provider) {
+      return { synced: 0, failed: 0, skipped: true };
+    }
+
+    const withSubscription = await db
+      .select({ tenantId: billingSubscriptions.tenantId })
+      .from(billingSubscriptions)
+      .where(and(
+        eq(billingSubscriptions.provider, PROVIDER_NAME),
+        isNotNull(billingSubscriptions.providerSubscriptionId),
+      ))
+      .limit(limit);
+
+    const withPendingCheckout = await db
+      .selectDistinct({ tenantId: billingCheckoutSessions.tenantId })
+      .from(billingCheckoutSessions)
+      .where(and(
+        eq(billingCheckoutSessions.status, 'pending'),
+        eq(billingCheckoutSessions.provider, PROVIDER_NAME),
+        isNotNull(billingCheckoutSessions.providerSessionId),
+        gt(billingCheckoutSessions.expiresAt, new Date()),
+      ))
+      .limit(limit);
+
+    const tenantIds = new Set<string>([
+      ...withSubscription.map((row) => row.tenantId),
+      ...withPendingCheckout.map((row) => row.tenantId),
+    ]);
+
+    let synced = 0;
+    let failed = 0;
+    const errors: Array<{ tenantId: string; error: string }> = [];
+
+    for (const tenantId of tenantIds) {
+      try {
+        await this.syncTenantSubscription(tenantId);
+        synced += 1;
+      } catch (error: any) {
+        failed += 1;
+        errors.push({ tenantId, error: error?.message || String(error) });
+      }
+    }
+
+    return { synced, failed, errors };
+  }
+
+  /**
+   * Espelha o estado de uma assinatura do provedor no banco.
+   *
+   * Idempotente: relida todo dia pela sincronização, só grava quando algo
+   * mudou de verdade — senão `currentPeriodStart` seria reiniciado a cada
+   * varredura.
+   */
+  static async applyProviderSubscription(remote: ProviderSubscription): Promise<ApplyResult> {
+    const session = await findCheckoutSessionByProviderId(remote.id);
+    const existingByProvider = await findSubscriptionByProviderId(remote.id);
+    const parsedReference = parseExternalReference(remote.externalReference);
+
+    const tenantId = session?.tenantId ?? existingByProvider?.tenantId ?? parsedReference?.tenantId;
+    if (!tenantId) {
+      return { handled: false, reason: 'tenant_not_resolved' };
+    }
+
+    const plan = normalizePlan(session?.plan ?? parsedReference?.plan ?? existingByProvider?.plan);
+    const billingCycle: BillingCycle = session?.billingCycle ?? parsedReference?.billingCycle ?? existingByProvider?.billingCycle ?? 'monthly';
+    const nextStatus = PROVIDER_STATUS_MAP[remote.status];
+
+    const [current] = await db
+      .select()
+      .from(billingSubscriptions)
+      .where(eq(billingSubscriptions.tenantId, tenantId))
+      .limit(1);
+
+    if (remote.status === 'pending') {
+      // Cartão ainda não cadastrado: só garante que a sessão tem o link.
+      if (session && !session.checkoutUrl && remote.checkoutUrl) {
+        await db
+          .update(billingCheckoutSessions)
+          .set({ checkoutUrl: remote.checkoutUrl, updatedAt: new Date() } as any)
+          .where(eq(billingCheckoutSessions.id, session.id));
+      }
+      return { handled: true, reason: 'pending_card', tenantId, changed: false };
+    }
+
+    const isCurrentSubscription = current?.providerSubscriptionId === remote.id;
+
+    if (remote.status === 'cancelled' && !isCurrentSubscription) {
+      // Assinatura antiga (substituída por outra) ou cadastro abandonado.
+      if (session && session.status === 'pending') {
+        await db
+          .update(billingCheckoutSessions)
+          .set({ status: 'canceled', updatedAt: new Date() } as any)
+          .where(eq(billingCheckoutSessions.id, session.id));
+        return { handled: true, reason: 'checkout_canceled', tenantId, changed: true };
+      }
+      return { handled: true, reason: 'superseded_subscription', tenantId, changed: false };
+    }
+
+    if (remote.status === 'authorized' && session && session.status === 'pending') {
+      await db
+        .update(billingCheckoutSessions)
+        .set({
+          status: 'completed',
+          completedAt: new Date(),
+          updatedAt: new Date(),
+          metadata: { ...(session.metadata || {}), providerStatus: remote.status },
+        } as any)
+        .where(eq(billingCheckoutSessions.id, session.id));
+    }
+
+    const nextPeriodEnd = remote.nextPaymentDate ? new Date(remote.nextPaymentDate) : null;
+    const unchanged = current
+      && current.provider === PROVIDER_NAME
+      && current.providerSubscriptionId === remote.id
+      && current.plan === plan
+      && current.billingCycle === billingCycle
+      && current.status === nextStatus
+      && (!nextPeriodEnd || current.currentPeriodEnd?.getTime() === nextPeriodEnd.getTime());
+
+    if (unchanged) {
+      return { handled: true, reason: `subscription_${remote.status}`, tenantId, changed: false };
+    }
+
+    const previousProviderSubscriptionId = current?.providerSubscriptionId ?? null;
+
+    await this.changePlan(tenantId, {
+      plan,
+      billingCycle,
+      status: nextStatus,
+      provider: PROVIDER_NAME,
+      providerCustomerId: remote.payerId ?? remote.payerEmail ?? current?.providerCustomerId ?? undefined,
+      providerSubscriptionId: remote.id,
+      currentPeriodEnd: nextPeriodEnd?.toISOString(),
+    }, {
+      createInvoice: false,
+      currentPeriodStart: isCurrentSubscription ? current?.currentPeriodStart ?? undefined : undefined,
+    });
+
+    // Troca de plano: a assinatura nova foi autorizada, a antiga precisa
+    // parar de cobrar. Falha aqui não pode desfazer a ativação.
+    if (
+      remote.status === 'authorized'
+      && previousProviderSubscriptionId
+      && previousProviderSubscriptionId !== remote.id
+      && current?.provider === PROVIDER_NAME
+    ) {
+      await getProvider()?.setSubscriptionStatus(previousProviderSubscriptionId, 'cancelled').catch(() => {});
+    }
+
+    return { handled: true, reason: `subscription_${remote.status}`, tenantId, changed: true };
+  }
+
+  /**
+   * Registra uma cobrança recorrente do provedor e decide entre reativar e
+   * abrir a janela de tolerância. Idempotente por `providerInvoiceId`: a
+   * varredura relê as mesmas cobranças e só age quando o estado muda.
+   */
+  static async applyProviderCharge(charge: ProviderCharge): Promise<ApplyResult> {
+    if (charge.status === 'scheduled') {
+      return { handled: true, reason: 'charge_scheduled', changed: false };
+    }
+
+    const subscription = await findSubscriptionByProviderId(charge.subscriptionId);
+    const session = subscription ? null : await findCheckoutSessionByProviderId(charge.subscriptionId);
+    const tenantId = subscription?.tenantId ?? session?.tenantId;
+
+    if (!tenantId) {
+      return { handled: false, reason: 'charge_tenant_not_resolved' };
+    }
+
+    const invoiceStatus = charge.status === 'approved' ? 'paid'
+      : charge.status === 'cancelled' ? 'void'
+      : charge.status === 'rejected' ? 'uncollectible'
+      : 'open';
+    const paymentStatus = charge.status === 'approved' ? 'succeeded'
+      : charge.status === 'rejected' ? 'failed'
+      : charge.status === 'cancelled' ? 'canceled'
+      : 'pending';
+
+    const [existingInvoice] = await db
+      .select()
+      .from(billingInvoices)
+      .where(and(
+        eq(billingInvoices.tenantId, tenantId),
+        eq(billingInvoices.providerInvoiceId, charge.id),
+      ))
+      .limit(1);
+
+    if (existingInvoice && existingInvoice.status === invoiceStatus) {
+      return { handled: true, reason: 'charge_already_recorded', tenantId, changed: false };
+    }
+
+    const now = new Date();
+    const paidAt = charge.status === 'approved' ? (existingInvoice?.paidAt ?? now) : null;
+    const invoiceValues = {
+      tenantId,
+      subscriptionId: subscription?.id ?? null,
+      status: invoiceStatus,
+      currency: charge.currency.toUpperCase(),
+      subtotalCents: charge.amountCents,
+      taxCents: 0,
+      totalCents: charge.amountCents,
+      paidAt,
+      dueAt: charge.debitDate ? new Date(charge.debitDate) : existingInvoice?.dueAt ?? now,
+      providerInvoiceId: charge.id,
+      metadata: {
+        ...(existingInvoice?.metadata || {}),
+        providerChargeStatus: charge.status,
+        providerStatusDetail: charge.statusDetail,
+        providerPaymentId: charge.paymentId,
+      },
+      updatedAt: now,
+    };
+
+    const [invoice] = existingInvoice
+      ? await db
+          .update(billingInvoices)
+          .set(invoiceValues as any)
+          .where(eq(billingInvoices.id, existingInvoice.id))
+          .returning()
+      : await db
+          .insert(billingInvoices)
+          .values(invoiceValues as any)
+          .returning();
+
+    const [existingPayment] = await db
+      .select({ id: billingPayments.id })
+      .from(billingPayments)
+      .where(and(
+        eq(billingPayments.tenantId, tenantId),
+        eq(billingPayments.providerInvoiceId, charge.id),
+      ))
+      .limit(1);
+
+    const paymentValues = {
+      tenantId,
+      subscriptionId: subscription?.id ?? null,
+      invoiceId: invoice.id,
+      status: paymentStatus,
+      amountCents: charge.amountCents,
+      currency: charge.currency.toUpperCase(),
+      provider: PROVIDER_NAME,
+      providerInvoiceId: charge.id,
+      providerPaymentIntentId: charge.paymentId,
+      paidAt,
+      metadata: {
+        providerChargeStatus: charge.status,
+        providerStatusDetail: charge.statusDetail,
+      },
+      updatedAt: now,
+    };
+
+    if (existingPayment) {
+      await db.update(billingPayments).set(paymentValues as any).where(eq(billingPayments.id, existingPayment.id));
+    } else {
+      await db.insert(billingPayments).values(paymentValues as any);
+    }
+
+    if (subscription) {
+      if (charge.status === 'approved') {
+        const periodStart = paidAt ?? now;
+        await db
+          .update(billingSubscriptions)
+          .set({
+            status: 'active',
+            gracePeriodExpiresAt: null,
+            currentPeriodStart: periodStart,
+            currentPeriodEnd: addPeriod(periodStart, subscription.billingCycle),
+            updatedAt: now,
+          } as any)
+          .where(eq(billingSubscriptions.id, subscription.id));
+      } else if (charge.status === 'rejected' && (subscription.status === 'active' || subscription.status === 'trialing')) {
+        // Recusa abre a janela de tolerância; o provedor tenta de novo por
+        // alguns dias antes de desistir.
+        await db
+          .update(billingSubscriptions)
+          .set({
+            status: 'grace_period',
+            gracePeriodExpiresAt: addDays(now, GRACE_PERIOD_DAYS),
+            updatedAt: now,
+          } as any)
+          .where(eq(billingSubscriptions.id, subscription.id));
+      }
+    }
+
+    if (charge.status === 'approved' && !existingInvoice?.paidAt) {
+      // Telemetria: subscription_paid do lado do servidor. Nunca quebra a cobrança.
+      try {
+        await db.insert(analyticsEvents).values({
+          tenantId,
+          name: 'subscription_paid',
+          category: 'billing',
+          props: {
+            invoiceId: invoice.id,
+            totalCents: invoice.totalCents,
+            plan: subscription?.plan || 'unknown',
+            cycle: subscription?.billingCycle || 'monthly',
+          },
+          timestamp: now,
+        } as any);
+      } catch {
+        // telemetria não pode falhar a cobrança
+      }
+
+      // Emissão de NFS-e (gancho fiscal). DESLIGADO por padrão (sem CNPJ):
+      // não faz chamada externa nem custa nada; só emite quando FISCAL_PROVIDER
+      // + FISCAL_API_KEY estiverem configurados. Nunca quebra o pagamento.
+      const fiscal = await FiscalService.emitForInvoice({
+        tenantId,
+        invoiceId: invoice.id,
+        providerInvoiceId: charge.id,
+        amountCents: charge.amountCents,
+        currency: charge.currency.toUpperCase(),
+        customerEmail: (charge.raw?.payer?.email as string) || null,
+        customerName: null,
+        description: 'Assinatura Arxis',
+      });
+      if (fiscal.emitted) {
+        await db
+          .update(billingInvoices)
+          .set({ metadata: { ...(invoice.metadata as any), nfse: fiscal } } as any)
+          .where(eq(billingInvoices.id, invoice.id));
+      }
+    }
+
+    return { handled: true, reason: `charge_${charge.status}`, tenantId, changed: true };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Webhook do provedor + jornal de eventos (idempotência, retry, ops)
+  // ---------------------------------------------------------------------------
+
+  static verifyProviderNotification(input: ProviderNotificationSignature): boolean {
+    const provider = getProvider();
+    if (!provider) return false;
+    return provider.verifyNotification(input);
+  }
+
+  /**
+   * Recebe uma notificação já autenticada do provedor. A notificação entra
+   * no jornal ANTES de ser processada (chave única = id da notificação): o
+   * provedor reenvia quando não recebe 200 rápido, e sem isso a mesma
+   * cobrança entraria duas vezes.
+   *
+   * O processamento não confia no corpo: relê o recurso no provedor. Por
+   * isso reprocessar um evento é sempre seguro.
+   */
+  static async handleProviderWebhook(notification: ProviderNotification) {
+    const provider = getProvider();
+    if (!provider) {
+      throw new Error('Notificação do provedor recebida mas o provedor não está configurado');
+    }
+
+    const [inserted] = await db
+      .insert(billingProviderEvents)
+      .values({
+        eventId: notification.id,
+        eventType: notification.topic,
+        provider: provider.providerName,
+        status: 'received',
+        rawEvent: { ...notification.raw, topic: notification.topic, dataId: notification.dataId, action: notification.action },
+      } as any)
+      .onConflictDoNothing({ target: billingProviderEvents.eventId })
+      .returning();
+
+    if (!inserted) {
+      return {
+        received: true,
+        duplicate: true,
+        eventId: notification.id,
+      };
+    }
+
+    try {
+      const result = await this.applyProviderEvent(inserted.rawEvent as Record<string, any>);
+      await markProviderEventProcessed(notification.id, result.tenantId);
+
+      return {
+        received: true,
+        processed: true,
+        eventId: notification.id,
+        topic: notification.topic,
+        reason: result.reason,
+      };
+    } catch (error: any) {
+      await markProviderEventFailed(notification.id, error?.message || 'Unknown provider event error');
+      return {
+        received: true,
+        processed: false,
+        eventId: notification.id,
+        topic: notification.topic,
+        error: error?.message || 'Unknown provider event error',
+      };
+    }
+  }
+
+  private static async applyProviderEvent(raw: Record<string, any>): Promise<ApplyResult> {
+    const topic = raw.topic ?? raw.type;
+    const dataId = raw.dataId ?? raw.data?.id;
+
+    if (!topic || !dataId) {
+      return { handled: false, reason: 'invalid_event' };
+    }
+
+    if (topic === PROVIDER_WEBHOOK_TOPICS.subscription) {
+      const remote = await requireProvider().getSubscription(String(dataId));
+      return this.applyProviderSubscription(remote);
+    }
+
+    if (topic === PROVIDER_WEBHOOK_TOPICS.charge) {
+      const charge = await requireProvider().getCharge(String(dataId));
+      return this.applyProviderCharge(charge);
+    }
+
+    return { handled: false, reason: `topic_not_mapped:${topic}` };
+  }
+
   static async getWebhookOpsStatus(tenantId?: string) {
-    const whereClause = tenantId ? eq(stripeEvents.tenantId, tenantId) : undefined;
+    const whereClause = tenantId ? eq(billingProviderEvents.tenantId, tenantId) : undefined;
 
     const [summary] = whereClause
       ? await db
           .select({
             total: sql<number>`count(*)::int`,
-            processed: sql<number>`count(*) filter (where ${stripeEvents.status} = 'processed')::int`,
-            failed: sql<number>`count(*) filter (where ${stripeEvents.status} = 'failed')::int`,
-            received: sql<number>`count(*) filter (where ${stripeEvents.status} = 'received')::int`,
+            processed: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'processed')::int`,
+            failed: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'failed')::int`,
+            received: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'received')::int`,
           })
-          .from(stripeEvents)
+          .from(billingProviderEvents)
           .where(whereClause)
       : await db
           .select({
             total: sql<number>`count(*)::int`,
-            processed: sql<number>`count(*) filter (where ${stripeEvents.status} = 'processed')::int`,
-            failed: sql<number>`count(*) filter (where ${stripeEvents.status} = 'failed')::int`,
-            received: sql<number>`count(*) filter (where ${stripeEvents.status} = 'received')::int`,
+            processed: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'processed')::int`,
+            failed: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'failed')::int`,
+            received: sql<number>`count(*) filter (where ${billingProviderEvents.status} = 'received')::int`,
           })
-          .from(stripeEvents);
+          .from(billingProviderEvents);
 
     return {
+      provider: this.providerName(),
       total: summary?.total ?? 0,
       processed: summary?.processed ?? 0,
       failed: summary?.failed ?? 0,
@@ -638,86 +1236,93 @@ export class BillingService {
     };
   }
 
-  static async listFailedStripeEvents(tenantId: string, limit = 20) {
+  static async listFailedProviderEvents(tenantId: string, limit = 20) {
     return await db
       .select({
-        id: stripeEvents.id,
-        eventId: stripeEvents.eventId,
-        eventType: stripeEvents.eventType,
-        status: stripeEvents.status,
-        retryCount: stripeEvents.retryCount,
-        nextRetryAt: stripeEvents.nextRetryAt,
-        failedAt: stripeEvents.failedAt,
-        errorMessage: stripeEvents.errorMessage,
-        updatedAt: stripeEvents.updatedAt,
+        id: billingProviderEvents.id,
+        eventId: billingProviderEvents.eventId,
+        eventType: billingProviderEvents.eventType,
+        provider: billingProviderEvents.provider,
+        status: billingProviderEvents.status,
+        retryCount: billingProviderEvents.retryCount,
+        nextRetryAt: billingProviderEvents.nextRetryAt,
+        failedAt: billingProviderEvents.failedAt,
+        errorMessage: billingProviderEvents.errorMessage,
+        updatedAt: billingProviderEvents.updatedAt,
       })
-      .from(stripeEvents)
+      .from(billingProviderEvents)
       .where(and(
-        eq(stripeEvents.tenantId, tenantId),
-        eq(stripeEvents.status, 'failed')
+        eq(billingProviderEvents.tenantId, tenantId),
+        eq(billingProviderEvents.status, 'failed')
       ))
-      .orderBy(desc(stripeEvents.updatedAt))
+      .orderBy(desc(billingProviderEvents.updatedAt))
       .limit(limit);
   }
 
-  static async reprocessStripeEvent(eventId: string, tenantId?: string) {
+  static async reprocessProviderEvent(eventId: string, tenantId?: string) {
     const [event] = tenantId
       ? await db
           .select()
-          .from(stripeEvents)
+          .from(billingProviderEvents)
           .where(and(
-            eq(stripeEvents.eventId, eventId),
-            eq(stripeEvents.tenantId, tenantId)
+            eq(billingProviderEvents.eventId, eventId),
+            eq(billingProviderEvents.tenantId, tenantId)
           ))
           .limit(1)
       : await db
           .select()
-          .from(stripeEvents)
-          .where(eq(stripeEvents.eventId, eventId))
+          .from(billingProviderEvents)
+          .where(eq(billingProviderEvents.eventId, eventId))
           .limit(1);
 
     if (!event) {
-      throw new Error('Stripe event not found for reprocessing');
+      throw new Error('Provider event not found for reprocessing');
     }
 
     try {
-      await this.applyStripeEvent(event.rawEvent as Record<string, any>);
-      await markStripeEventProcessed(event.eventId);
+      const raw = event.rawEvent as Record<string, any>;
+      // Eventos do webhook genérico (provider interno) guardam o payload do
+      // caller; os do provedor guardam a notificação, que é relida na API.
+      const result = event.provider === 'internal' || raw?.event
+        ? await this.applyGenericWebhook(billingWebhookSchema.parse(raw)).then((): ApplyResult => ({ handled: true, reason: 'generic_webhook', tenantId: event.tenantId ?? undefined }))
+        : await this.applyProviderEvent(raw);
+      await markProviderEventProcessed(event.eventId, result.tenantId);
 
       return {
         reprocessed: true,
         eventId: event.eventId,
+        reason: result.reason,
       };
     } catch (error: any) {
-      await markStripeEventFailed(event.eventId, error?.message || 'Unknown reprocess error');
+      await markProviderEventFailed(event.eventId, error?.message || 'Unknown reprocess error');
       throw error;
     }
   }
 
-  static async processDueStripeRetries(tenantId?: string, limit = 20) {
+  static async processDueProviderRetries(tenantId?: string, limit = 20) {
     const now = new Date();
     const dueWhere = and(
-      eq(stripeEvents.status, 'failed'),
-      sql`${stripeEvents.retryCount} < ${MAX_WEBHOOK_RETRY_ATTEMPTS}`,
+      eq(billingProviderEvents.status, 'failed'),
+      sql`${billingProviderEvents.retryCount} < ${MAX_WEBHOOK_RETRY_ATTEMPTS}`,
       or(
-        lte(stripeEvents.nextRetryAt, now),
-        eq(stripeEvents.nextRetryAt, null as any)
+        lte(billingProviderEvents.nextRetryAt, now),
+        isNull(billingProviderEvents.nextRetryAt)
       ),
-      ...(tenantId ? [eq(stripeEvents.tenantId, tenantId)] : [])
+      ...(tenantId ? [eq(billingProviderEvents.tenantId, tenantId)] : [])
     );
 
     const dueEvents = await db
-      .select({ eventId: stripeEvents.eventId, tenantId: stripeEvents.tenantId })
-      .from(stripeEvents)
+      .select({ eventId: billingProviderEvents.eventId, tenantId: billingProviderEvents.tenantId })
+      .from(billingProviderEvents)
       .where(dueWhere)
-      .orderBy(desc(stripeEvents.updatedAt))
+      .orderBy(desc(billingProviderEvents.updatedAt))
       .limit(limit);
 
     const results: Array<{ eventId: string; success: boolean; error?: string }> = [];
 
     for (const event of dueEvents) {
       try {
-        await this.reprocessStripeEvent(event.eventId, event.tenantId ?? undefined);
+        await this.reprocessProviderEvent(event.eventId, event.tenantId ?? undefined);
         results.push({ eventId: event.eventId, success: true });
       } catch (error: any) {
         results.push({
@@ -736,250 +1341,9 @@ export class BillingService {
     };
   }
 
-  static async handleStripeWebhook(rawBody: string, signature: string) {
-    const stripeProvider = getStripeProvider();
-    if (!stripeProvider) {
-      throw new Error('Stripe webhook received but provider is not configured');
-    }
-
-    const event = stripeProvider.parseWebhookEvent(rawBody, signature);
-
-    const [inserted] = await db
-      .insert(stripeEvents)
-      .values({
-        eventId: event.id,
-        eventType: event.type,
-        tenantId: extractTenantIdFromStripeEvent(event.raw),
-        provider: 'stripe',
-        status: 'received',
-        rawEvent: event.raw,
-      } as any)
-      .onConflictDoNothing({ target: stripeEvents.eventId })
-      .returning();
-
-    if (!inserted) {
-      return {
-        received: true,
-        duplicate: true,
-        eventId: event.id,
-      };
-    }
-
-    try {
-      await this.applyStripeEvent(event.raw);
-      await markStripeEventProcessed(event.id);
-
-      return {
-        received: true,
-        processed: true,
-        eventId: event.id,
-        type: event.type,
-      };
-    } catch (error: any) {
-      await markStripeEventFailed(event.id, error?.message || 'Unknown stripe event error');
-      throw error;
-    }
-  }
-
-  private static async applyStripeEvent(event: Record<string, any>) {
-    const eventType = event.type;
-    const data = event.data?.object;
-
-    if (!eventType || !data) {
-      return { ignored: true, reason: 'invalid_event' };
-    }
-
-    if (eventType === STRIPE_WEBHOOK_EVENTS.checkoutCompleted) {
-      const metadata = data.metadata || {};
-      const providerSessionId = data.id as string;
-
-      const [session] = await db
-        .select()
-        .from(billingCheckoutSessions)
-        .where(eq(billingCheckoutSessions.providerSessionId, providerSessionId))
-        .limit(1);
-
-      if (!session) {
-        return { ignored: true, reason: 'checkout_session_not_found', providerSessionId };
-      }
-
-      await db
-        .update(billingCheckoutSessions)
-        .set({
-          status: 'completed',
-          completedAt: new Date(),
-          updatedAt: new Date(),
-          metadata: {
-            ...(session.metadata || {}),
-            stripeEventType: eventType,
-          },
-        } as any)
-        .where(eq(billingCheckoutSessions.id, session.id));
-
-      await this.changePlan(session.tenantId, {
-        plan: normalizePlan(metadata.plan || session.plan),
-        billingCycle: (metadata.billingCycle || session.billingCycle || 'monthly') as BillingCycle,
-        status: 'active',
-        provider: 'stripe',
-        providerCustomerId: typeof data.customer === 'string' ? data.customer : undefined,
-        providerSubscriptionId: typeof data.subscription === 'string' ? data.subscription : undefined,
-      });
-
-      return { handled: true, eventType };
-    }
-
-    if (
-      eventType === STRIPE_WEBHOOK_EVENTS.subscriptionCreated
-      || eventType === STRIPE_WEBHOOK_EVENTS.subscriptionUpdated
-      || eventType === STRIPE_WEBHOOK_EVENTS.subscriptionDeleted
-    ) {
-      const metadata = data.metadata || {};
-      const items = data.items?.data || [];
-      const primaryItem = Array.isArray(items) && items.length > 0 ? items[0] : null;
-      const stripePriceId = primaryItem?.price?.id as string | undefined;
-      const inferredPlan = inferPlanFromPriceId(stripePriceId);
-      const plan = normalizePlan(metadata.plan || inferredPlan || 'free');
-      const billingCycle: BillingCycle = (primaryItem?.price?.recurring?.interval === 'year' ? 'yearly' : 'monthly');
-      const tenantId = metadata.tenantId || await resolveTenantByProvider(data.id as string, data.customer as string);
-
-      if (!tenantId) {
-        return { ignored: true, reason: 'tenant_not_resolved', eventType };
-      }
-
-      await this.changePlan(tenantId, {
-        plan,
-        billingCycle,
-        status: eventType === STRIPE_WEBHOOK_EVENTS.subscriptionDeleted ? 'canceled' : mapStripeStatus(data.status),
-        provider: 'stripe',
-        providerCustomerId: typeof data.customer === 'string' ? data.customer : undefined,
-        providerSubscriptionId: typeof data.id === 'string' ? data.id : undefined,
-        providerPriceId: stripePriceId,
-      });
-
-      return { handled: true, eventType };
-    }
-
-    if (
-      eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid
-      || eventType === STRIPE_WEBHOOK_EVENTS.invoicePaymentFailed
-    ) {
-      const subscriptionId = typeof data.subscription === 'string' ? data.subscription : null;
-      const customerId = typeof data.customer === 'string' ? data.customer : null;
-      const tenantId = await resolveTenantByProvider(subscriptionId, customerId);
-
-      if (!tenantId) {
-        return { ignored: true, reason: 'invoice_tenant_not_resolved', eventType };
-      }
-
-      const [subscription] = await db
-        .select()
-        .from(billingSubscriptions)
-        .where(eq(billingSubscriptions.tenantId, tenantId))
-        .limit(1);
-
-      const [invoice] = await db
-        .insert(billingInvoices)
-        .values({
-          tenantId,
-          subscriptionId: subscription?.id,
-          status: eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid ? 'paid' : 'open',
-          currency: (data.currency || DEFAULT_CURRENCY).toUpperCase(),
-          subtotalCents: Math.round((data.subtotal || 0) as number),
-          taxCents: Math.round((data.tax || 0) as number),
-          totalCents: Math.round((data.amount_paid || data.amount_due || 0) as number),
-          paidAt: eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid ? new Date() : null,
-          providerInvoiceId: data.id,
-          hostedInvoiceUrl: data.hosted_invoice_url || null,
-          metadata: {
-            stripeInvoiceStatus: data.status,
-            stripeEventType: eventType,
-          },
-        } as any)
-        .returning();
-
-      await db
-        .insert(billingPayments)
-        .values({
-          tenantId,
-          subscriptionId: subscription?.id,
-          invoiceId: invoice.id,
-          status: eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid ? 'succeeded' : 'failed',
-          amountCents: Math.round((data.amount_paid || data.amount_due || 0) as number),
-          currency: (data.currency || DEFAULT_CURRENCY).toUpperCase(),
-          provider: 'stripe',
-          providerInvoiceId: data.id,
-          providerPaymentIntentId: typeof data.payment_intent === 'string' ? data.payment_intent : null,
-          paidAt: eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid ? new Date() : null,
-          metadata: {
-            stripeInvoiceStatus: data.status,
-            stripeEventType: eventType,
-          },
-        } as any);
-
-      if (subscription) {
-        const paid = eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid;
-        const nextStatus: BillingStatus = paid ? 'active' : 'grace_period';
-
-        await db
-          .update(billingSubscriptions)
-          .set({
-            status: nextStatus,
-            // Pagamento ok zera o prazo; falha inicia a janela de grace.
-            gracePeriodExpiresAt: paid ? null : addDays(new Date(), GRACE_PERIOD_DAYS),
-            updatedAt: new Date(),
-          } as any)
-          .where(eq(billingSubscriptions.id, subscription.id));
-      }
-
-      // Emissão de NFS-e (gancho fiscal). DESLIGADO por padrão (sem CNPJ):
-      // não faz chamada externa nem custa nada; só emite quando FISCAL_PROVIDER
-      // + FISCAL_API_KEY estiverem configurados. Nunca quebra o pagamento.
-      if (eventType === STRIPE_WEBHOOK_EVENTS.invoicePaid) {
-        // Telemetry: track subscription_paid server-side
-        try {
-          await db.insert(analyticsEvents).values({
-            tenantId,
-            name: 'subscription_paid',
-            category: 'billing',
-            props: {
-              invoiceId: invoice.id,
-              totalCents: invoice.totalCents,
-              plan: subscription?.plan || 'unknown',
-              cycle: subscription?.billingCycle || 'monthly',
-            },
-            timestamp: new Date(),
-          } as any);
-        } catch (e) {
-          // Do not fail webhook on telemetry error
-        }
-
-        const fiscal = await FiscalService.emitForInvoice({
-          tenantId,
-          invoiceId: invoice.id,
-          providerInvoiceId: data.id,
-          amountCents: Math.round((data.amount_paid || data.amount_due || 0) as number),
-          currency: (data.currency || DEFAULT_CURRENCY).toUpperCase(),
-          customerEmail: (data.customer_email as string) || null,
-          customerName: (data.customer_name as string) || null,
-          description: 'Assinatura ArxisVR',
-        });
-        if (fiscal.emitted) {
-          await db
-            .update(billingInvoices)
-            .set({ metadata: { ...(invoice.metadata as any), nfse: fiscal } } as any)
-            .where(eq(billingInvoices.id, invoice.id));
-        }
-      }
-
-      return { handled: true, eventType };
-    }
-
-    return {
-      ignored: true,
-      reason: 'event_not_mapped',
-      eventType,
-    };
-  }
+  // ---------------------------------------------------------------------------
+  // Webhook genérico (provider interno / aprovação manual)
+  // ---------------------------------------------------------------------------
 
   static async handleWebhook(input: BillingWebhookInput) {
     // Idempotency: if the caller supplies an eventId, dedupe before processing.
@@ -987,7 +1351,7 @@ export class BillingService {
     // means we have already seen this event and must not reprocess it.
     if (input.eventId) {
       const [claimed] = await db
-        .insert(stripeEvents)
+        .insert(billingProviderEvents)
         .values({
           eventId: input.eventId,
           eventType: input.event,
@@ -996,7 +1360,7 @@ export class BillingService {
           status: 'received',
           rawEvent: input as any,
         } as any)
-        .onConflictDoNothing({ target: stripeEvents.eventId })
+        .onConflictDoNothing({ target: billingProviderEvents.eventId })
         .returning();
 
       if (!claimed) {
@@ -1005,10 +1369,10 @@ export class BillingService {
 
       try {
         const result = await this.applyGenericWebhook(input);
-        await markStripeEventProcessed(input.eventId);
+        await markProviderEventProcessed(input.eventId);
         return result;
       } catch (error: any) {
-        await markStripeEventFailed(input.eventId, error?.message || 'Unknown webhook error');
+        await markProviderEventFailed(input.eventId, error?.message || 'Unknown webhook error');
         throw error;
       }
     }
@@ -1248,7 +1612,7 @@ export class BillingService {
     const appUrl = getAppBaseUrl();
     const isFree = nextStatus === 'active';
     const subject = isFree
-      ? 'Seu período de teste do ArxisVR terminou'
+      ? 'Seu período de teste do Arxis terminou'
       : 'Seu período de teste terminou — regularize seu pagamento';
     const body = isFree
       ? `<p>Seu teste do plano <strong>${plan}</strong> terminou. Sua conta continua ativa no plano gratuito e seus dados estão preservados.</p>`
@@ -1259,7 +1623,7 @@ export class BillingService {
         <div style="font-family:sans-serif;max-width:480px;margin:auto">
           <h2>Olá${r.name ? ' ' + r.name : ''},</h2>
           ${body}
-          <p><a href="${appUrl}/app.html?billing=overview" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Ver assinatura</a></p>
+          <p><a href="${appUrl}/account?tab=billing" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Ver assinatura</a></p>
         </div>`;
       await emailService.sendCustomEmail(r.email, subject, html, tenantId).catch(() => {});
     }

@@ -108,7 +108,7 @@ export default function ApiTokenCreatedModal({
 
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
             <p>
-              <strong>Próximo passo:</strong> Use esta chave para conectar o ArxisVR na sua ferramenta de integração.
+              <strong>Próximo passo:</strong> Use esta chave para conectar o Arxis na sua ferramenta de integração.
             </p>
           </div>
 

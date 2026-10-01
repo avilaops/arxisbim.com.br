@@ -53,11 +53,16 @@ describe('OTService', () => {
 
   describe('Conflict Resolution', () => {
     it('should resolve conflict', () => {
-      const op1 = { type: 'modify', position: 0, content: 'a', userId: 'user-1' } as any;
-      const op2 = { type: 'modify', position: 0, content: 'b', userId: 'user-2' } as any;
+      // `resolveConflict(conflito, 'merge' | 'override')` — o caso anterior
+      // passava duas operações soltas, então `conflict.operation1` era
+      // undefined e o serviço estourava ao ler `.content`.
+      const op1 = { id: 'op-1', type: 'modify', position: 0, content: 'a', userId: 'user-1', timestamp: 1 } as any;
+      const op2 = { id: 'op-2', type: 'modify', position: 0, content: 'b', userId: 'user-2', timestamp: 2 } as any;
+      const conflito = { operation1: op1, operation2: op2, type: 'concurrent', resolution: 'manual' } as any;
 
-      const resolved = service.resolveConflict(op1, op2);
-      expect(resolved).toBeDefined();
+      const resolvido = service.resolveConflict(conflito, 'override');
+      // 'override' fica com a operação mais recente.
+      expect(resolvido.id).toBe('op-2');
     });
   });
 });

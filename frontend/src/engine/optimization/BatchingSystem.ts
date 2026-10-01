@@ -140,9 +140,9 @@ export class BatchingSystem {
   private mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
     const merged = new THREE.BufferGeometry();
     
-    let positionArrays: Float32Array[] = [];
-    let normalArrays: Float32Array[] = [];
-    let uvArrays: Float32Array[] = [];
+    const positionArrays: Float32Array[] = [];
+    const normalArrays: Float32Array[] = [];
+    const uvArrays: Float32Array[] = [];
     
     geometries.forEach((geometry) => {
       const position = geometry.getAttribute('position');

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { ShieldCheck, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import ArxisIcon from '@/components/ui/ArxisIcon'
 
 interface User {
   name?: string
@@ -12,6 +13,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ user }: UserMenuProps) {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -41,10 +43,13 @@ export default function UserMenu({ user }: UserMenuProps) {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="topbar__avatar-wrap" style={{ position: 'relative' }}>
       <div
         ref={avatarRef}
         className="topbar__avatar"
+        role="button"
+        tabIndex={0}
+        aria-label="Menu da conta"
         style={{
           width: '28px',
           height: '28px',
@@ -94,7 +99,7 @@ export default function UserMenu({ user }: UserMenuProps) {
         {isAdmin && (
           <>
             <button
-              onClick={() => (window.location.href = '/admin')}
+              onClick={() => { setIsOpen(false); navigate('/admin') }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -119,7 +124,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 e.currentTarget.style.color = 'var(--c-text2)'
               }}
             >
-              <ShieldCheck size={14} strokeWidth={1.5} /> Painel Admin
+              <ArxisIcon name="admin" size={16} /> Painel Admin
             </button>
             <div style={{ height: '1px', background: 'var(--c-border)', margin: '4px 0' }}></div>
           </>
@@ -151,7 +156,7 @@ export default function UserMenu({ user }: UserMenuProps) {
             e.currentTarget.style.color = '#f87171'
           }}
         >
-          <LogOut size={14} strokeWidth={1.5} /> Sair
+          <ArxisIcon name="logout" size={16} /> Sair
         </button>
       </div>
     </div>

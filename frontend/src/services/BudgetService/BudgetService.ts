@@ -96,7 +96,7 @@ export class BudgetService {
    */
   async exportBudget(id: string, options: BudgetExportOptions): Promise<Blob> {
     const url = `${this.baseURL}/${id}/export`;
-    return api.downloadFile(url, `budget-${id}.${options.format}`, {
+    return api.downloadFile(url, `budget-${id}.${this.getFileExtension(options.format)}`, {
       headers: { 'Accept': this.getAcceptHeader(options.format) },
     });
   }
@@ -193,6 +193,20 @@ export class BudgetService {
   /**
    * Helper to get Accept header for export format
    */
+  /**
+   * Extensão do arquivo baixado. O formato não serve como extensão: 'excel'
+   * gerava `budget-<id>.excel`, que nenhum sistema operacional abre.
+   */
+  private getFileExtension(format: string): string {
+    const extensoes: Record<string, string> = {
+      pdf: 'pdf',
+      excel: 'xlsx',
+      csv: 'csv',
+      json: 'json',
+    };
+    return extensoes[format] || format;
+  }
+
   private getAcceptHeader(format: string): string {
     const headers: Record<string, string> = {
       pdf: 'application/pdf',

@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
       <section className="auth-card slide-in">
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
-          <h1 className="auth-title">ArxisVR</h1>
+          <h1 className="auth-title">Arxis</h1>
           <p className="auth-subtitle">Nova senha</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
             <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>
               Você já pode entrar com a nova senha.
             </p>
-            <a className="auth-button" href="/login.html" style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}>
+            <a className="auth-button" href="/login" style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}>
               Ir para o login
             </a>
           </div>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
 
         {!done && (
           <p className="auth-footer-text">
-            <a className="auth-link" href="/forgot-password.html">
+            <a className="auth-link" href="/forgot-password">
               Solicitar novo link
             </a>
           </p>

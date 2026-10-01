@@ -200,7 +200,7 @@ export class GPSAlignment {
     console.log(`📐 GPS Offset from origin: (${offset.x.toFixed(2)}, ${offset.y.toFixed(2)}, ${offset.z.toFixed(2)}) m`);
 
     // 2. Calcula rotação baseada em heading (bússola)
-    let rotation = new Quaternion();
+    const rotation = new Quaternion();
     
     if (this.currentHeading !== null) {
       // Corrige heading com o norte do projeto

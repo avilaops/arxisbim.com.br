@@ -62,14 +62,15 @@ describe('UndoRedoController', () => {
       expect(controller.canUndo()).toBe(true);
     });
 
-    test('should check canRedo', () => {
+    test('should check canRedo', async () => {
       expect(controller.canRedo()).toBe(false);
 
       controller.recordAction({ type: 'test', description: 'Test', data: {} });
       expect(controller.canRedo()).toBe(false);
 
-      // After undo, redo should be available
-      controller.undo();
+      // After undo, redo should be available. `undo()` é assíncrono: sem o
+      // await, canRedo era consultado antes de a ação entrar na pilha de redo.
+      await controller.undo();
       expect(controller.canRedo()).toBe(true);
     });
 

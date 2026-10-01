@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { authenticateRequest } from '../../core/auth/middleware.js';
 import { metaService, type MetaError } from './meta.service.js';
 import { conversionsService, type CapiEvent } from './conversions.service.js';
+import { FRONTEND_URL } from '../../core/config/domains.js';
 
 /**
  * Rotas Meta (Facebook) — Graph API + Marketing API (Ads).
@@ -88,7 +89,7 @@ export async function metaRoutes(fastify: FastifyInstance) {
     const event: CapiEvent = {
       eventName: body.eventName || 'PageView',
       actionSource: 'website',
-      eventSourceUrl: (request.headers['referer'] as string) || 'https://www.arxisvr.avilaops.com/',
+      eventSourceUrl: (request.headers['referer'] as string) || `${FRONTEND_URL}/`,
       userData: { clientIpAddress: ip, clientUserAgent: ua },
     };
     return handle(() => conversionsService.send([event], body.testEventCode))(request, reply);

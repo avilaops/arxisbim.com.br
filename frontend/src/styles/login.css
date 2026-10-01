@@ -1,13 +1,13 @@
-/* ── ArxisVR Auth Pages — Dark Design System ── */
+/* Arxis authentication surfaces share the clear Arxis landing language. */
 :root {
-  --bg-app:      #111827;
-  --bg-panel:    rgba(31, 41, 55, 0.95);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(139, 92, 246, 0.5);
-  --text-primary:   #F9FAFB;
-  --text-secondary: #9CA3AF;
-  --accent:      #8B5CF6;
-  --accent-l:    #A78BFA;
+  --bg-app:      #f5f8f9;
+  --bg-panel:    #ffffff;
+  --border-color: #dfe5e8;
+  --border-focus: rgba(14, 107, 143, 0.42);
+  --text-primary: #1e2d3d;
+  --text-secondary: #536272;
+  --accent: #0e6b8f;
+  --accent-l: #f36b21;
 }
 
 * { box-sizing: border-box; }
@@ -21,9 +21,7 @@ body {
   min-height: 100vh;
   letter-spacing: -0.1px;
   /* Subtle radial glow */
-  background-image:
-    radial-gradient(ellipse at 30% 20%, rgba(79, 70, 229, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+  background-image: radial-gradient(ellipse at 75% -15%, rgba(14, 107, 143, .11) 0%, transparent 42%);
 }
 
 /* Animations */
@@ -57,7 +55,7 @@ body {
   border-radius: 18px;
   background: var(--bg-panel);
   backdrop-filter: blur(20px);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,.04);
+  box-shadow: 0 20px 50px rgba(30, 45, 61, .10);
 }
 
 /* ── Header ── */
@@ -74,20 +72,20 @@ body {
   height: 44px;
   margin-bottom: 14px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #0e6b8f, #147f9f);
   color: #ffffff;
   border: none;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 4px 16px rgba(14, 107, 143, .22);
   position: relative;
 }
 .auth-brand-mark::after {
   content: '';
   position: absolute;
   width: 6px; height: 6px;
-  background: #A78BFA;
+  background: #f36b21;
   border-radius: 50%;
   bottom: -2px; right: -2px;
   animation: ai-pulse 1.8s infinite;
@@ -136,7 +134,7 @@ body {
   padding: 10px 16px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #fff;
   color: var(--text-primary);
   font: inherit;
   font-size: 13px;
@@ -144,12 +142,12 @@ body {
   transition: all 0.2s ease;
 }
 
-.auth-input::placeholder { color: rgba(255,255,255,.2); }
+.auth-input::placeholder { color: #9aa7b1; }
 
 .auth-input:focus {
   border-color: var(--border-focus);
-  background: rgba(139, 92, 246, 0.06);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(14, 107, 143, .10);
 }
 
 /* ── Button ── */
@@ -162,14 +160,14 @@ body {
   padding: 10px 18px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #0e6b8f, #147f9f);
   color: #ffffff;
   font-weight: 600;
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 4px 16px rgba(14, 107, 143, .22);
   margin-top: 4px;
 }
 

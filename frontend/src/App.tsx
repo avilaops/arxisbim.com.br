@@ -1,12 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
+import BlogPage from './pages/BlogPage'
+import BlogArticlePage from './pages/BlogArticlePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ValidadorPage from './pages/ValidadorPage'
 import DashboardPage from './pages/DashboardPage'
 import Viewer3DPage from './pages/Viewer3DPage'
+import ComparePage from './pages/ComparePage'
 import AccountPage from './pages/AccountPage'
 import AdminPage from './pages/AdminPage'
 import PrivacyPage from './pages/PrivacyPage'
@@ -25,11 +29,14 @@ export default function App() {
       <Routes>
         {/* Public Pages */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogArticlePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/validador" element={<ValidadorPage />} />
 
         {/* Legal Pages */}
         <Route path="/privacy" element={<PrivacyPage />} />
@@ -51,6 +58,7 @@ export default function App() {
         {/* Protected Pages */}
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/app" element={<Viewer3DPage />} />
+        <Route path="/app/compare" element={<ComparePage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/admin" element={<AdminPage />} />
 

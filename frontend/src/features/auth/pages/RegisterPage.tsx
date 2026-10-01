@@ -16,7 +16,7 @@ export default function RegisterPage() {
   useEffect(() => {
     try {
       (window as any).arxis?.track('register_started');
-    } catch (e) {}
+    } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -46,17 +46,17 @@ export default function RegisterPage() {
       try {
         (window as any).arxis?.track('register_completed');
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
 
       // Se o servidor retornou requiresEmailVerification, mostrar mensagem
       if (result?.requiresEmailVerification) {
         setError(''); // limpar erros
-        window.location.href = `/verify-email.html?email=${encodeURIComponent(email.trim())}`;
+        window.location.href = `/verify-email?email=${encodeURIComponent(email.trim())}`;
         return;
       }
 
       // Fallback: se por algum motivo já tiver token, vai para app
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err?.message || 'Não foi possível criar a conta.');
     } finally {
@@ -69,7 +69,7 @@ export default function RegisterPage() {
       <section className="auth-card slide-in">
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
-          <h1 className="auth-title">ArxisVR</h1>
+          <h1 className="auth-title">Arxis</h1>
           <p className="auth-subtitle">Crie sua conta para começar</p>
         </div>
 

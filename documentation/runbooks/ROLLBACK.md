@@ -6,7 +6,7 @@
 
 > ⚠️ **Status: PROCEDIMENTO DOCUMENTADO, EXECUÇÃO EM STAGING PENDENTE.**
 > O ensaio real está bloqueado pelo deploy manual no Render (billing). Rollback
-> só é confiável **depois de executado** — agendar ensaio assim que o billing
+> só é confiável **depois de executado**, agendar ensaio assim que o billing
 > destravar. Até lá, este runbook é hipótese, não garantia.
 
 ---
@@ -35,7 +35,7 @@ Investigar **depois** de restaurar o serviço. Rollback primeiro.
 
 | Risco | Checagem |
 |---|---|
-| **Migration irreversível** | Rollback do código **não** desfaz migration já aplicada. Se o deploy rodou uma migration destrutiva, o código antigo pode quebrar contra o schema novo. Ver `runMigrations()` — migrations são forward-only. Mitigar: migration aditiva, nunca destrutiva no mesmo deploy. |
+| **Migration irreversível** | Rollback do código **não** desfaz migration já aplicada. Se o deploy rodou uma migration destrutiva, o código antigo pode quebrar contra o schema novo. Ver `runMigrations()` - migrations são forward-only. Mitigar: migration aditiva, nunca destrutiva no mesmo deploy. |
 | **Env vars mudaram** | Se o deploy quebrado alterou env vars, o rollback do código **não** reverte env. Conferir/reverter manualmente em Environment. |
 | **Build cache inválido** | Se o rollback re-buildar, cache pode estar sujo. Preferir rollback que reusa imagem, não rebuild. |
 | **Frontend incompatível** | Backend antigo + frontend novo = contrato de API divergente. Reverter **os dois** (ver abaixo). |
@@ -52,12 +52,12 @@ Investigar **depois** de restaurar o serviço. Rollback primeiro.
 
 ## Ordem em incompatibilidade backend↔frontend
 
-Reverter **backend primeiro**, depois frontend — o frontend tolera backend mais
+Reverter **backend primeiro**, depois frontend, o frontend tolera backend mais
 novo melhor do que o contrário. Se o quebrado foi só frontend, reverter só ele.
 
 ---
 
-## Ensaio em staging (pendente — fechar critério de aceite)
+## Ensaio em staging (pendente: fechar critério de aceite)
 
 Quando o billing destravar:
 

@@ -1,8 +1,10 @@
-# S25 · Modelo de Dados 4D — Atividades
+# S25 · Modelo de Dados 4D: Atividades
 
 **Fase:** 4D BIM  
-**Status:** Pendente  
-**Depende de:** S12 (cenário — schedules pertencem a um cenário), S07 (elementos IFC para vínculo)  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Atividades 4D no backend (estava marcado Pendente).
+**Depende de:** S12 (cenário, schedules pertencem a um cenário), S07 (elementos IFC para vínculo)  
 **Bloqueia:** S26 (comparação temporal), S27 (animação), S28 (import de MSP)
 
 ---
@@ -11,17 +13,17 @@
 
 Schema de atividades e cronograma com vínculo muitos-para-muitos entre atividades e elementos IFC. Import de CSV e MS Project XML.
 
-> **Nota para o agente:** O vínculo N:N atividade↔elemento é a relação mais complexa do produto e precisa nascer no schema — não dá para adicionar depois sem migração. Como nos custos, o cronograma é **scenario-aware**: mesmo conjunto de elementos, durações diferentes por cenário. Detecção de ciclo em predecessores é obrigatória desde o insert.
+> **Nota para o agente:** O vínculo N:N atividade↔elemento é a relação mais complexa do produto e precisa nascer no schema, não dá para adicionar depois sem migração. Como nos custos, o cronograma é **scenario-aware**: mesmo conjunto de elementos, durações diferentes por cenário. Detecção de ciclo em predecessores é obrigatória desde o insert.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Comparação temporal A|B (S26)
 - Animação 4D no viewer (S27)
-- Import Primavera P6 / MSP binário completo (S28 — aqui só CSV + MSP XML básico)
+- Import Primavera P6 / MSP binário completo (S28, aqui só CSV + MSP XML básico)
 - CPM forward/backward pass completo (S26)
 - Curva S de custo no tempo (S30)
 
@@ -31,7 +33,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 O vínculo entre atividade e elemento IFC é a relação mais complexa do produto. Uma atividade pode afetar múltiplos elementos ("Concretagem da laje do 3° pavimento" = todos os `IfcSlab` do `IfcStorey[3]`). Um elemento pode aparecer em múltiplas atividades ("Forma, armação, concretagem e cura" para o mesmo pilar).
 
-O schema precisa suportar essa relação N:N desde o início. Além disso, o vínculo precisa ser serializável por cenário — Cenário A tem cronograma de 180 dias, Cenário B tem 210 dias — usando o mesmo conjunto de elementos IFC.
+O schema precisa suportar essa relação N:N desde o início. Além disso, o vínculo precisa ser serializável por cenário, Cenário A tem cronograma de 180 dias, Cenário B tem 210 dias, usando o mesmo conjunto de elementos IFC.
 
 ---
 

@@ -1,5 +1,12 @@
 # SPRINT-12-RESULT · Primeiro Cenário Salvo ★
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **nao**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.  
+> ★ **MARCO ZERADO**: não atingido.
+
+
 > Artefato pós-execução. Marco crítico do roadmap.
 
 **Sprint:** S12 · Primeiro Cenário Salvo
@@ -13,11 +20,11 @@
 
 ## Arquivos
 
-- `migrations/041_scenarios_s12_state.sql` + `schema/scenarios.ts` — **alterado.** Adiciona `scenario_state`/`state_version`/`model_version_id`/`parent_id`/`is_base_scenario`/`sort_order`/`deleted_at`; camera/player/config legados → nullable (coexistência).
-- `modules/scenario/scenario-snapshot.service.ts` — **novo.** capture/restore/validate/migrate/clone do envelope opaco. Única abstração que entende o formato (S18/S24/S28/S30 reusam).
-- `modules/scenario/scenarios-v12.service.ts` — **novo.** create/clone/saveState/loadState; repo/limite/telemetria injetados.
+- `migrations/041_scenarios_s12_state.sql` + `schema/scenarios.ts` - **alterado.** Adiciona `scenario_state`/`state_version`/`model_version_id`/`parent_id`/`is_base_scenario`/`sort_order`/`deleted_at`; camera/player/config legados → nullable (coexistência).
+- `modules/scenario/scenario-snapshot.service.ts` - **novo.** capture/restore/validate/migrate/clone do envelope opaco. Única abstração que entende o formato (S18/S24/S28/S30 reusam).
+- `modules/scenario/scenarios-v12.service.ts` - **novo.** create/clone/saveState/loadState; repo/limite/telemetria injetados.
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|

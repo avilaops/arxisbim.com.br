@@ -1,13 +1,17 @@
 /**
  * IFC Processing Queue Service
- * 
- * Async processing for heavy IFC operations (validation, thumbnail generation, metadata extraction)
- * Uses in-memory queue with optional Redis backend (REDIS_URL from .env)
+ *
+ * Async processing for heavy IFC operations (validation, thumbnail generation, geometry extraction)
+ * Integrates with database for persistent status tracking (queued, processing, ready, failed)
  */
+
+import { db, withTenant } from '../../shared/database/db.js';
+import { ifcModels } from '../../shared/database/schema/projects.js';
+import { eq, or, and, sql } from 'drizzle-orm';
 
 export interface QueueJob {
   id: string;
-  type: 'validate' | 'thumbnail' | 'metadata' | 'quality-report';
+  type: 'validate' | 'thumbnail' | 'metadata' | 'quality-report' | 'geometry';
   ifcModelId: string;
   projectId: string;
   tenantId: string;
@@ -27,15 +31,89 @@ export class IfcProcessingQueue {
   private activeJobs = 0;
 
   /**
-   * Add job to queue
+   * Initialize and recover stuck queue jobs on startup.
+   * If a job has crashed the backend repeatedly (attempts >= 3), mark it failed.
+   * Otherwise, recover the job, maintaining the current attempt count.
+   */
+  async initialize() {
+    console.log('[Queue] Initializing IFC processing queue & checking for stuck jobs...');
+    try {
+      const stuckModels = await db
+        .select()
+        .from(ifcModels)
+        .where(
+          or(
+            eq(ifcModels.status, 'queued'),
+            eq(ifcModels.status, 'processing')
+          )
+        );
+
+      console.log(`[Queue] Found ${stuckModels.length} stuck jobs to recover.`);
+      const maxRecoveryAttempts = 3;
+
+      for (const model of stuckModels) {
+        if (model.processingAttempts >= maxRecoveryAttempts) {
+          console.warn(`[Queue] Model ${model.id} exceeded max recovery attempts (${model.processingAttempts}). Marking as failed.`);
+          await withTenant(model.tenantId, async (tx) => {
+            await tx
+              .update(ifcModels)
+              .set({
+                status: 'failed',
+                processingError: 'Max processing attempts exceeded (crashed or interrupted in previous runs)',
+                processingCompletedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(ifcModels.id, model.id));
+          });
+          continue;
+        }
+
+        console.log(`[Queue] Recovering job for model ${model.id} (attempts so far: ${model.processingAttempts})`);
+        // Add job to queue, keeping the existing attempts counter
+        await this.addJob('geometry', model.id, model.projectId, model.tenantId, 'medium', false);
+      }
+    } catch (error) {
+      console.error('[Queue] Error during initialization recovery:', error);
+    }
+  }
+
+  /**
+   * Add job to queue and persist state to DB.
+   * If resetAttempts is true (e.g. user manually triggers a new run), attempts counter is reset to 0.
    */
   async addJob(
     type: QueueJob['type'],
     ifcModelId: string,
     projectId: string,
     tenantId: string,
-    priority: QueueJob['priority'] = 'medium'
+    priority: QueueJob['priority'] = 'medium',
+    resetAttempts: boolean = true
   ): Promise<QueueJob> {
+    // Avoid duplicate processing if already pending or processing in memory
+    const duplicate = this.queue.find(
+      j => j.ifcModelId === ifcModelId && j.type === type && (j.status === 'pending' || j.status === 'processing')
+    );
+    if (duplicate) {
+      console.log(`[Queue] Job of type '${type}' for model '${ifcModelId}' is already in progress, reusing job ${duplicate.id}.`);
+      return duplicate;
+    }
+
+    // Set initial status to 'queued' in DB
+    await withTenant(tenantId, async (tx) => {
+      const updates: any = {
+        status: 'queued',
+        processingError: null,
+        updatedAt: new Date(),
+      };
+      if (resetAttempts) {
+        updates.processingAttempts = 0;
+      }
+      await tx
+        .update(ifcModels)
+        .set(updates)
+        .where(eq(ifcModels.id, ifcModelId));
+    });
+
     const job: QueueJob = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type,
@@ -78,11 +156,8 @@ export class IfcProcessingQueue {
   private sortQueue() {
     const priorityWeight = { high: 3, medium: 2, low: 1 };
     this.queue.sort((a, b) => {
-      // Status first (pending > processing > completed/failed)
       if (a.status === 'pending' && b.status !== 'pending') return -1;
       if (a.status !== 'pending' && b.status === 'pending') return 1;
-
-      // Then by priority
       return priorityWeight[b.priority] - priorityWeight[a.priority];
     });
   }
@@ -94,78 +169,145 @@ export class IfcProcessingQueue {
     this.processing = true;
 
     while (this.queue.some(j => j.status === 'pending')) {
-      // Check if we can start new jobs
       if (this.activeJobs >= this.maxConcurrent) {
         await this.sleep(100);
         continue;
       }
 
-      // Get next pending job
       const job = this.queue.find(j => j.status === 'pending');
       if (!job) break;
 
-      // Start processing
       this.processJob(job);
     }
 
     this.processing = false;
   }
 
-  /**
-   * Process single job
-   */
   private async processJob(job: QueueJob) {
     this.activeJobs++;
     job.status = 'processing';
     job.startedAt = new Date();
 
-    try {
-      // Import services dynamically
-      const { IfcValidationService } = await import('./ifc-validation.service.js');
-      const validationService = new IfcValidationService();
+    // Set 'processing' status in DB and increment attempts
+    await withTenant(job.tenantId, async (tx) => {
+      await tx
+        .update(ifcModels)
+        .set({
+          status: 'processing',
+          processingStartedAt: job.startedAt,
+          processingAttempts: sql`processing_attempts + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(ifcModels.id, job.ifcModelId));
+    });
 
-      let result: any;
+    const maxAttempts = 3;
+    let attempt = 0;
+    let success = false;
+    let lastError: any;
+    let result: any;
 
-      switch (job.type) {
-        case 'validate':
-          result = await validationService.validateIfcForProject(
-            job.ifcModelId,
-            job.projectId,
-            job.tenantId
-          );
-          break;
+    while (attempt < maxAttempts && !success) {
+      attempt++;
+      try {
+        switch (job.type) {
+          case 'validate': {
+            const { IfcValidationService } = await import('./ifc-validation.service.js');
+            const validationService = new IfcValidationService();
+            result = await validationService.validateIfcForProject(
+              job.ifcModelId,
+              job.projectId,
+              job.tenantId
+            );
+            break;
+          }
 
-        case 'quality-report':
-          result = await validationService.generateQualityReport(
-            job.ifcModelId,
-            job.tenantId
-          );
-          break;
+          case 'quality-report': {
+            const { IfcValidationService } = await import('./ifc-validation.service.js');
+            const validationService = new IfcValidationService();
+            result = await validationService.generateQualityReport(
+              job.ifcModelId,
+              job.tenantId
+            );
+            break;
+          }
 
-        case 'thumbnail':
-          // Placeholder - implement thumbnail generation
-          result = { message: 'Thumbnail generation not implemented' };
-          break;
+          case 'thumbnail':
+            result = { message: 'Thumbnail generation not implemented' };
+            break;
 
-        case 'metadata':
-          // Placeholder - implement metadata extraction
-          result = { message: 'Metadata extraction not implemented' };
-          break;
+          case 'metadata':
+            result = { message: 'Metadata extraction not implemented' };
+            break;
 
-        default:
-          throw new Error(`Unknown job type: ${job.type}`);
+          case 'geometry': {
+            const { processModelGeometry } = await import('./ifc-geometry-pipeline.helper.js');
+            result = await processModelGeometry(job.ifcModelId, job.tenantId, job.projectId);
+            break;
+          }
+
+          default:
+            throw new Error(`Unknown job type: ${job.type}`);
+        }
+        success = true;
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[Queue] Job ${job.id} of type ${job.type} failed on attempt ${attempt}:`, error.message);
+
+        // Update error message in DB temporarily during attempts
+        await withTenant(job.tenantId, async (tx) => {
+          await tx
+            .update(ifcModels)
+            .set({
+              processingError: `Attempt ${attempt} failed: ${error.message}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(ifcModels.id, job.ifcModelId));
+        });
+
+        if (attempt < maxAttempts) {
+          await this.sleep(1000 * attempt);
+        }
       }
+    }
 
+    const completedAt = new Date();
+    if (success) {
       job.status = 'completed';
       job.result = result;
-      job.completedAt = new Date();
-    } catch (error: any) {
+      job.completedAt = completedAt;
+
+      // Update to 'ready' in DB
+      await withTenant(job.tenantId, async (tx) => {
+        await tx
+          .update(ifcModels)
+          .set({
+            status: 'ready',
+            processingCompletedAt: completedAt,
+            processingError: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(ifcModels.id, job.ifcModelId));
+      });
+    } else {
       job.status = 'failed';
-      job.error = error.message;
-      job.completedAt = new Date();
-    } finally {
-      this.activeJobs--;
+      job.error = lastError?.message || 'Unknown error';
+      job.completedAt = completedAt;
+
+      // Update to 'failed' in DB
+      await withTenant(job.tenantId, async (tx) => {
+        await tx
+          .update(ifcModels)
+          .set({
+            status: 'failed',
+            processingCompletedAt: completedAt,
+            processingError: job.error,
+            updatedAt: new Date(),
+          })
+          .where(eq(ifcModels.id, job.ifcModelId));
+      });
     }
+    this.activeJobs--;
   }
 
   /**

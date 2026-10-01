@@ -21,7 +21,7 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header__left">
-        <div className="header__logo">ArxisVR</div>
+        <div className="header__logo">Arxis</div>
         <nav className="header__nav">
           <button className="nav-button active" data-view="viewer">
             <span className="nav-button__code">3D</span> Workspace

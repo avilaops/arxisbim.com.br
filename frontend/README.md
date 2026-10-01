@@ -1,4 +1,4 @@
-# ArxisVR — Frontend
+# ArxisVR: Frontend
 
 Vite MPA + Three.js + IFC. Viewer BIM com colaboração realtime e pipeline AAA de renderização.
 
@@ -39,7 +39,7 @@ src/
 | Serviço | Responsabilidade |
 |---|---|
 | `AuthService` | JWT + OAuth Google/GitHub |
-| `RealtimeService` | WebSocket — presença, chat, seleções |
+| `RealtimeService` | WebSocket, presença, chat, seleções |
 | `IFCService` | Parse, streaming, LOD |
 | `StorageService` | Upload/download R2 |
 | `BudgetService` | Quantitativos 5D |
@@ -52,7 +52,7 @@ Padrão singleton: `getAuthService()`, `getRealtimeService()`, etc.
 
 Pipeline AAA ativo: SAO · UnrealBloom · BokehPass · SMAA · FilmPass · GodRays · CSM · AdaptiveQuality.
 
-Presets de qualidade: `low · medium · high · ultra` — trocáveis via `setQuality()`.
+Presets de qualidade: `low · medium · high · ultra` - trocáveis via `setQuality()`.
 
 Testar pipeline: `window.__postProcess` exposto no browser.
 

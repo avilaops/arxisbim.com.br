@@ -1,12 +1,12 @@
 /**
  * Redact (S06) — remove campos sensíveis ANTES de chegar ao log.
  *
- * Spec S06: Authorization, Cookie, senha, tokens (access/refresh/JWT), Stripe
- * secret, Database URL, storage keys / presigned URLs nunca podem aparecer em log.
+ * Spec S06: Authorization, Cookie, senha, tokens (access/refresh/JWT), token do
+ * Mercado Pago, Database URL, storage keys / presigned URLs nunca podem aparecer em log.
  *
  * Duas camadas:
  *  1. Por NOME de chave (case-insensitive, deep) — pega `authorization`, `password`,
- *     `accessToken`, `apiKey`, `stripeSecret`, etc.
+ *     `accessToken`, `apiKey`, `mpAccessToken`, etc.
  *  2. Por VALOR de string — pega presigned URLs (assinatura S3/R2) e connection
  *     strings de banco mesmo quando a chave não é óbvia (ex.: `url`, `endpoint`).
  */
@@ -42,7 +42,7 @@ const SENSITIVE_VALUE_PATTERNS: RegExp[] = [
   /\bpostgres(?:ql)?:\/\/[^\s]*:[^\s]*@/i, // postgres://user:pass@host
   /\bredis:\/\/[^\s]*:[^\s]*@/i,
   /^Bearer\s+[A-Za-z0-9._-]+$/i,
-  /\bsk_(?:live|test)_[A-Za-z0-9]+/, // Stripe secret key
+  /\b(?:APP_USR|TEST)-\d{6,}-[A-Za-z0-9-]+/, // access token do Mercado Pago
 ];
 
 function isSensitiveKey(key: string): boolean {

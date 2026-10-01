@@ -1,7 +1,7 @@
 # SPRINT-XX-RESULT · <Título>
 
 > Artefato de memória pós-execução. Preenchido ao **fechar** o sprint, com evidência verificável.
-> Não é planejamento — é o registro do que de fato foi entregue. Cada afirmação aqui deve ser checável (diff, build, teste, query no banco).
+> Não é planejamento, é o registro do que de fato foi entregue. Cada afirmação aqui deve ser checável (diff, build, teste, query no banco).
 
 **Sprint:** SXX · <nome>
 **Status:** Concluído | Parcial | Bloqueado
@@ -16,14 +16,14 @@ Uma linha: o que o sprint se propôs e se foi atingido. Se parcial, dizer o que 
 
 ## Arquivos alterados
 
-- `path/arquivo.ts` — o que mudou
-- `migrations/0NN_*.sql` — listar separadamente abaixo também
+- `path/arquivo.ts` - o que mudou
+- `migrations/0NN_*.sql` - listar separadamente abaixo também
 
 ## Migrations adicionadas
 
-- `0NN_nome.sql` — aplicada? (`sim/não`), reversível? (`sim/não`)
+- `0NN_nome.sql` - aplicada? (`sim/não`), reversível? (`sim/não`)
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério (do doc de sprint) | Resultado | Evidência |
 |---|---|---|
@@ -43,7 +43,7 @@ O que funciona mas é incompleto/frágil. Sem isto, o próximo agente assume cob
 
 ## Decisões arquiteturais alteradas
 
-Mudou algo do que o doc de sprint previa? Registrar aqui — propaga para sprints dependentes.
+Mudou algo do que o doc de sprint previa? Registrar aqui, propaga para sprints dependentes.
 
 ## Riscos para o próximo sprint
 

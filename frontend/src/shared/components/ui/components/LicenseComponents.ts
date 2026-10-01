@@ -1,3 +1,7 @@
+// `usePlan` nao e hook de React: le o licenseManager e devolve na hora, sem
+// useState nem useEffect (ver systems/licensing/LicenseHooks.ts). Chamar de
+// dentro de classe e legitimo; o ESLint acusa so pelo prefixo do nome.
+/* eslint-disable react-hooks/rules-of-hooks */
 /**
  * Componentes UI para gerenciamento de licenças e upgrades
  */

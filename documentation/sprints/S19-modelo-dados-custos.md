@@ -1,23 +1,25 @@
 # S19 · Modelo de Dados de Custos
 
 **Fase:** 5D BIM  
-**Status:** ✅ ENTREGUE  
-**Depende de:** S12 (cenário — costs pertencem a um cenário)  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Modelo de custos no banco. Sem tela.
+**Depende de:** S12 (cenário, costs pertencem a um cenário)  
 **Bloqueia:** S20 (takeoff vincula a CostItem), S21 (SINAPI preenche CostTable), S22 (engine calcula sobre esse schema)
 
 ---
 
 ## Objetivo
 
-Schema de custos que suporte cenários independentes, tabelas customizadas e SINAPI. Nenhuma UI ainda — apenas o modelo de dados e API.
+Schema de custos que suporte cenários independentes, tabelas customizadas e SINAPI. Nenhuma UI ainda, apenas o modelo de dados e API.
 
-> **Nota para o agente:** Este é o schema mais crítico da Fase 5D — todo o cálculo de S22 e a comparação financeira de S30 dependem dele. Dinheiro **nunca** em FLOAT (`DECIMAL` sempre). O schema precisa nascer suportando cenários independentes, versionamento SINAPI e override por elemento — adicionar qualquer um depois é migração arriscada em produção.
+> **Nota para o agente:** Este é o schema mais crítico da Fase 5D, todo o cálculo de S22 e a comparação financeira de S30 dependem dele. Dinheiro **nunca** em FLOAT (`DECIMAL` sempre). O schema precisa nascer suportando cenários independentes, versionamento SINAPI e override por elemento, adicionar qualquer um depois é migração arriscada em produção.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Cálculo de custo / agregação (S22)
 - Cálculo de quantitativos / takeoff (S20)

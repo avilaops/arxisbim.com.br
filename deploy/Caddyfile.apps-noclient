@@ -1,0 +1,218 @@
+# Caddy do servidor "apps-noclient" (204.168.249.111, Hetzner hel1, CX23).
+# Criado em 10/09/2026 quando ArxisVR, CRM, SMS e Alo Barbeiro sairam do
+# servidor de aplicacoes (178.105.82.48). Caddy nativo, apps em Docker
+# publicando portas em 127.0.0.1 (mesmo desenho do servidor de aplicacoes).
+#
+# Fonte deste arquivo: arxisvr.avilaops.com/deploy/Caddyfile.apps-noclient.
+# Instalado em /etc/caddy/Caddyfile.
+
+{
+	# Conta ACME: com e-mail o Caddy consegue cair para a ZeroSSL quando a
+	# Let's Encrypt limita (aconteceu no primeiro dia: 5 falhas de autorizacao
+	# em alobarbeiro.com enquanto o DNS propagava).
+	email nicolas@avilaops.com
+
+	# Faixas da Cloudflare (api.cloudflare.com/client/v4/ips, 26/08/2026). Só o
+	# crm.avilaops.com passa pelo proxy laranja; para ele, {client_ip} e
+	# remote_ip valem o visitante de verdade, nao a borda.
+	servers {
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+	}
+}
+
+# --- Arxis (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
+# Dominio proprio desde 17/09/2026. Aplicar SO DEPOIS que arxisbim.com.br e
+# api.arxisbim.com.br resolverem para 204.168.249.111: o Caddy so emite o
+# certificado quando o ACME alcanca a maquina pelo nome.
+# Runbook: documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
+arxisbim.com.br {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3102
+}
+
+# www manda para o apex: um endereco so indexado, um so no analytics.
+www.arxisbim.com.br {
+	redir https://arxisbim.com.br{uri} 308
+}
+
+api.arxisbim.com.br {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3101
+}
+
+# Dominio anterior: o site redireciona (308 preserva metodo e passa o sinal de
+# SEO para o canonico), preservando caminho e query de links ja publicados.
+arxisvr.avilaops.com, www.arxisvr.avilaops.com {
+	redir https://arxisbim.com.br{uri} 308
+}
+
+# A API antiga NAO redireciona. Redirecionar quebraria o preflight do CORS e os
+# POST do plugin do Revit ja instalado, que nao seguem 3xx com corpo. Ela
+# continua servindo o mesmo backend ate o fim da janela de transicao (prazo e
+# criterio de desligamento no runbook).
+api.arxisvr.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3101
+}
+
+# --- CRM (container agenda-crm-app 3020, /opt/agenda-crm/current) ---
+crm.avilaops.com {
+	reverse_proxy 127.0.0.1:3020
+}
+
+# --- Avila SMS (containers sms 3091 e sms-smpp 3093, /opt/sms) ---
+sms.avilaops.com {
+	encode zstd gzip
+
+	# /api/interno/* aceita "envie no nome desta conta" com um token so, que
+	# vale para todas as contas. Quem chama e o n8n, que desde 11/09/2026 roda
+	# NESTE servidor: o pedido sai do container pelo IP publico da maquina
+	# (204.168.249.111), nao pela bridge, entao ele entra na lista. O token
+	# continua sendo a fechadura; isto e a corrente.
+	@interno_de_fora {
+		path /api/interno/*
+		not remote_ip 127.0.0.1 ::1 172.16.0.0/12 204.168.249.111
+	}
+	respond @interno_de_fora 403
+
+	# Metricas da rota SMPP: o Prometheus que as lia (VPS de infra) nao existe
+	# mais; a rota fica fechada para tudo que nao for o proprio host.
+	handle /metricas/smpp {
+		@fora not remote_ip 127.0.0.1 ::1
+		respond @fora 403
+		rewrite * /metricas
+		reverse_proxy 127.0.0.1:3093
+	}
+
+	reverse_proxy 127.0.0.1:3091
+}
+
+# --- Alo Barbeiro (container alobarbeiro 3110, /opt/alobarbeiro) ---
+# Primeiro deploy em 10/09/2026. A zona na Cloudflare e alobarbeiro.com; o
+# repositorio chama-se alobarbeiro.com.br, mas essa zona nao esta na conta.
+alobarbeiro.com, www.alobarbeiro.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3110
+}
+
+# --- CDDA Judô (container cdda 3120, /opt/cdda) ---
+# Primeiro deploy em 11/09/2026. Enquanto o cliente não paga o cdda.com.br,
+# o site responde em cdda.avilaops.com (A DNS-only na zona avilaops.com; o
+# TLS é do Caddy). Quando o domínio for pago, somar "cdda.com.br,
+# www.cdda.com.br" na linha de hosts; a zona na Cloudflare já tem os
+# registros A. Fonte: cdda.com.br/deploy/Caddyfile.bloco.
+cdda.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3120
+}
+
+# --- n8n (container n8n-n8n-1, /opt/n8n) ---
+# Veio do servidor de aplicacoes em 11/09/2026 (la vivia em swap; antes disso
+# no VPS de infra, removido em 08/09). Motor comercial: todo produto da casa
+# chama n8n.avilaops.com pelo nome publico, entao mudar de maquina nao muda
+# nenhuma configuracao deles.
+n8n.avilaops.com {
+	# Celular (11/09/2026): o n8n prende o cabecalho das listas e rola so a
+	# lista; num iPhone sobra menos da metade da tela para os fluxos. O HTML do
+	# editor passa por um template do Caddy que injeta /avila-n8n-mobile.css
+	# (em /opt/n8n/override). API, webhooks, assets e WebSocket vao direto.
+	# Doc: app.avilaops.com/docs/n8n-celular-cabecalho.md
+	@editor_html {
+		method GET
+		header Accept *text/html*
+		not path *.* /rest/* /webhook* /form* /chat* /mcp* /api/* /oauth* /sso* /push* /healthz* /metrics* /assets/* /static/* /__n8n_index
+	}
+	handle /__n8n_index {
+		rewrite * /
+		reverse_proxy 127.0.0.1:5678
+	}
+	handle /avila-n8n-mobile.css {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle /avila-n8n-credentials.css {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle /avila-n8n-credentials.js {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle /avila-credential-icons/* {
+		root * /opt/n8n/override
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+	handle /avila-modules.css {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle /avila-modules.js {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle /avila {
+		redir * /avila/ 308
+	}
+	handle_path /avila/* {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle_path /avila-api/* {
+		reverse_proxy 127.0.0.1:5679
+	}
+	handle @editor_html {
+		root * /opt/n8n/override
+		rewrite * /index.html
+		header Cache-Control "no-store"
+		templates
+		file_server
+	}
+	handle {
+		reverse_proxy 127.0.0.1:5678 {
+			# O editor usa WebSocket para execucao ao vivo; sem cabecalho longo a
+			# tela fica "conectando" para sempre.
+			flush_interval -1
+		}
+	}
+}
+
+# --- Notas (Outline, container notas-outline 3090, /opt/notas-avilaops-com) ---
+# Login pelo auth.avilaops.com (OIDC), que continua no servidor de aplicacoes.
+notas.avilaops.com {
+	encode zstd gzip
+	# Websocket obrigatorio: edicao colaborativa em tempo real.
+	reverse_proxy 127.0.0.1:3090 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# --- Avila IA (containers ia-app 3092 e ia-worker, /opt/ia) ---
+ia.avilaops.com {
+	encode zstd gzip
+	request_body {
+		max_size 40MB
+	}
+	reverse_proxy 127.0.0.1:3092 {
+		transport http {
+			response_header_timeout 5m
+			read_timeout 5m
+			write_timeout 5m
+		}
+	}
+}
+
+# --- EngOps (container engops 3130, /opt/engops) ---
+# Demandas Caixa (SIMIL, RAE, SIOPI). Login pelo auth.avilaops.com.
+# Fonte: arxisvr.avilaops.com/deploy/Caddyfile.apps-noclient.
+engops.avilaops.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3130
+}

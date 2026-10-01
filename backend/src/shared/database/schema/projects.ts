@@ -88,6 +88,11 @@ export const ifcModels = pgTable('ifc_models', {
   phase: varchar('phase', { length: 50 }), // 'existing', 'demolition', 'new', 'renovation', 'future'
   thumbnailUrl: text('thumbnail_url'), // URL do thumbnail gerado
   uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 50 }).notNull().default('queued'),
+  processingError: text('processing_error'),
+  processingAttempts: integer('processing_attempts').default(0).notNull(),
+  processingStartedAt: timestamp('processing_started_at'),
+  processingCompletedAt: timestamp('processing_completed_at'),
   metadata: jsonb('metadata').$type<{
     author?: string;
     application?: string;
@@ -152,6 +157,7 @@ export const modelElements = pgTable('model_elements', {
   ifcModelIdIdx: index('model_elements_ifc_model_id_idx').on(table.ifcModelId),
   expressIdIdx: index('model_elements_express_id_idx').on(table.expressId),
   typeIdx: index('model_elements_type_idx').on(table.type),
+  ifcModelExpressIdx: index('model_elements_ifc_model_express_idx').on(table.ifcModelId, table.expressId),
 }));
 
 // =====================================

@@ -130,7 +130,7 @@ export function CostItems() {
         <div className="items-list">
           {items.length === 0 ? (
             <div className="empty-state">
-              Nenhum item adicionado. Clique em "+ Novo Item" para começar.
+              Nenhum item adicionado. Clique em “+ Novo Item” para começar.
             </div>
           ) : (
             <table>
