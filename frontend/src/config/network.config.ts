@@ -1,7 +1,11 @@
 /**
  * Network Configuration
  * Centralized network settings for ArxisVR
+ *
+ * Os endereços públicos vêm de `site.config.ts`; aqui ficam só os parâmetros
+ * de rede (reconexão, taxa de sync, VoIP).
  */
+import { resolveWsUrl } from './site.config';
 
 export interface NetworkConfig {
   /** WebSocket server URL (ws:// for local, wss:// for production) */
@@ -25,8 +29,8 @@ export interface NetworkConfig {
  */
 export const networkConfig: NetworkConfig = {
   // Vite injects import.meta.env at build time
-  serverUrl: import.meta.env.VITE_WS_SERVER || 'ws://localhost:3002',
-  
+  serverUrl: resolveWsUrl(),
+
   autoReconnect: true,
   maxReconnectAttempts: 5,
   reconnectDelay: 2000, // ms
@@ -44,9 +48,9 @@ export function getServerUrl(): string {
   if (import.meta.env.DEV) {
     return import.meta.env.VITE_WS_SERVER || 'ws://localhost:3002';
   }
-  
-  // Production - use environment variable or default (WS servido pelo backend)
-  return import.meta.env.VITE_WS_SERVER || 'wss://api.arxisvr.avilaops.com';
+
+  // Production — WS servido pelo backend, no mesmo host da API.
+  return resolveWsUrl();
 }
 
 /**

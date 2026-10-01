@@ -1,0 +1,1049 @@
+@import "tailwindcss";
+
+/* ArxisVR Global Styles */
+
+:root {
+  /* Colors */
+  --c-bg: #0a0a0a;
+  --c-surface: #0f0f0f;
+  --c-surface2: #1a1a1a;
+  --c-surface3: #242424;
+  --c-border: #2a2a2a;
+  --c-border2: #1a1a1a;
+  --c-text: #ffffff;
+  --c-text2: #b4b4b4;
+  --c-text3: #727272;
+  --c-blue: #2563eb;
+  --c-blue-dim: rgba(37, 99, 235, 0.1);
+  --c-green: #22c55e;
+  --c-red: #ef4444;
+
+  /* Layout */
+  --sidebar-expanded: 220px;
+  --sidebar-collapsed: 64px;
+  --r: 6px;
+
+  /* Landing — legacy aliases (kept for app pages) */
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --accent-green: #22c55e;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --transition: all 0.2s ease;
+
+  /* ===== Landing Page Dark Identity ===== */
+  --lp-bg:            #030507;
+  --lp-bg2:           #060a10;
+  --lp-surface:       #0c1018;
+  --lp-surface2:      #111827;
+  --lp-border:        rgba(255, 255, 255, 0.07);
+  --lp-border-glow:   rgba(26, 111, 255, 0.35);
+  --lp-text:          #F0F4FF;
+  --lp-text2:         #8895AA;
+  --lp-text3:         #4A5568;
+  --lp-blue:          #1A6FFF;
+  --lp-blue-dim:      rgba(26, 111, 255, 0.15);
+  --lp-blue-glow:     rgba(26, 111, 255, 0.28);
+  --lp-blue-strong:   rgba(26, 111, 255, 0.55);
+  --lp-silver:        #C8D4E8;
+  --lp-silver2:       #8FA3BF;
+  --lp-green:         #22c55e;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'DM Sans', 'Inter', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+}
+
+body {
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--c-blue);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--c-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--c-surface3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-border);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 0.7s linear infinite;
+}
+
+/* Utility classes */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 900px) {
+  .container {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 12px;
+  }
+}
+
+/* Typography */
+.h1 {
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.h2 {
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+}
+
+.lead {
+  font-size: clamp(14px, 1.5vw, 18px);
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--r);
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background-color: #000000;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary:hover {
+  background-color: #1a1a1a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  color: var(--text-primary);
+}
+
+.btn-outline {
+  background-color: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.btn-lg {
+  padding: 14px 26px;
+  font-size: 15px;
+}
+
+/* Form elements */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+textarea,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+  color: var(--c-text);
+  font-size: 13px;
+  transition: border-color 0.12s;
+}
+
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--c-blue);
+}
+
+/* Cards */
+.card {
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+  padding: 16px;
+  transition: border-color 0.12s;
+}
+
+.card:hover {
+  border-color: var(--c-border2);
+}
+
+/* ===== Landing Page — Dark Identity ===== */
+
+/* Keyframes */
+@keyframes lp-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes lp-glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+@keyframes lp-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(3, 5, 7, 0.82);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 24px;
+}
+
+/* Brand wordmark dark */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.brand-arxis {
+  background: linear-gradient(135deg, #ffffff 0%, #C8D4E8 50%, #8FA3BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.brand-vr {
+  background: linear-gradient(135deg, #1A6FFF 0%, #0A4FD4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero */
+.hero {
+  position: relative;
+  padding: 100px 0 80px;
+  overflow: hidden;
+  background: var(--lp-bg);
+}
+
+/* Blueprint dot grid */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(26, 111, 255, 0.18) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Radial glow behind hero */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, rgba(26, 111, 255, 0.14) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto;
+  animation: lp-fade-up 0.7s ease both;
+}
+
+/* Eyebrow badge */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--lp-border-glow);
+  background: rgba(26, 111, 255, 0.08);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lp-silver);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.hero-meta {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--lp-text2);
+}
+
+/* CTA band — dark glassmorphism */
+.cta-band {
+  padding: 64px 40px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(12, 16, 24, 0.9) 0%, rgba(6, 10, 16, 0.95) 100%);
+  border: 1px solid var(--lp-border);
+  text-align: center;
+  box-shadow: 0 0 60px rgba(26, 111, 255, 0.08), 0 2px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+.cta-band::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lp-blue), transparent);
+  opacity: 0.6;
+}
+
+.cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Nav CTA animation */
+.nav-btn-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.nav-btn-visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Mobile Menu — dark */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: 68px;
+  z-index: 49;
+  background: rgba(3, 5, 7, 0.97);
+  backdrop-filter: blur(24px);
+  padding: 24px;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--lp-border);
+}
+
+@media (max-width: 760px) {
+  .nav-links {
+    display: none !important;
+  }
+  .nav-hamburger {
+    display: flex !important;
+  }
+  .mobile-nav {
+    display: flex;
+  }
+}
+
+
+/* ===== Landing — responsivo de verdade =====
+   Regra: o inline do TSX carrega a identidade (pill buttons, gradiente do
+   titulo, badge). Aqui ficam SO as propriedades que mudam por viewport, e para
+   isso elas foram REMOVIDAS do inline, senao inline vence e a media query nao
+   faz nada. `@media` dentro de style={{}} em React e no-op: foi assim que o
+   header quebrou. */
+
+/* --- A landing precisa ROLAR ---
+   `body { overflow: hidden }` (linha ~74) e regra do layout do app: la quem rola
+   e um container interno. A landing nao tem container nenhum, entao desde que
+   virou React (24/06/2026) o viewport ficou travado e NADA abaixo da dobra era
+   alcancavel por gesto. Medido: wheel de 600px, scrollY continua 0, em
+   producao. A classe `lp-page` entra no <html> enquanto a landing esta montada
+   e devolve o fluxo normal do documento. Nao mexe nas paginas do app. */
+html.lp-page,
+html.lp-page body,
+html.lp-page #root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
+/* --- scroll lock com o drawer aberto ---
+   Com o viewport rolando de verdade, travar html+body funciona. `touch-action`
+   e o que segura o iOS: overflow:hidden sozinho nao impede o rubber-band do
+   documento quando o dedo esta sobre um elemento fixed. O painel libera pan-y
+   para o proprio menu rolar se for mais alto que a tela. */
+html.lp-page.lp-menu-open,
+html.lp-page.lp-menu-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.lp-drawer[data-open="true"] { touch-action: none; }
+.lp-drawer[data-open="true"] .lp-drawer__panel { touch-action: pan-y; }
+
+/* --- Header --- */
+.brand { flex-shrink: 0; white-space: nowrap; }
+
+.nav-hamburger {
+  /* touch target de 44x44 (Apple HIG) sem inflar o icone */
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-right: -8px; /* compensa o padding para alinhar o icone a borda */
+}
+
+/* --- Hero: valores desktop (saíram do inline) --- */
+.hero { padding: 80px 0 60px; }
+.h1   { font-size: clamp(34px, 5.5vw, 58px); line-height: 1.1; letter-spacing: -0.6px; margin-bottom: 20px; }
+.lead {
+  color: var(--c-text2); /* #b4b4b4 sobre #0a0a0a ~7.5:1, AA. Era #666 (~3.5:1) */
+  font-size: clamp(16px, 1.5vw, 18px);
+  line-height: 1.55;
+  margin: 0 auto 36px;
+}
+.eyebrow { font-size: 13px; padding: 6px 16px; max-width: 100%; margin-bottom: 24px; }
+.hero-cta > a { padding: 14px 26px; }
+.eyebrow-short { display: none; }
+.hero-cta  { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+.hero-meta {
+  display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+  font-size: 13.5px; color: var(--c-text2);
+}
+.foot-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; margin-bottom: 36px; text-align: left; }
+
+/* --- CTA band (valores desktop sairam do inline) --- */
+.cta-band { padding: 64px 32px; }
+.cta-row  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cta-row > a { padding: 14px 26px; }
+
+main section[id] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px)); }
+.lp-section { padding: 88px 0; color: var(--c-text); }
+.lp-section:nth-of-type(odd) { background: rgba(255, 255, 255, 0.018); }
+.lp-section-head { max-width: 720px; margin: 0 auto 36px; text-align: center; }
+.lp-section-head h2, .lp-seal-section h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.12; letter-spacing: -0.8px; margin: 10px 0 14px; color: var(--c-text); }
+.lp-section-head p, .lp-seal-section > .container > div > p { color: var(--c-text2); font-size: 16px; line-height: 1.65; }
+.lp-kicker { color: #86c5ff; font-size: 12px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+.lp-section-image { display: block; width: 100%; aspect-ratio: 2.4 / 1; object-fit: cover; border-radius: 20px; border: 1px solid rgba(255,255,255,.1); margin-bottom: 28px; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+.lp-feature-grid, .lp-usecase-grid, .lp-cases-grid, .lp-pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.lp-feature-grid, .lp-usecase-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lp-cases-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lp-card, .lp-plan { min-width: 0; padding: 24px; background: var(--c-surface2); border: 1px solid var(--c-border); border-radius: 14px; }
+.lp-card h3, .lp-plan h3 { color: var(--c-text); font-size: 17px; margin: 15px 0 8px; }
+.lp-card p, .lp-plan p, .lp-card li, .lp-plan li { color: var(--c-text2); font-size: 14px; line-height: 1.6; }
+.lp-card-icon { color: #86c5ff; width: 25px; height: 25px; }
+.lp-split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.lp-seal-section h2 span { background: linear-gradient(90deg, #62b2ff, #c4b5f4); background-clip: text; -webkit-background-clip: text; color: transparent; }
+.lp-section-image--tall { aspect-ratio: 4 / 5; margin: 0; }
+.lp-seal-list { display: grid; gap: 16px; margin-top: 28px; }
+.lp-seal-item { display: grid; grid-template-columns: 28px 1fr; gap: 12px; }
+.lp-seal-item > svg { color: var(--accent-green); margin-top: 3px; }
+.lp-seal-item h3 { color: var(--c-text); font-size: 15px; margin: 0 0 3px; }
+.lp-seal-item p { color: var(--c-text2); font-size: 14px; line-height: 1.55; margin: 0; }
+.lp-inline-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.lp-inline-cta a, .lp-plan-cta, .lp-pricing-message button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; padding: 0 20px; border-radius: 50px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; }
+.lp-inline-cta a:first-child, .lp-plan-cta { background: #fff; color: #0a0a0a; }
+.lp-inline-cta a:last-child { color: var(--c-text); border: 1px solid var(--c-border); }
+.lp-usecase-emoji { display: block; font-size: 28px; }
+.lp-usecase-tag { display: inline-block; margin-top: 14px; color: #9ed0ff; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.lp-usecase h3 { margin-top: 8px; }
+.lp-case ul, .lp-plan ul { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 9px; }
+.lp-case li, .lp-plan li { display: flex; gap: 8px; align-items: flex-start; }
+.lp-case li svg, .lp-plan li svg { color: var(--accent-green); flex: 0 0 auto; margin-top: 3px; }
+.lp-pricing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: stretch; }
+.lp-plan { display: flex; flex-direction: column; position: relative; padding: 28px 22px; }
+.lp-plan--featured { border-color: #6fb9ff; box-shadow: 0 0 0 1px rgba(111,185,255,.22), 0 24px 60px rgba(0,122,255,.12); transform: translateY(-8px); }
+.lp-plan-badge { align-self: flex-start; color: #0a0a0a; background: #86c5ff; padding: 5px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.lp-plan h3 { font-size: 20px; }
+.lp-plan-description { min-height: 68px; }
+.lp-plan-price { color: var(--c-text) !important; font-size: 28px !important; font-weight: 750; letter-spacing: -.5px; margin: 12px 0 6px; }
+.lp-plan-price small { color: var(--c-text2); font-size: 12px; font-weight: 500; }
+.lp-plan-cta { margin-top: auto; padding-top: 12px; }
+.lp-plan ul { margin-bottom: 24px; }
+.lp-plan--skeleton { min-height: 480px; background: linear-gradient(100deg, var(--c-surface2) 30%, #242424 50%, var(--c-surface2) 70%); background-size: 300% 100%; animation: lp-skeleton 1.5s infinite; }
+.lp-pricing-message { min-height: 220px; display: grid; place-items: center; text-align: center; gap: 12px; color: var(--c-text2); }
+.lp-pricing-message button { color: #0a0a0a; background: #fff; border: 0; }
+@keyframes lp-skeleton { to { background-position: -300% 0; } }
+
+/* --- Telas de auth (login, registro, esqueci, redefinir) ---
+   Desktop: dois paineis lado a lado (brand | form), como sempre foi.
+   Mobile: o brand some e o form ocupa a tela. Os dois `!important` sao
+   necessarios porque display e padding estao inline nessas telas, e a
+   regra do codigo ja usa o mesmo recurso para .nav-links/.nav-hamburger. */
+
+/* --- Drawer mobile --- */
+.lp-drawer {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; justify-content: flex-end;
+  visibility: hidden; pointer-events: none;
+}
+.lp-drawer[data-open="true"] { visibility: visible; pointer-events: auto; }
+
+.lp-drawer__backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0; transition: opacity 220ms ease;
+}
+.lp-drawer[data-open="true"] .lp-drawer__backdrop { opacity: 1; }
+
+.lp-drawer__panel {
+  position: relative;
+  width: min(86vw, 360px);
+  height: 100dvh; /* Safari iOS: barra de endereco dinamica */
+  display: flex; flex-direction: column;
+  background: var(--c-surface, #0f0f0f);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.5);
+  padding: calc(16px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(100%);
+  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.lp-drawer[data-open="true"] .lp-drawer__panel { transform: translateX(0); }
+
+.lp-drawer__head {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 44px; margin-bottom: 12px;
+}
+.lp-drawer__close {
+  width: 44px; height: 44px; margin-right: -10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--c-text); cursor: pointer;
+  border-radius: 10px;
+}
+.lp-drawer__close:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
+
+.lp-drawer__list { display: flex; flex-direction: column; gap: 2px; }
+.lp-drawer__link {
+  display: block; padding: 14px 12px; border-radius: 10px;
+  font-size: 17px; font-weight: 500; color: var(--c-text);
+  text-decoration: none;
+}
+.lp-drawer__link:active { background: rgba(255, 255, 255, 0.06); }
+.lp-drawer__link:focus-visible { outline: 2px solid var(--c-blue); outline-offset: -2px; }
+
+.lp-drawer__sep { height: 1px; background: rgba(255, 255, 255, 0.08); margin: 14px 0; }
+
+.lp-drawer__cta {
+  margin-top: auto; padding-top: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.lp-drawer__btn {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 48px; border-radius: 50px; padding: 0 20px;
+  font-size: 15px; font-weight: 600; text-decoration: none;
+}
+.lp-drawer__btn--primary { background: #ffffff; color: #0a0a0a; }
+.lp-drawer__btn--ghost   { color: var(--c-text); border: 1px solid rgba(255, 255, 255, 0.16); }
+
+/* --- Mobile (<= 760px, breakpoint que a landing ja usava) --- */
+@media (max-width: 760px) {
+  .nav-inner {
+    height: calc(60px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .brand { font-size: 17px; }
+
+  /* "Entrar" e "Criar conta" saem do header e vao para o drawer: no celular os
+     tres elementos disputavam o espaco e o logo saia cortado ("ARXISV"). */
+  .nav-cta > a { display: none; }
+
+  .hero { padding: 40px 0 36px; }
+
+  /* Titulo: 11vw da 40px em 360, 43px em 390, 46px+ em 430 (limitado a 46).
+     Antes o minimo era 34px com <br/> forcado: 5 linhas dominando a tela. */
+  /* `.hero .h1` e nao `.h1`: o bloco de 600px mais abaixo tem `.h1 { 28px }`
+     para o app, e como vem depois no arquivo venceria. Especificidade resolve
+     sem tocar na regra do app. */
+  .hero .h1 { font-size: clamp(40px, 11vw, 46px); line-height: 1.04; letter-spacing: -1px; margin-bottom: 16px; }
+  .hero .h1-br { display: none; } /* deixa o browser quebrar onde couber */
+  /* "no navegador" sai no mobile: com ele o titulo dava 5 linhas em todos os
+     viewports de 360 a 430. Sem ele fica em 3-4, que era o alvo. Autorizado. */
+  .hero .h1-nav { display: none; }
+
+  .lead { font-size: 16px; line-height: 1.5; margin-bottom: 28px; }
+
+  .eyebrow { font-size: 11px; padding: 5px 12px; margin-bottom: 20px; letter-spacing: 0.04em; }
+  .eyebrow-full  { display: none; }
+  .eyebrow-short { display: inline; }
+
+  .hero-cta { flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .hero-cta > a { width: 100%; justify-content: center; min-height: 50px; padding: 0 20px; }
+
+  .hero-meta {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px; font-size: 14px; text-align: left; justify-items: start;
+  }
+
+  .foot-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+
+  .cta-band { padding: 40px 20px; }
+  .cta-row  { flex-direction: column; gap: 10px; }
+  .cta-row > a { width: 100%; justify-content: center; min-height: 50px; padding: 0 20px; }
+
+  .lp-section { padding: 64px 0; }
+  .lp-section-image { aspect-ratio: 1.45 / 1; border-radius: 14px; }
+  .lp-feature-grid, .lp-usecase-grid, .lp-cases-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-split { grid-template-columns: 1fr; gap: 32px; }
+  .lp-section-image--tall { aspect-ratio: 1.35 / 1; }
+  .lp-plan--featured { transform: none; }
+
+  .auth-split { flex-direction: column; }
+  .auth-brand { display: none !important; }
+  .auth-form  {
+    padding: calc(28px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 100dvh;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-meta { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .foot-grid { grid-template-columns: 1fr; }
+  .lp-feature-grid, .lp-usecase-grid, .lp-cases-grid, .lp-pricing-grid { grid-template-columns: 1fr; }
+  .lp-card, .lp-plan { padding: 22px 18px; }
+  .lp-inline-cta { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-drawer__panel, .lp-drawer__backdrop { transition: none; }
+}
+
+/* Layout do app autenticado: .main/.content sao do AppShell; #loading das
+   paginas que checam sessao. Sidebar e topbar ficam mais abaixo, em uma so
+   definicao cada. */
+.main {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Loading state */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 9999;
+}
+
+@media (max-width: 600px) {
+  .h1 {
+    font-size: 28px;
+  }
+
+  .h2 {
+    font-size: 20px;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .nav-inner {
+    justify-content: space-between;
+    height: 68px;
+    padding: 0 20px;
+  }
+}
+
+/* Sidebar Responsive Fixes */
+.app-layout {
+  min-height: 100vh;
+}
+
+/* Fonte unica da sidebar (08/09/2026: antes havia tres `.sidebar` no arquivo,
+   duas copias identicas de um layout em grid que nao existe mais e esta). */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-expanded);
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  padding: 12px;
+  gap: 8px;
+  font-size: 12px;
+  overflow: hidden;
+  transition: width 180ms ease, transform 180ms ease;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-toggle {
+  width: 36px;
+  height: 36px;
+  margin: auto auto 14px;
+  display: grid;
+  place-items: center;
+
+  color: #a1a1aa;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 50;
+}
+
+.sidebar-toggle:hover {
+  color: #fff;
+  background: #1d1d1d;
+  border-color: #303030;
+}
+
+.main-content {
+  min-width: 0;
+  margin-left: var(--sidebar-expanded);
+  transition: margin-left 180ms ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-layout.sidebar-collapsed .sidebar {
+  width: var(--sidebar-collapsed);
+}
+
+.app-layout.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-collapsed);
+}
+
+.app-layout.sidebar-collapsed .sidebar-label,
+.app-layout.sidebar-collapsed .sidebar-section-title,
+.app-layout.sidebar-collapsed .sidebar-submenu,
+.app-layout.sidebar-collapsed .brand-name {
+  display: none !important;
+}
+
+.app-layout.sidebar-collapsed .sidebar-item {
+  justify-content: center;
+  padding-inline: 0 !important;
+}
+
+.app-layout.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+  padding-inline: 0 !important;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* ===== Navegacao mobile do app (auditoria de 08/09/2026) =====
+   O drawer mobile tinha TRES defeitos de causa, nao de estilo:
+   1. abria sozinho em toda visita nova, porque usava o mesmo estado da sidebar
+      "expandida" do desktop (padrao). Agora e `.mobile-nav-open`, separado.
+   2. fechado, nao havia como reabrir: o unico controle ("Recolher menu") ficava
+      DENTRO da sidebar. Agora ha hamburguer no topbar.
+   3. ficava por baixo do topbar (z 60 < 100). Agora sobe para 110. */
+
+/* --- Dashboard: valores desktop (sairam do inline) e mobile --- */
+.dash-page { padding: 28px 28px 48px; }
+.dash-cta  { height: 30px; padding: 0 12px; font-size: 12px; }
+.dash-kpis { grid-template-columns: repeat(3, 1fr); }
+.dash-link { padding: 4px 8px; font-size: 12px; }
+
+@media (max-width: 768px) {
+  .dash-page { padding: 16px 16px calc(32px + env(safe-area-inset-bottom, 0px)); gap: 16px; }
+  /* titulo em cima, CTA embaixo na largura toda: a acao principal fica obvia */
+  .dash-head { flex-direction: column; align-items: stretch !important; gap: 12px; }
+  .dash-head > div:last-child { display: flex; }
+  .dash-cta  { height: 44px; padding: 0 16px; font-size: 14px; flex: 1; justify-content: center; }
+  /* 3 colunas em 390px dava 110px por card e "Reunioes XR" quebrava */
+  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-link { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+}
+/* Painel Admin: 4 totais e 2 listas lado a lado no desktop */
+.admin-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-duo  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 768px) {
+  .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-duo  { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 370px) {
+  /* so em 360: em 375+ duas colunas cabem e tres cards de "0 Total" em coluna
+     unica gastavam 660px de tela para dizer quase nada */
+  .dash-kpis { grid-template-columns: 1fr; }
+}
+
+/* Controles que so existem no celular: escondidos por padrao. */
+.topbar__menu,
+.topbar__brand,
+.sidebar-close-mobile { display: none; }
+
+/* Fonte unica do topbar (idem). */
+.topbar {
+  height: 48px;
+  padding: 0 20px;
+  gap: 16px;
+  display: flex;
+  align-items: center;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  z-index: 100;
+}
+
+.topbar__link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px; height: 32px; border-radius: var(--r);
+  font-size: 12px; color: var(--c-text2);
+  transition: background .12s, color .12s;
+}
+
+/* drawer aberto: trava o scroll (o body do app ja e hidden; o que rola e o
+   .main, mas o html e o que o iOS respeita com fixed na tela) */
+html.app-nav-open { overflow: hidden; overscroll-behavior: none; }
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: min(84vw, 300px) !important;
+    z-index: 110; /* acima do topbar (100) */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.5);
+  }
+  .app-layout.mobile-nav-open .sidebar {
+    transform: translateX(0);
+  }
+  .sidebar-backdrop {
+    z-index: 105;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .app-layout.mobile-nav-open .sidebar-backdrop {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .app-layout.mobile-nav-open { touch-action: none; }
+  .app-layout.mobile-nav-open .sidebar { touch-action: pan-y; }
+
+  .main-content,
+  .app-layout.sidebar-collapsed .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* No celular a sidebar nunca fica "recolhida" (nao ha estado intermediario):
+     labels e secoes sempre visiveis, mesmo que o desktop tenha salvo
+     "recolhida" no localStorage. */
+  .app-layout.sidebar-collapsed .sidebar-label,
+  .app-layout.sidebar-collapsed .sidebar-section-title,
+  .app-layout.sidebar-collapsed .sidebar-submenu,
+  .app-layout.sidebar-collapsed .brand-name {
+    display: revert !important;
+  }
+  .app-layout.sidebar-collapsed .sidebar-item {
+    justify-content: flex-start;
+    padding-inline: 14px !important;
+  }
+
+  /* cabeca do drawer: marca a esquerda, X a direita */
+  .sidebar-head { justify-content: space-between !important; height: 56px !important; }
+  .sidebar-close-mobile {
+    display: inline-grid; place-items: center;
+    width: 44px; height: 44px; margin-right: -10px;
+    background: none; border: none; color: var(--c-text); border-radius: 10px;
+  }
+  .sidebar-close-mobile:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
+
+  /* itens com area de toque de 44px */
+  .sidebar-item {
+    min-height: 44px;
+    padding-block: 10px !important;
+    font-size: 15px !important;
+  }
+  .sidebar-section-title { padding-top: 10px !important; }
+
+  /* o "Recolher menu" e semantica de desktop */
+  .sidebar-toggle { display: none !important; }
+
+  /* topbar: hamburguer + marca + suporte (icone) + avatar */
+  .topbar {
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 8px 0 8px;
+    gap: 4px;
+  }
+  .topbar__menu {
+    display: inline-grid; place-items: center;
+    width: 44px; height: 44px;
+    background: none; border: none; color: var(--c-text); border-radius: 10px;
+    cursor: pointer;
+  }
+  .topbar__menu:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 2px; }
+  .topbar__brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.2px; color: var(--c-text);
+    text-decoration: none; padding: 0 4px;
+  }
+  .topbar__breadcrumb { display: none !important; }
+  .topbar__link {
+    width: 44px; height: 44px; padding: 0; justify-content: center;
+  }
+  .topbar__link-text { display: none; }
+  /* avatar de 28px vira alvo de 44: cresce para 36 e o wrap completa com padding */
+  .topbar__avatar-wrap { padding: 4px; }
+  .topbar__avatar { width: 36px !important; height: 36px !important; font-size: 13px !important; }
+}

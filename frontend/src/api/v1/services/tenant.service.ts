@@ -216,6 +216,14 @@ class TenantService {
     return response.json();
   }
 
+  async getWorkspaces(): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/workspaces`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch workspaces');
+    return response.json();
+  }
+
   async getTenant(tenantId: string): Promise<Tenant> {
     const response = await fetch(`${API_BASE_URL}/api/v1/tenants/${tenantId}`, {
       headers: this.getAuthHeaders(),

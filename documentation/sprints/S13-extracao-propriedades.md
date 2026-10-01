@@ -1,7 +1,9 @@
 # S13 · Extração de Propriedades IFC
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Painel de propriedades no viewer.
 **Depende de:** S07 (parser estrutura), S11 (pipeline assíncrono)  
 **Bloqueia:** S15 (busca BIM), S20 (quantitativos dependem de propriedades)
 
@@ -11,13 +13,13 @@
 
 Extrair e persistir todos os PropertySets de cada elemento IFC. Painel lateral mostra propriedades ao clicar.
 
-> **Nota para o agente:** Este sprint **não existe para exibir um painel de propriedades.** Ele existe para transformar os dados embutidos no IFC em uma camada consultável e quantificável — a fonte de verdade dos quantitativos (S20) e dos custos (S22). Precisão e completude da extração têm prioridade sobre a UI do painel.
+> **Nota para o agente:** Este sprint **não existe para exibir um painel de propriedades.** Ele existe para transformar os dados embutidos no IFC em uma camada consultável e quantificável, a fonte de verdade dos quantitativos (S20) e dos custos (S22). Precisão e completude da extração têm prioridade sobre a UI do painel.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Busca/filtro avançado por propriedade (S15)
 - Cálculo de quantitativos agregados (S20)
@@ -29,7 +31,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 ## Por que importa a longo prazo
 
-As propriedades IFC são a fonte dos quantitativos do S20 (área, volume, comprimento). Se a extração for imprecisa ou incompleta aqui, o cálculo 5D do S22 será incorreto — e erros de orçamento são os mais visíveis para o cliente.
+As propriedades IFC são a fonte dos quantitativos do S20 (área, volume, comprimento). Se a extração for imprecisa ou incompleta aqui, o cálculo 5D do S22 será incorreto, e erros de orçamento são os mais visíveis para o cliente.
 
 O schema de armazenamento de propriedades precisa suportar busca eficiente (S15) sem exigir JOIN em N tabelas para cada query. Armazenar como JSONB indexado é a escolha correta para escalar.
 
@@ -66,7 +68,7 @@ element_properties (
   length_m         DECIMAL(12,4),
 
   -- Todos os psets como JSONB
-  properties       JSONB NOT NULL,  -- { "Pset_WallCommon": { "IsExternal": true, ... } }
+  properties       JSONB NOT NULL,  -- { "Pset_WallCommon": { "IsExternal": true ... } }
 
   created_at       TIMESTAMP
 )

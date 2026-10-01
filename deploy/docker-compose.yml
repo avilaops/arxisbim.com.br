@@ -1,0 +1,79 @@
+# ArxisVR no servidor orquestrador (infra, 23.88.60.193 / 10.10.0.1).
+#
+# Vive em /opt/arxisvr. O Caddy que termina TLS é o do stack de
+# observabilidade (/opt/observabilidade), que entra aqui pela rede
+# `arxisvr_default` e fala com `api:3001` pelo nome do serviço. Por isso
+# nenhuma porta é publicada no host: quem entra é o Caddy, pela rede docker.
+#
+# O Postgres é dedicado ao ArxisVR em vez de dividir o do n8n: são 59
+# migrations e 70 tabelas, e misturar isso com o banco do orquestrador
+# transformaria qualquer restauração de um em risco para o outro.
+
+services:
+  db:
+    # PG18 desde 02/09/2026. A saida do Docker foi medida e recusada
+    # (`documentation/DECISAO-saida-do-docker.md`): tirar so o ArxisVR nao
+    # elimina o daemon, entao o ganho de RAM e ~zero e o risco nao e.
+    # Subir a versao aqui dentro entrega o PG18 sem PM2, sem Postgres no host
+    # e sem mexer no Caddy. Rollback: voltar a tag para postgres:16-alpine e
+    # apontar o volume para arxisvr_db-data-pg16-rollback.
+    image: postgres:18.6
+    container_name: arxisvr-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arxisvr
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      POSTGRES_DB: arxisvr
+    volumes:
+      # PG18 mudou o ponto de montagem: a imagem 18+ espera o volume em
+      # /var/lib/postgresql (e coloca os dados num subdiretorio por versao),
+      # nao mais em /var/lib/postgresql/data. Montar no caminho antigo faz o
+      # container reiniciar em loop reclamando de "unused mount/volume".
+      - db-data-pg18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arxisvr -d arxisvr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: arxisvr-api:local
+    container_name: arxisvr-api
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Driver de storage local. Sem este volume os IFCs enviados somem no
+      # primeiro deploy.
+      - uploads:/app/uploads
+
+  web:
+    image: caddy:2-alpine
+    container_name: arxisvr-web
+    restart: unless-stopped
+    volumes:
+      # O build sai da máquina do dev (213 mil linhas não cabem confortavelmente
+      # em 3,7 GB de RAM); aqui só entra o `dist` pronto, montado como leitura.
+      - ./web/dist:/srv:ro
+      - ./web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - web-data:/data
+      - web-config:/config
+
+volumes:
+  # PG18 tem datadir incompativel com o do PG16: por isso um volume novo.
+  # `db-data` (PG16) e `db-data-pg16-rollback` continuam existindo e NAO
+  # sao apagados por esta troca. Sao o rollback.
+  db-data-pg18:
+  db-data:
+  uploads:
+  web-data:
+  web-config:
+
+networks:
+  default:
+    name: arxisvr_default

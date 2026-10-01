@@ -31,7 +31,7 @@ export interface ShellProps {
 }
 
 export const Shell: React.FC<ShellProps> = ({
-  brand = 'ArxisVR',
+  brand = 'Arxis',
   nav = [],
   headerRight,
   sidebarFooter,

@@ -1,0 +1,5 @@
+{{/* Ávila Ops: o index.html do editor do n8n, vindo do próprio n8n, com uma
+     folha de estilo e o identificador visual das credenciais. Nada é copiado a mão: a cada
+     pedido o Caddy busca o HTML atual em /__n8n_index (proxy para o n8n),
+     então trocar a versão do n8n não quebra nada. Ver
+     docs/n8n-celular-cabecalho.md no app.avilaops.com. */}}{{ httpInclude "/__n8n_index" | replace "</head>" `<link rel="stylesheet" href="/avila-n8n-mobile.css?v=2"><link rel="stylesheet" href="/avila-n8n-credentials.css?v=2"><script defer src="/avila-n8n-credentials.js?v=5"></script><script defer src="/avila-modules.js?v=10"></script></head>` }}

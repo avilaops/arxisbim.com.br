@@ -14,9 +14,10 @@ import {
   buildStats, createBBoxAccumulator,
 } from './ifc-structure.builder.js';
 import type {
-  IFCStructure, IFCElement, SpatialNode, IfcSchema,
+  IFCStructure, IFCElement, SpatialNode,
 } from './ifc-structure.dto.js';
 import { IFC_STRUCTURE_VERSION } from './ifc-structure.dto.js';
+import { assessIfcSchemaSupport } from './ifc-schema-support.js';
 
 // web-ifc node build (WASM). createRequire garante o artefato CJS de node,
 // não o de browser (que usa fetch e quebra fora do navegador).
@@ -42,13 +43,6 @@ export interface ParseRequest {
 export type ParseResult =
   | { ok: true; structure: IFCStructure; durationMs: number; fileSizeMb: number }
   | { ok: false; errorType: string; message: string; durationMs: number };
-
-function mapSchema(raw: string): IfcSchema {
-  const s = (raw || '').toUpperCase();
-  if (s.includes('IFC4X3') || s.includes('IFC4X2') || s.includes('IFC4X1')) return 'IFC4X3';
-  if (s.includes('IFC4')) return 'IFC4';
-  return 'IFC2X3';
-}
 
 /** Fallback 'IFCWALL' → 'IfcWall' (usado só se line.constructor.name faltar). */
 function pascalIfcType(typeName: string): string {
@@ -135,9 +129,22 @@ async function parse(req: ParseRequest): Promise<ParseResult> {
         durationMs: Date.now() - start,
       };
     }
-    modelID = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true });
+    // Guard de esquema ANTES do OpenModel: IFC2X2/anteriores fariam o web-ifc
+    // falhar (ou produzir estrutura não confiável) já com o WASM carregado.
+    const support = assessIfcSchemaSupport(
+      new TextDecoder('utf-8').decode(data.slice(0, 64 * 1024)),
+    );
+    if (!support.supported) {
+      return {
+        ok: false,
+        errorType: 'UNSUPPORTED_IFC_SCHEMA',
+        message: support.reason ?? 'Esquema IFC não suportado',
+        durationMs: Date.now() - start,
+      };
+    }
+    const schema = support.normalized!;
 
-    const schema = mapSchema(api.GetModelSchema(modelID));
+    modelID = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true });
 
     // ── Árvore espacial: monta tree + mapa expressID → {parent, storey} ─────
     const props = new WebIFC.Properties(api);

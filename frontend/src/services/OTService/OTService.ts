@@ -112,7 +112,7 @@ class OTService {
    * Transforma operação de inserção
    */
   private transformInsert(op1: OTOperation, op2: OTOperation): OTTransform {
-    let transformed = { ...op1 };
+    const transformed = { ...op1 };
 
     if (op2.type === 'insert') {
       // Se op2 inseriu antes de op1, ajustar posição
@@ -137,7 +137,7 @@ class OTService {
    * Transforma operação de deleção
    */
   private transformDelete(op1: OTOperation, op2: OTOperation): OTTransform {
-    let transformed = { ...op1 };
+    const transformed = { ...op1 };
 
     if (op2.type === 'insert') {
       // Se op2 inseriu antes de op1, ajustar posição

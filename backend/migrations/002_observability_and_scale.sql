@@ -41,7 +41,10 @@ CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS user_sessions_tenant_id_idx ON user_sessions(tenant_id);
 CREATE UNIQUE INDEX IF NOT EXISTS user_sessions_refresh_token_idx ON user_sessions(refresh_token);
 CREATE INDEX IF NOT EXISTS user_sessions_expires_at_idx ON user_sessions(expires_at);
+
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP;
 CREATE INDEX IF NOT EXISTS user_sessions_user_active_idx ON user_sessions(user_id, revoked_at, expires_at);
+
 
 -- ========== USER_PREFERENCES ==========
 CREATE TABLE IF NOT EXISTS user_preferences (

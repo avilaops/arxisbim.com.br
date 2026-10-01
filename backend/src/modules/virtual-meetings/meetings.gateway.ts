@@ -9,10 +9,19 @@ import { db } from '../../shared/database/db.js';
 import { projects } from '../../shared/database/schema/projects.js';
 import { eq } from 'drizzle-orm';
 
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET must be defined in .env');
+/**
+ * Lido na hora do uso, nao no carregamento do modulo. Imports ESM resolvem
+ * antes do codigo do `index.ts`, entao um throw solto aqui em cima passava
+ * por cima da checagem de `requiredEnvVars` e o processo morria com stack
+ * trace de modulo interno em vez da lista do que falta configurar.
+ */
+function jwtSecret(): string {
+  const valor = process.env.JWT_SECRET;
+  if (!valor) {
+    throw new Error('JWT_SECRET nao configurado');
+  }
+  return valor;
 }
-const JWT_SECRET = process.env.JWT_SECRET;
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -68,7 +77,7 @@ export class MeetingsGateway {
           return next(new Error('Authentication token required'));
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; tenantId: string };
+        const decoded = jwt.verify(token, jwtSecret()) as { userId: string; tenantId: string };
         socket.userId = decoded.userId;
         socket.tenantId = decoded.tenantId;
         

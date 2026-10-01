@@ -4,6 +4,7 @@ import { db } from '../../shared/database/db.js';
 import { analyticsEvents } from '../../shared/database/schema/analytics.js';
 import { authenticateRequest, optionalAuth } from '../../core/auth/middleware.js';
 import { requireSuperAdmin } from '../../core/admin/super-admin.middleware.js';
+import { logFrontendEvent } from '../../core/observability/service.js';
 
 // ── Ingest payload ────────────────────────────────────────────────
 interface IncomingEvent {
@@ -59,21 +60,26 @@ export async function trackRoutes(fastify: FastifyInstance) {
     const rows = list
       .filter((e) => e && typeof e.name === 'string' && e.name.trim())
       .slice(0, 50) // anti-flood por request
-      .map((e) => ({
-        anonId: clamp(e.anonId, 64),
-        sessionId: clamp(e.sessionId, 64),
-        userId: user?.userId ?? null,
-        tenantId: user?.tenantId ?? null,
-        name: clamp(e.name, 120)!,
-        category: clamp(e.category, 60),
-        path: clamp(e.path, 512),
-        referrer: clamp(e.referrer, 512),
-        utm: e.utm && typeof e.utm === 'object' ? e.utm : null,
-        props: e.props && typeof e.props === 'object' ? e.props : null,
-        ip,
-        userAgent: ua,
-        country: null,
-      }));
+      .map((e) => {
+        const row = {
+          anonId: clamp(e.anonId, 64),
+          sessionId: clamp(e.sessionId, 64),
+          userId: user?.userId ?? null,
+          tenantId: user?.tenantId ?? null,
+          name: clamp(e.name, 120)!,
+          category: clamp(e.category, 60),
+          path: clamp(e.path, 512),
+          referrer: clamp(e.referrer, 512),
+          utm: e.utm && typeof e.utm === 'object' ? e.utm : null,
+          props: e.props && typeof e.props === 'object' ? e.props : null,
+          ip,
+          userAgent: ua,
+          country: null,
+          timestamp: new Date().toISOString()
+        };
+        logFrontendEvent(row);
+        return row;
+      });
 
     if (!rows.length) return reply.code(202).send({ accepted: 0 });
 

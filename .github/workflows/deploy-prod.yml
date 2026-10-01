@@ -19,10 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
     services:
       postgres:
-        image: postgres:16
+        image: postgres:18.6
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
@@ -38,14 +39,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          node-version: '24'
 
       - name: Install backend dependencies
         working-directory: backend
@@ -62,6 +59,18 @@ jobs:
       - name: Build frontend (vite)
         working-directory: frontend
         run: npm run build
+
+      - name: Upload backend source maps to Sentry
+        if: ${{ env.SENTRY_AUTH_TOKEN != '' }}
+        continue-on-error: true
+        working-directory: frontend
+        env:
+          SENTRY_ORG: avilaops
+          SENTRY_PROJECT: arxisvr
+          SENTRY_RELEASE: arxisvr-backend@${{ github.sha }}
+        run: |
+          npx sentry-cli sourcemaps inject ../backend/dist
+          npx sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ../backend/dist
 
       - name: Install signaling-server dependencies
         working-directory: signaling-server
@@ -81,7 +90,7 @@ jobs:
           PORT: '3001'
           NODE_ENV: test
         run: |
-          timeout 60s node dist/index.js > backend.log 2>&1 &
+          timeout 60s node --import ./dist/instrument.js dist/index.js > backend.log 2>&1 &
           PID=$!
           ok=0
           for i in $(seq 1 40); do

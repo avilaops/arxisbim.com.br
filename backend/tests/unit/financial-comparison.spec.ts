@@ -230,10 +230,10 @@ describe('FinancialComparisonService Unit Tests', () => {
 
     // Verify category breakdown
     // IfcWall -> structure, IfcPipe -> mep
-    expect((res.scenarioA.categoryBreakdown.structure as any).total_cost).toBe('1000.00');
-    expect((res.scenarioA.categoryBreakdown.mep as any).total_cost).toBe('1000.00');
-    expect((res.scenarioB.categoryBreakdown.structure as any).total_cost).toBe('1500.00');
-    expect((res.scenarioB.categoryBreakdown.mep as any).total_cost).toBe('1500.00');
+    expect(res.scenarioA.categoryBreakdown.structure).toBe('1000.00');
+    expect(res.scenarioA.categoryBreakdown.mep).toBe('1000.00');
+    expect(res.scenarioB.categoryBreakdown.structure).toBe('1500.00');
+    expect(res.scenarioB.categoryBreakdown.mep).toBe('1500.00');
 
     // Verify S-Curves
     expect(res.scenarioA.sCurve.length).toBe(1);

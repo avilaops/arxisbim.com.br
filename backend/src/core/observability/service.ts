@@ -8,6 +8,53 @@ import { db } from '../../shared/database/db.js';
 import { auditLogs, metrics, errorLogs, performanceMetrics } from '../../shared/database/schema/observability.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { redactSensitive } from './redact.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Writable } from 'node:stream';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const logsDir = path.resolve(__dirname, '../../../../logs');
+
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// Criar subdiretório único por inicialização para manter os logs organizados
+const now = new Date();
+const pad = (n: number) => n.toString().padStart(2, '0');
+const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+const runLogsDir = path.join(logsDir, `run_${timestamp}`);
+
+if (!fs.existsSync(runLogsDir)) {
+  fs.mkdirSync(runLogsDir, { recursive: true });
+}
+
+export const backendLogStream = fs.createWriteStream(path.join(runLogsDir, 'backend.log'), { flags: 'a' });
+export const dbLogStream = fs.createWriteStream(path.join(runLogsDir, 'database.log'), { flags: 'a' });
+export const frontendLogStream = fs.createWriteStream(path.join(runLogsDir, 'frontend.log'), { flags: 'a' });
+
+export const fastifyCombinedStream = new Writable({
+  write(chunk, encoding, callback) {
+    process.stdout.write(chunk, encoding);
+    backendLogStream.write(chunk, encoding, callback);
+  }
+});
+
+export function logDatabaseQuery(query: string, parameters: any, connection?: any) {
+  const timestamp = new Date().toISOString();
+  const connId = connection?.id || 'unknown';
+  const logMessage = `[${timestamp}] [Conn:${connId}] Query: ${query.replace(/\s+/g, ' ').trim()} | Params: ${JSON.stringify(parameters)}\n`;
+  dbLogStream.write(logMessage);
+}
+
+export function logFrontendEvent(event: any) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${JSON.stringify(event)}\n`;
+  frontendLogStream.write(logMessage);
+}
 
 // =====================================
 // TYPES
@@ -85,6 +132,10 @@ class ObservabilityService {
   async logAudit(data: AuditLogData): Promise<void> {
     if (!this.dbAvailable) return;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(auditLogs).values({
         tenantId: data.tenantId,
@@ -122,6 +173,10 @@ class ObservabilityService {
         }
       : dataOrName;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(metrics).values({
         tenantId: data.tenantId,
@@ -153,6 +208,10 @@ class ObservabilityService {
         }
       : dataOrError;
 
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
+
     try {
       await db.insert(errorLogs).values({
         tenantId: data.tenantId,
@@ -174,6 +233,10 @@ class ObservabilityService {
    */
   async recordPerformance(data: PerformanceMetricData): Promise<void> {
     if (!this.dbAvailable) return;
+
+    if (data.tenantId === 'system') {
+      await this.ensureSystemTenant();
+    }
 
     try {
       await db.insert(performanceMetrics).values({
@@ -345,43 +408,51 @@ export async function observabilityMiddleware(
 
 export const logger = {
   info(message: string, meta?: Record<string, any>) {
-    console.log(JSON.stringify({
+    const entry = JSON.stringify({
       level: 'info',
       message,
       timestamp: new Date().toISOString(),
       ...redactSensitive(meta),
-    }));
+    });
+    console.log(entry);
+    backendLogStream.write(entry + '\n');
   },
 
   error(message: string, error?: unknown, meta?: Record<string, any>) {
     const normalizedError = error instanceof Error ? error : undefined;
-    console.error(JSON.stringify({
+    const entry = JSON.stringify({
       level: 'error',
       message,
       error: normalizedError?.message ?? String(error ?? ''),
       stack: normalizedError?.stack,
       timestamp: new Date().toISOString(),
       ...redactSensitive(meta),
-    }));
+    });
+    console.error(entry);
+    backendLogStream.write(entry + '\n');
   },
 
   warn(message: string, meta?: Record<string, any>) {
-    console.warn(JSON.stringify({
+    const entry = JSON.stringify({
       level: 'warn',
       message,
       timestamp: new Date().toISOString(),
       ...redactSensitive(meta),
-    }));
+    });
+    console.warn(entry);
+    backendLogStream.write(entry + '\n');
   },
 
   debug(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV === 'development') {
-      console.debug(JSON.stringify({
+      const entry = JSON.stringify({
         level: 'debug',
         message,
         timestamp: new Date().toISOString(),
         ...redactSensitive(meta),
-      }));
+      });
+      console.debug(entry);
+      backendLogStream.write(entry + '\n');
     }
   },
 };

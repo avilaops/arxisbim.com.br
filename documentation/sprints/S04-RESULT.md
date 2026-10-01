@@ -1,11 +1,17 @@
 # SPRINT-04-RESULT · Billing & Planos
 
+> **Revisado em 02/09/2026** (`AUDIT-2026-09-02-sprints-e-codigo-morto.md`):
+> backend **sim**, interface **sim**. O status abaixo descreve o núcleo entregue
+> na época e continua válido como registro; ele **não** afirma que a
+> funcionalidade chega ao usuário hoje.
+
+
 > Artefato de memória pós-execução. Evidência verificável de tudo abaixo foi coletada na sessão de fechamento.
 
 **Sprint:** S04 · Billing & Planos
-**Status:** Concluído (núcleo) — 5 gaps de hardening abertos (ver abaixo)
+**Status:** Concluído (núcleo), 5 gaps de hardening abertos (ver abaixo)
 **Data de fechamento:** 2026-06-12
-**Commit(s):** pendente — alterações ainda no working tree (não commitadas em `b7707e3`)
+**Commit(s):** pendente, alterações ainda no working tree (não commitadas em `b7707e3`)
 
 ---
 
@@ -15,20 +21,20 @@ Enforcement de limites de plano por tenant, tracking de uso real (sem `COUNT` po
 
 ## Arquivos alterados
 
-- `src/core/billing/entitlements.ts` — **novo.** `getTenantEntitlements()` lê `tenant_entitlements` com fallback a `BILLING_PLANS[plan].limits`
-- `src/core/billing/usage-tracker.ts` — **novo.** `ensureUsageRecord` + `incrementProjectCount/StorageBytes/UserCount/ScenarioCount`
-- `src/core/billing/plan-limits.ts` — `PlanLimitError` agora 403 com `{code, resource, limit, current}`; asserts usam entitlements + `tenant_usage`
-- `src/modules/files/files.service.ts` + `files.routes.ts` — `incrementStorageBytes` em ambos os paths de upload
-- `src/modules/projects/projects.service.ts` — `incrementProjectCount` no create
-- `src/modules/billing/billing.routes.ts` — insert em `failed_webhooks` no catch
-- `src/modules/billing/billing.service.ts` — `trialEndsAt` = NOW + 14 dias na inicialização free tier
-- `src/modules/{projects.controller,ifc.controller,workspaces.routes}.ts` — resposta de erro no formato estruturado
+- `src/core/billing/entitlements.ts` - **novo.** `getTenantEntitlements()` lê `tenant_entitlements` com fallback a `BILLING_PLANS[plan].limits`
+- `src/core/billing/usage-tracker.ts` - **novo.** `ensureUsageRecord` + `incrementProjectCount/StorageBytes/UserCount/ScenarioCount`
+- `src/core/billing/plan-limits.ts` - `PlanLimitError` agora 403 com `{code, resource, limit, current}`; asserts usam entitlements + `tenant_usage`
+- `src/modules/files/files.service.ts` + `files.routes.ts` - `incrementStorageBytes` em ambos os paths de upload
+- `src/modules/projects/projects.service.ts` - `incrementProjectCount` no create
+- `src/modules/billing/billing.routes.ts` - insert em `failed_webhooks` no catch
+- `src/modules/billing/billing.service.ts` - `trialEndsAt` = NOW + 14 dias na inicialização free tier
+- `src/modules/{projects.controller,ifc.controller,workspaces.routes}.ts` - resposta de erro no formato estruturado
 
 ## Migrations adicionadas
 
-- `036_tenant_usage_failed_webhooks.sql` — aplicada: **sim** (psql). Cria `tenant_usage` (counters) + `failed_webhooks` (dead-letter). Reversível: **sim** (drop tables)
+- `036_tenant_usage_failed_webhooks.sql` - aplicada: **sim** (psql). Cria `tenant_usage` (counters) + `failed_webhooks` (dead-letter). Reversível: **sim** (drop tables)
 
-## Critérios de aceite — passou?
+## Critérios de aceite: passou?
 
 | Critério | Resultado | Evidência |
 |---|---|---|

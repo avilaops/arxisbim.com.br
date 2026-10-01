@@ -4,7 +4,7 @@
 
 import { db } from '../../shared/database/db.js';
 import { ifcModels, modelElements, projects } from '../../shared/database/schema/index.js';
-import { eq, and, or, sql, like, inArray, gt, lt, gte, lte, ne } from 'drizzle-orm';
+import { eq, and, or, sql, like, inArray, gt, lt, gte, lte, ne, asc, desc } from 'drizzle-orm';
 import type {
   BIMQuery,
   BIMQueryResult,
@@ -98,15 +98,35 @@ export class BIMQueryService {
     }
 
     // Query no banco
-    let dbQuery = db.select().from(modelElements).where(and(...conditions));
+    let dbQuery: any = db.select().from(modelElements).where(and(...conditions));
 
     // Ordenação
     if (query.orderBy && query.orderBy.length > 0) {
-      // TODO: Implementar ordenação dinâmica
+      const orderClauses = query.orderBy.map((sort) => {
+        let fieldSelector;
+        if (sort.field === 'id') {
+          fieldSelector = modelElements.id;
+        } else if (sort.field === 'expressId') {
+          fieldSelector = modelElements.expressId;
+        } else if (sort.field === 'globalId') {
+          fieldSelector = modelElements.globalId;
+        } else if (sort.field === 'type') {
+          fieldSelector = modelElements.type;
+        } else if (sort.field === 'name') {
+          fieldSelector = modelElements.name;
+        } else {
+          const propName = sort.field.startsWith('properties.')
+            ? sort.field.substring(11)
+            : sort.field;
+          fieldSelector = sql`properties->>${propName}`;
+        }
+        return sort.direction === 'DESC' ? desc(fieldSelector) : asc(fieldSelector);
+      });
+      dbQuery = dbQuery.orderBy(...orderClauses);
     }
 
     // Paginação
-    let finalQuery: typeof dbQuery = dbQuery;
+    let finalQuery: any = dbQuery;
     if (query.limit) {
       finalQuery = finalQuery.limit(query.limit) as typeof dbQuery;
       if (query.offset) {
@@ -117,7 +137,7 @@ export class BIMQueryService {
     const rows = await finalQuery;
 
     // Converter para BIMElement
-    const elements: BIMElement[] = rows.map((row) => {
+    const elements: BIMElement[] = rows.map((row: any) => {
       const geo = row.geometry as { boundingBox?: { min: number[]; max: number[] }; vertices?: number } | null;
       return {
         expressId: row.expressId,

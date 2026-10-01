@@ -1,4 +1,4 @@
-# Signaling Server — Tutorial Completo
+# Signaling Server: Tutorial Completo
 
 ## O que é o Signaling Server?
 
@@ -43,7 +43,7 @@ O signaling **não tem banco de dados próprio**. Todo o estado fica em memória
 
 ### 🔐 Autenticação e Sala
 
-#### `join_room` — Entrar em uma sala
+#### `join_room`: Entrar em uma sala
 ```json
 {
   "type": "join_room",
@@ -58,7 +58,7 @@ O signaling **não tem banco de dados próprio**. Todo o estado fica em memória
 - Responde com `room_joined` + lista de quem já está na sala
 - Notifica os outros com `user_joined`
 
-#### `leave_room` — Sair
+#### `leave_room`: Sair
 ```json
 { "type": "leave_room" }
 ```
@@ -66,11 +66,11 @@ Notifica todos com `user_left`. Sala vazia é removida da memória.
 
 ---
 
-### 📡 WebRTC — Negociação de Peer-to-Peer
+### 📡 WebRTC: Negociação de Peer-to-Peer
 
 O signaling não transmite áudio/vídeo diretamente. Ele faz a **troca de envelopes** para que os browsers se conectem diretamente entre si (P2P). É o "carteiro" do WebRTC.
 
-#### `offer` — Browser A propõe conexão para B
+#### `offer`: Browser A propõe conexão para B
 ```json
 {
   "type": "offer",
@@ -79,7 +79,7 @@ O signaling não transmite áudio/vídeo diretamente. Ele faz a **troca de envel
 }
 ```
 
-#### `answer` — Browser B aceita
+#### `answer`: Browser B aceita
 ```json
 {
   "type": "answer",
@@ -88,7 +88,7 @@ O signaling não transmite áudio/vídeo diretamente. Ele faz a **troca de envel
 }
 ```
 
-#### `ice_candidate` — Trocar candidatos de rede
+#### `ice_candidate`: Trocar candidatos de rede
 ```json
 {
   "type": "ice_candidate",
@@ -97,13 +97,13 @@ O signaling não transmite áudio/vídeo diretamente. Ele faz a **troca de envel
 }
 ```
 
-> Após essa troca, os dois browsers se falam **direto** — o signaling sai do caminho.
+> Após essa troca, os dois browsers se falam **direto**, o signaling sai do caminho.
 
 ---
 
 ### 🧍 Presença em Tempo Real
 
-#### `position_update` — Onde estou no modelo 3D
+#### `position_update`: Onde estou no modelo 3D
 ```json
 {
   "type": "position_update",
@@ -113,9 +113,9 @@ O signaling não transmite áudio/vídeo diretamente. Ele faz a **troca de envel
   "yaw": 1.57
 }
 ```
-Broadcast para toda a sala (exceto quem enviou). **Alta frequência — não persiste no DB.**
+Broadcast para toda a sala (exceto quem enviou). **Alta frequência, não persiste no DB.**
 
-#### `avatar_update` — Mudei meu avatar
+#### `avatar_update`: Mudei meu avatar
 ```json
 {
   "type": "avatar_update",
@@ -133,7 +133,7 @@ Broadcast para toda a sala (exceto quem enviou). **Alta frequência — não per
 
 Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tiver, o servidor retorna `error`.
 
-#### `material_changed` — Mudei o material de um objeto
+#### `material_changed`: Mudei o material de um objeto
 ```json
 {
   "type": "material_changed",
@@ -147,7 +147,7 @@ Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tive
 ```
 → Broadcast + persiste no DB como `material_changed`
 
-#### `object_moved` — Movi/rotacionei um elemento
+#### `object_moved`: Movi/rotacionei um elemento
 ```json
 {
   "type": "object_moved",
@@ -162,7 +162,7 @@ Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tive
 
 ### 🖊️ Anotações e Comunicação
 
-#### `laser_pointed` — Ponteiro laser no modelo
+#### `laser_pointed`: Ponteiro laser no modelo
 ```json
 {
   "type": "laser_pointed",
@@ -175,7 +175,7 @@ Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tive
 - Sem `text`: só broadcast visual (não persiste)
 - Com `text`: persiste como `annotation_added` no DB
 
-#### `annotation_added` — Nota fixa no espaço 3D
+#### `annotation_added`: Nota fixa no espaço 3D
 ```json
 {
   "type": "annotation_added",
@@ -187,7 +187,7 @@ Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tive
 ```
 → Broadcast + persiste no DB
 
-#### `chat_message` — Chat da sessão
+#### `chat_message`: Chat da sessão
 ```json
 {
   "type": "chat_message",
@@ -196,7 +196,7 @@ Esses eventos **requerem permissão `mutate` ou role `architect`**. Se não tive
 ```
 → Broadcast + persiste no DB
 
-#### `ping` — Keep-alive manual
+#### `ping`: Keep-alive manual
 ```json
 { "type": "ping" }
 ```
@@ -312,7 +312,7 @@ function addAnnotation(x, y, z, text) {
 
 ---
 
-## Heartbeat — Detecção de conexões mortas
+## Heartbeat: Detecção de conexões mortas
 
 A cada **30 segundos** o servidor envia um `ping` WebSocket nativo para todos os clientes.
 Se o cliente não responder com `pong` no próximo ciclo, é considerado morto e desconectado.
@@ -344,7 +344,7 @@ Usado pelo Render para saber se o serviço está vivo.
 | Variável | Default | Descrição |
 |---|---|---|
 | `SIGNALING_PORT` | `3002` | Porta do servidor |
-| `JWT_SECRET` | — | Chave para validar tokens de participante |
+| `JWT_SECRET` | - | Chave para validar tokens de participante |
 | `BACKEND_URL` | `http://localhost:3001` | URL do backend para persistir eventos |
 | `INTERNAL_API_KEY` | `internal` | Chave para chamadas internas backend |
 | `LOG_VERBOSE` | `false` | Logs detalhados (dev) |

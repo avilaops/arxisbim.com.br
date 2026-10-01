@@ -149,7 +149,23 @@ export async function tenantRoutes(fastify: FastifyInstance) {
       return reply.status(403).send({ error: 'Acesso negado.' });
     }
     try {
-      const tenantUsers = await db.select().from(users).where(eq(users.tenantId, tenantId));
+      // Colunas explícitas: `select()` devolvia a linha inteira, e a linha inteira
+      // inclui `password_hash`, `two_factor_secret` e os códigos de backup. Qualquer
+      // membro do workspace recebia o hash e o segredo de 2FA dos colegas.
+      const tenantUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          role: users.role,
+          emailVerified: users.emailVerified,
+          twoFactorEnabled: users.twoFactorEnabled,
+          createdAt: users.createdAt,
+          lastLoginAt: users.lastLoginAt,
+          isActive: users.isActive,
+        })
+        .from(users)
+        .where(eq(users.tenantId, tenantId));
       return reply.send(tenantUsers);
     } catch (error) {
       fastify.log.error(error);

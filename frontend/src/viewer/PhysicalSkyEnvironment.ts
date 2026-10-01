@@ -126,9 +126,18 @@ export class PhysicalSkyEnvironment {
 
   private setupGround(): void {
     const geo = new THREE.PlaneGeometry(2000, 2000);
+    
+    // Carregar textura de grama realista
+    const textureLoader = new THREE.TextureLoader();
+    const grassTexture = textureLoader.load('/grass.png');
+    grassTexture.wrapS = THREE.RepeatWrapping;
+    grassTexture.wrapT = THREE.RepeatWrapping;
+    grassTexture.repeat.set(500, 500); // Repetir para manter escala realista (~4m por ladrilho)
+    grassTexture.colorSpace = THREE.SRGBColorSpace;
+
     const mat = new THREE.MeshStandardMaterial({
-      color: 0xd4cfc8,
-      roughness: 0.95,
+      map: grassTexture,
+      roughness: 0.9,
       metalness: 0.0,
     });
     this.groundPlane = new THREE.Mesh(geo, mat);
@@ -240,10 +249,10 @@ export class PhysicalSkyEnvironment {
     this.scene.fog = new THREE.FogExp2(fogColor.getHex(), 0.0008);
     this.scene.background = new THREE.Color(fogColor).lerp(new THREE.Color(0x88aabb), 0.3);
 
-    // Cor do ground combina com o ambiente
+    // Cor do ground combina com o ambiente (tonalidade suave para a grama)
     if (this.groundPlane) {
-      const groundColor = isGolden ? 0xc8b89a : isOvercast ? 0xb8b8b4 : 0xd4cfc8;
-      (this.groundPlane.material as THREE.MeshStandardMaterial).color.set(groundColor);
+      const tintColor = isGolden ? 0xffddaa : isOvercast ? 0xcccccc : 0xffffff;
+      (this.groundPlane.material as THREE.MeshStandardMaterial).color.set(tintColor);
     }
   }
 
@@ -283,9 +292,12 @@ export class PhysicalSkyEnvironment {
     this.sunLight.shadow.camera.far = maxDim * 4;
     this.sunLight.shadow.camera.updateProjectionMatrix();
 
-    // Ground ao nível do modelo
+    // Ground ao nível do modelo e centrado sob ele (corrige modelos georreferenciados/deslocados)
     if (this.groundPlane) {
-      this.groundPlane.position.y = box.min.y - 0.05;
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      this.groundPlane.position.set(center.x, box.min.y - 0.05, center.z);
+      this.groundPlane.updateMatrixWorld(true);
     }
 
     console.log(`📐 PhysicalSky fitted to model: ${maxDim.toFixed(1)}m`);

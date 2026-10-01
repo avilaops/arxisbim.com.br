@@ -1,21 +1,24 @@
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import { reconcileSchema } from './core/db/schema-reconciler.js';
+import { API_URL, resolveCorsOrigins } from './core/config/domains.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
 // @fastify/static removed — frontend now served by Cloudflare Pages
-import fastifyRawBody from 'fastify-raw-body';
 import postgres from 'postgres';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { authRoutes } from './core/auth/auth.routes.js';
 import { adminRoutes } from './core/admin/admin.routes.js';
 import { tenantRoutes } from './routes/v1/tenants.js';
+import { dashboardRoutes } from './routes/v1/dashboard.routes.js';
 import { companyRoutes } from './routes/v1/companies.js';
 import { ifcModelRoutes } from './routes/v1/ifc-models.js';
+import { aiCopilotRoutes } from './routes/v1/ai-copilot.js';
 import { workspaceRoutes } from './modules/workspaces/workspaces.routes.js';
 import { trackRoutes, adminAnalyticsRoutes } from './modules/analytics/analytics.routes.js';
 import { schedulingRoutes as legacySchedulingRoutes } from './routes/v1/scheduling.js';
@@ -38,6 +41,7 @@ import { PINO_REDACT_PATHS, REDACTED } from './core/observability/redact.js';
 import { recordRequest } from './core/observability/metrics.js';
 import { filesRoutes } from './modules/files/files.routes.js';
 import { modelsRoutes } from './modules/models/models.routes.js';
+import { revitExportsRoutes } from './modules/revit-exports/revit-exports.routes.js';
 import { clashDetectionRoutes } from './modules/clash-detection/clash-detection.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
@@ -54,6 +58,8 @@ import { registerCostCalculationRoutes } from './modules/costs/cost-calculation.
 import { registerSINAPIImportRoutes, registerSINAPISearchRoutes } from './modules/sinapi/index.js';
 import { registerStreamingRoutes } from './modules/streaming/streaming.routes.js';
 import { streamingOrchestrator } from './modules/streaming/streaming-orchestrator.service.js';
+import { apiTokensRoutes } from './modules/api-tokens/api-tokens.routes.js';
+import { ApiTokensService, setApiTokensService } from './modules/api-tokens/api-tokens.service.js';
 
 import { BillingService } from './modules/billing/billing.service.js';
 import { createBillingRetryWorker } from './modules/billing/billing-retry.worker.js';
@@ -66,9 +72,13 @@ import { createAuthCleanupWorker } from './core/auth/auth-cleanup.worker.js';
 import { createAnalyticsCleanupWorker } from './modules/analytics/analytics-cleanup.worker.js';
 import { createEmailQueueWorker } from './core/email/email-queue.worker.js';
 import { createUsageReconcileWorker } from './modules/billing/usage-reconcile.worker.js';
-import { observabilityService, logger } from './core/observability/service.js';
+import { createBillingSyncWorker } from './modules/billing/billing-sync.worker.js';
+import { observabilityService, logger, fastifyCombinedStream } from './core/observability/service.js';
 import { emailService } from './core/email/email.service.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { captureRequestException, shutdownObservability } from './shared/observability/index.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // =====================================
 // ENVIRONMENT VALIDATION (ZERO fallbacks hardcoded)
@@ -94,6 +104,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const BILLING_RETRY_WORKER_ENABLED = process.env.BILLING_RETRY_WORKER_ENABLED !== 'false';
 const BILLING_RETRY_INTERVAL_MS = Math.max(15_000, Number(process.env.BILLING_RETRY_INTERVAL_MS || 60_000));
 const BILLING_RETRY_BATCH_SIZE = Math.max(1, Math.min(200, Number(process.env.BILLING_RETRY_BATCH_SIZE || 20)));
+setApiTokensService(new ApiTokensService());
 
 // Database connection (NO fallback)
 const sql = postgres(process.env.DATABASE_URL!);
@@ -184,7 +195,7 @@ async function checkWebSocketSignaling(): Promise<boolean> {
   try {
     // O WebSocket (signaling/realtime) é servido pelo próprio backend — não há
     // serviço de signaling separado. Checa a saúde do próprio backend.
-    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://api.arxisvr.avilaops.com/health';
+    const signalingUrl = process.env.SIGNALING_HEALTH_URL || `${API_URL}/health`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(signalingUrl, { signal: controller.signal });
@@ -248,6 +259,7 @@ const server = Fastify({
       paths: PINO_REDACT_PATHS,
       censor: REDACTED,
     },
+    stream: fastifyCombinedStream
   },
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,
@@ -259,18 +271,18 @@ const billingRetryWorker = createBillingRetryWorker({
   intervalMs: BILLING_RETRY_INTERVAL_MS,
   batchSize: BILLING_RETRY_BATCH_SIZE,
   logger: server.log,
-  // Single sweep drives three jobs: Stripe event retries, the local
+  // Single sweep drives four jobs: provider event retries, the local
   // failed_webhooks dead-letter, and trial/subscription expiry. Counts are
   // merged so worker health/stats reflect all of them.
-  processDueStripeRetries: async (tenantId?: string, limit?: number) => {
-    const stripeRetries = await BillingService.processDueStripeRetries(tenantId, limit);
+  processDueRetries: async (tenantId?: string, limit?: number) => {
+    const providerRetries = await BillingService.processDueProviderRetries(tenantId, limit);
     const failedWebhooks = await BillingService.processFailedWebhooks(limit);
     const trials = await BillingService.expireDueTrials();
     const grace = await BillingService.expireGracePeriods();
     return {
-      processed: stripeRetries.processed + failedWebhooks.processed + trials.expired + grace.expired,
-      succeeded: stripeRetries.succeeded + failedWebhooks.succeeded + trials.expired + grace.expired,
-      failed: stripeRetries.failed + failedWebhooks.failed,
+      processed: providerRetries.processed + failedWebhooks.processed + trials.expired + grace.expired,
+      succeeded: providerRetries.succeeded + failedWebhooks.succeeded + trials.expired + grace.expired,
+      failed: providerRetries.failed + failedWebhooks.failed,
     };
   },
   onSweepSuccess: async (result, context) => {
@@ -320,6 +332,14 @@ const usageReconcileWorker = createUsageReconcileWorker({
   reconcileAllUsage: (limit?: number) => BillingService.reconcileAllUsage(limit),
 });
 
+const billingSyncWorker = createBillingSyncWorker({
+  // Espelha assinaturas e cobranças do Mercado Pago no banco. O webhook do MP
+  // não é garantido (URL única por conta), então esta varredura é a rede.
+  intervalMs: Math.max(15 * 60 * 1000, Number(process.env.BILLING_PROVIDER_SYNC_INTERVAL_MS || 6 * 60 * 60 * 1000)), // default 6h
+  logger: server.log,
+  syncProviderSubscriptions: (limit?: number) => BillingService.syncProviderSubscriptions(limit),
+});
+
 const authCleanupWorker = createAuthCleanupWorker({
   intervalMs: 6 * 60 * 60 * 1000, // 6h
   logger: server.log,
@@ -339,7 +359,9 @@ const analyticsCleanupWorker = createAnalyticsCleanupWorker({
 
 // CORS
 await server.register(cors, {
-  origin: process.env.CORS_ORIGIN?.split(',') || '*',
+  // Allowlist em core/config/domains.ts: os dois domínios do produto durante a
+  // transição para arxisbim.com.br. `CORS_ORIGIN` continua mandando.
+  origin: resolveCorsOrigins(),
   credentials: true,
   // Declarar métodos/headers explicitamente — preflight de DELETE/PATCH estava
   // sendo bloqueado quando origin é específico + credentials.
@@ -376,13 +398,6 @@ await server.register(multipart, {
     fileSize: MAX_UPLOAD_MB * 1024 * 1024,
     files: 1, // 1 file per request
   },
-} as any);
-
-await server.register(fastifyRawBody, {
-  field: 'rawBody',
-  global: false,
-  encoding: 'utf8',
-  runFirst: true,
 } as any);
 
 // Frontend is now served by Cloudflare Pages — backend is API-only.
@@ -501,6 +516,8 @@ server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply
 server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: FastifyReply) => {
   const tenantId = request.headers['x-tenant-id'] as string || request.user?.tenantId;
   const user = request.user;
+  const statusCode = Number((error as Error & { statusCode?: number }).statusCode || 500);
+  const routePattern = (request.routeOptions?.url as string | undefined) || request.url.split('?')[0];
 
   // Log estruturado do erro (sempre)
   logger.error('Unhandled error', error, {
@@ -508,6 +525,15 @@ server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: Fast
     url: request.url,
     userId: user?.userId,
     tenantId: tenantId || 'no-tenant',
+  });
+
+  captureRequestException(error, {
+    method: request.method,
+    route: routePattern,
+    statusCode,
+    requestId: request.id,
+    userId: user?.userId,
+    tenantId,
   });
 
   // Salvar erro no banco (apenas se houver tenant)
@@ -528,9 +554,11 @@ server.setErrorHandler(async (error: Error, request: FastifyRequest, reply: Fast
   }
 
   // Retornar erro genérico ao cliente
-  return reply.status(500).send({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred',
+  return reply.status(statusCode).send({
+    error: statusCode >= 500 ? 'Internal Server Error' : 'Request Error',
+    message: process.env.NODE_ENV === 'development' || statusCode < 500
+      ? error.message
+      : 'An unexpected error occurred',
   });
 });
 
@@ -613,12 +641,15 @@ server.get('/api/v1/health/live', async (_request: FastifyRequest, reply: Fastif
 
 await server.register(authRoutes, { prefix: '/api/v1/auth' });
 await server.register(adminRoutes, { prefix: '/api/v1/admin' });
+await server.register(apiTokensRoutes, { prefix: '/api/v1' });
 await server.register(taskElementLinksRoutes, { prefix: '/api/v1' });
 await server.register(timelineSimulationsRoutes, { prefix: '/api/v1' });
 await server.register(notificationsRoutes, { prefix: '/api/v1' });
 await server.register(tenantRoutes, { prefix: '/api/v1' });
+await server.register(dashboardRoutes, { prefix: '/api/v1' });
 await server.register(companyRoutes, { prefix: '/api/v1' });
 await server.register(ifcModelRoutes, { prefix: '/api/v1' });
+await server.register(aiCopilotRoutes, { prefix: '/api/v1/ai' });
 await server.register(workspaceRoutes, { prefix: '/api/v1' });
 await server.register(trackRoutes, { prefix: '/api/v1' });
 await server.register(adminAnalyticsRoutes, { prefix: '/api/v1/admin/analytics' });
@@ -646,6 +677,7 @@ await server.register(scenarioRoutes, { prefix: '/api/v1' });
 await server.register(storageRoutes, { prefix: '/api/v1/storage' });
 await server.register(filesRoutes, { prefix: '/api/v1' });
 await server.register(modelsRoutes, { prefix: '/api/v1' });
+await server.register(revitExportsRoutes, { prefix: '/api/v1' });
 await server.register(clashDetectionRoutes, { prefix: '/api/v1/clash-detection' });
 await server.register(bimQueryRoutes);
 await server.register(glbExportRoutes);
@@ -676,10 +708,12 @@ signals.forEach((signal: NodeJS.Signals) => {
     try {
       billingRetryWorker.stop();
       usageReconcileWorker.stop();
+      billingSyncWorker.stop();
       authCleanupWorker.stop();
       emailQueueWorker.stop();
       await server.close();
       await sql.end();
+      await shutdownObservability();
       server.log.info('Server closed successfully');
       process.exit(0);
     } catch (err) {
@@ -721,6 +755,7 @@ try {
 
   // Initialize usage reconcile worker (runs every 24h)
   usageReconcileWorker.start();
+  billingSyncWorker.start();
 
   // Initialize auth cleanup worker (runs every 6h)
   authCleanupWorker.start();
@@ -740,21 +775,9 @@ try {
   const notificationsGateway = new NotificationsGateway(server.server);
   server.log.info('🔌 WebSocket Gateways initialized (Meetings + Notifications)');
   
-  // Keep-alive: Render free tier dorme após 15 min sem tráfego. O serviço se
-  // auto-pinga a cada 14 min na URL pública → sempre há tráfego → não dorme
-  // (sem depender de máquina do dev nem de pinger externo). Só em produção.
-  const selfUrl = process.env.RENDER_EXTERNAL_URL
-    || process.env.PUBLIC_URL
-    || (process.env.NODE_ENV === 'production' ? 'https://api.arxisvr.avilaops.com' : '');
-  if (selfUrl) {
-    const KEEPALIVE_MS = 14 * 60 * 1000;
-    setInterval(() => {
-      fetch(`${selfUrl.replace(/\/$/, '')}/health`)
-        .then((r) => server.log.info(`💓 keep-alive ping ${r.status}`))
-        .catch((e) => server.log.warn(`keep-alive falhou: ${e?.message || e}`));
-    }, KEEPALIVE_MS).unref?.();
-    server.log.info(`💓 Keep-alive ativo (ping /health a cada 14 min em ${selfUrl})`);
-  }
+  // (Não há keep-alive. Ele existia porque o free tier do Render hibernava
+  // após 15 min sem tráfego; no Hetzner o container fica de pé e se auto-pingar
+  // só gastaria log e CPU.)
 
   server.log.info(`🚀 ArxisVR Backend API running at http://${HOST}:${PORT}`);
   server.log.info(`📊 Health check: http://${HOST}:${PORT}/health`);
@@ -763,5 +786,13 @@ try {
   server.log.info(`�📡 API v1: http://${HOST}:${PORT}/api/v1`);
 } catch (err) {
   server.log.error(err);
+  captureRequestException(err, {
+    method: 'STARTUP',
+    route: 'server.boot',
+    statusCode: 500,
+  });
+  await shutdownObservability();
   process.exit(1);
 }
+
+

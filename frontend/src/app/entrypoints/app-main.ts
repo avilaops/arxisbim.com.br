@@ -8,7 +8,6 @@ import { typeColorizer } from '../../viewer/TypeColorizer';
 import { getIfcService } from '../../api/v1/services/index';
 import { tenantService } from '../../api/v1/services/tenant.service';
 import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
-import { TenantProjectSelector } from '../../app/components/TenantProjectSelector.js';
 import { AuthModal } from '../../app/components/AuthModal.js';
 import { WorkspacePanel } from '../../app/components/WorkspacePanel.js';
 import { AdminPanel } from '../../app/components/AdminPanel.js';
@@ -30,9 +29,9 @@ import { SINAPIImportPanel } from '../../app/components/SINAPIImportPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
-let inspectorController: any = null;
-let selectionService: any = null;
-let batchSelectionService: any = null;
+const inspectorController: any = null;
+const selectionService: any = null;
+const batchSelectionService: any = null;
 
 // Utility to defer non-critical work to reduce main-thread blocking
 function deferNonCritical(callback: () => void, timeout = 0) {
@@ -60,7 +59,7 @@ window.addEventListener('arxisvr:project-selected', (e: Event) => {
   const id = (e as CustomEvent).detail?.projectId;
   if (id) PROJECT_ID = id;
 });
-let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
+const TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 
 let viewerHost: ViewerHost | null = null;
 let ifcLoader: IFCSimpleLoader | null = null;
@@ -76,14 +75,8 @@ const hasAuthToken = () => Boolean(localStorage.getItem('arxisvr_token'));
  */
 function enforceAuthOrRedirect(): boolean {
   if (isAuthenticated()) return true;
-  const search = window.location.search;
-  const sessionParam = new URLSearchParams(search).get('session');
-  if (sessionParam) {
-    const next = encodeURIComponent('/app.html' + search);
-    window.location.replace('/login.html?next=' + next);
-  } else {
-    window.location.replace('/index.html');
-  }
+  const next = encodeURIComponent('/app' + window.location.search + window.location.hash);
+  window.location.replace('/login?next=' + next);
   return false;
 }
 
@@ -207,18 +200,7 @@ async function init() {
     ctaContainer.appendChild(meetingsBtn2);
   }
 
-  // Initialize Tenant/Project Selector — uma falha no fetch de tenants NÃO pode
-  // abortar a inicialização do app (ex.: convidado sem acesso a tenants ainda
-  // precisa entrar na reunião). Isolado em try/catch.
-  const tenantSelector = new TenantProjectSelector();
-  try {
-    await Promise.race([
-      tenantSelector.init(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('tenant init timeout')), 8000)),
-    ]);
-  } catch (err) {
-    console.warn('[ArxisVR] Seletor de tenant indisponível (seguindo sem ele):', err);
-  }
+
 
   // Listen for project changes
   window.addEventListener('project-changed', async (e: any) => {
@@ -598,7 +580,7 @@ function updateModelInfoFromSelection(payload: any) {
         const s = box.getSize(new (window as any).THREE.Vector3());
         dims = { x: parseFloat(s.x.toFixed(2)), y: parseFloat(s.y.toFixed(2)), z: parseFloat(s.z.toFixed(2)) };
       }
-    } catch (_) {}
+    } catch (_) { /* ignora: falha aqui não impede o fluxo */ }
   }
 
   const volume = (dims.x * dims.y * dims.z).toFixed(2);

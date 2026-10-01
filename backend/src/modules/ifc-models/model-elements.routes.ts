@@ -5,7 +5,8 @@ import {
   getModelElementHandler,
   createModelElementHandler,
   updateModelElementHandler,
-  deleteModelElementHandler
+  deleteModelElementHandler,
+  getModelElementByExpressIdHandler
 } from './model-elements.controller.js';
 
 export async function modelElementsRoutes(fastify: FastifyInstance) {
@@ -13,6 +14,7 @@ export async function modelElementsRoutes(fastify: FastifyInstance) {
   fastify.get('/model-elements', auth, getModelElementsHandler);
   fastify.post('/model-elements', auth, createModelElementHandler);
   fastify.get('/model-elements/:id', auth, getModelElementHandler);
+  fastify.get('/model-elements/:modelId/by-express-id/:expressId', auth, getModelElementByExpressIdHandler);
   fastify.put('/model-elements/:id', auth, updateModelElementHandler);
   fastify.delete('/model-elements/:id', auth, deleteModelElementHandler);
 }

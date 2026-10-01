@@ -10,6 +10,8 @@ yarn-error.log
 .env.local
 .env.*
 !.env.example
+# Sem segredo: so VITE_* que ja vao no bundle publico.
+!frontend/.env.production
 
 # IDE
 .vscode/
@@ -18,6 +20,9 @@ yarn-error.log
 *.swp
 *.swo
 scripts/
+!backend/scripts/
+backend/scripts/*
+!backend/scripts/verify-migrations.mjs
 !/scripts/
 /scripts/*
 !/scripts/link-local-deps.ps1
@@ -58,5 +63,16 @@ uploads/
 *.pdf
 *.rvt
 docs/
+# Exceção: documentação do plugin Revit é versionada.
+!revit-plugin/docs/
 .skills/
 backend/scripts/_backup_*
+
+# Scripts e configs de verificação local (migrations/PG18), não versionados
+.run-migrations.mjs
+.run-reconcile.mjs
+vitest.pg*.config.ts
+
+# Logs de sessao do Playwright CLI (Codex) e saidas soltas: nao versionar
+.playwright-cli/
+output/

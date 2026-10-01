@@ -1,7 +1,9 @@
 # S02 · Upload e Storage de Arquivos
 
 **Fase:** Fundação SaaS  
-**Status:** Pendente  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Upload usado pelo Dashboard.
 **Depende de:** S01 (tenant isolado para segregar arquivos)  
 **Bloqueia:** S03, S07 (modelos IFC precisam de storage antes de serem processados)
 
@@ -17,7 +19,7 @@ O módulo nasce **genérico**: serve IFC, SINAPI, MS Project, PDFs e exports. IF
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar neste sprint**:
+Pertencem a sprints futuros, **não implementar neste sprint**:
 
 - Versionamento de arquivos (S03 modela `model_version`)
 - Antivírus / scanning de conteúdo
@@ -77,7 +79,7 @@ backend/tests/e2e/
 
 ## Schema de metadados (`files`)
 
-Toda gravação no storage tem registro persistido — necessário para o S11 (processamento assíncrono) saber o estado de cada arquivo:
+Toda gravação no storage tem registro persistido, necessário para o S11 (processamento assíncrono) saber o estado de cada arquivo:
 
 ```sql
 files (
@@ -101,7 +103,7 @@ files (
 | Risco | Mitigação |
 |---|---|
 | CORS no R2 bloqueando upload do browser | Configurar CORS no bucket antes do primeiro teste |
-| Arquivo grande esgota memória se passar pelo backend | Forçar presigned URL — nunca pipe pelo servidor |
+| Arquivo grande esgota memória se passar pelo backend | Forçar presigned URL, nunca pipe pelo servidor |
 | URL assinada vazada em log | Mascarar URLs com `***` em todos os loggers |
 | Uploads órfãos acumulam custo no storage (browser fechado, multipart abandonado) | Registro nasce `pending`; job de limpeza posterior remove `pending` expirados e aborta multipart inacabado. Reconhecido aqui, implementado depois |
 

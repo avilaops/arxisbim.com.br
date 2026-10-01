@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Módulo Ávila para n8n</title>
+    <script>
+      if (new URLSearchParams(location.search).get("embed") !== "1") location.replace("/home/workflows");
+      else document.documentElement.classList.add("is-embedded");
+    </script>
+    <link rel="stylesheet" href="/avila/avila-control.css?v=8">
+    <script defer src="/avila/avila-control.js?v=8"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/avila/" aria-label="Módulos Ávila">
+          <span class="brand-mark">A</span>
+          <span><strong>Ávila</strong><small>Módulos do n8n</small></span>
+        </a>
+        <nav aria-label="Módulos Ávila">
+          <button class="nav-item is-active" data-module="insights"><span>◫</span>Insights</button>
+          <button class="nav-item" data-module="config"><span>⌘</span>Configurações</button>
+          <button class="nav-item" data-module="events"><span>↗</span>Event Stream <small>Em breve</small></button>
+          <button class="nav-item" data-module="vault"><span>◇</span>Cofre <small>Em breve</small></button>
+          <button class="nav-item" data-module="spaces"><span>▱</span>Espaços <small>Em breve</small></button>
+          <button class="nav-item" data-module="roles"><span>◎</span>Permissões <small>Em breve</small></button>
+          <button class="nav-item" data-module="environments"><span>⑂</span>Ambientes <small>Em breve</small></button>
+          <button class="nav-item" data-module="sso"><span>↪</span>Acesso Único <small>Em breve</small></button>
+          <button class="nav-item" data-module="directory"><span>⌁</span>Diretório <small>Em breve</small></button>
+          <button class="nav-item" data-module="copilot"><span>✦</span>Copiloto <small>Em breve</small></button>
+        </nav>
+        <a class="back-link" href="/home/workflows">← Voltar ao n8n</a>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Módulos próprios da Ávila Ops</p>
+            <h1 data-page-title>Insights</h1>
+          </div>
+          <div class="user-pill" data-user>Validando sessão...</div>
+        </header>
+        <section class="content" data-content aria-live="polite">
+          <div class="loading"><i></i><span>Carregando dados reais</span></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

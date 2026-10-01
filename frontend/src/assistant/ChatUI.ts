@@ -104,7 +104,7 @@ export class ChatUI {
     // Mensagem de boas-vindas
     this.addMessage(
       'assistant',
-      'Olá! Sou o assistente corporativo do ArxisVR. Posso ajudar com leitura BIM, coordenação, cenas e decisões do modelo.'
+      'Olá! Sou o assistente corporativo do Arxis. Posso ajudar com leitura BIM, coordenação, cenas e decisões do modelo.'
     );
     
     return container;
@@ -192,7 +192,7 @@ export class ChatUI {
   private createToggleButton(): HTMLButtonElement {
     const button = document.createElement('button');
     button.textContent = 'AI';
-    button.title = 'Assistente ArxisVR';
+    button.title = 'Assistente Arxis';
     button.style.cssText = `
       position: fixed;
       bottom: 20px;

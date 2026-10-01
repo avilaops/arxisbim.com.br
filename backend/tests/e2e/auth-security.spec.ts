@@ -9,6 +9,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
 import { authRoutes } from '../../src/core/auth/auth.routes.js';
 import { authenticateRequest } from '../../src/core/auth/middleware.js';
+import { db } from '../../src/shared/database/db.js';
+import { users } from '../../src/shared/database/schema/tenants.js';
+import { or, like } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -25,12 +28,33 @@ function buildApp() {
 describe('Auth Security Tests (S-series)', () => {
   let app: ReturnType<typeof buildApp>;
 
+  let originalRequireEmailVerification: string | undefined;
+
   beforeAll(async () => {
+    // Clean up test users to avoid state pollution from prior runs
+    try {
+      await db.delete(users).where(or(
+        like(users.email, '%@unverified.test'),
+        like(users.email, '%@test.com'),
+        like(users.email, '%@example.com'),
+        like(users.email, '%@example.invalid')
+      )).execute();
+    } catch (err) {
+      console.warn('DB cleanup warning (might be skipped if table not ready):', err);
+    }
+
+    originalRequireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION;
+    process.env.REQUIRE_EMAIL_VERIFICATION = 'true';
     app = buildApp();
     await app.ready();
   });
 
   afterAll(async () => {
+    if (originalRequireEmailVerification === undefined) {
+      delete process.env.REQUIRE_EMAIL_VERIFICATION;
+    } else {
+      process.env.REQUIRE_EMAIL_VERIFICATION = originalRequireEmailVerification;
+    }
     await app.close();
   });
 
@@ -206,7 +230,8 @@ describe('Auth Security Tests (S-series)', () => {
 
   // ── S14 — Login without email verified → 403 EMAIL_NOT_VERIFIED ────────
   // Requires live DB — skips gracefully if DB is unavailable
-  it('S14: login without email verification returns 403 EMAIL_NOT_VERIFIED', { timeout: 15000 }, async () => {
+  it('S14: login without email verification returns 403 EMAIL_NOT_VERIFIED when verification is required', { timeout: 15000 }, async () => {
+    process.env.REQUIRE_EMAIL_VERIFICATION = 'true';
     const reg = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/register',
@@ -223,10 +248,31 @@ describe('Auth Security Tests (S-series)', () => {
       headers: { 'cf-connecting-ip': '10.0.6.2' },
     });
     if (login.statusCode >= 500) return;
-    // User is isActive=false until email verified — WHERE isActive=true misses them → 401
-    // Either 401 (user inactive/not found) or 403 (EMAIL_NOT_VERIFIED) both block login
-    expect([401, 403]).toContain(login.statusCode);
-    expect(login.statusCode).not.toBe(200);
+    expect(login.statusCode).toBe(403);
+    const body = JSON.parse(login.body);
+    expect(body.error).toBe('EMAIL_NOT_VERIFIED');
+  });
+
+  it('S14b: login succeeds for a new user when email verification is disabled', { timeout: 15000 }, async () => {
+    process.env.REQUIRE_EMAIL_VERIFICATION = 'false';
+
+    const reg = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/register',
+      payload: { email: 's14-disabled@example.invalid', password: 'ValidPass1!', name: 'S14 Disabled' },
+      headers: { 'cf-connecting-ip': '10.0.6.11' },
+    });
+    if (reg.statusCode >= 500) return;
+    expect(reg.statusCode).toBe(201);
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: { email: 's14-disabled@example.invalid', password: 'ValidPass1!' },
+      headers: { 'cf-connecting-ip': '10.0.6.12' },
+    });
+    if (login.statusCode >= 500) return;
+    expect(login.statusCode).toBe(200);
   });
 
   // ── S11 — Refresh token reuse after rotation → TOKEN_REUSE_DETECTED or TOKEN_REVOKED
@@ -296,7 +342,10 @@ describe('Auth Security Tests (S-series)', () => {
   });
 
   // ── /auth/2fa/verify-login rejects invalid challenge ──────────────────
-  it('B2: verify-login with invalid challengeToken returns 401', async () => {
+  // O timeout nao e folga a toa: o handler faz `await import('./totp.service.js')`
+  // e esta e a primeira vez que esse modulo carrega. Com o suite inteiro rodando
+  // em paralelo, a transformacao desse import sozinha passa dos 5s padrao.
+  it('B2: verify-login with invalid challengeToken returns 401', { timeout: 30000 }, async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/2fa/verify-login',

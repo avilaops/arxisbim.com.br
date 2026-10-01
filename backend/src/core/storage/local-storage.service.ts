@@ -27,8 +27,7 @@ import {
 } from './storage.types.js';
 
 function isAbsolutePathish(key: string): boolean {
-  // Detect legacy absolute paths (e.g., D:\AvilaOps\...\uploads\file.ifc).
-  return path.isAbsolute(key);
+  return path.isAbsolute(key) || key.startsWith('/') || key.startsWith('\\') || /^[a-zA-Z]:/.test(key);
 }
 
 export class LocalStorageService implements StorageService {
@@ -63,11 +62,66 @@ export class LocalStorageService implements StorageService {
   }
 
   private resolve(key: StorageKey): string {
-    if (isAbsolutePathish(key)) {
-      // Legacy absolute path; honour it as-is.
-      return key;
+    let decodedKey = key;
+    let prev = '';
+    try {
+      while (decodedKey !== prev) {
+        prev = decodedKey;
+        decodedKey = decodeURIComponent(decodedKey);
+      }
+    } catch {
+      // Ignore decode errors and use original/last successfully decoded key
     }
-    return path.join(this.root, key);
+
+    let cleanKey = decodedKey;
+    if (cleanKey.startsWith('/api/v1/storage/')) {
+      cleanKey = cleanKey.slice('/api/v1/storage/'.length);
+    } else if (cleanKey.startsWith('api/v1/storage/')) {
+      cleanKey = cleanKey.slice('api/v1/storage/'.length);
+    }
+
+    // Uniformize separator representation and normalize path segments
+    const normalizedKey = cleanKey.replace(/\\/g, '/');
+
+    // Reject absolute paths or key traversing outside root
+    if (
+      isAbsolutePathish(normalizedKey) ||
+      normalizedKey.includes('..')
+    ) {
+      throw new StorageError(
+        `Directory traversal or absolute path rejected: ${key}`,
+        'INVALID_ARGUMENT'
+      );
+    }
+
+    const target = path.resolve(this.root, normalizedKey);
+    const relative = path.relative(this.root, target);
+
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new StorageError(
+        `Directory traversal or absolute path rejected: ${key}`,
+        'INVALID_ARGUMENT'
+      );
+    }
+
+    return target;
+  }
+
+  private async verifySafePath(target: string): Promise<void> {
+    try {
+      const real = await fs.realpath(target);
+      const relative = path.relative(this.root, real);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new StorageError(
+          `Symlink resolution points outside storage root: ${target}`,
+          'INVALID_ARGUMENT'
+        );
+      }
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') {
+        throw err;
+      }
+    }
   }
 
   private async ensureDir(filePath: string): Promise<void> {
@@ -77,6 +131,7 @@ export class LocalStorageService implements StorageService {
   async upload(key: StorageKey, body: StorageBody, _opts: UploadOptions = {}): Promise<StorageObject> {
     await this.ensureWritableRoot();
     const target = this.resolve(key);
+    await this.verifySafePath(target);
     await this.ensureDir(target);
 
     if (Buffer.isBuffer(body) || typeof body === 'string') {
@@ -97,6 +152,7 @@ export class LocalStorageService implements StorageService {
 
   async download(key: StorageKey): Promise<Buffer> {
     const target = this.resolve(key);
+    await this.verifySafePath(target);
     try {
       return await fs.readFile(target);
     } catch (err: any) {
@@ -114,6 +170,7 @@ export class LocalStorageService implements StorageService {
 
   async delete(key: StorageKey): Promise<void> {
     const target = this.resolve(key);
+    await this.verifySafePath(target);
     try {
       await fs.unlink(target);
     } catch (err: any) {
@@ -125,15 +182,20 @@ export class LocalStorageService implements StorageService {
   async exists(key: StorageKey): Promise<boolean> {
     const target = this.resolve(key);
     try {
+      await this.verifySafePath(target);
       await fs.access(target);
       return true;
-    } catch {
+    } catch (err: any) {
+      if (err instanceof StorageError) {
+        throw err;
+      }
       return false;
     }
   }
 
   async stat(key: StorageKey): Promise<StorageObject> {
     const target = this.resolve(key);
+    await this.verifySafePath(target);
     try {
       const s = await fs.stat(target);
       return { key, size: s.size };
@@ -149,6 +211,7 @@ export class LocalStorageService implements StorageService {
     // Local backend has no public endpoint; return the resolved path
     // expressed as a file:// URL so consumers can distinguish from a real URL.
     const target = this.resolve(key);
+    await this.verifySafePath(target);
     return `file://${target.replace(/\\/g, '/')}`;
   }
 

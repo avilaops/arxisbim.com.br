@@ -19,23 +19,31 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install & Build
         run: |
-          npm ci --include=dev
+          npm ci
           npm run build
         working-directory: frontend
         env:
-          VITE_API_URL: https://api.arxisvr.avilaops.com
-          VITE_WS_URL: wss://api.arxisvr.avilaops.com
-          VITE_WS_SERVER: wss://api.arxisvr.avilaops.com
+          VITE_API_URL: https://api.arxisbim.com.br
+          VITE_SITE_URL: https://arxisbim.com.br
+          VITE_WS_URL: wss://api.arxisbim.com.br
+          VITE_WS_SERVER: wss://api.arxisbim.com.br
+          VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          VITE_SENTRY_ENVIRONMENT: production
+          VITE_SENTRY_RELEASE: arxisvr-frontend@${{ github.sha }}
+          VITE_SENTRY_TRACES_SAMPLE_RATE: "0.2"
+          VITE_SENTRY_REPLAY_SESSION_RATE: "0.05"
+          VITE_SENTRY_REPLAY_ERROR_RATE: "1"
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: frontend/dist
-          cname: arxisvr.avilaops.com
+          cname: arxisbim.com.br

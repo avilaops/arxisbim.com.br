@@ -67,7 +67,7 @@ export async function sessionsRoutes(fastify: FastifyInstance) {
       const accessToken = issueParticipantToken(hostParticipant);
       const frontendBase = process.env.FRONTEND_URL
         ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://app.arxisvr.com');
-      const inviteLink = `${frontendBase}/join.html?token=${session.inviteToken}`;
+      const inviteLink = `${frontendBase}/join?token=${session.inviteToken}`;
 
       return reply.code(201).send({
         session,
@@ -106,7 +106,7 @@ export async function sessionsRoutes(fastify: FastifyInstance) {
       const accessToken = issueParticipantToken(existing);
       const frontendBase = process.env.FRONTEND_URL
         ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://app.arxisvr.com');
-      const inviteLink = `${frontendBase}/join.html?token=${session.inviteToken}`;
+      const inviteLink = `${frontendBase}/join?token=${session.inviteToken}`;
 
       return reply.send({ accessToken, participant: existing, inviteLink });
     },

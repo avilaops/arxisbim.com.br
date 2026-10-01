@@ -1,9 +1,11 @@
-# S32 · Release Candidate — Hardening
+# S32 · Release Candidate: Hardening
 
 **Fase:** Apresentação e Entrega  
-**Status:** Pendente  
+**Status:** ☐ Não iniciado  
+**Backend:** nao · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Hardening nao iniciado.
 **Depende de:** S31 (feature completa), todos os sprints anteriores  
-**Bloqueia:** —
+**Bloqueia:** -
 
 ---
 
@@ -11,13 +13,13 @@
 
 Cobertura de testes e2e do fluxo completo (S01→S30). Auditoria de segurança. Load test com 50 usuários simultâneos. Documentação pública do produto. Sem regressões no build.
 
-> **Nota para o agente:** Este sprint **não adiciona features** — garante que as 31 anteriores funcionam juntas, sob carga, sem vulnerabilidades. O risco sistêmico nº 1 do ArxisVR é **vazamento entre tenants** (RLS falhando sob condição específica) — a auditoria foca nesse vetor antes de tudo. Validar que o princípio do produto (IFC → metadados → cenários → tempo → custo → decisão) funciona ponta a ponta num único fluxo e2e.
+> **Nota para o agente:** Este sprint **não adiciona features**, garante que as 31 anteriores funcionam juntas, sob carga, sem vulnerabilidades. O risco sistêmico nº 1 do ArxisVR é **vazamento entre tenants** (RLS falhando sob condição específica), a auditoria foca nesse vetor antes de tudo. Validar que o princípio do produto (IFC → metadados → cenários → tempo → custo → decisão) funciona ponta a ponta num único fluxo e2e.
 
 ---
 
 ## Fora de Escopo
 
-Este é o fechamento do v1.0 — pertencem ao **pós-v1 / Digital Twin** (não implementar aqui):
+Este é o fechamento do v1.0, pertencem ao **pós-v1 / Digital Twin** (não implementar aqui):
 
 - Integração com sensores IoT / dados de execução real (Digital Twin)
 - Mobile app nativo
@@ -29,7 +31,7 @@ Este é o fechamento do v1.0 — pertencem ao **pós-v1 / Digital Twin** (não i
 
 ## Por que importa a longo prazo
 
-Um produto que não pode ser entregue com confiança não existe comercialmente. O S32 não adiciona features — é o sprint que garante que as features dos 31 sprints anteriores funcionam juntas, sob carga, sem vulnerabilidades óbvias.
+Um produto que não pode ser entregue com confiança não existe comercialmente. O S32 não adiciona features, é o sprint que garante que as features dos 31 sprints anteriores funcionam juntas, sob carga, sem vulnerabilidades óbvias.
 
 O risco sistêmico mais alto do ArxisVR é vazamento de dados entre tenants (RLS falhando sob condição específica). A auditoria de segurança deste sprint foca nesse vetor antes de qualquer outro.
 

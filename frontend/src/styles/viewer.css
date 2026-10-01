@@ -1,0 +1,1319 @@
+.viewer-page {
+  position: relative; /* ancora do .viewer-notice quando vira toast no mobile */
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--c-bg);
+}
+
+.viewer-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.viewer-toolbar {
+  min-height: 62px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.viewer-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.viewer-toolbar__title > svg {
+  color: var(--c-text2);
+  flex-shrink: 0;
+}
+
+.viewer-toolbar__title h1 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.viewer-toolbar__title span {
+  display: block;
+  color: var(--c-text3);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.viewer-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.viewer-icon-button,
+.viewer-panel__close {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--c-text2);
+  background: transparent;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+}
+
+/* Os SVGs do Lucide precisam manter a geometria mesmo quando a barra encolhe.
+   Sem isso, regras globais de flex e tamanho acabam comprimindo o desenho. */
+.viewer-toolbar svg,
+.viewer-empty-state svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.viewer-toolbar__title > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.viewer-icon-button:hover:not(:disabled),
+.viewer-panel__close:hover {
+  color: var(--c-text);
+  background: var(--c-surface2);
+}
+
+.viewer-icon-button:disabled {
+  opacity: 0.38;
+}
+
+.viewer-upload-button {
+  min-height: 34px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  background: var(--c-blue);
+  border: 1px solid #3b72e8;
+  border-radius: var(--r);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewer-upload-button:hover {
+  background: #2f6bec;
+}
+
+.viewer-upload-button:disabled {
+  transform: none;
+}
+
+.viewer-notice {
+  position: relative;
+  min-height: 38px;
+  padding: 9px 16px;
+  flex-shrink: 0;
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.12);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+  font-size: 12px;
+}
+
+.viewer-notice--error {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border-bottom-color: rgba(239, 68, 68, 0.28);
+}
+
+.viewer-notice__progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.viewer-notice__progress > span {
+  display: block;
+  height: 100%;
+  background: var(--c-blue);
+  transition: width 180ms ease;
+}
+
+.viewer-mobile-action {
+  display: none;
+}
+
+.viewer-workspace {
+  position: relative;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  /* Duas linhas na coluna da esquerda: projetos em cima, cenarios embaixo.
+     Antes o painel de cenarios (4o item do grid) criava uma segunda linha
+     implicita e roubava metade da altura do canvas desde o S12; com a lista
+     de visibilidade o canvas virava uma faixa. Canvas e propriedades
+     atravessam as duas linhas. */
+  grid-template-rows: minmax(0, auto) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.viewer-projects-panel { grid-column: 1; grid-row: 1; max-height: 45vh; }
+.viewer-scenarios-panel { grid-row: 2; border-top: 1px solid var(--c-border); }
+.viewer-canvas { grid-column: 2; grid-row: 1 / 3; }
+.viewer-properties-panel { grid-column: 3; grid-row: 1 / 3; }
+
+.viewer-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: auto;
+  background: var(--c-surface);
+}
+
+.viewer-projects-panel {
+  border-right: 1px solid var(--c-border);
+}
+
+.viewer-properties-panel {
+  border-left: 1px solid var(--c-border);
+}
+
+.viewer-panel__header {
+  min-height: 66px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.viewer-panel__eyebrow {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--c-text3);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.viewer-panel__header h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.viewer-panel__close {
+  display: none;
+  border-color: transparent;
+}
+
+.viewer-panel__section {
+  padding: 16px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.viewer-panel__section--models {
+  flex: 1;
+}
+
+.viewer-panel__section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewer-panel__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.viewer-panel__add {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--c-text2);
+  background: transparent;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+}
+
+.viewer-panel__add:hover {
+  color: var(--c-text);
+  background: var(--c-surface2);
+}
+
+.viewer-panel__empty {
+  margin-top: 12px;
+  padding: 20px 12px;
+  color: var(--c-text3);
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px dashed var(--c-border);
+  border-radius: var(--r);
+  font-size: 11px;
+  text-align: center;
+}
+
+.viewer-panel__list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.viewer-panel__item {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font-size: 11px;
+  text-align: left;
+}
+
+.viewer-panel__item svg {
+  flex-shrink: 0;
+}
+
+.viewer-panel__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer-panel__item:hover,
+.viewer-panel__item.is-active {
+  color: var(--c-text);
+  background: var(--c-blue-dim);
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+/* Visibilidade por categoria IFC (painel de cenarios) */
+.viewer-panel__hint {
+  font-size: 10.5px;
+  color: var(--c-text3);
+  white-space: nowrap;
+}
+.viewer-panel__categoria { cursor: pointer; }
+.viewer-panel__categoria span { flex: 1; }
+.viewer-panel__categoria small {
+  font-size: 10px;
+  color: var(--c-text3);
+  font-variant-numeric: tabular-nums;
+}
+.viewer-panel__categoria.is-oculta {
+  color: var(--c-text3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.25);
+}
+.viewer-panel__categoria.is-oculta svg { opacity: 0.55; }
+
+/* Diferencas entre cenarios (S18): o estado e a fonte, nao o pixel */
+.compare-diff {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  min-width: 220px;
+  max-width: min(360px, calc(100% - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(8px);
+  color: var(--c-text2);
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.compare-diff h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+}
+.compare-diff ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.compare-diff li { display: flex; align-items: center; gap: 8px; }
+.compare-diff li b { color: var(--c-text); font-weight: 600; flex: 1; }
+.compare-diff__cor {
+  width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+}
+.compare-diff__cor--a { background: #f97316; }
+.compare-diff__cor--b { background: #d946ef; }
+.compare-diff__onde { color: var(--c-text3); font-size: 11px; white-space: nowrap; }
+.compare-diff__vazio { margin: 0; color: var(--c-text3); }
+@media (max-width: 768px) {
+  .compare-diff { left: 8px; right: 8px; bottom: 8px; max-width: none; }
+}
+
+.viewer-canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #121416;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.viewer-canvas__host {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.viewer-canvas__host canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+
+.viewer-canvas__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at center, #000 0, transparent 72%);
+}
+
+.viewer-empty-state {
+  position: relative;
+  z-index: 1;
+  width: min(420px, calc(100% - 40px));
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.viewer-loading-state {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+  color: var(--c-text2);
+  background: rgba(18, 20, 22, 0.9);
+  text-align: center;
+}
+
+.viewer-loading-state h2 {
+  margin-top: 12px;
+  color: var(--c-text);
+  font-size: 14px;
+}
+
+.viewer-loading-state p {
+  max-width: 460px;
+  margin-top: 5px;
+  color: var(--c-text3);
+  font-size: 11px;
+}
+
+.viewer-loading-state__bar {
+  width: min(280px, 75%);
+  height: 3px;
+  margin-top: 16px;
+  overflow: hidden;
+  background: var(--c-surface3);
+  border-radius: 999px;
+}
+
+.viewer-loading-state__bar span {
+  display: block;
+  height: 100%;
+  background: var(--c-blue);
+  transition: width 180ms ease;
+}
+
+.viewer-loading-state--error {
+  color: #fca5a5;
+}
+
+.viewer-navigation-help {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 4;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: var(--c-text2);
+  background: rgba(10, 10, 10, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r);
+  backdrop-filter: blur(7px);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.viewer-navigation-help span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Variantes: teclado (ponteiro fino) x gestos (ponteiro grosso = touch).
+   Nao e por largura: um iPad de 1024px e touch, um notebook de 1280 nao. */
+.viewer-navigation-help--touch { display: none; }
+@media (pointer: coarse) {
+  .viewer-navigation-help--keyboard { display: none; }
+  .viewer-navigation-help--touch {
+    display: flex;
+    pointer-events: auto;              /* para o botao de fechar funcionar */
+    left: 12px; right: 12px;           /* largura toda no celular */
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 10px 8px 12px;
+    font-size: 12px;
+    gap: 6px 14px;
+    justify-content: space-between;
+  }
+  .viewer-navigation-help--touch .viewer-help-close {
+    width: 32px; height: 32px; margin: -6px -6px -6px 0;
+    display: inline-grid; place-items: center;
+    background: none; border: none; color: var(--c-text2); border-radius: 8px;
+  }
+  .viewer-navigation-help--touch .viewer-help-gesto {
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .viewer-navigation-help--touch .viewer-help-gesto b {
+    color: var(--c-text); font-weight: 600;
+  }
+}
+
+.viewer-navigation-help kbd {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--c-text);
+  background: var(--c-surface3);
+  border: 1px solid var(--c-border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 9px;
+}
+
+.viewer-empty-state__icon {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--c-text2);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+}
+
+.viewer-empty-state h2 {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.viewer-empty-state p {
+  max-width: 340px;
+  margin-bottom: 20px;
+  color: var(--c-text3);
+  font-size: 12px;
+}
+
+.viewer-properties-empty {
+  padding: 24px 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.viewer-properties-empty__icon {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  color: var(--c-text3);
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: 50%;
+}
+
+.viewer-properties-empty h3 {
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewer-properties-empty p,
+.viewer-controls p {
+  color: var(--c-text3);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.viewer-controls {
+  flex: 1;
+}
+
+.viewer-controls p {
+  margin-top: 12px;
+}
+
+.viewer-drawer-backdrop {
+  display: none;
+}
+
+.viewer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(3px);
+}
+
+.viewer-modal {
+  width: min(420px, 100%);
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.viewer-modal__header {
+  min-height: 64px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.viewer-modal__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.viewer-modal__close {
+  display: inline-grid;
+  font-size: 20px;
+}
+
+.viewer-modal__body {
+  padding: 18px 16px;
+}
+
+.viewer-modal__body label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--c-text2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.viewer-modal__footer {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.015);
+  border-top: 1px solid var(--c-border);
+}
+
+.viewer-secondary-button {
+  min-height: 34px;
+  padding: 0 13px;
+  color: var(--c-text2);
+  background: transparent;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.viewer-secondary-button:hover {
+  color: var(--c-text);
+  background: var(--c-surface2);
+}
+
+.dashboard-projects-modal {
+  width: min(560px, 100%);
+}
+
+.dashboard-projects-list {
+  max-height: min(520px, 65vh);
+  padding: 8px;
+  overflow: auto;
+}
+
+.dashboard-projects-list > p {
+  padding: 28px 16px;
+  color: var(--c-text3);
+  font-size: 12px;
+  text-align: center;
+}
+
+.dashboard-projects-list > button {
+  width: 100%;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--c-text);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  text-align: left;
+}
+
+.dashboard-projects-list > button:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.dashboard-projects-list > button span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-projects-list strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-projects-list small {
+  margin-top: 2px;
+  color: var(--c-text3);
+  font-size: 10px;
+}
+
+.dashboard-projects-list em {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-style: normal;
+}
+
+@media (max-width: 1100px) {
+  .viewer-workspace {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .viewer-properties-panel {
+    /* Item absoluto com grid-area explicita usa a AREA como bloco de
+       contencao: na grade de 2 colunas a coluna 3 nao existe e a gaveta
+       nascia com largura zero. `auto` devolve o workspace inteiro. */
+    grid-area: auto;
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: min(320px, calc(100% - 48px));
+    transform: translateX(100%);
+    transition: transform 180ms ease;
+    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.28);
+  }
+
+  .viewer-properties-panel.is-open {
+    transform: translateX(0);
+    z-index: 4; /* acima do backdrop (3): antes o backdrop cobria o painel */
+  }
+
+  .viewer-mobile-action {
+    display: inline-grid;
+  }
+
+  .viewer-panel__close {
+    display: inline-grid;
+  }
+
+  .viewer-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: block;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(0, 0, 0, 0.46);
+    border: 0;
+    border-radius: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .viewer-drawer-backdrop.is-open {
+    pointer-events: auto;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .viewer-toolbar {
+    min-height: 52px;
+    padding: 0 8px 0 12px;
+    gap: 8px;
+  }
+  .viewer-toolbar__actions { gap: 6px; }
+
+  /* 34x34 era abaixo do minimo de toque; 44 e o alvo da Apple HIG */
+  .viewer-icon-button.viewer-mobile-action,
+  .viewer-panel__close,
+  .viewer-panel__add {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  /* O CTA continua sendo um CTA: só os comandos puramente icônicos viram
+     quadrados. A regra anterior deixava o texto dentro de 44px e quebrava
+     cada palavra em uma linha. */
+  .viewer-upload-button {
+    width: auto;
+    min-width: max-content;
+    min-height: 44px;
+    height: 44px;
+    padding-inline: 14px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .viewer-panel__item { min-height: 44px; }
+
+  /* O aviso "modelo enviado" era um banner no fluxo, empurrando o canvas e
+     crescendo quando o texto quebrava. Vira toast sobreposto, compacto, que o
+     Viewer3DPage apaga sozinho em alguns segundos. */
+  .viewer-notice {
+    position: absolute;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    z-index: 6;
+    min-height: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    border-radius: 10px;
+    background: rgba(13, 24, 48, 0.94);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .viewer-notice--error {
+    background: rgba(48, 13, 13, 0.94);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  .viewer-toolbar__title span,
+  .viewer-icon-button:not(.viewer-mobile-action):not(.viewer-always) {
+    display: none;
+  }
+  .viewer-icon-button.viewer-always { width: 44px; height: 44px; }
+
+  .viewer-upload-button {
+    padding-inline: 10px;
+  }
+
+  .viewer-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .viewer-canvas { grid-column: 1; grid-row: 1; }
+  /* gavetas absolutas: mesma armadilha, a linha 2 nao existe aqui */
+  .viewer-projects-panel,
+  .viewer-scenarios-panel { grid-area: auto; max-height: none; border-top: 0; }
+
+  .viewer-projects-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(300px, calc(100% - 48px));
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
+    box-shadow: 12px 0 30px rgba(0, 0, 0, 0.28);
+  }
+
+  .viewer-projects-panel.is-open {
+    transform: translateX(0);
+    z-index: 4; /* idem: o backdrop interceptava o toque no modelo */
+  }
+
+  .viewer-canvas {
+    width: 100%;
+    height: auto;
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .viewer-toolbar__title h1 {
+    font-size: 13px;
+  }
+
+  .viewer-upload-button span {
+    display: none;
+  }
+
+  .viewer-upload-button {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+}
+
+/* ── S18: comparação visual de cenários ──────────────────────────────────── */
+
+/* `flex: 1` e nao `height: 100%`: o AppShell distribui altura por flex, entao
+   uma altura percentual aqui resolve para zero e o split fica invisivel. Foi o
+   que aconteceu na primeira prova do S18: os dois canvas existiam no DOM e a
+   area aparecia vazia. */
+.compare-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-bg);
+}
+
+.comparison-canvas {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 2px 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #121416;
+}
+
+.comparison-canvas__lado {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.comparison-canvas__host {
+  position: absolute;
+  inset: 0;
+}
+
+.comparison-canvas__host canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+
+/* O rótulo fica sobre o canvas: identifica o lado sem roubar altura da cena. */
+.comparison-canvas__rotulo {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(10, 12, 14, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.comparison-canvas__divisor {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.compare-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 32px 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.compare-picker__colunas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 300px));
+  gap: 20px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.compare-picker__coluna {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.compare-picker__rotulo {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.compare-picker__aviso {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+.viewer-panel__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.viewer-panel__link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Notebook estreito: o split vira duas faixas empilhadas em vez de espremer. */
+@media (max-width: 900px) {
+  .comparison-canvas {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 2px 1fr;
+  }
+
+  .compare-picker__colunas {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tela cheia (Fullscreen API): a pagina do viewer inteira vai para tela cheia,
+   com a toolbar, para o botao de sair continuar a mao. */
+.viewer-page:fullscreen {
+  background: var(--c-bg, #0a0a0a);
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── S26: cronograma 4D e comparação temporal ─────────────────────────────── */
+
+/* A gaveta do cronograma NAO entra na grade do workspace de proposito: o grid
+   tem duas linhas (projetos em cima, cenarios embaixo) e um quarto painel
+   criaria uma terceira linha, espremendo o canvas — o mesmo defeito que o S12
+   ja custou uma correcao. Aqui ela flutua sobre a area do modelo em todos os
+   tamanhos de tela. */
+.viewer-cronograma-panel {
+  grid-area: auto;
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 4;
+  width: min(360px, calc(100% - 32px));
+  max-height: none;
+  border-top: 0;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 180ms ease;
+  box-shadow: 12px 0 30px rgba(0, 0, 0, 0.32);
+}
+.viewer-cronograma-panel.is-open { transform: translateX(0); }
+
+.viewer-panel__form--coluna {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.viewer-panel__form--coluna label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--c-text3);
+}
+.viewer-panel__form--coluna input,
+.viewer-panel__form--coluna select {
+  width: 100%;
+}
+.viewer-panel__form-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.viewer-panel__hint--erro { color: #fca5a5; white-space: normal; }
+
+.cronograma-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.cronograma-resumo div {
+  padding: 8px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.cronograma-resumo dt {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+}
+.cronograma-resumo dd {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cronograma-lista {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cronograma-item {
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cronograma-item__topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cronograma-item__topo strong {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--c-text);
+  line-height: 1.3;
+}
+.cronograma-item__datas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.cronograma-item__datas label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+}
+.cronograma-item__datas input { width: 100%; font-size: 11px; }
+.cronograma-item__vinculo {
+  font-size: 11px;
+  color: var(--c-text3);
+  font-variant-numeric: tabular-nums;
+}
+.cronograma-item__acoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.cronograma-item__acoes select { width: 100%; font-size: 11px; }
+.cronograma-item__predecessoras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cronograma-item__predecessoras li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--c-text2);
+}
+.cronograma-item__predecessoras button {
+  border: 0;
+  background: none;
+  color: var(--c-text3);
+  cursor: pointer;
+  padding: 2px;
+  line-height: 0;
+}
+.cronograma-item__predecessoras button:hover { color: var(--c-text); }
+
+/* A regua fica sobre o modelo, como a barra de um player: a data e o comando
+   principal enquanto o 4D esta ligado. */
+.regua-tempo {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 6;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(760px, calc(100% - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.regua-tempo__botao {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text2);
+  cursor: pointer;
+}
+.regua-tempo__botao:hover:not(:disabled) { color: var(--c-text); }
+.regua-tempo__botao:disabled { opacity: 0.4; cursor: not-allowed; }
+.regua-tempo__trilho {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.regua-tempo__trilho input[type='range'] { width: 100%; accent-color: #facc15; }
+.regua-tempo__data {
+  font-size: 11px;
+  color: var(--c-text2);
+  font-variant-numeric: tabular-nums;
+}
+.regua-tempo__velocidade {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.regua-tempo__resumo {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--c-text3);
+  font-variant-numeric: tabular-nums;
+}
+.regua-tempo__estado--ativo { color: #facc15; }
+.regua-tempo__estado--futuro { color: var(--c-text3); }
+
+/* Painel de prazo do split A|B: mesma linguagem do .compare-diff do S18, do
+   outro lado da tela para os dois poderem conviver. */
+.compare-prazo {
+  position: absolute;
+  right: 12px;
+  bottom: 84px;
+  z-index: 5;
+  min-width: 220px;
+  max-width: min(320px, calc(100% - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(13, 17, 23, 0.92);
+  backdrop-filter: blur(8px);
+  color: var(--c-text2);
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.compare-prazo h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text3);
+}
+.compare-prazo dl { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.compare-prazo dl div { display: flex; align-items: baseline; gap: 8px; }
+.compare-prazo dt { flex: 1; color: var(--c-text3); }
+.compare-prazo dd { margin: 0; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.compare-prazo__delta { margin: 8px 0 0; color: var(--c-text); }
+.compare-prazo__delta b { color: #facc15; }
+.compare-prazo__vazio { margin: 0; color: var(--c-text3); }
+
+/* O split e filho do .compare-page; sem posicionamento aqui, regua e painel de
+   prazo se ancorariam em algum ancestral do AppShell. */
+.compare-page { position: relative; }
+
+.viewer-upload-button.is-active {
+  border-color: rgba(250, 204, 21, 0.5);
+  color: #facc15;
+}
+
+@media (max-width: 768px) {
+  .regua-tempo {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    transform: none;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .regua-tempo__trilho { order: -1; flex-basis: 100%; }
+  .regua-tempo__resumo { flex-basis: 100%; justify-content: space-between; }
+  .compare-prazo { left: 8px; right: 8px; bottom: auto; top: 8px; max-width: none; }
+  .viewer-cronograma-panel { width: min(320px, calc(100% - 32px)); }
+}

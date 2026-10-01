@@ -218,7 +218,7 @@ export class AIIntegration {
    Sugestões disponíveis: ${data.optimizations}
    Potencial de economia: Até 15% do custo
 
-  Gerado por ArxisVR AI Analytics
+  Gerado por Arxis AI Analytics
     `.trim();
   }
 

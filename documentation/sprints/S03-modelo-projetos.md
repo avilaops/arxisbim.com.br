@@ -1,7 +1,9 @@
-# S03 · Modelo de Dados — Projetos
+# S03 · Modelo de Dados: Projetos
 
 **Fase:** Fundação SaaS  
-**Status:** Em andamento (core entregue em 2026-06-11 — migration 035, módulo models, testes 9/9)  
+**Status:** ✅ Entregue (chega ao usuário)  
+**Backend:** sim · **Interface:** sim  
+**Verificado em:** 02/09/2026 — Projetos listados e criados no Dashboard.
 **Depende de:** S01 (tenant), S02 (storage)  
 **Bloqueia:** S05 (dashboard), S07 (IFC precisa de project + model IDs)
 
@@ -17,7 +19,7 @@ Definir o schema central do produto: Project → Model → Version. Todas as ent
 
 ## Fora de Escopo
 
-Pertencem a sprints posteriores — **não implementar aqui**:
+Pertencem a sprints posteriores, **não implementar aqui**:
 
 - Cenários (S12)
 - Custos / cost tables (S19)
@@ -30,13 +32,13 @@ Pertencem a sprints posteriores — **não implementar aqui**:
 
 ## Por que importa a longo prazo
 
-O modelo de dados de projetos é a espinha dorsal do banco. Decisões tomadas aqui — como versioning de modelos, soft-delete, e a relação entre `project` e `scenario` — se propagam para todos os sprints de 5D e 4D. Errar aqui significa migrations destrutivas em produção com clientes ativos.
+O modelo de dados de projetos é a espinha dorsal do banco. Decisões tomadas aqui, como versioning de modelos, soft-delete, e a relação entre `project` e `scenario`, se propagam para todos os sprints de 5D e 4D. Errar aqui significa migrations destrutivas em produção com clientes ativos.
 
 Em especial: a relação `Project 1→N Model 1→N Version` precisa ser pensada para acomodar cenários no S12 (`Scenario 1→1 ModelVersion` como base) sem quebrar o schema existente.
 
 ---
 
-## Compatibilidade futura — cadeia de domínio
+## Compatibilidade futura: cadeia de domínio
 
 A hierarquia deste sprint é a base de toda a cadeia de valor do ArxisVR:
 

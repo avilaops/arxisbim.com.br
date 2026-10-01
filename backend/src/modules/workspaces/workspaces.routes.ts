@@ -8,6 +8,7 @@ import { authenticateRequest } from '../../core/auth/middleware.js';
 import { AuthService } from '../../core/auth/auth.service.js';
 import { emailService } from '../../core/email/email.service.js';
 import { assertCanAddMember, PlanLimitError, SubscriptionInactiveError } from '../../core/billing/plan-limits.js';
+import { FRONTEND_URL } from '../../core/config/domains.js';
 
 const authService = new AuthService();
 
@@ -17,7 +18,6 @@ function getUser(req: FastifyRequest): AuthedUser | null {
 }
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://arxisvr.avilaops.com';
 
 function workspaceSlug(name: string): string {
   const base = name
@@ -87,11 +87,11 @@ export async function workspaceRoutes(fastify: FastifyInstance) {
     });
 
     const [ws] = await db.select({ name: tenants.name }).from(tenants).where(eq(tenants.tenantId, tenantId)).limit(1);
-    const acceptUrl = `${FRONTEND_URL}/accept-invite.html?token=${token}`;
+    const acceptUrl = `${FRONTEND_URL}/accept-invite?token=${token}`;
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:auto">
         <h2>Você foi convidado para o workspace <strong>${ws?.name || tenantId}</strong></h2>
-        <p>Você foi convidado como <strong>${inviteRole}</strong> no ArxisVR.</p>
+        <p>Você foi convidado como <strong>${inviteRole}</strong> no Arxis.</p>
         <p><a href="${acceptUrl}" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;border-radius:8px;text-decoration:none">Aceitar convite</a></p>
         <p style="color:#888;font-size:13px">O convite expira em 7 dias. Se você não esperava isto, ignore este email.</p>
       </div>`;

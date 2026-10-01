@@ -1,0 +1,11 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Mail, ArrowRight } from 'lucide-react'
+import { buildApiV1Url } from '@/config/apiBaseUrl'
+import AuthLayout, { AuthField } from '../components/auth/AuthLayout'
+
+export default function ForgotPasswordPage() {
+  const navigate = useNavigate(); const [email,setEmail]=useState(''); const [loading,setLoading]=useState(false); const [sent,setSent]=useState(false); const [error,setError]=useState('')
+  async function submit(event: React.FormEvent){event.preventDefault();setLoading(true);setError('');try{const response=await fetch(buildApiV1Url('/auth/forgot-password'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!response.ok){const data=await response.json().catch(()=>null);setError(data?.message||data?.error||'Não foi possível enviar o email.');return}setSent(true)}catch{setError('Falha de conexão. Tente novamente.')}finally{setLoading(false)}}
+  return <AuthLayout title="Recuperar senha" description="Recupere o acesso ao seu espaço de projeto Arxis." eyebrow="Acesso seguro" heading="Volte ao seu projeto." intro="Enviaremos um link para você criar uma nova senha e continuar de onde parou.">{sent?<div className="auth-notice"><div className="auth-notice-icon"><Mail size={27}/></div><h2>Confira seu email</h2><p>Se existir uma conta com <strong>{email}</strong>, enviamos um link para redefinir a senha.</p><button className="auth-button-link" onClick={()=>navigate('/login')}>Voltar para login</button></div>:<><span className="auth-kicker">Recuperar acesso</span><h2>Esqueci minha senha</h2><p className="auth-subtitle">Informe seu email e enviaremos instruções para criar uma nova senha.</p><form className="auth-form" onSubmit={submit}>{error&&<div className="auth-error" role="alert">{error}</div>}<AuthField label="Email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="seu@email.com" required/><button className="auth-submit" type="submit" disabled={loading}>{loading?'Enviando...':<>Enviar link <ArrowRight size={16}/></>}</button></form><div className="auth-links"><span>Lembrou a senha?</span><Link to="/login">Entrar</Link></div></>}</AuthLayout>
+}

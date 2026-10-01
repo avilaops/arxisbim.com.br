@@ -9,6 +9,7 @@
 -- This migration is idempotent and only adds the missing columns/index.
 
 ALTER TABLE user_sessions
+  ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP NOT NULL DEFAULT NOW(),
   ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMP,
   ADD COLUMN IF NOT EXISTS ip_address  VARCHAR(255),
   ADD COLUMN IF NOT EXISTS is_revoked  BOOLEAN NOT NULL DEFAULT FALSE;

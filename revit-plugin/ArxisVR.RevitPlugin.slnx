@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ArxisVR.RevitPlugin.Tests/ArxisVR.RevitPlugin.Tests.csproj" />
+  <Project Path="ArxisVR.RevitPlugin/ArxisVR.RevitPlugin.csproj" />
+</Solution>
