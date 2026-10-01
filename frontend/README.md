@@ -70,4 +70,4 @@ cp .env.example .env.local
 
 ## Deploy
 
-Push em `main` em `frontend/**` → GitHub Actions → GitHub Pages → `arxisvr.avilaops.com`.
+Push em `main` → workflow `Deploy to Production` (`.github/workflows/deploy-prod.yml`) → build e verificação → deploy por SSH no servidor apps-noclient, que serve frontend e backend em `arxisvr.avilaops.com` (`/opt/arxisvr`, Caddy do container `arxisvr-web`).
