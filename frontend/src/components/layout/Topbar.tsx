@@ -23,7 +23,7 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
       if (userData) {
         setUser(JSON.parse(userData))
       }
-    } catch {}
+    } catch { /* ignora: falha aqui não impede o fluxo */ }
   }, [])
 
   return (

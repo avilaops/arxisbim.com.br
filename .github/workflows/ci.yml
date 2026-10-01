@@ -2,24 +2,91 @@ name: CI
 
 on:
   push:
-    branches: [main, 'chore/**', 'feat/**', 'fix/**']
+    branches: [main, 'chore/**', 'feat/**', 'fix/**', 'ci/**', 'claude/**']
   pull_request:
     branches: [main]
 
+# Push seguido de push na mesma branch: o run antigo não interessa mais.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build & smoke test
+  # Portao real do frontend hoje: type-check e build. Lint e testes rodam, mas
+  # informativos — a main nao esta verde neles, e portao que nasce vermelho
+  # ensina o time a ignorar CI.
+  frontend:
+    name: Frontend — lint, type-check, testes e build
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-    
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # npm, nao yarn: o frontend tem package-lock.json e nenhum yarn.lock, e o
+      # package.json da raiz declara "packageManager": "npm@11.16.0" — o yarn 1
+      # do runner le esse campo como "yarn@npm@11.16.0" e recusa instalar. Era
+      # o que deixava TODO PR vermelho neste passo, antes de qualquer teste
+      # rodar (e o que fazia `yarn lint` morrer com "eslint: not found").
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Lint ainda NAO barra o merge: sao 100 erros no repo, a maioria nos 819
+      # arquivos orfaos que nem entram no build (ver
+      # documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md). O passo roda
+      # para o numero ficar visivel e cair junto com a limpeza; quando chegar a
+      # zero, tira-se o continue-on-error e ele vira portao como os outros.
+      - name: Lint frontend (informativo)
+        continue-on-error: true
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Type-check frontend
+        working-directory: frontend
+        run: npm run typecheck
+
+      # Testes do frontend ainda NAO barram o merge: 17 dos 76 arquivos estao
+      # vermelhos na main, e nenhum por causa do codigo que roda em producao —
+      # sao dependencias que nunca entraram no package.json
+      # (`@testing-library/react`, `yjs`), 13 casos ainda escritos para Jest
+      # (`jest is not defined`) e asserts velhos, tudo na arvore orfa. Limpar
+      # isso e outro trabalho; aqui o passo roda para o numero ficar a vista.
+      # Quando os 17 cairem, tira-se o continue-on-error.
+      - name: Test frontend (vitest, informativo)
+        continue-on-error: true
+        working-directory: frontend
+        run: npm test
+
+      - name: Build frontend (vite)
+        working-directory: frontend
+        run: npm run build
+
+  backend:
+    name: Backend — type-check, migrations, testes e smoke
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
     services:
       postgres:
         image: postgres:18.6
         env:
-          POSTGRES_USER: ci
-          POSTGRES_PASSWORD: ci
-          POSTGRES_DB: ci
+          # As credenciais espelham o default de `backend/vitest.config.ts`
+          # (postgres/postgres/arxisvr_test). O job do repo antigo subia o
+          # servico como ci/ci e nao passava TEST_DATABASE_URL: os 67 arquivos
+          # morriam em "password authentication failed for user postgres"
+          # antes de qualquer teste rodar. Mesmo assim o passo abaixo declara
+          # TEST_DATABASE_URL, para a origem da URL ser explicita.
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: arxisvr_test
         ports:
           - 5432:5432
         options: >-
@@ -27,7 +94,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,35 +107,39 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Type-check backend
+        working-directory: backend
+        run: npm run type-check
+
+      # Sem isto os testes sobem num banco vazio e 35 arquivos quebram em
+      # `relation "tenants" does not exist`. A ordem e a mesma do
+      # `scripts/verify-migrations.mjs`: nome de arquivo, em ordem alfabetica.
+      - name: Apply migrations to the test database
+        working-directory: backend
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for arquivo in $(ls migrations/*.sql | sort); do
+            echo "→ $arquivo"
+            psql -h 127.0.0.1 -U postgres -d arxisvr_test -v ON_ERROR_STOP=1 -q -f "$arquivo"
+          done
+          psql -h 127.0.0.1 -U postgres -d arxisvr_test -c \
+            "select count(*) as tabelas from information_schema.tables where table_schema='public'"
+
+      - name: Test backend (vitest)
+        working-directory: backend
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/arxisvr_test
+        run: npm test
+
       - name: Build backend (esbuild)
         working-directory: backend
         run: npm run build
 
-      - name: Type-check backend
-        continue-on-error: true
-        working-directory: backend
-        run: npm run type-check
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: yarn install --frozen-lockfile
-
-      - name: Build frontend (vite)
-        working-directory: frontend
-        run: yarn build
-
-      - name: Install signaling-server dependencies
-        working-directory: signaling-server
-        run: npm install --omit=dev --no-audit --no-fund
-
-      - name: Sanity check signaling-server entrypoint
-        working-directory: signaling-server
-        run: node --check server.js
-
       - name: Smoke test — backend sobe e responde /health/live
         working-directory: backend
         env:
-          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/arxisvr_test
           JWT_SECRET: ci-smoke-secret-not-for-prod
           JWT_REFRESH_SECRET: ci-refresh-secret-not-for-prod
           HOST: 127.0.0.1
@@ -102,3 +173,27 @@ jobs:
             echo "❌ backend não respondeu a tempo (80 segundos)"
             exit 1
           fi
+
+  signaling:
+    name: Signaling server — sanity check
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Dev local (porta 3002). Em producao o WebSocket e servido pelo proprio
+      # backend, entao aqui basta provar que o arquivo ainda carrega.
+      - name: Install signaling-server dependencies
+        working-directory: signaling-server
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Sanity check signaling-server entrypoint
+        working-directory: signaling-server
+        run: node --check server.js

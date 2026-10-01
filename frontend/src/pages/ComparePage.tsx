@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Download, GitCompare, Layers, Link2, Unlink } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Download, GitCompare, Layers, Link2, Unlink } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import ComparisonCanvas, { type ComparisonHandle } from '@/components/comparison/ComparisonCanvas'
+import ReguaTempo from '@/components/viewer/ReguaTempo'
+import { dataLegivel, janelaDoCronograma, janelaUnida } from '@/components/viewer/estado4d'
 import { scenariosService, type Scenario } from '@/services/scenarios.service'
+import { schedulesService, type ComparacaoTemporal } from '@/services/schedules.service'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
 
@@ -13,13 +16,17 @@ interface ModeloResumo {
 }
 
 /**
- * S18 ★ — comparação visual de cenários.
+ * S18 ★ — comparação visual de cenários, e S26 ★ — comparação temporal.
  *
  * A tela tem dois momentos de propósito: primeiro o usuário escolhe A e B,
  * depois abre o split. Cair direto num split vazio ficaria técnico demais e não
  * demonstraria nada para quem não conhece o produto.
  *
- * Escopo travado no visual: nada de custo, prazo ou PDF, que são S26/S30.
+ * O S18 respondia "os dois cenários mostram a mesma coisa?". O S26 acrescenta
+ * a outra metade da decisão: "e qual termina antes?". A régua de prazo é um
+ * modo do mesmo split — mesma tela, mesmo par A|B, mesma câmera sincronizada —
+ * porque quem compara alternativas de obra olha geometria e data na mesma
+ * conversa. Custo e PDF continuam fora: são S30.
  */
 export default function ComparePage() {
   const [modelo, setModelo] = useState<ModeloResumo | null>(null)
@@ -34,6 +41,21 @@ export default function ComparePage() {
   const setIdB = (id: string) => setParams((p) => { p.set('b', id); p.delete('split'); return p }, { replace: true })
   const setComparando = (v: boolean) => setParams((p) => { if (v) p.set('split', '1'); else p.delete('split'); return p })
   const [travado, setTravado] = useState(true)
+  // S26: prazo e data também vivem na URL, pela mesma razão do A|B — um link
+  // de comparação tem de reabrir na MESMA data, senão a prova não sobrevive ao
+  // reload nem à pessoa para quem você mandou o link.
+  const compararPrazo = params.get('prazo') === '1'
+  const dataRegua = params.get('data') ?? ''
+  const setCompararPrazo = (v: boolean) => setParams((p) => {
+    if (v) p.set('prazo', '1')
+    else { p.delete('prazo'); p.delete('data') }
+    return p
+  })
+  const setDataRegua = (data: string) => setParams((p) => { p.set('data', data); return p }, { replace: true })
+  const [comparacao, setComparacao] = useState<ComparacaoTemporal | null>(null)
+  const [carregandoPrazo, setCarregandoPrazo] = useState(false)
+  const [tocando, setTocando] = useState(false)
+  const [velocidade, setVelocidade] = useState(1)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [exportando, setExportando] = useState(false)
@@ -93,6 +115,48 @@ export default function ComparePage() {
   // A x A não compara nada: o marco é ver a diferença entre dois cenários.
   const podeComparar = Boolean(cenarioA && cenarioB && idA !== idB && modelo)
 
+  // S26: o prazo vem pronto do backend — os dois cronogramas passam pelo CPM e
+  // voltam com early start/finish e o `deltaDays` entre as conclusões. Não se
+  // recalcula caminho crítico no cliente.
+  useEffect(() => {
+    if (!comparando || !compararPrazo || !idA || !idB) {
+      setComparacao(null)
+      return
+    }
+    let cancelado = false
+    setCarregandoPrazo(true)
+    schedulesService
+      .compararPrazo(idA, idB)
+      .then((resposta) => { if (!cancelado) setComparacao(resposta) })
+      .catch((e) => { if (!cancelado) setErro(e instanceof Error ? e.message : 'Falha ao comparar prazos.') })
+      .finally(() => { if (!cancelado) setCarregandoPrazo(false) })
+    return () => { cancelado = true }
+  }, [comparando, compararPrazo, idA, idB])
+
+  // Memoizadas porque descem como prop para o canvas: um array novo a cada
+  // render remontaria a pintura 4D sem que nada tivesse mudado.
+  const atividadesA = useMemo(() => comparacao?.scenarioA.schedule?.activities ?? [], [comparacao])
+  const atividadesB = useMemo(() => comparacao?.scenarioB.schedule?.activities ?? [], [comparacao])
+  const temCronograma = atividadesA.length > 0 || atividadesB.length > 0
+  // Uma régua só para os dois lados: a janela cobre do primeiro começo à última
+  // conclusão dos dois cronogramas, senão um lado terminaria fora da régua.
+  const janela4d = useMemo(
+    () => janelaUnida(janelaDoCronograma(atividadesA), janelaDoCronograma(atividadesB)),
+    [atividadesA, atividadesB],
+  )
+  const atividades4d = useMemo(
+    () => (compararPrazo && temCronograma ? { A: atividadesA, B: atividadesB } : null),
+    [compararPrazo, temCronograma, atividadesA, atividadesB],
+  )
+  const dataValida = dataRegua || janela4d?.inicio || ''
+
+  // Link sem data (o primeiro clique em "Comparar prazo") abre no início da obra.
+  useEffect(() => {
+    if (compararPrazo && !dataRegua && janela4d) setDataRegua(janela4d.inicio)
+    // setDataRegua vem de useSearchParams e muda a cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compararPrazo, dataRegua, janela4d?.inicio])
+
   if (comparando && cenarioA && cenarioB && modelo) {
     return (
       <AppShell>
@@ -118,6 +182,16 @@ export default function ComparePage() {
               >
                 <Download size={17} strokeWidth={1.45} />
                 <span>{exportando ? 'Gerando…' : 'Exportar imagem'}</span>
+              </button>
+              <button
+                className={`viewer-upload-button ${compararPrazo ? 'is-active' : ''}`}
+                type="button"
+                onClick={() => { setCompararPrazo(!compararPrazo); setTocando(false) }}
+                aria-pressed={compararPrazo}
+                title="Mostra os dois cenários na mesma data e a diferença de prazo"
+              >
+                <CalendarClock size={17} strokeWidth={1.45} />
+                <span>{compararPrazo ? 'Sair do prazo' : 'Comparar prazo'}</span>
               </button>
               <button
                 className="viewer-icon-button"
@@ -153,7 +227,70 @@ export default function ComparePage() {
             scenarioA={cenarioA}
             scenarioB={cenarioB}
             travado={travado}
+            atividades4d={atividades4d}
+            data4d={atividades4d ? dataValida : ''}
           />
+
+          {compararPrazo && (
+            <aside className="compare-prazo" aria-label="Comparação de prazo">
+              {carregandoPrazo ? (
+                <p className="compare-prazo__vazio">Calculando prazos…</p>
+              ) : !temCronograma ? (
+                <p className="compare-prazo__vazio">
+                  Nenhum dos dois cenários tem cronograma. Monte um em <b>Cronograma 4D</b>, no
+                  Viewer 3D, para comparar prazos.
+                </p>
+              ) : (
+                <>
+                  <h3>Prazo</h3>
+                  <dl>
+                    <div>
+                      <dt>A · {cenarioA.name}</dt>
+                      <dd>
+                        {comparacao?.scenarioA.schedule
+                          ? dataLegivel(comparacao.scenarioA.schedule.completionDate)
+                          : 'sem cronograma'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>B · {cenarioB.name}</dt>
+                      <dd>
+                        {comparacao?.scenarioB.schedule
+                          ? dataLegivel(comparacao.scenarioB.schedule.completionDate)
+                          : 'sem cronograma'}
+                      </dd>
+                    </div>
+                  </dl>
+                  {/* O sinal é o que decide: positivo = B termina depois de A. */}
+                  {comparacao?.deltaDays === null || comparacao?.deltaDays === undefined ? (
+                    <p className="compare-prazo__vazio">
+                      Falta cronograma de um dos lados para medir a diferença.
+                    </p>
+                  ) : comparacao.deltaDays === 0 ? (
+                    <p className="compare-prazo__delta">Os dois terminam no mesmo dia.</p>
+                  ) : (
+                    <p className="compare-prazo__delta">
+                      <b>{Math.abs(comparacao.deltaDays)} dia(s)</b>{' '}
+                      {comparacao.deltaDays > 0 ? 'a mais em B' : 'a mais em A'}
+                    </p>
+                  )}
+                </>
+              )}
+            </aside>
+          )}
+
+          {compararPrazo && janela4d && temCronograma && (
+            <ReguaTempo
+              janela={janela4d}
+              data={dataValida}
+              onChange={setDataRegua}
+              tocando={tocando}
+              onTocandoChange={setTocando}
+              velocidade={velocidade}
+              onVelocidadeChange={setVelocidade}
+              resumo={<span className="regua-tempo__estado regua-tempo__estado--ativo">amarelo = em obra</span>}
+            />
+          )}
         </div>
       </AppShell>
     )

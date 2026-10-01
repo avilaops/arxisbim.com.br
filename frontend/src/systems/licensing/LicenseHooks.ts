@@ -123,7 +123,7 @@ export function withFeature<P extends object>(
   requiredFeatures: Feature[],
   FallbackComponent?: React.ComponentType<{ missingFeatures: Feature[] }>
 ): React.ComponentType<P> {
-  return (props: P) => {
+  const ComponenteComLicenca = (props: P) => {
     const { allAvailable, missing } = useFeatures(requiredFeatures);
 
     if (allAvailable) {
@@ -136,6 +136,11 @@ export function withFeature<P extends object>(
 
     return null;
   };
+  // Sem displayName o componente embrulhado vira "Anonymous" no DevTools e nas
+  // stacks — justo quando se está investigando por que a feature sumiu.
+  ComponenteComLicenca.displayName = `withFeature(${Component.displayName || Component.name || 'Componente'})`;
+
+  return ComponenteComLicenca;
 }
 
 /**

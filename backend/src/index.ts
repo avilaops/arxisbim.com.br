@@ -1,6 +1,7 @@
 import { taskElementLinksRoutes } from './modules/tenants/index.js';
 import timelineSimulationsRoutes from './routes/v1/timeline-simulations.js';
 import { reconcileSchema } from './core/db/schema-reconciler.js';
+import { API_URL, resolveCorsOrigins } from './core/config/domains.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -194,7 +195,7 @@ async function checkWebSocketSignaling(): Promise<boolean> {
   try {
     // O WebSocket (signaling/realtime) é servido pelo próprio backend — não há
     // serviço de signaling separado. Checa a saúde do próprio backend.
-    const signalingUrl = process.env.SIGNALING_HEALTH_URL || 'https://api.arxisvr.avilaops.com/health';
+    const signalingUrl = process.env.SIGNALING_HEALTH_URL || `${API_URL}/health`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(signalingUrl, { signal: controller.signal });
@@ -358,7 +359,9 @@ const analyticsCleanupWorker = createAnalyticsCleanupWorker({
 
 // CORS
 await server.register(cors, {
-  origin: process.env.CORS_ORIGIN?.split(',') || '*',
+  // Allowlist em core/config/domains.ts: os dois domínios do produto durante a
+  // transição para arxisbim.com.br. `CORS_ORIGIN` continua mandando.
+  origin: resolveCorsOrigins(),
   credentials: true,
   // Declarar métodos/headers explicitamente — preflight de DELETE/PATCH estava
   // sendo bloqueado quando origin é específico + credentials.

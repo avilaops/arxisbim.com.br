@@ -13,4 +13,4 @@ Disallow: /account
 Disallow: /ar-calibration
 Disallow: /oauth-callback
 
-Sitemap: https://arxisvr.avilaops.com/sitemap.xml
+Sitemap: https://arxisbim.com.br/sitemap.xml

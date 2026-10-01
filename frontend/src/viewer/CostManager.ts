@@ -1,7 +1,7 @@
 export class CostManager {
   private showPanel = false;
   private scenarioId: string | null = null;
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners: Map<string, Set<(...args: any[]) => void>> = new Map();
 
   togglePanel(scenarioId?: string) {
     if (scenarioId) this.scenarioId = scenarioId;
@@ -23,14 +23,14 @@ export class CostManager {
     return this.scenarioId;
   }
 
-  addEventListener(event: string, callback: Function) {
+  addEventListener(event: string, callback: (...args: any[]) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(callback);
   }
 
-  removeEventListener(event: string, callback: Function) {
+  removeEventListener(event: string, callback: (...args: any[]) => void) {
     this.listeners.get(event)?.delete(callback);
   }
 

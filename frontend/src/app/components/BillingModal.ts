@@ -183,7 +183,7 @@ export class BillingModal {
             provider: checkout.provider,
           });
           (window as any).arxis?.flush();
-        } catch (e) {}
+        } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
         window.location.href = checkout.checkoutUrl;
         return;
       }

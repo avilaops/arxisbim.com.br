@@ -62,7 +62,7 @@ describe('Geometry Module', () => {
     let clippingGeometry: ClippingGeometry;
 
     beforeEach(() => {
-      // @ts-ignore - Mock scene
+      // @ts-expect-error - Mock scene
       clippingGeometry = new ClippingGeometry(mockScene);
     });
 

@@ -387,7 +387,7 @@ export const componentRegistry = ComponentRegistry.getInstance();
  * Decorator para auto-registro de componentes (experimental)
  */
 export function Component(options: Partial<ComponentDescriptor> = {}) {
-  return function <T extends { new(...args: any[]): {} }>(constructor: T) {
+  return function <T extends { new(...args: any[]): Record<string, unknown> }>(constructor: T) {
     const name = options.name || constructor.name;
     componentRegistry.register(name, constructor, options);
     return constructor;

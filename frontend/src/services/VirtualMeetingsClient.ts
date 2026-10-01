@@ -18,7 +18,7 @@ export class VirtualMeetingsClient {
   private baseUrl: string;
   
   // Event handlers
-  private eventHandlers: Map<string, Set<Function>> = new Map();
+  private eventHandlers: Map<string, Set<(...args: any[]) => void>> = new Map();
 
   constructor(baseUrl: string, token: string) {
     this.baseUrl = baseUrl;
@@ -162,7 +162,7 @@ export class VirtualMeetingsClient {
   /**
    * Registrar handler para evento
    */
-  on(event: string, handler: Function): void {
+  on(event: string, handler: (...args: any[]) => void): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -172,7 +172,7 @@ export class VirtualMeetingsClient {
   /**
    * Remover handler de evento
    */
-  off(event: string, handler: Function): void {
+  off(event: string, handler: (...args: any[]) => void): void {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.delete(handler);

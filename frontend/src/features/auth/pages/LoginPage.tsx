@@ -46,7 +46,7 @@ export default function LoginPage() {
       try {
         (window as any).arxis?.track('login_success');
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
       window.location.href = next;
     } catch (err: any) {
       setError(err?.message || 'Email ou senha incorretos.');

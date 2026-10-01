@@ -101,7 +101,7 @@ export function CostManagement() {
         <div className="cost-tables-list">
           {tables.length === 0 ? (
             <div className="empty-state">
-              Nenhuma tabela de custo criada. Clique em "Nova Tabela" para começar.
+              Nenhuma tabela de custo criada. Clique em “Nova Tabela” para começar.
             </div>
           ) : (
             <table>

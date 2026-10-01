@@ -124,7 +124,7 @@ export class UnifiedRenderer {
     }
 
     try {
-      // @ts-ignore - WebGPU API experimental
+      // @ts-expect-error - WebGPU API experimental
       const adapter = await navigator.gpu?.requestAdapter({
         powerPreference: 'high-performance'
       });
@@ -142,7 +142,7 @@ export class UnifiedRenderer {
 
       // Captura features
       adapter.features.forEach((feature) => {
-        // @ts-ignore
+        // @ts-expect-error - índice dinâmico: o mapa de features do WebGPU não tem chaves conhecidas em tempo de compilação
         this.webgpuFeatures[feature] = true;
       });
 

@@ -20,12 +20,36 @@
 	}
 }
 
-# --- ArxisVR (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
-arxisvr.avilaops.com, www.arxisvr.avilaops.com {
+# --- Arxis (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
+# Dominio proprio desde 17/09/2026. Aplicar SO DEPOIS que arxisbim.com.br e
+# api.arxisbim.com.br resolverem para 204.168.249.111: o Caddy so emite o
+# certificado quando o ACME alcanca a maquina pelo nome.
+# Runbook: documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
+arxisbim.com.br {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3102
 }
 
+# www manda para o apex: um endereco so indexado, um so no analytics.
+www.arxisbim.com.br {
+	redir https://arxisbim.com.br{uri} 308
+}
+
+api.arxisbim.com.br {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3101
+}
+
+# Dominio anterior: o site redireciona (308 preserva metodo e passa o sinal de
+# SEO para o canonico), preservando caminho e query de links ja publicados.
+arxisvr.avilaops.com, www.arxisvr.avilaops.com {
+	redir https://arxisbim.com.br{uri} 308
+}
+
+# A API antiga NAO redireciona. Redirecionar quebraria o preflight do CORS e os
+# POST do plugin do Revit ja instalado, que nao seguem 3xx com corpo. Ela
+# continua servindo o mesmo backend ate o fim da janela de transicao (prazo e
+# criterio de desligamento no runbook).
 api.arxisvr.avilaops.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3101
