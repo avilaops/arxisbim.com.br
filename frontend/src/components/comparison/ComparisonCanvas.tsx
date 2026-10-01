@@ -7,11 +7,16 @@ import {
   aplicarDestaque,
   aplicarVisibilidade,
   diferencaVisibilidade,
+  expressIdsDe,
   idsOcultos,
   listarCategorias,
+  mapearGlobalIds,
   todosExpressIds,
   type DiferencaCategoria,
+  type MapaIfc,
 } from '@/components/viewer/visibilidadeIfc'
+import { estadosNaData, type Estado4d } from '@/components/viewer/estado4d'
+import type { Atividade } from '@/services/schedules.service'
 
 interface ComparisonCanvasProps {
   modelId: string
@@ -20,6 +25,20 @@ interface ComparisonCanvasProps {
   scenarioB: Scenario
   /** Câmeras andam juntas? Controlado pela tela. */
   travado: boolean
+  /**
+   * Comparação temporal ligada (S26): as atividades de cada lado e a data que
+   * a régua marca. Com `null` o split é o do S18, puramente visual.
+   */
+  atividades4d?: { A: Atividade[]; B: Atividade[] } | null
+  data4d?: string
+}
+
+/** O que cada lado do split publica para a tela repintar por data. */
+interface LadoVivo {
+  controls: any
+  destruir: () => void
+  /** `null` volta ao split visual do S18; com estados, pinta o 4D. */
+  renderizar: (estados: Map<string, Estado4d> | null) => Promise<void>
 }
 
 export interface ComparisonHandle {
@@ -47,10 +66,16 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
   scenarioA,
   scenarioB,
   travado,
+  atividades4d = null,
+  data4d = '',
 }: ComparisonCanvasProps, ref) {
   const hostA = useRef<HTMLDivElement>(null)
   const hostB = useRef<HTMLDivElement>(null)
   const syncRef = useRef<CameraSync | null>(null)
+  // Cada lado publica como se repintar (S26): a data da regua muda a cena sem
+  // remontar nada, como o cadeado da camera ja fazia no S18.
+  const ladosRef = useRef<{ A: LadoVivo; B: LadoVivo } | null>(null)
+  const [montagem, setMontagem] = useState(0)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   // Diferencas por categoria, calculadas do estado dos cenarios (nao de pixel).
@@ -64,7 +89,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       if (!ca || !cb) return null
       const rotulo = 36
       const vao = 8
-      const rodape = diferencas && diferencas.length ? 30 : 0
+      const rodape = (atividades4d && data4d) || (diferencas && diferencas.length) ? 30 : 0
       const w = ca.width + vao + cb.width
       const h = Math.max(ca.height, cb.height) + rotulo + rodape
       const saida = document.createElement('canvas')
@@ -87,7 +112,21 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       ctx.font = `${Math.round(rotulo * 0.32)}px Inter, system-ui, sans-serif`
       ctx.textAlign = 'right'
       ctx.fillText(`${modelName} · Arxis · ${new Date().toLocaleDateString('pt-BR')}`, w - 12, rotulo / 2)
-      if (rodape && diferencas) {
+      if (rodape && atividades4d && data4d) {
+        // Com a regua ligada o que a imagem precisa dizer e a data: sem ela o
+        // PNG vira "duas obras pela metade" sem explicacao.
+        const y = h - rodape / 2
+        ctx.textAlign = 'left'
+        ctx.font = `${Math.round(rotulo * 0.34)}px Inter, system-ui, sans-serif`
+        ctx.fillStyle = '#facc15'
+        ctx.fillRect(12, y - 5, 10, 10)
+        ctx.fillStyle = '#f4f4f5'
+        ctx.fillText(
+          `Em obra em ${new Date(`${data4d}T00:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`,
+          28,
+          y,
+        )
+      } else if (rodape && diferencas) {
         // A diferenca vai escrita no PNG: quem recebe a imagem nao ve a legenda da tela.
         const y = h - rodape / 2
         ctx.textAlign = 'left'
@@ -108,7 +147,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
       }
       return new Promise((ok) => saida.toBlob((b) => ok(b), 'image/png'))
     },
-  }), [scenarioA.name, scenarioB.name, modelName, diferencas])
+  }), [scenarioA.name, scenarioB.name, modelName, diferencas, atividades4d, data4d])
 
   // O cadeado muda sem remontar a cena: só avisa o sync que já existe.
   // A primeira execução é pulada de propósito: ela roda antes das cenas
@@ -123,6 +162,25 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
     }
     syncRef.current?.setLocked(travado)
   }, [travado])
+
+  // A data manda nos dois lados ao mesmo tempo: e o que torna a comparacao
+  // temporal, e nao duas animacoes soltas. Cada lado usa o SEU cronograma.
+  useEffect(() => {
+    const lados = ladosRef.current
+    if (!lados) return
+    if (!atividades4d || !data4d) {
+      void lados.A.renderizar(null)
+      void lados.B.renderizar(null)
+      return
+    }
+    // Mesmo atraso do viewer: aqui sao DUAS cenas por repintura, entao arrastar
+    // a regua sem folga custaria o dobro.
+    const espera = setTimeout(() => {
+      void lados.A.renderizar(estadosNaData(atividades4d.A, data4d))
+      void lados.B.renderizar(estadosNaData(atividades4d.B, data4d))
+    }, 120)
+    return () => clearTimeout(espera)
+  }, [atividades4d, data4d, montagem])
 
   useEffect(() => {
     const a = hostA.current
@@ -160,6 +218,12 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         // com o terreno do modelo de teste).
         const materialSoEmA = new THREE.MeshLambertMaterial({ color: 0xf97316, emissive: 0x9a3412, emissiveIntensity: 0.45 })
         const materialSoEmB = new THREE.MeshLambertMaterial({ color: 0xd946ef, emissive: 0x86198f, emissiveIntensity: 0.45 })
+        // Amarelo = em obra na data da regua (S26). O destaque e um so por
+        // modelo, entao com a comparacao temporal ligada ele passa a mostrar o
+        // que esta em obra, e nao mais a diferenca de categoria do S18: sao
+        // duas perguntas distintas e a legenda diz qual esta na tela.
+        const material4dA = new THREE.MeshLambertMaterial({ color: 0xfacc15, emissive: 0x854d0e, emissiveIntensity: 0.5 })
+        const material4dB = new THREE.MeshLambertMaterial({ color: 0xfacc15, emissive: 0x854d0e, emissiveIntensity: 0.5 })
 
         // UM loader para os dois lados. Com dois IFCLoader o web-ifc-three
         // partilha a API wasm por baixo: o segundo modelo nascia com modelID 1
@@ -242,8 +306,51 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
           // visivel aqui e oculto la = "so em <lado>"
           const soAqui = [...ocultosDoOutro].filter((t) => !ocultosDesteLado.has(t))
           const idsSoAqui = idsOcultos(categorias, soAqui)
-          aplicarVisibilidade(manager, model, scene, todos, idsOcultos(categorias, ocultosDesteLado), idsSoAqui)
-          aplicarDestaque(manager, model, scene, [...idsSoAqui], lado === 'A' ? materialSoEmA : materialSoEmB)
+          const idsOcultosDesteLado = idsOcultos(categorias, ocultosDesteLado)
+          const materialDoLado = lado === 'A' ? materialSoEmA : materialSoEmB
+          const material4d = lado === 'A' ? material4dA : material4dB
+
+          // GlobalId x expressID so e lido quando a comparacao temporal entra:
+          // quem abre o split para ver geometria nao paga por isso.
+          let mapa: MapaIfc | null = null
+          let mapaEmCurso: Promise<MapaIfc> | null = null
+          const garantirMapa = () => {
+            if (mapa) return Promise.resolve(mapa)
+            if (!mapaEmCurso) {
+              mapaEmCurso = mapearGlobalIds(manager, model.modelID).then((lido) => {
+                mapa = lido
+                return lido
+              })
+            }
+            return mapaEmCurso
+          }
+
+          const renderizar = async (estados: Map<string, Estado4d> | null) => {
+            if (!estados) {
+              // Volta ao split do S18. O destaque 4D sai primeiro: subset e
+              // indexado por material, e trocar sem remover deixaria o antigo
+              // desenhado por baixo.
+              aplicarDestaque(manager, model, scene, [], material4d)
+              aplicarVisibilidade(manager, model, scene, todos, idsOcultosDesteLado, idsSoAqui)
+              aplicarDestaque(manager, model, scene, [...idsSoAqui], materialDoLado)
+              return
+            }
+            const mapaLido = await garantirMapa()
+            const naoIniciados: string[] = []
+            const ativos: string[] = []
+            for (const [globalId, estado] of estados) {
+              if (estado === 'nao_iniciado') naoIniciados.push(globalId)
+              else if (estado === 'ativo') ativos.push(globalId)
+            }
+            const ocultos = new Set(idsOcultosDesteLado)
+            for (const id of expressIdsDe(mapaLido, naoIniciados)) ocultos.add(id)
+            const idsAtivos = [...expressIdsDe(mapaLido, ativos)].filter((id) => !ocultos.has(id))
+            aplicarDestaque(manager, model, scene, [], materialDoLado)
+            aplicarVisibilidade(manager, model, scene, todos, ocultos, new Set(idsAtivos))
+            aplicarDestaque(manager, model, scene, idsAtivos, material4d)
+          }
+
+          await renderizar(null)
           if (lado === 'A') setDiferencas(diferencaVisibilidade(categorias, ocultosA, ocultosB))
 
           const observer = new ResizeObserver(() => {
@@ -265,6 +372,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
 
           return {
             controls,
+            renderizar,
             destruir: () => {
               cancelAnimationFrame(frame)
               observer.disconnect()
@@ -301,12 +409,21 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         sync.setLocked(travado, false)
         syncRef.current = sync
 
+        ladosRef.current = { A: ladoA, B: ladoB }
         setCarregando(false)
+        // Avisa o efeito da data: a cena so existe agora, e se a regua ja
+        // estava ligada (ex.: link com ?data= na URL) ela precisa pintar.
+        setMontagem((n) => n + 1)
         limpar = () => {
           sync.dispose()
           syncRef.current = null
+          ladosRef.current = null
           ladoA.destruir()
           ladoB.destruir()
+          materialSoEmA.dispose()
+          materialSoEmB.dispose()
+          material4dA.dispose()
+          material4dB.dispose()
           loader.ifcManager.dispose()
         }
       } catch (e) {
@@ -339,7 +456,7 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         <div ref={hostB} className="comparison-canvas__host" />
       </div>
 
-      {!carregando && !erro && diferencas && (
+      {!carregando && !erro && diferencas && !atividades4d && (
         <aside className="compare-diff" aria-label="Diferenças entre os cenários">
           <h3>Diferenças</h3>
           {diferencas.length === 0 ? (

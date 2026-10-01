@@ -6,13 +6,13 @@
  */
 
 export class EventEmitter {
-  private events: Map<string, Function[]>;
+  private events: Map<string, Array<(...args: any[]) => void>>;
 
   constructor() {
     this.events = new Map();
   }
 
-  on(event: string, listener: Function): this {
+  on(event: string, listener: (...args: any[]) => void): this {
     if (!this.events.has(event)) {
       this.events.set(event, []);
     }
@@ -20,7 +20,7 @@ export class EventEmitter {
     return this;
   }
 
-  off(event: string, listener: Function): this {
+  off(event: string, listener: (...args: any[]) => void): this {
     if (!this.events.has(event)) return this;
     
     const listeners = this.events.get(event)!;
@@ -47,7 +47,7 @@ export class EventEmitter {
     return true;
   }
 
-  once(event: string, listener: Function): this {
+  once(event: string, listener: (...args: any[]) => void): this {
     const onceWrapper = (...args: any[]) => {
       listener(...args);
       this.off(event, onceWrapper);

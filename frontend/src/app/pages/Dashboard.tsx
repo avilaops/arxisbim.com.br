@@ -259,7 +259,7 @@ export default function Dashboard() {
       const u = JSON.parse(localStorage.getItem('arxisvr_user') || 'null');
       if (u?.tenantName) setTenant(u.tenantName);
       else if (u?.name)  setTenant(u.name);
-    } catch {}
+    } catch { /* ignora: falha aqui não impede o fluxo */ }
   }, []);
 
   useEffect(() => {

@@ -4,12 +4,19 @@ import ArxisIcon from '@/components/ui/ArxisIcon'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import type { CameraState } from '@/services/scenarios.service'
 import {
+  aplicarDestaque,
   aplicarVisibilidade as aplicarVisibilidadeIfc,
+  expressIdsDe,
+  globalIdsDe,
+  idsDosTipos,
   idsOcultos,
   listarCategorias,
+  mapearGlobalIds,
   todosExpressIds,
   type Categoria,
+  type MapaIfc,
 } from './visibilidadeIfc'
+import type { Estado4d } from './estado4d'
 
 interface ViewerCanvasProps {
   onUpload: () => void
@@ -42,6 +49,20 @@ export interface ViewerHandle {
   aplicarOcultos: (tiposIfc: string[]) => boolean
   /** Categorias presentes no modelo aberto (vazio sem modelo). */
   categorias: () => Categoria[]
+  /**
+   * GlobalIds dos elementos de uma ou mais categorias IFC (S26).
+   *
+   * É a tradução que o vínculo 4D exige: o painel escolhe categoria, que é o
+   * que o viewer sabe, e o que se grava é GlobalId, que é o que o cronograma
+   * entende. A primeira chamada lê as propriedades do modelo e guarda o mapa.
+   */
+  globalIdsDasCategorias: (tiposIfc: string[]) => Promise<string[]>
+  /**
+   * Pinta o modelo pelo estado 4D na data escolhida: não iniciado some, em
+   * andamento ganha cor, concluído fica normal. `null` desliga e devolve o
+   * modelo à visibilidade do cenário.
+   */
+  aplicar4d: (estados: Map<string, Estado4d> | null) => Promise<boolean>
   /** Há uma cena carregada agora? */
   pronto: () => boolean
   /** Volta ao enquadramento calculado quando o modelo abriu. */
@@ -63,7 +84,12 @@ interface CenaViva {
   categorias: Categoria[]
   /** Tipos IFC ocultos agora. */
   ocultos: Set<string>
-  aplicarVisibilidade: (ocultos: Set<string>) => void
+  /** Estado 4D em vigor (S26), ou null com a régua de tempo desligada. */
+  estados4d: Map<string, Estado4d> | null
+  /** GlobalId × expressID, lido sob demanda: só o 4D precisa dele. */
+  garantirMapa: () => Promise<MapaIfc>
+  /** Redesenha a visibilidade a partir de `ocultos` + `estados4d`. */
+  renderizar: () => void
 }
 
 const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function ViewerCanvas({
@@ -81,7 +107,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
   })
   const dismissTouchHelp = () => {
     setTouchHelpDismissed(true)
-    try { localStorage.setItem('arxisvr_viewer_touch_help', 'ok') } catch {}
+    try { localStorage.setItem('arxisvr_viewer_touch_help', 'ok') } catch { /* ignora: falha aqui não impede o fluxo */ }
   }
   const [loadingModel, setLoadingModel] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
@@ -217,8 +243,54 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
         }
         const todos = todosExpressIds(model)
         const ocultosAtuais = new Set<string>()
-        const aplicarVisibilidade = (ocultos: Set<string>) => {
-          aplicarVisibilidadeIfc(loader.ifcManager as any, model, scene, todos, idsOcultos(categorias, ocultos))
+        const manager = loader.ifcManager as any
+        // Cor do que esta em obra na data da regua (S26). Laranja e magenta ja
+        // sao do split A|B do S18; o amarelo nao colide com nenhum dos dois.
+        const material4d = new THREE.MeshLambertMaterial({
+          color: 0xfacc15,
+          emissive: 0x854d0e,
+          emissiveIntensity: 0.5,
+        })
+        // O mapa GlobalId x expressID custa uma leitura de propriedades do
+        // modelo inteiro. So o 4D precisa dele, entao so nasce quando alguem
+        // abre o cronograma: quem nunca usa nao paga.
+        let mapa: MapaIfc | null = null
+        let mapaEmCurso: Promise<MapaIfc> | null = null
+        const garantirMapa = () => {
+          if (mapa) return Promise.resolve(mapa)
+          if (!mapaEmCurso) {
+            mapaEmCurso = mapearGlobalIds(manager, (model as any).modelID).then((lido) => {
+              mapa = lido
+              return lido
+            })
+          }
+          return mapaEmCurso
+        }
+        // Um so caminho de desenho: visibilidade do cenario e estado 4D se
+        // somam. Sem isso, ocultar uma categoria com a regua ligada apagaria o
+        // 4D, e mudar a data traria de volta o que o cenario escondeu.
+        const renderizar = () => {
+          const cena = sceneRef.current
+          const estados = cena?.estados4d ?? null
+          const ocultosPorCategoria = idsOcultos(categorias, cena?.ocultos ?? ocultosAtuais)
+          if (!estados || !mapa) {
+            aplicarDestaque(manager, model, scene, [], material4d)
+            aplicarVisibilidadeIfc(manager, model, scene, todos, ocultosPorCategoria)
+            return
+          }
+          const naoIniciados: string[] = []
+          const ativos: string[] = []
+          for (const [globalId, estado] of estados) {
+            if (estado === 'nao_iniciado') naoIniciados.push(globalId)
+            else if (estado === 'ativo') ativos.push(globalId)
+          }
+          const ocultos = new Set(ocultosPorCategoria)
+          for (const id of expressIdsDe(mapa, naoIniciados)) ocultos.add(id)
+          // O que esta em obra sai do subset normal e entra colorido: a mesma
+          // geometria desenhada duas vezes brigaria no z-buffer.
+          const idsAtivos = [...expressIdsDe(mapa, ativos)].filter((id) => !ocultos.has(id))
+          aplicarVisibilidadeIfc(manager, model, scene, todos, ocultos, new Set(idsAtivos))
+          aplicarDestaque(manager, model, scene, idsAtivos, material4d)
         }
         sceneRef.current = {
           camera,
@@ -230,7 +302,9 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
           },
           categorias,
           ocultos: ocultosAtuais,
-          aplicarVisibilidade,
+          estados4d: null,
+          garantirMapa,
+          renderizar,
         }
         onModeloAberto?.(categorias)
 
@@ -314,6 +388,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
           window.removeEventListener('keyup', onKeyUp)
           window.removeEventListener('blur', onWindowBlur)
           controls.dispose()
+          material4d.dispose()
           scene.traverse((object) => {
             if (!(object instanceof THREE.Mesh)) return
             object.geometry?.dispose()
@@ -393,11 +468,32 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
       if (!cena) return false
       cena.ocultos.clear()
       for (const t of tiposIfc ?? []) cena.ocultos.add(t)
-      cena.aplicarVisibilidade(cena.ocultos)
+      cena.renderizar()
       return true
     },
 
     categorias: () => sceneRef.current?.categorias ?? [],
+
+    globalIdsDasCategorias: async (tiposIfc) => {
+      const cena = sceneRef.current
+      if (!cena) return []
+      const mapa = await cena.garantirMapa()
+      // A categoria ja conhece seus expressIDs; o mapa so troca a moeda.
+      return globalIdsDe(mapa, idsDosTipos(cena.categorias, tiposIfc ?? []))
+    },
+
+    aplicar4d: async (estados) => {
+      const cena = sceneRef.current
+      if (!cena) return false
+      // Garante o mapa ANTES de guardar o estado: sem ele o renderizar cairia
+      // no caminho sem 4D e a data escolhida nao apareceria na tela.
+      if (estados) await cena.garantirMapa()
+      const atual = sceneRef.current
+      if (!atual) return false
+      atual.estados4d = estados
+      atual.renderizar()
+      return true
+    },
   }), [])
 
   return (

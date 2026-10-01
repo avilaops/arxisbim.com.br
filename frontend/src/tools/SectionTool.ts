@@ -234,7 +234,7 @@ export class SectionTool extends BaseTool {
         console.log('✂️ All sections cleared');
         break;
       case 'delete':
-      case 'backspace':
+      case 'backspace': {
         // Remove última seção
         const sections = appController.sectionManager.getSections();
         if (sections.length > 0) {
@@ -243,6 +243,7 @@ export class SectionTool extends BaseTool {
           console.log('✂️ Last section removed');
         }
         break;
+      }
     }
   }
 

@@ -157,6 +157,22 @@ salvamento; (3) slider de data no viewer (do órfão), colorindo por estado;
 do S18; (5) prova em produção: dois cenários com cronogramas diferentes, o
 split mostra a diferença de prazo, reload mantém.
 
+**Estado em 19/09/2026:** os passos 1 a 4 estão entregues e no bundle
+(`documentation/sprints/S26-RESULT.md`). **Falta o passo 5**, e só ele fecha o
+marco: deploy (`./deploy/deploy.sh api && ./deploy/deploy.sh web`) e a prova em
+browser na aplicação publicada, com recarga de página.
+
+Duas coisas mudaram em relação ao "sem backend novo" acima, e as duas por
+necessidade medida, não por gosto:
+
+- **`activity_predecessors` não tinha rota de escrita.** Só o importador de
+  MSP/P6 gravava ali. Sem `POST /activities/:id/predecessors` o usuário monta
+  atividades soltas e o CPM não tem o que propagar — a tese do sprint ("atraso
+  em A empurra B") ficaria inalcançável pela tela.
+- **O CPM só existia dentro da comparação A×B.** A régua do viewer precisa das
+  mesmas datas; a leitura virou `schedule-cpm.service.ts`, usado pela comparação
+  e por `GET /schedules/:id/cpm`. É extração, não código novo duplicado.
+
 ## 4. Recomendação
 
 **S18 ★ caiu (04/09) e foi completado (08/09).** O texto original: era o próximo marco, tinha peça órfã para aproveitar

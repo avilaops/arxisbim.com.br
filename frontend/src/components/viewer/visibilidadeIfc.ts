@@ -104,14 +104,19 @@ export function todosExpressIds(model: any): number[] {
   return [...vistos]
 }
 
-/** expressIDs das categorias cujo tipo IFC esta em `tiposOcultos`. */
-export function idsOcultos(categorias: Categoria[], tiposOcultos: Iterable<string>): Set<number> {
-  const ocultos = new Set(tiposOcultos)
+/** expressIDs das categorias que tem algum destes tipos IFC. */
+export function idsDosTipos(categorias: Categoria[], tipos: Iterable<string>): Set<number> {
+  const procurados = new Set(tipos)
   const ids = new Set<number>()
   for (const c of categorias) {
-    if (c.tipos.some((t) => ocultos.has(t))) c.ids.forEach((id) => ids.add(id))
+    if (c.tipos.some((t) => procurados.has(t))) c.ids.forEach((id) => ids.add(id))
   }
   return ids
+}
+
+/** expressIDs das categorias cujo tipo IFC esta em `tiposOcultos`. */
+export function idsOcultos(categorias: Categoria[], tiposOcultos: Iterable<string>): Set<number> {
+  return idsDosTipos(categorias, tiposOcultos)
 }
 
 export const SUBSET_VISIVEL = 'arxis-visivel'
@@ -181,4 +186,68 @@ export function diferencaVisibilidade(
     saida.push({ nome: c.nome, tipos: c.tipos, visivelEm: ocultaEmA ? 'B' : 'A' })
   }
   return saida
+}
+
+/**
+ * GlobalId × expressID (S26).
+ *
+ * O 4D vincula elemento por **GlobalId** (identidade IFC, estável entre
+ * reexportações do modelo) e o viewer só conhece **expressID** (índice de
+ * arquivo, usado pelos subsets do web-ifc-three). Este é o descasamento que
+ * travava o S26: a ponte não existia em lugar nenhum vivo.
+ *
+ * A tradução vem de `getAllItemsOfType(..., verbose = true)`: uma chamada por
+ * tipo IFC devolve as propriedades de todos os elementos daquele tipo, com
+ * `GlobalId`. É ~24 chamadas contra uma por elemento, que em modelo real seriam
+ * milhares.
+ */
+export interface MapaIfc {
+  /** expressID → GlobalId. */
+  porExpress: Map<number, string>
+  /** GlobalId → expressIDs (um GlobalId pode repetir se o IFC estiver sujo). */
+  porGlobal: Map<string, number[]>
+}
+
+export async function mapearGlobalIds(manager: GerenteIfc, modelID: number): Promise<MapaIfc> {
+  const porExpress = new Map<number, string>()
+  const porGlobal = new Map<string, number[]>()
+
+  for (const { tipo } of TIPOS) {
+    let itens: any[] = []
+    try {
+      itens = (await manager.getAllItemsOfType(modelID, tipo, true)) as any[]
+    } catch {
+      continue
+    }
+    for (const item of itens ?? []) {
+      const expressId = Number(item?.expressID)
+      const globalId = String(item?.GlobalId?.value ?? item?.GlobalId ?? '').trim()
+      if (!Number.isFinite(expressId) || !globalId) continue
+      porExpress.set(expressId, globalId)
+      const lista = porGlobal.get(globalId)
+      if (lista) lista.push(expressId)
+      else porGlobal.set(globalId, [expressId])
+    }
+  }
+
+  return { porExpress, porGlobal }
+}
+
+/** expressIDs de um conjunto de GlobalIds (o que os subsets precisam). */
+export function expressIdsDe(mapa: MapaIfc, globalIds: Iterable<string>): Set<number> {
+  const ids = new Set<number>()
+  for (const globalId of globalIds) {
+    for (const expressId of mapa.porGlobal.get(globalId) ?? []) ids.add(expressId)
+  }
+  return ids
+}
+
+/** GlobalIds de um conjunto de expressIDs (o que o vínculo persiste). */
+export function globalIdsDe(mapa: MapaIfc, expressIds: Iterable<number>): string[] {
+  const globalIds = new Set<string>()
+  for (const expressId of expressIds) {
+    const globalId = mapa.porExpress.get(expressId)
+    if (globalId) globalIds.add(globalId)
+  }
+  return [...globalIds]
 }

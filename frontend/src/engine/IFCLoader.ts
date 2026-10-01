@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-// @ts-ignore - web-ifc-three pode não ter tipos completos
+// @ts-expect-error - web-ifc-three pode não ter tipos completos
 import { IFCLoader as ThreeIFCLoader } from 'web-ifc-three';
 import { LODSystem } from '../systems/LODSystem';
 import { LayerManager } from '../systems/layers/LayerManager';

@@ -176,7 +176,7 @@ export class CollaborationPanel {
           projectId: projectId,
         });
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
 
       this.showInviteLink(data.inviteLink);
       await this.connectWS(data.session.id, authToken, this.accessToken!);
@@ -225,7 +225,7 @@ export class CollaborationPanel {
           role: 'host',
         });
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
       this.updateCallButton();
       this.startPresence();
     } catch {
@@ -329,7 +329,7 @@ export class CollaborationPanel {
           roomId: this.sessionId || '',
         });
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
     });
   }
 
@@ -373,7 +373,7 @@ export class CollaborationPanel {
             role: 'guest',
           });
           (window as any).arxis?.flush();
-        } catch (e) {}
+        } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
         this.updateCallButton();
         this.startPresence();
       } catch {

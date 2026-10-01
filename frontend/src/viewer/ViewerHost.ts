@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { resolveWsUrl } from '../config/site.config';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FPSControls } from './FPSControls';
 import { ThirdPersonControls } from './ThirdPersonControls';
@@ -453,7 +454,7 @@ export class ViewerHost {
     // WebRTC Manager (opcional - só inicializa se usuário quiser multiplayer)
     // Usar variável de ambiente ou config
     const enableMultiplayer = import.meta.env.VITE_ENABLE_MULTIPLAYER === 'true';
-    const signalingServer = import.meta.env.VITE_SIGNALING_SERVER || 'ws://localhost:3002';
+    const signalingServer = import.meta.env.VITE_SIGNALING_SERVER || resolveWsUrl();
     
     if (enableMultiplayer) {
       this.initWebRTC(signalingServer);

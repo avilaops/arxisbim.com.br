@@ -4,8 +4,12 @@ import ViewerToolbar from '@/components/viewer/ViewerToolbar'
 import ProjectModelsPanel from '@/components/viewer/ProjectModelsPanel'
 import ViewerCanvas, { type ViewerHandle } from '@/components/viewer/ViewerCanvas'
 import ScenariosPanel from '@/components/viewer/ScenariosPanel'
+import CronogramaPanel from '@/components/viewer/CronogramaPanel'
+import ReguaTempo from '@/components/viewer/ReguaTempo'
 import type { Categoria } from '@/components/viewer/visibilidadeIfc'
+import { estadosNaData, janelaDoCronograma, resumirEstados } from '@/components/viewer/estado4d'
 import { scenariosService, type Scenario } from '@/services/scenarios.service'
+import { schedulesService, type Cronograma } from '@/services/schedules.service'
 import ViewerPropertiesPanel from '@/components/viewer/ViewerPropertiesPanel'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
@@ -113,6 +117,16 @@ export default function Viewer3DPage() {
   // Visibilidade por categoria IFC (fatia do S10 para o S18)
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [ocultos, setOcultos] = useState<string[]>([])
+
+  // --- S26: cronograma 4D --------------------------------------------------
+  const [cronogramaAberto, setCronogramaAberto] = useState(false)
+  const [cronograma, setCronograma] = useState<Cronograma | null>(null)
+  const [carregandoCronograma, setCarregandoCronograma] = useState(false)
+  const [salvandoCronograma, setSalvandoCronograma] = useState(false)
+  const [regua, setRegua] = useState(false)
+  const [dataRegua, setDataRegua] = useState('')
+  const [tocando, setTocando] = useState(false)
+  const [velocidade, setVelocidade] = useState(1)
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId)
   const selectedModel = models.find((model) => model.id === selectedModelId)
@@ -293,6 +307,196 @@ export default function Viewer3DPage() {
     }
   }
 
+  // --- S26: cronograma 4D --------------------------------------------------
+
+  const carregarCronograma = useCallback(async (projectId: string, scenarioId: string) => {
+    if (!projectId || !scenarioId) {
+      setCronograma(null)
+      return
+    }
+    setCarregandoCronograma(true)
+    try {
+      setCronograma(await schedulesService.doCenario(projectId, scenarioId))
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao carregar cronograma.')
+    } finally {
+      setCarregandoCronograma(false)
+    }
+  }, [])
+
+  // Trocar de cenário troca de cronograma: é o cenário que tem prazo, e é isso
+  // que faz A e B poderem terminar em datas diferentes.
+  useEffect(() => {
+    setRegua(false)
+    setTocando(false)
+    setDataRegua('')
+    void carregarCronograma(selectedProjectId, activeScenarioId)
+  }, [selectedProjectId, activeScenarioId, carregarCronograma])
+
+  const janela = janelaDoCronograma(cronograma?.activities ?? [])
+
+  /** Traduz categoria IFC para GlobalId e grava o vínculo da atividade. */
+  const vincularCategoria = async (activityId: string, tiposIfc: string[]) => {
+    const viewer = viewerRef.current
+    if (!viewer?.pronto()) {
+      setError('Abra o modelo IFC antes de vincular elementos.')
+      return
+    }
+    setSalvandoCronograma(true)
+    try {
+      const globalIds = await viewer.globalIdsDasCategorias(tiposIfc)
+      if (!globalIds.length) {
+        setError('Nenhum elemento desta categoria tem GlobalId no modelo.')
+        return
+      }
+      const gravados = await schedulesService.vincularElementos(activityId, globalIds)
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+      setMessage(`${gravados} elemento(s) vinculados à atividade.`)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao vincular elementos.')
+    } finally {
+      setSalvandoCronograma(false)
+    }
+  }
+
+  const criarCronograma = async (nome: string, dataInicio: string) => {
+    if (!selectedProjectId || !activeScenarioId) return
+    setSalvandoCronograma(true)
+    setError(null)
+    try {
+      const criado = await schedulesService.criar(selectedProjectId, nome, dataInicio, activeScenarioId)
+      setCronograma({ ...criado, activities: [] })
+      setMessage(`Cronograma "${criado.name}" criado.`)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao criar cronograma.')
+    } finally {
+      setSalvandoCronograma(false)
+    }
+  }
+
+  const apagarCronograma = async () => {
+    if (!cronograma) return
+    setSalvandoCronograma(true)
+    try {
+      await schedulesService.apagar(cronograma.id)
+      setCronograma(null)
+      setRegua(false)
+      setTocando(false)
+      void viewerRef.current?.aplicar4d(null)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao apagar cronograma.')
+    } finally {
+      setSalvandoCronograma(false)
+    }
+  }
+
+  const adicionarAtividade = async (dados: { nome: string; inicio: string; fim: string; tiposIfc: string[] }) => {
+    if (!cronograma) return
+    setSalvandoCronograma(true)
+    setError(null)
+    try {
+      const atividade = await schedulesService.criarAtividade(cronograma.id, {
+        name: dados.nome,
+        plannedStart: dados.inicio,
+        plannedEnd: dados.fim,
+        sortOrder: (cronograma.activities?.length ?? 0) + 1,
+      })
+      // O vínculo entra na mesma ação: atividade sem elemento não muda nada na
+      // tela, e pedir dois passos ao usuário só adia o erro.
+      if (dados.tiposIfc.length) {
+        const viewer = viewerRef.current
+        const globalIds = viewer?.pronto() ? await viewer.globalIdsDasCategorias(dados.tiposIfc) : []
+        if (globalIds.length) await schedulesService.vincularElementos(atividade.id, globalIds)
+      }
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+      setMessage(`Atividade "${dados.nome}" cadastrada.`)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao cadastrar atividade.')
+    } finally {
+      setSalvandoCronograma(false)
+    }
+  }
+
+  const apagarAtividade = async (activityId: string) => {
+    try {
+      await schedulesService.apagarAtividade(activityId)
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao apagar atividade.')
+    }
+  }
+
+  const alterarDatas = async (activityId: string, datas: { inicio: string; fim: string }) => {
+    if (datas.fim < datas.inicio) {
+      setError('O fim da atividade não pode ser antes do início.')
+      return
+    }
+    try {
+      await schedulesService.atualizarAtividade(activityId, {
+        plannedStart: datas.inicio,
+        plannedEnd: datas.fim,
+      })
+      // Relê com CPM: mudar uma data pode empurrar as sucessoras, e a régua
+      // precisa refletir isso na mesma ação.
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao alterar datas.')
+    }
+  }
+
+  const vincularPredecessora = async (activityId: string, predecessorId: string) => {
+    try {
+      await schedulesService.vincularPredecessora(activityId, predecessorId)
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao encadear atividades.')
+    }
+  }
+
+  const desvincularPredecessora = async (activityId: string, predecessorId: string) => {
+    try {
+      await schedulesService.desvincularPredecessora(activityId, predecessorId)
+      await carregarCronograma(selectedProjectId, activeScenarioId)
+    } catch (erro) {
+      setError(erro instanceof Error ? erro.message : 'Falha ao soltar dependência.')
+    }
+  }
+
+  const alternarRegua = () => {
+    if (regua) {
+      setRegua(false)
+      setTocando(false)
+      return
+    }
+    if (!janela) {
+      setError('Cadastre uma atividade com datas antes de ligar a régua.')
+      return
+    }
+    setDataRegua((atual) => atual || janela.inicio)
+    setRegua(true)
+  }
+
+  // A data manda na tela: cada mudança repinta o modelo pelo estado de cada
+  // elemento (não iniciado some, em obra ganha cor, concluído fica normal).
+  //
+  // O atraso curto existe porque arrastar a régua dispara um evento por pixel e
+  // cada repintura recria subsets de geometria. Sem ele, um modelo grande trava
+  // enquanto o dedo está no slider — é o risco que o doc do S26 já previa. O
+  // rótulo da data continua instantâneo; só a cena espera o arrasto parar.
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer?.pronto()) return
+    if (!regua || !dataRegua || !cronograma?.activities?.length) {
+      void viewer.aplicar4d(null)
+      return
+    }
+    const atividades = cronograma.activities
+    const espera = setTimeout(() => {
+      void viewer.aplicar4d(estadosNaData(atividades, dataRegua))
+    }, 120)
+    return () => clearTimeout(espera)
+  }, [regua, dataRegua, cronograma, selectedModelId])
+
   const selectProject = (projectId: string) => {
     setSelectedProjectId(projectId)
     setSelectedModelId('')
@@ -408,6 +612,7 @@ export default function Viewer3DPage() {
           onToggleProjects={() => setProjectsOpen((open) => !open)}
           onToggleProperties={() => setPropertiesOpen((open) => !open)}
           onToggleScenarios={() => setScenariosOpen((open) => !open)}
+          onToggleCronograma={() => setCronogramaAberto((open) => !open)}
           hasModel={Boolean(selectedModel)}
           onResetView={() => { viewerRef.current?.redefinirVista() }}
           fullscreen={fullscreen}
@@ -456,11 +661,55 @@ export default function Viewer3DPage() {
             projectName={selectedProject?.name}
             modelId={selectedModel?.id}
             modelName={selectedModel?.originalName}
-            onModeloAberto={(lista) => { setCategorias(lista); setOcultos([]) }}
+            onModeloAberto={(lista) => { setCategorias(lista); setOcultos([]); setRegua(false); setTocando(false) }}
           />
           <ViewerPropertiesPanel
             open={propertiesOpen}
             onClose={() => setPropertiesOpen(false)}
+          />
+          {/* S26: a regua fica sobre o canvas, como a barra de um player. Ela
+              so existe com cronograma ligado, para nao roubar area do modelo. */}
+          {regua && janela && cronograma?.activities?.length ? (
+            <ReguaTempo
+              janela={janela}
+              data={dataRegua || janela.inicio}
+              onChange={setDataRegua}
+              tocando={tocando}
+              onTocandoChange={setTocando}
+              velocidade={velocidade}
+              onVelocidadeChange={setVelocidade}
+              resumo={(() => {
+                const resumo = resumirEstados(estadosNaData(cronograma.activities, dataRegua || janela.inicio))
+                return (
+                  <>
+                    <span className="regua-tempo__estado regua-tempo__estado--ativo">{resumo.ativo} em obra</span>
+                    <span className="regua-tempo__estado">{resumo.concluido} concluído(s)</span>
+                    <span className="regua-tempo__estado regua-tempo__estado--futuro">{resumo.naoIniciado} a fazer</span>
+                  </>
+                )
+              })()}
+            />
+          ) : null}
+          <CronogramaPanel
+            open={cronogramaAberto}
+            onClose={() => setCronogramaAberto(false)}
+            cenarioNome={scenarios.find((item) => item.id === activeScenarioId)?.name ?? ''}
+            temCenarioAtivo={Boolean(activeScenarioId)}
+            viewerPronto={Boolean(selectedModel)}
+            cronograma={cronograma}
+            carregando={carregandoCronograma}
+            salvando={salvandoCronograma}
+            categorias={categorias}
+            onCriarCronograma={(nome, dataInicio) => void criarCronograma(nome, dataInicio)}
+            onApagarCronograma={() => void apagarCronograma()}
+            onAdicionarAtividade={(dados) => void adicionarAtividade(dados)}
+            onApagarAtividade={(id) => void apagarAtividade(id)}
+            onAlterarDatas={(id, datas) => void alterarDatas(id, datas)}
+            onVincularCategoria={(id, tipos) => void vincularCategoria(id, tipos)}
+            onVincularPredecessora={(id, predecessorId) => void vincularPredecessora(id, predecessorId)}
+            onDesvincularPredecessora={(id, predecessorId) => void desvincularPredecessora(id, predecessorId)}
+            regua={regua}
+            onToggleRegua={alternarRegua}
           />
           <ScenariosPanel
             open={scenariosOpen}

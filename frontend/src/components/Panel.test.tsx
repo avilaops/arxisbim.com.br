@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Panel } from './Panel';
+import { vi } from 'vitest';
 
 describe('Panel Component', () => {
   it('renders title when provided', () => {
@@ -14,7 +15,7 @@ describe('Panel Component', () => {
   });
 
   it('calls onClose when close button is clicked', () => {
-    const handleClose = jest.fn();
+    const handleClose = vi.fn();
     render(<Panel title="Test" onClose={handleClose}>Content</Panel>);
     const closeButton = screen.getByLabelText('Fechar painel');
     fireEvent.click(closeButton);

@@ -8,7 +8,7 @@ export function mountSidebarPanels(viewerHost: ViewerHost) {
   // Exemplo: montar painel de cenários
   const scenariosMount = document.getElementById('scenarios-panel-mount');
   if (scenariosMount) {
-    // @ts-ignore - Supondo que ScenariosPanel já está disponível globalmente ou importado
+    // @ts-expect-error - Supondo que ScenariosPanel já está disponível globalmente ou importado
     new window.ScenariosPanel(scenariosMount, { viewerHost });
   }
   // TODO: Montar demais painéis (SectionsPanel, MeasurementsPanel, etc)

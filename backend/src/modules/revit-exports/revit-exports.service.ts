@@ -18,8 +18,7 @@ import { validateFileType, buildFileKey } from '../files/files.service.js';
 import { assertIfcSchemaSupported } from '../ifc/ifc-schema-support.js';
 import { ProjectsService } from '../projects/projects.service.js';
 import { ModelsService } from '../models/models.service.js';
-
-const FRONTEND_URL = (process.env.FRONTEND_URL ?? 'https://arxisvr.avilaops.com').replace(/\/$/, '');
+import { FRONTEND_URL } from '../../core/config/domains.js';
 
 export interface CreateExportInput {
   tenantId: string;
