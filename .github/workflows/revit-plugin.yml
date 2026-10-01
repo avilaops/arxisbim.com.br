@@ -1,0 +1,44 @@
+name: Revit Plugin CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['revit-plugin/**']
+  pull_request:
+    paths: ['revit-plugin/**']
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: revit-plugin
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ArxisVR.RevitPlugin.slnx
+
+      - name: Build
+        run: dotnet build ArxisVR.RevitPlugin.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ArxisVR.RevitPlugin.slnx --configuration Release --no-build --verbosity normal
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arxisvr-revit-plugin
+          path: |
+            revit-plugin/ArxisVR.RevitPlugin/bin/Release/ArxisVR.RevitPlugin.dll
+            revit-plugin/ArxisVR.RevitPlugin/bin/Release/ArxisVR.addin
+            revit-plugin/ArxisVR.RevitPlugin/bin/Release/Newtonsoft.Json.dll
+            revit-plugin/ArxisVR.RevitPlugin/bin/Release/Serilog.dll
+            revit-plugin/ArxisVR.RevitPlugin/bin/Release/Serilog.Sinks.File.dll

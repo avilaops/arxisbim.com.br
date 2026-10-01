@@ -108,7 +108,7 @@ export class WorkspaceTopBar {
     brand.appendChild(this.createIcon(Box));
 
     const brandText = document.createElement('span');
-    brandText.textContent = 'ArxisVR';
+    brandText.textContent = 'Arxis';
     brand.appendChild(brandText);
 
     const breadcrumb = document.createElement('nav');

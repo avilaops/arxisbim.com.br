@@ -2,7 +2,7 @@
  * FiscalService — emissão de Nota Fiscal de Serviço (NFS-e).
  *
  * ⚠️ IMPORTANTE (Brasil):
- * - O Stripe NÃO emite NFS-e. Ele só cobra. A nota é emitida por você (ou por
+ * - O Mercado Pago NÃO emite NFS-e. Ele só cobra. A nota é emitida por você (ou por
  *   um integrador fiscal: NFE.io, eNotas, Asaas, etc.) na sua prefeitura.
  * - NFS-e exige CNPJ + inscrição municipal. Pessoa física (CPF) normalmente
  *   NÃO emite NFS-e. Por isso este serviço nasce DESLIGADO.

@@ -1,0 +1,91 @@
+{
+  "name": "Arxis - Blog para pautas e prospeccao",
+  "nodes": [
+    {
+      "id": "arxis-manual-v1",
+      "name": "Iniciar revisao editorial",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "arxis-rss-v1",
+      "name": "Ler artigos publicados",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "url": "https://arxisvr.avilaops.com/feed.xml",
+        "options": {}
+      }
+    },
+    {
+      "id": "arxis-normalize-v1",
+      "name": "Preparar 3 pautas unicas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const origin = 'https://arxisvr.avilaops.com';\nconst feedUrl = origin + '/feed.xml';\nconst byUrl = new Map();\nconst now = Date.now();\nconst clean = (value) => typeof value === 'string'\n  ? value.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim()\n  : '';\nfor (const item of $input.all()) {\n  const source = item.json ?? {};\n  const match = clean(source.link).match(/^https:\\/\\/arxisvr\\.avilaops\\.com\\/blog\\/([a-z0-9]+(?:-[a-z0-9]+)*)\\/?(?:[?#].*)?$/);\n  const title = clean(source.title).slice(0, 220);\n  const published = Date.parse(source.isoDate || source.pubDate || '');\n  if (!match || !title || !Number.isFinite(published) || published > now) continue;\n  const url = origin + '/blog/' + match[1];\n  const candidate = {\n    chave: 'arxis-blog-v1|' + url,\n    titulo: title,\n    url,\n    publicadoEm: new Date(published).toISOString(),\n    resumo: clean(source.contentSnippet || source.description || source.content).slice(0, 700),\n    fonte: feedUrl,\n    estado: 'candidato para revisao editorial',\n    redes: {\n      instagram: 'https://www.instagram.com/arxis.bim',\n      formatoSugerido: 'Carrossel educativo ou roteiro curto, conforme a planilha de 360 dias',\n      direcao: 'Extrair uma duvida pratica do artigo e mostrar o caminho para responde-la. Manter logo original, azul petroleo, branco e laranja. Avatar Arxis quando ajudar a explicacao.',\n      chamada: 'Confira o artigo completo no blog Arxis.',\n    },\n    prospeccao: {\n      publico: 'Escritorios de arquitetura, engenharia e coordenacao BIM',\n      criterio: 'Selecionar empresas com necessidade observavel de revisar modelos ou comunicar decisoes de projeto.',\n      preparacao: 'Registrar empresa, pagina publica de origem, necessidade observada e relacao com o artigo antes de preparar abordagem individual.',\n      proximoPasso: 'Revisar a pauta e preparar uma abordagem util ao contexto do contato.',\n    },\n    revisao: ['Conferir artigo fonte e recursos realmente disponiveis', 'Consultar a planilha antes de criar nova arte', 'Evitar promessas de economia ou resultados sem evidencia', 'Aprovar conteudo e destinatario antes de qualquer envio'],\n  };\n  const previous = byUrl.get(url);\n  if (!previous || previous.publicadoEm < candidate.publicadoEm) byUrl.set(url, candidate);\n}\nreturn [...byUrl.values()]\n  .sort((a, b) => b.publicadoEm.localeCompare(a.publicadoEm) || a.url.localeCompare(b.url))\n  .slice(0, 3)\n  .map((json) => ({ json }));"
+      }
+    },
+    {
+      "id": "arxis-note-v1",
+      "name": "Como usar",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        160,
+        40
+      ],
+      "parameters": {
+        "content": "## Arxis - planejamento editorial manual\n\nExecute depois que o feed estiver publicado. A saida lista ate 3 artigos recentes, sem duplicatas de URL, com briefing para redes e preparacao comercial.\n\nO fluxo nao publica, nao envia mensagens, nao agenda e nao cria tarefas. Consulte a planilha de 360 dias e revise cada pauta antes de produzir. Exportar a saida JSON cria um briefing reaproveitavel.\n\nChave estavel: arxis-blog-v1|URL. Futuras gravacoes devem fazer upsert por essa chave.",
+        "height": 210,
+        "width": 890,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Iniciar revisao editorial": {
+      "main": [
+        [
+          {
+            "node": "Ler artigos publicados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler artigos publicados": {
+      "main": [
+        [
+          {
+            "node": "Preparar 3 pautas unicas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "errorWorkflow": "dtk7UwKorqvDIqfu",
+    "saveManualExecutions": true
+  }
+}

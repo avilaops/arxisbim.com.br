@@ -42,11 +42,11 @@ export default function LoginPage() {
       const nextParam = new URLSearchParams(window.location.search).get('next');
       const next = nextParam && nextParam.charAt(0) === '/' && nextParam.charAt(1) !== '/'
         ? nextParam
-        : '/dashboard.html';
+        : '/dashboard';
       try {
         (window as any).arxis?.track('login_success');
         (window as any).arxis?.flush();
-      } catch (e) {}
+      } catch (e) { /* ignora: falha aqui não impede o fluxo */ }
       window.location.href = next;
     } catch (err: any) {
       setError(err?.message || 'Email ou senha incorretos.');
@@ -60,7 +60,7 @@ export default function LoginPage() {
       <section className="auth-card slide-in">
         <div className="auth-header">
           <div className="auth-brand-mark">BIM</div>
-          <h1 className="auth-title">ArxisVR</h1>
+          <h1 className="auth-title">Arxis</h1>
           <p className="auth-subtitle">Entre com sua conta para acessar seus projetos BIM</p>
         </div>
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
           <label className="auth-field">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span className="auth-label">Senha</span>
-              <a className="auth-link" href="/forgot-password.html" style={{ fontSize: 13 }}>
+              <a className="auth-link" href="/forgot-password" style={{ fontSize: 13 }}>
                 Esqueci minha senha
               </a>
             </div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
 
         <p className="auth-footer-text">
           Não tem conta?{' '}
-          <a className="auth-link" href="/register.html">
+          <a className="auth-link" href="/register">
             Criar conta
           </a>
         </p>

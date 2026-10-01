@@ -35,7 +35,7 @@ interface WirePayloadEvent {
 
 function resolveTrackUrl(baseUrl?: string): string {
   const env = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || undefined;
-  let base = (baseUrl || env || 'http://localhost:3001').replace(/\/$/, '');
+  const base = (baseUrl || env || 'http://localhost:3001').replace(/\/$/, '');
   // base pode já vir com /api/v1 — evita /api/v1/api/v1/track.
   if (base.endsWith('/api/v1')) return `${base}/track`;
   return `${base}/api/v1/track`;

@@ -1,7 +1,9 @@
 # S15 · Busca BIM
 
 **Fase:** Metadados BIM  
-**Status:** Concluído  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Modulo bim-query completo. Sem campo de busca na UI.
 **Depende de:** S13 (propriedades no banco com índice GIN)  
 **Bloqueia:** S20 (takeoff precisa de filtro por tipo), S28 (mapeamento de atividades por código WBS)
 
@@ -11,13 +13,13 @@
 
 Busca por GUID, nome, tipo IFC e valor de PropertySet em < 500ms em modelos de 50.000 elementos.
 
-> **Nota para o agente:** Esta busca **não é só uma feature de UI** — é o motor de seleção que o mapeamento automático de atividades 4D (S28) usa para resolver "todos os `IfcBeam` do 3º pavimento" em conjuntos de elementos. Precisão e determinismo da query importam tanto quanto a velocidade.
+> **Nota para o agente:** Esta busca **não é só uma feature de UI**, é o motor de seleção que o mapeamento automático de atividades 4D (S28) usa para resolver "todos os `IfcBeam` do 3º pavimento" em conjuntos de elementos. Precisão e determinismo da query importam tanto quanto a velocidade.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros ou não fazem parte deste sprint — **não implementar aqui**:
+Pertencem a sprints futuros ou não fazem parte deste sprint, **não implementar aqui**:
 
 - Elasticsearch / engine de busca externa (Postgres basta agora)
 - Busca semântica / linguagem natural
@@ -99,7 +101,7 @@ Build · type-check · lint · testes passam · sem regressões conhecidas · do
 - [x] Busca por GUID retorna elemento correto em < 100ms
 - [x] Busca por nome parcial (ex.: "pilar") retorna todos os `IfcColumn` com esse nome
 - [x] Busca por PropertySet `IsExternal=true` filtra corretamente
-- [x] Query é determinística (mesma entrada → mesma ordem de resultados) — pré-requisito do S28
+- [x] Query é determinística (mesma entrada → mesma ordem de resultados), pré-requisito do S28
 - [x] Resultado destaca elemento no viewer ao clicar
 - [x] Paginação de resultados (25/página), nunca renderiza 200 de uma vez
 - [x] Performance < 500ms em modelo de 50.000 elementos

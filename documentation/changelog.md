@@ -1,7 +1,29 @@
-# Changelog — ArxisVR
+# Changelog: ArxisVR
 
 Registro de decisões relevantes e mudanças de direção.
 Uma entrada por decisão. Atualizar este arquivo quando uma decisão anterior for substituída.
+
+---
+
+## 2026-09-17
+
+### Domínio próprio: `arxisbim.com.br` passa a ser o canônico
+**Decisão:** o produto sai de `arxisvr.avilaops.com` para `arxisbim.com.br`
+(API em `api.arxisbim.com.br`), com o domínio antigo respondendo durante uma
+janela de transição: o site redireciona 308, a API continua servindo sem
+redirecionar.
+**Motivo:** subdomínio de `avilaops.com` faz o produto parecer módulo interno da
+casa. O nome comercial já é Arxis (`@arxis.bim` no Instagram), e domínio próprio
+é pré-requisito para verificar domínio na Meta, no Search Console e no remetente
+de e-mail. A API antiga não redireciona porque 3xx quebra preflight de CORS e os
+`POST` do plugin do Revit já instalado.
+**Impacto:** endereço público deixou de ser literal no código —
+`frontend/src/config/site.config.ts` e `backend/src/core/config/domains.ts` são
+os dois pontos de verdade, e os scripts de deploy leem `ARXISVR_SITE_URL` /
+`ARXISVR_API_URL`. O default de CORS deixou de ser `*` (incompatível com
+`credentials: true`) e passou a ser a allowlist dos domínios do produto.
+Execução em `documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md`; nada muda
+em produção antes do DNS e do Caddyfile.
 
 ---
 

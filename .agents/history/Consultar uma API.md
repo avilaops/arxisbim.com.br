@@ -9,7 +9,7 @@ Read [](file:///d%3A/arxisvr/frontend/package.json#1-1), lines 1 to 50
 ## Há **3 formas** de consultar API no projeto:
 
 ### **1️⃣ HTTPClient (Recomendado - Frontend)**
-src/api/v1/client.ts — Cliente HTTP principal com retry, autenticação JWT e tratamento de erros:
+src/api/v1/client.ts, Cliente HTTP principal com retry, autenticação JWT e tratamento de erros:
 
 ```typescript
 import { getAPIClient } from '@/api/v1/client';
@@ -41,7 +41,7 @@ await apiService.post('/api/v1/projects', { name: 'Project' });
 ```
 
 ### **3️⃣ ArxisCoreClient (Legacy)**
-src/shared/services/arxisCoreClient.ts — Para integração com APIs externas:
+src/shared/services/arxisCoreClient.ts, Para integração com APIs externas:
 
 ```typescript
 import { arxisCoreClient } from '@/shared/services/arxisCoreClient';
@@ -53,7 +53,7 @@ await arxisCoreClient.getProjects();
 ---
 
 **Config Base:**
-- URL base: src/config/api.config.ts — lê de `VITE_API_URL` (.env.local = `http://localhost:3001`)
+- URL base: src/config/api.config.ts, lê de `VITE_API_URL` (.env.local = `http://localhost:3001`)
 - Token JWT armazenado em `localStorage.arxisvr_token`
 - Timeout padrão: 15s
 
@@ -71,7 +71,7 @@ Read [](file:///d%3A/arxisvr/backend/src/shared/observability/index.ts)
 
 Searched for regex `Sentry.capture|Sentry.post|Sentry.http`, 2 results
 
-## **SENTRY_API_KEY** — Uso & Consultas
+## **SENTRY_API_KEY**: Uso & Consultas
 
 Sentry tem **2 usos** diferentes:
 
@@ -86,7 +86,7 @@ SENTRY_DSN=https://<key>@sentry.io/<project-id>
 Depois erros são capturados automaticamente via index.ts:
 
 ```typescript
-// Já integrado — qualquer erro não tratado é enviado automaticamente
+// Já integrado, qualquer erro não tratado é enviado automaticamente
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
@@ -111,9 +111,9 @@ console.log(issues);
 ```
 
 **Endpoints úteis:**
-- `GET /api/0/projects/{org}/{project}/issues/` — Listar issues
-- `POST /api/0/projects/{org}/{project}/releases/` — Criar release
-- `GET /api/0/organizations/{org}/members/` — Listar membros
+- `GET /api/0/projects/{org}/{project}/issues/` - Listar issues
+- `POST /api/0/projects/{org}/{project}/releases/` - Criar release
+- `GET /api/0/organizations/{org}/members/` - Listar membros
 
 ---
 
@@ -467,7 +467,7 @@ Roda assim:
 
 ---
 
-**Recomendo:** use a **Opção 1 com curl** — é rápido, não precisa instalar nada a mais.
+**Recomendo:** use a **Opção 1 com curl**, é rápido, não precisa instalar nada a mais.
 
 Quer que monte o comando exato com teu org/project do Sentry?
 
@@ -537,7 +537,7 @@ curl.exe -H "Authorization: Bearer $SENTRY_API_KEY" `
   https://sentry.io/api/0/organizations/
 ```
 
-Tenta a primeira opção — é mais confiável no PowerShell. Quer ajuda pra descobrir teu org/project no Sentry?
+Tenta a primeira opção, é mais confiável no PowerShell. Quer ajuda pra descobrir teu org/project no Sentry?
 
 User: ta, mas eu nao quero mostrar a env via terminal, como faço? 
 
@@ -991,7 +991,7 @@ Me avisa o output!
 
 User: 
 
-Markdown(4).md coladoArquivosei que tem .env exposta, mas estou tentando consutlar via terminal e ta dificil! O problema já ficou claro: não é o PowerShell nem o curl — é o arquivo .env / nome da variável.Você está tentando ler:SENTRY_API_KEYMas toda vez que lista o arquivo, aparece só:SENTRY_DSN=SENTRY_ID_CLIENTE=...SENTRY_SECRET_KEY=...SENTRY_URL_AUTORIZACAO=...SENTRY_URL_TOKEN=...Ou seja: o .env.local que o PowerShell está lendo NÃO contém SENTRY_API_KEY.Por isso isto retorna null:Get-Content .env.local | Select-String "SENTRY_API_KEY"e depois quebra no .ToString().Vamos diagnosticar sem adivinharRoda exatamente isso:pwdGet-ChildItem -Force | Where-Object {$_.Name -like ".env*"}Quero ver:Em qual pasta você está (pwd)Quais arquivos env existem aliExemplo:.env.env.local.env.production.env.production.localPorque você disse:salvei no .env.production tambémMas o comando continua lendo:Get-Content .env.localTalvez você salvou em .env.production, mas está tentando ler de .env.local.Se salvou em .env.productionEntão teste:Get-Content .env.production | Select-String "SENTRY_API_KEY"Se aparecer, então use:$key = (  Get-Content .env.production |  Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()Outra possibilidade (bem comum)Talvez a variável foi salva assim:SENTRY_API_KEY = abc123(com espaços)ou com aspas:SENTRY_API_KEY="abc123"Nesse caso, o split simples pode falhar.Teste mostrando a linha exata:Get-Content .env.production | Select-String "SENTRY_API_KEY" | ForEach-Object { $_.Line }Também preciso te alertar sobre outra coisa importanteVocê colou aqui um token Sentry que parece real (sntryu_...).Se esse token for válido, revoga ele agora no Sentry e gera outro.Mesmo que seja só de teste, tratar como comprometido é o mais seguro.Me manda só o output de:pwdGet-ChildItem -Force | Where-Object {$_.Name -like ".env*"}Com isso eu te digo exatamente qual comando usar.PS D:\arxisvr&gt; pwd
+Markdown(4).md coladoArquivosei que tem .env exposta, mas estou tentando consutlar via terminal e ta dificil! O problema já ficou claro: não é o PowerShell nem o curl, é o arquivo .env / nome da variável.Você está tentando ler:SENTRY_API_KEYMas toda vez que lista o arquivo, aparece só:SENTRY_DSN=SENTRY_ID_CLIENTE=...SENTRY_SECRET_KEY=...SENTRY_URL_AUTORIZACAO=...SENTRY_URL_TOKEN=...Ou seja: o .env.local que o PowerShell está lendo NÃO contém SENTRY_API_KEY.Por isso isto retorna null:Get-Content .env.local | Select-String "SENTRY_API_KEY"e depois quebra no .ToString().Vamos diagnosticar sem adivinharRoda exatamente isso:pwdGet-ChildItem -Force | Where-Object {$_.Name -like ".env*"}Quero ver:Em qual pasta você está (pwd)Quais arquivos env existem aliExemplo:.env.env.local.env.production.env.production.localPorque você disse:salvei no .env.production tambémMas o comando continua lendo:Get-Content .env.localTalvez você salvou em .env.production, mas está tentando ler de .env.local.Se salvou em .env.productionEntão teste:Get-Content .env.production | Select-String "SENTRY_API_KEY"Se aparecer, então use:$key = (  Get-Content .env.production |  Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()Outra possibilidade (bem comum)Talvez a variável foi salva assim:SENTRY_API_KEY = abc123(com espaços)ou com aspas:SENTRY_API_KEY="abc123"Nesse caso, o split simples pode falhar.Teste mostrando a linha exata:Get-Content .env.production | Select-String "SENTRY_API_KEY" | ForEach-Object { $_.Line }Também preciso te alertar sobre outra coisa importanteVocê colou aqui um token Sentry que parece real (sntryu_...).Se esse token for válido, revoga ele agora no Sentry e gera outro.Mesmo que seja só de teste, tratar como comprometido é o mais seguro.Me manda só o output de:pwdGet-ChildItem -Force | Where-Object {$_.Name -like ".env*"}Com isso eu te digo exatamente qual comando usar.PS D:\arxisvr&gt; pwd
 
 Path      
 ----      
@@ -1022,7 +1022,7 @@ PS D:\arxisvr&gt; $key = (
 &gt;&gt; ).ToString().Split("=")[1].Trim()
 PS D:\arxisvr&gt; Get-Content .env.production | Select-String "SENTRY_API_KEY" | ForEach-Object { $_.Line }
 SENTRY_API_KEY=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
-PS D:\arxisvr&gt; Boa — agora avançamos bastante.Seu PowerShell conseguiu ler a chave de .env.production sem erro:$key = (  Get-Content .env.production |  Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()Se esse comando não mostrou erro, então:✅ arquivo correto encontrado✅ variável existe✅ token foi extraído para $keyAgora falta testar se o token é válido para a API.Roda isto:$key.LengthSe retornar algo tipo 70–100+ caracteres, ótimo.Depois:$headers = @{    Authorization = "Bearer $key"}Invoke-RestMethod `  -Uri "https://sentry.io/api/0/organizations/" `  -Headers $headersSe der erro, há 3 possibilidades1) Token inválido / expiradoSentry responde com algo como:{"detail":"Invalid token"}2) Não é API token — é OAuth secret/clientIsso me chamou atenção no seu .env:SENTRY_ID_CLIENTE=...SENTRY_SECRET_KEY=...SENTRY_API_KEY=sntryu_...Você também tem:client idclient secretoauth URLsIsso sugere que seu sistema usa OAuth App, não necessariamente Personal Auth Token.No  existem dois tipos:Auth Token pessoal → funciona com BearerOAuth client secret → NÃO funciona com BearerO prefixo:sntryu_me parece suspeito — tokens de auth do Sentry costumam aparecer em formatos diferentes dependendo do tipo.3) Token sem scopeMesmo válido, ele precisa de permissões como:org:readproject:readevent:readSem isso, a API recusa.Quero confirmar uma coisaRoda este comando e me mostra só o resultado (não a chave):$key.Substring(0,8)$key.LengthExemplo de output:sntryu_d73Isso me ajuda a identificar que tipo de token você tem sem expor o segredo inteiro.
+PS D:\arxisvr&gt; Boa, agora avançamos bastante.Seu PowerShell conseguiu ler a chave de .env.production sem erro:$key = (  Get-Content .env.production |  Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()Se esse comando não mostrou erro, então:✅ arquivo correto encontrado✅ variável existe✅ token foi extraído para $keyAgora falta testar se o token é válido para a API.Roda isto:$key.LengthSe retornar algo tipo 70–100+ caracteres, ótimo.Depois:$headers = @{    Authorization = "Bearer $key"}Invoke-RestMethod `  -Uri "https://sentry.io/api/0/organizations/" `  -Headers $headersSe der erro, há 3 possibilidades1) Token inválido / expiradoSentry responde com algo como:{"detail":"Invalid token"}2) Não é API token, é OAuth secret/clientIsso me chamou atenção no seu .env:SENTRY_ID_CLIENTE=...SENTRY_SECRET_KEY=...SENTRY_API_KEY=sntryu_...Você também tem:client idclient secretoauth URLsIsso sugere que seu sistema usa OAuth App, não necessariamente Personal Auth Token.No  existem dois tipos:Auth Token pessoal → funciona com BearerOAuth client secret → NÃO funciona com BearerO prefixo:sntryu_me parece suspeito, tokens de auth do Sentry costumam aparecer em formatos diferentes dependendo do tipo.3) Token sem scopeMesmo válido, ele precisa de permissões como:org:readproject:readevent:readSem isso, a API recusa.Quero confirmar uma coisaRoda este comando e me mostra só o resultado (não a chave):$key.Substring(0,8)$key.LengthExemplo de output:sntryu_d73Isso me ajuda a identificar que tipo de token você tem sem expor o segredo inteiro.
 
 
 
@@ -1254,9 +1254,9 @@ $issues | Select-Object -Property @{N="ID";E={$_.id}}, @{N="Title";E={$_.title}}
 ```
 
 **Qual platform você quer usar?**
-- `csharp` — .NET/C# (backend)
-- `javascript` — JavaScript/Node (frontend)
-- `other` — Genérico
+- `csharp` - .NET/C# (backend)
+- `javascript` - JavaScript/Node (frontend)
+- `other` - Genérico
 
 User: /compact
 
@@ -1271,9 +1271,9 @@ GitHub Copilot: # Release & Issue Detection no Sentry
 ## 📦 Quando Criar uma Release?
 
 **Timing correto:**
-- **Após build/compilação** — antes de fazer deploy em produção
-- **Antes de desploy** — para que o Sentry saiba qual versão está rodando
-- **Uma release por versão** — 1.0.0, 1.1.0, etc.
+- **Após build/compilação**, antes de fazer deploy em produção
+- **Antes de desploy**, para que o Sentry saiba qual versão está rodando
+- **Uma release por versão**, 1.0.0, 1.1.0, etc.
 
 **Workflow típico:**
 ```
@@ -1398,7 +1398,7 @@ Write-Host "✓ Projeto criado!" -ForegroundColor Green
 $project | ConvertTo-Json | Write-Host
 ```
 
-Copla e cola esse comando PowerShell. Receberá de volta o projeto com **SENTRY_DSN** — que você coloca no .env.production.
+Copla e cola esse comando PowerShell. Receberá de volta o projeto com **SENTRY_DSN**, que você coloca no .env.production.
 
 User: PS D:\arxisvr> 
 PS D:\arxisvr> $key = (Get-Content .env.production | Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()
@@ -1429,7 +1429,7 @@ No linha:12 caractere:12
 ✓ Projeto criado!
 PS D:\arxisvr> 
 
-GitHub Copilot: Erro 404 — o endpoint de **teams** não existe. Tenta com `/organizations/` direto:
+GitHub Copilot: Erro 404, o endpoint de **teams** não existe. Tenta com `/organizations/` direto:
 
 ```powershell
 $key = (Get-Content .env.production | Select-String "SENTRY_API_KEY").ToString().Split("=")[1].Trim()
@@ -2296,11 +2296,11 @@ Invoke-RestMethod -Uri "https://sentry.io/api/0/projects/avilaops/arxisvr/issues
 ```
 
 **Campos úteis:**
-- `title` — título do erro
-- `count` — quantas vezes ocorreu
-- `lastSeen` — último horário
-- `level` — error / warning / info
-- `status` — resolved / unresolved
+- `title` - título do erro
+- `count` - quantas vezes ocorreu
+- `lastSeen` - último horário
+- `level` - error / warning / info
+- `status` - resolved / unresolved
 
 ### 3. Consultar eventos de uma issue
 
@@ -2378,7 +2378,7 @@ Error: TypeError: Cannot read property 'email' of undefined
 
 ```bash
 # .env.local
-SENTRY_DSN=  # Vazio — não captura
+SENTRY_DSN=  # Vazio, não captura
 NODE_ENV=development
 ```
 
@@ -2493,7 +2493,7 @@ Sentry desativado. Backend não envia erros. Use em **dev** apenas.
 # 2. Cole em .env.local
 # 3. npm run dev
 # 4. Trigger um erro
-# 5. Vá para Sentry — deve aparecer
+# 5. Vá para Sentry: deve aparecer
 ```
 
 ---
@@ -2602,7 +2602,7 @@ No linha:1 caractere:1
  
 PS D:\arxisvr> 
 
-GitHub Copilot: Erro 401 — o token **não tem acesso** à organização `avilaops`.
+GitHub Copilot: Erro 401, o token **não tem acesso** à organização `avilaops`.
 
 Verifica qual é o slug correto:
 
@@ -2998,11 +2998,11 @@ Invoke-RestMethod -Uri "https://sentry.io/api/0/projects/avilaops/arxisvr/issues
 ```
 
 **Campos úteis:**
-- `title` — título do erro
-- `count` — quantas vezes ocorreu
-- `lastSeen` — último horário
-- `level` — error / warning / info
-- `status` — resolved / unresolved
+- `title` - título do erro
+- `count` - quantas vezes ocorreu
+- `lastSeen` - último horário
+- `level` - error / warning / info
+- `status` - resolved / unresolved
 
 ### 3. Consultar eventos de uma issue
 
@@ -3080,7 +3080,7 @@ Error: TypeError: Cannot read property 'email' of undefined
 
 ```bash
 # .env.local
-SENTRY_DSN=  # Vazio — não captura (opcional)
+SENTRY_DSN=  # Vazio, não captura (opcional)
 NODE_ENV=development
 ```
 
@@ -3200,7 +3200,7 @@ Sentry desativado. Backend não envia erros. Use em **dev** apenas.
 # 2. Cole em .env.local
 # 3. npm run dev
 # 4. Trigger um erro
-# 5. Vá para Sentry — deve aparecer
+# 5. Vá para Sentry: deve aparecer
 ```
 
 ### "Erro 401 na API?"
@@ -3427,10 +3427,10 @@ GitHub Copilot: Perfeito! Os resultados mostram que **tudo funciona!** 🎉
 
 ## ✅ Resumo do que funcionou:
 
-1. **Projetos listados** — arxisvr aparece corretamente
-2. **Issues endpoint** — vazio como esperado (projeto novo)
-3. **Release criada** — versão 1.1.0 foi criada com sucesso
-4. **ID da release** — 1831196118 (pode usar para rastrear)
+1. **Projetos listados**, arxisvr aparece corretamente
+2. **Issues endpoint**, vazio como esperado (projeto novo)
+3. **Release criada**, versão 1.1.0 foi criada com sucesso
+4. **ID da release**, 1831196118 (pode usar para rastrear)
 
 ## ⚠️ Nota sobre o erro 405:
 

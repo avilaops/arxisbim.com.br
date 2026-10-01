@@ -47,7 +47,7 @@ export type BillingRetryWorkerOptions = {
   intervalMs: number;
   batchSize: number;
   logger: RetryWorkerLogger;
-  processDueStripeRetries: RetryProcessor;
+  processDueRetries: RetryProcessor;
 } & RetryWorkerHooks;
 
 export function createBillingRetryWorker(options: BillingRetryWorkerOptions) {
@@ -77,7 +77,7 @@ export function createBillingRetryWorker(options: BillingRetryWorkerOptions) {
     totalRuns += 1;
 
     try {
-      const result = await options.processDueStripeRetries(undefined, options.batchSize);
+      const result = await options.processDueRetries(undefined, options.batchSize);
       const durationMs = Date.now() - runStartMs;
       const context: BillingRetrySweepContext = {
         durationMs,

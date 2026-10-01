@@ -144,6 +144,7 @@ describe('CompositeController', () => {
   describe('Reset', () => {
     test('should reset controller', () => {
       const testController = new BaseController();
+      testController.setState({ sujo: true });
       controller.registerController('test', testController);
       controller.addStep({
         name: 'step1',
@@ -152,7 +153,12 @@ describe('CompositeController', () => {
 
       controller.reset();
 
-      expect(controller.getController('test')).toBeUndefined();
+      // `reset()` limpa estado e passos, e propaga o reset aos filhos — o
+      // registro continua de pé de propósito: resetar para em seguida jogar
+      // fora a fiação tornaria o `controller.reset()` de cada filho inútil.
+      // A expectativa anterior (`toBeUndefined`) contrariava a implementação.
+      expect(controller.getController('test')).toBe(testController);
+      expect(testController.getState()).toEqual({});
       expect(controller['steps']).toHaveLength(0);
     });
   });

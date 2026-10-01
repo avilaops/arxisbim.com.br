@@ -1,7 +1,22 @@
-# S29 · Motor de Cenários — Branching Completo
+# S29 · Motor de Cenários: Branching Completo
 
 **Fase:** Motor de Cenários  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Branching no backend (estava marcado Pendente).
+
+> **O S12 passou a usar este CRUD (02/09/2026).** As rotas
+> `/api/v1/projects/:projectId/scenarios` (create/list/get/update/delete) são as
+> únicas que aceitam `camera`, `player` e `metadata`, então o primeiro marco
+> depende delas. O CRUD plano `/api/v1/scenarios` não salva estado do viewer.
+>
+> Consequência para este sprint: **não mudar o contrato dessas cinco rotas sem
+> olhar `src/services/scenarios.service.ts` do frontend.** `fork`, `merge`,
+> `diff`, `financial` e `pdf` continuam exclusivos daqui e ninguém os chama
+> ainda.
+>
+> A unificação dos dois CRUDs (`modules/scenario` x `modules/scenarios`, mesma
+> tabela `scenarios`) é assunto **deste** sprint, não do S12.
 **Depende de:** S12 (cenários base), S22 (custos por cenário), S26 (datas por cenário)  
 **Bloqueia:** S30 (comparação financeira usa branching)
 
@@ -11,13 +26,13 @@
 
 Fork de cenário com deep copy de schedule e cost_table. Diff textual e visual entre dois cenários. Merge de cenário vencedor como novo baseline do projeto.
 
-> **Nota para o agente:** Completa o conceito de cenário iniciado no S12. O risco máximo é o **deep copy**: fork por referência vaza mudanças entre cenários. A cópia precisa ser **atômica** (transação — ou tudo ou nada). Cenários **nunca são deletados**, apenas arquivados (auditabilidade: "por que escolhemos este cronograma?"). Reusa `ScenarioSnapshotService` do S12.
+> **Nota para o agente:** Completa o conceito de cenário iniciado no S12. O risco máximo é o **deep copy**: fork por referência vaza mudanças entre cenários. A cópia precisa ser **atômica** (transação, ou tudo ou nada). Cenários **nunca são deletados**, apenas arquivados (auditabilidade: "por que escolhemos este cronograma?"). Reusa `ScenarioSnapshotService` do S12.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Comparação financeira com PDF (S30)
 - Presentation Studio (S31)
@@ -31,7 +46,7 @@ Pertencem a sprints futuros — **não implementar aqui**:
 
 O S12 criou o conceito de cenário. O S29 torna o sistema de cenários completo: um gerente de obras precisa criar "Cenário A: fundação convencional" e "Cenário B: fundação com estacas", comparar prazo e custo, e transformar o vencedor no plano oficial.
 
-O deep copy é o risco maior: um cenário bifurca schedule (cronograma) e cost_table (orçamento) inteiros. Usar referência em vez de cópia faria mudanças num cenário vazar para o outro. A cópia precisa ser atômica — ou tudo ou nada.
+O deep copy é o risco maior: um cenário bifurca schedule (cronograma) e cost_table (orçamento) inteiros. Usar referência em vez de cópia faria mudanças num cenário vazar para o outro. A cópia precisa ser atômica, ou tudo ou nada.
 
 ---
 
@@ -53,8 +68,8 @@ O deep copy é o risco maior: um cenário bifurca schedule (cronograma) e cost_t
 -- Ao fazer fork do Cenário A para criar Cenário B:
 BEGIN;
 
-INSERT INTO scenarios (id, project_id, name, parent_scenario_id, ...)
-VALUES (new_id, project_id, 'Cenário B', scenario_a_id, ...);
+INSERT INTO scenarios (id, project_id, name, parent_scenario_id ...)
+VALUES (new_id, project_id, 'Cenário B', scenario_a_id ...);
 
 -- Deep copy do schedule
 INSERT INTO schedules SELECT gen_random_uuid(), project_id, new_id, name, start_date, source, now()

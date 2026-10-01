@@ -1,6 +1,6 @@
 /**
  * RetryPolicy - Política de retry com exponential backoff
- * Padrão usado por AWS SDK, Google Cloud, Stripe, etc
+ * Padrão usado por AWS SDK, Google Cloud, Mercado Pago, etc
  */
 
 export interface RetryConfig {

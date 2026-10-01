@@ -1,4 +1,4 @@
-# Visão de Produto — ArxisVR
+# Visão de Produto: ArxisVR
 
 **Última atualização:** 11/06/2026
 
@@ -10,7 +10,7 @@ O ArxisVR não compete como viewer IFC nem como ferramenta de renderização.
 
 Compete como **plataforma de decisão baseada em modelos BIM**.
 
-> "A primeira plataforma focada em transformar modelos BIM em motores de decisão —
+> "A primeira plataforma focada em transformar modelos BIM em motores de decisão -
 > do IFC ao cenário de custo e prazo, sem sair do browser."
 
 ---
@@ -37,9 +37,9 @@ Metadados (propriedades, tipos, quantitativos)
 ↓
 Cenários (branches de alternativas de execução)
 ↓
-Tempo (4D — cronograma por cenário)
+Tempo (4D, cronograma por cenário)
 ↓
-Custo (5D — SINAPI vinculado por objeto)
+Custo (5D, SINAPI vinculado por objeto)
 ↓
 Decisão (comparação financeira entre cenários)
 ```
@@ -51,7 +51,7 @@ A camada de cenários e decisão não pode.
 
 ## Proposta de Valor Única
 
-Para **construtoras, gerenciadoras e escritórios de arquitetura** que precisam tomar decisões de projeto com clareza e velocidade — o ArxisVR oferece um ambiente onde qualquer modelo IFC se torna um motor de cenários interativos com custo e prazo em tempo real, eliminando o ciclo de render farm → planilha → reunião → retrabalho.
+Para **construtoras, gerenciadoras e escritórios de arquitetura** que precisam tomar decisões de projeto com clareza e velocidade, o ArxisVR oferece um ambiente onde qualquer modelo IFC se torna um motor de cenários interativos com custo e prazo em tempo real, eliminando o ciclo de render farm → planilha → reunião → retrabalho.
 
 ---
 
@@ -80,7 +80,7 @@ As seis forças convergem na mesma janela de 18 meses.
 | AR global (até 2028) | US$ 97 bilhões |
 | Construção civil Brasil | R$ 400+ bilhões/ano |
 
-LATAM está em estágio inicial de adoção — mercado em branco para ferramenta local com SINAPI.
+LATAM está em estágio inicial de adoção, mercado em branco para ferramenta local com SINAPI.
 
 ---
 
@@ -103,7 +103,7 @@ O mercado fala: visualização, coordenação, clash detection, digital twin.
 O ArxisVR fala: **motor de decisão baseado em cenários**.
 
 Concorrentes que começam por visualização precisam construir toda a cadeia de cima para baixo.
-ArxisVR começa pelo final da cadeia — a decisão — e constrói de baixo para cima.
+ArxisVR começa pelo final da cadeia, a decisão, e constrói de baixo para cima.
 
 ---
 

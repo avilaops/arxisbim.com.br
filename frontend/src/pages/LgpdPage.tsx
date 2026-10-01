@@ -1,3 +1,5 @@
+import SEO from '../components/SEO'
+
 export default function LgpdPage() {
   return (
     <div
@@ -8,6 +10,11 @@ export default function LgpdPage() {
         padding: '40px 20px',
       }}
     >
+      <SEO
+        title="LGPD e Proteção de Dados — Arxis"
+        description="Saiba como o Arxis está em conformidade com a LGPD (Lei Geral de Proteção de Dados) para garantir o tratamento seguro dos seus dados."
+        path="/lgpd"
+      />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
           href="/"
@@ -37,7 +44,7 @@ export default function LgpdPage() {
               1. Disposições Gerais
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A ArxisVR está em conformidade com a Lei Geral de Proteção de Dados (Lei nº
+              A Arxis está em conformidade com a Lei Geral de Proteção de Dados (Lei nº
               13.709/2018). Esta página explica como tratamos seus dados pessoais de acordo
               com a LGPD.
             </p>
@@ -77,7 +84,7 @@ export default function LgpdPage() {
               4. Dados de Crianças
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              A plataforma ArxisVR é destinada a usuários maiores de 18 anos. Não coletamos
+              A plataforma Arxis é destinada a usuários maiores de 18 anos. Não coletamos
               intencionalmente dados de menores. Se você descobrir que uma criança forneceu
               dados, por favor, contate-nos imediatamente.
             </p>
@@ -109,13 +116,9 @@ export default function LgpdPage() {
               7. Titular de Dados
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--c-text2)' }}>
-              <strong>ArxisVR</strong>
-              <br />
-              CNPJ: 00.000.000/0000-00
+              <strong>Arxis</strong>
               <br />
               Email: lgpd@arxisvr.com
-              <br />
-              Telefone: +55 (11) XXXX-XXXX
             </p>
           </section>
 

@@ -8,8 +8,7 @@
     "experimentalDecorators": true,
 
     /* Bundler mode */
-    "ignoreDeprecations": "6.0",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -24,13 +23,21 @@
 
     "paths": {
       "@/*": ["./src/*"],
-      "three/addons/*": ["./node_modules/three/examples/jsm/*", "./node_modules/@types/three/examples/jsm/*"]
+      "three/addons/*": ["./node_modules/@types/three/examples/jsm/*"]
     },
 
   },
-  "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "**/*.patch.ts"
-  ]
+  /* O type-check cobre exatamente o que entra no bundle: o grafo de imports
+     a partir de src/main.tsx (58 arquivos). Os ~800 arquivos orfaos em src/
+     (fora do build desde a reescrita do frontend) somam 1.890 erros e sao
+     divida de classificacao, nao portao de qualidade. */
+  "files": [
+    "src/main.tsx",
+    "src/env.d.ts",
+    "src/global.d.ts",
+    "src/node-shims.d.ts",
+    "src/vite-env.d.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
 }

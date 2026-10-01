@@ -1,7 +1,9 @@
 # S14 · Classificação e Tipos de Elementos
 
 **Fase:** Metadados BIM  
-**Status:** Pendente  
+**Status:** 🟠 Backend pronto, **não chega ao usuário**  
+**Backend:** sim · **Interface:** nao  
+**Verificado em:** 02/09/2026 — Paleta e legenda por tipo nao chegam a tela.
 **Depende de:** S13 (propriedades extraídas)  
 **Bloqueia:** S10 (filtros por disciplina usam taxonomia), S20 (quantitativos agrupam por tipo)
 
@@ -11,13 +13,13 @@
 
 Mapear tipos IFC para categorias construtivas do produto. Paleta de cores por tipo. Base de classificação para filtros, quantitativos e 4D.
 
-> **Nota para o agente:** Este sprint define uma **taxonomia que vira contrato** para S10, S20, S25 e S30. Ela deve ser configuração (dado), nunca lógica hard-coded espalhada. Mudar a taxonomia depois que há dados de clientes não pode exigir migração de dados — só atualização de mapeamento.
+> **Nota para o agente:** Este sprint define uma **taxonomia que vira contrato** para S10, S20, S25 e S30. Ela deve ser configuração (dado), nunca lógica hard-coded espalhada. Mudar a taxonomia depois que há dados de clientes não pode exigir migração de dados, só atualização de mapeamento.
 
 ---
 
 ## Fora de Escopo
 
-Pertencem a sprints futuros — **não implementar aqui**:
+Pertencem a sprints futuros, **não implementar aqui**:
 
 - Filtros de visibilidade por disciplina (S10 consome esta taxonomia)
 - Quantitativos agregados (S20)

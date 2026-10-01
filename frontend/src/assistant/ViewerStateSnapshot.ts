@@ -228,7 +228,7 @@ export class ViewerStateSnapshot {
    */
   static toPromptContext(snapshot: ViewerSnapshot): string {
     return `
-Estado atual do ArxisVR:
+Estado atual do Arxis:
 
 Seleção:
 - ${snapshot.selection.count} objetos selecionados

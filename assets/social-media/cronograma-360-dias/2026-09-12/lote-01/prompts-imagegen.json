@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-09-12",
+  "mode": "image_gen integrado",
+  "purpose": "Painéis visuais para composição das 4 artes P01, 14/09/2026",
+  "references": {
+    "avatar": [
+      "3-Foto-3.jpg",
+      "4-Foto-4.jpg"
+    ],
+    "logo": "6-Foto-7.jpg usado diretamente no HTML, sem reconstrução"
+  },
+  "prompts": [
+    {
+      "key": "arquitetura",
+      "prompt": "Use case: ads-marketing. Create a premium architectural image used as the photographic component of ARXIS social launch artwork (not a finished poster). Output landscape 1536x1024. Photorealistic Brazilian contemporary architecture: a refined modest 4-storey office building facade of off-white concrete, broad glass, vertical slim light fins, one subtle blue petrol detail #0E6B8F, neutral natural landscaping. Straight vertical lines, elegant perspective from ground at a 3/4 angle. Building isolated like a high-end architectural studio model/visualization on a pure white seamless environment; no street, no skyline, no people, no cars. Soft realistic shadows and clean natural light. Main building concentrated in RIGHT two thirds with clean white free space on the LEFT and upper border, fades naturally to pure white on all outer edges except base shadow. Navy #1E2D3D accents and extremely restrained orange #F36B21 somewhere in a small architectural element. It must feel tangible, architectural, calm, sophisticated. Real construction proportions, no impossible structure, no exploded elements. No words, no letters, no logo, no watermark, no interface, no border, no collage. This is an illustrative architectural scene, not a customer project or a screenshot of Arxis software."
+    },
+    {
+      "key": "modelo-bim",
+      "prompt": "Use case: ads-marketing. Create a refined 3D educational architectural illustration for ARXIS Instagram Story discussing BIM, projects and construction digital. This is a standalone scene component, no text or poster layout. Output square 1024x1024 on pure seamless WHITE. Isometric architectural cutaway model of a contemporary two-storey small building, with several clearly organized spaces, white concrete structural frame, pale glass windows, teal #0E6B8F partition or facade surfaces, restrained orange #F36B21 highlights on exactly two selected physical elements, navy #1E2D3D subtle shadows. A very light blue architectural plan outline underneath and alongside the model connects drawing to spatial model. Show precise construction logic, credible scale and crisp edges, tactile clay-render architectural visualization with soft ambient shadows. Whole model in frame centered lower-middle, clean isolated composition, attractive quiet modern professional engineering feel, plentiful white margins around all edges. NO typography, NO words, NO UI cards, NO dashboard, NO graph numbers, NO people, NO logos, NO watermark, NO neon sci-fi holograms. This is an explicitly illustrative BIM concept, not an image of actual software functionality."
+    },
+    {
+      "key": "avatar-conversa",
+      "prompt": "Use case: identity-preserve / ads-marketing illustration. Use the attached illustrations as CHARACTER IDENTITY references: the exact same friendly male cartoon construction engineer called ARXIS. Create ONE new clean portrait pose on a pure WHITE seamless background, square1024x1024. Preserve his face shape, cheerful large dark eyes, dark navy tousled hair, warm light peach skin, white hard hat with clear protective goggles resting on hat and a teal A symbol, blue petrol #0E6B8F shirt, gray safety vest with narrow orange #F36B21 horizontal chest stripe, dark navy tablet. Match original 2D polished hand-drawn/animation cel illustration style, NOT 3D, NOT a different character, NOT a photoreal person. Waist-up composition with both elbows completely in frame, no hands cut off. He holds tablet at his left waist with left hand, and lifts right hand in a natural friendly open-palm greeting, looking at viewer with warm smile. Anatomy: exactly five fingers per hand, natural thumb, correct wrists. Slight three-quarter body turn, face toward viewer. White margins on every side, subtle gray groundless shading only under elbows. No writing except the single A symbol already belonging on his hard hat. No words, no logo outside uniform, no background widgets, no artwork frames, no extra accessories, no additional characters."
+    }
+  ]
+}

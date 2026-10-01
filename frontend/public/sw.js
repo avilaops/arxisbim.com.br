@@ -90,8 +90,8 @@ async function networkFirst(request) {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'Nova notificação',
-    icon: '/logo.svg',
-    badge: '/logo.svg',
+    icon: '/favicon.svg',
+    badge: '/favicon.svg',
   };
   event.waitUntil(self.registration.showNotification('ArxisVR', options));
 });

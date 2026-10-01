@@ -46,14 +46,19 @@ const strongPassword = z
   .regex(/[0-9]/, 'Senha deve conter ao menos um número')
   .regex(/[^A-Za-z0-9]/, 'Senha deve conter ao menos um caractere especial');
 
+// E-mail e trim + lowercase ANTES de validar, nos dois schemas e no
+// forgotPassword. O teclado do iPhone capitaliza a primeira letra no cadastro
+// e o navegador preenche minusculo no login: "Nicolas@" e "nicolas@" viravam
+// contas diferentes, e o Nicolas ficou trancado fora com a senha certa em
+// 08/09/2026. A migration 056 poe as linhas existentes em minusculas.
 const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().trim().toLowerCase().email('Email inválido'),
   password: z.string().min(1),  // login: não revalida força — senha pode ser legada
   tenantId: z.string().optional(),
 });
 
 const registerSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().trim().toLowerCase().email('Email inválido'),
   password: strongPassword,
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').transform(val => val.replace(/</g, '&lt;').replace(/>/g, '&gt;')),
   tenantId: z.string().optional(),
@@ -156,6 +161,15 @@ const PASSWORD_HISTORY_DEPTH = parseInt(process.env.PASSWORD_HISTORY_DEPTH || '3
 // Garante tempo de resposta constante mesmo quando o usuário não existe.
 const DUMMY_HASH = bcrypt.hashSync('arxisvr-timing-protection-dummy-2026', BCRYPT_ROUNDS);
 
+let authDbCache: ReturnType<typeof drizzle<{ users: typeof users; tenants: typeof tenants }>> | null = null;
+function authDb() {
+  if (!authDbCache) {
+    const client = postgres(process.env.DATABASE_URL!, { max: 4 });
+    authDbCache = drizzle(client, { schema: { users, tenants } });
+  }
+  return authDbCache;
+}
+
 export class AuthService {
   private db;
   private jwtSecret: string;
@@ -164,9 +178,10 @@ export class AuthService {
   private refreshTokenExpiry = '7d';
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL!;
-    const client = postgres(connectionString);
-    this.db = drizzle(client, { schema: { users, tenants } });
+    // Tres AuthService vivem no processo (rotas, middleware, workspaces).
+    // Um pool por instancia com max 10 = 30 conexoes so daqui. Pool unico,
+    // compartilhado, pequeno (incidente de conexoes de 09/09/2026).
+    this.db = authDb();
     // JWT secrets are resolved lazily (getJwtSecret/getJwtRefreshSecret) so that
     // the constructor can be called before process.env is fully populated (e.g. tests).
     this.jwtSecret = '';
@@ -195,7 +210,6 @@ export class AuthService {
     // Email é único globalmente — tenantId opcional. Se omitido, busca só por email.
     const whereClauses = [
       eq(users.email, validated.email),
-      eq(users.isActive, true),
     ];
     if (validated.tenantId) {
       whereClauses.push(eq(users.tenantId, validated.tenantId));
@@ -250,6 +264,10 @@ export class AuthService {
       const err: any = new Error('Verifique seu email antes de fazer login. Confira sua caixa de entrada.');
       err.code = 'EMAIL_NOT_VERIFIED';
       throw err;
+    }
+
+    if (!user.isActive) {
+      throw new Error('Usuário inativo');
     }
 
     // Verificar se o tenant está ativo
@@ -383,6 +401,8 @@ export class AuthService {
 
       if (!tenant.isActive) throw new Error('Tenant inativo');
 
+      const requireEmailVerification = process.env.REQUIRE_EMAIL_VERIFICATION !== 'false';
+
       const [user] = await tx
         .insert(users)
         .values({
@@ -393,8 +413,8 @@ export class AuthService {
           companyId: validated.companyId || null,
           role: 'user',
           permissions: [],
-          emailVerified: false,
-          isActive: false,
+          emailVerified: !requireEmailVerification,
+          isActive: !requireEmailVerification,
         })
         .returning();
 
@@ -760,7 +780,8 @@ export class AuthService {
   /**
    * Solicitar reset de senha (forgot password)
    */
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(rawEmail: string): Promise<void> {
+    const email = rawEmail.trim().toLowerCase();
     const [user] = await this.db.select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, isActive: users.isActive }).from(users).where(eq(users.email, email)).limit(1);
     // Silencioso se email não existe (segurança)
     if (!user || !user.isActive) return;

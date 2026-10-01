@@ -310,6 +310,13 @@ export class BackgroundManager {
     if (this.physicalSky) {
       this.physicalSky.fitToModel(box);
     }
+    // Centrar o grid abaixo do modelo para modelos georreferenciados/deslocados
+    if (this.gridHelper) {
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      this.gridHelper.position.set(center.x, box.min.y, center.z);
+      this.gridHelper.updateMatrixWorld(true);
+    }
   }
 
   /**

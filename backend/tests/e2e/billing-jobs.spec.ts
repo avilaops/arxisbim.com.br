@@ -11,7 +11,7 @@ import { BillingService } from '../../src/modules/billing/billing.service.js';
 import { emailService } from '../../src/core/email/email.service.js';
 import { db } from '../../src/shared/database/db.js';
 import { tenants, users } from '../../src/shared/database/schema/tenants.js';
-import { billingSubscriptions, failedWebhooks, stripeEvents, tenantUsage } from '../../src/shared/database/schema/billing.js';
+import { billingSubscriptions, failedWebhooks, billingProviderEvents, tenantUsage } from '../../src/shared/database/schema/billing.js';
 import { projects } from '../../src/shared/database/schema/projects.js';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
@@ -203,8 +203,8 @@ describe('S04.1: Billing background jobs', () => {
     expect(res2.statusCode).toBe(200);
     expect(JSON.parse(res2.body).duplicate).toBe(true);
 
-    // Exactly one stripe_events row claimed for this id
-    const events = await db.select().from(stripeEvents).where(eq(stripeEvents.eventId, eventId));
+    // Exactly one billing_provider_events row claimed for this id
+    const events = await db.select().from(billingProviderEvents).where(eq(billingProviderEvents.eventId, eventId));
     expect(events.length).toBe(1);
     expect(events[0].status).toBe('processed');
 

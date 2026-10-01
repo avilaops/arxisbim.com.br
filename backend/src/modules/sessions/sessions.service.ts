@@ -18,10 +18,23 @@ import {
   sessionBillingUsage,
 } from '../../shared/database/schema/sessions.js';
 
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET not set');
+/**
+ * Lido na hora do uso, não no carregamento do módulo.
+ *
+ * Antes isto era um `throw` solto no topo. Imports ESM resolvem antes de
+ * qualquer código do `index.ts` rodar, então esse throw estourava primeiro e
+ * matava o processo com um stack trace cru, passando por cima da checagem de
+ * `requiredEnvVars` que existe justamente para listar tudo o que falta numa
+ * mensagem legível. Quem subia sem `.env` via um erro de um módulo interno em
+ * vez da lista de variáveis.
+ */
+function jwtSecret(): string {
+  const valor = process.env.JWT_SECRET;
+  if (!valor) {
+    throw new Error('JWT_SECRET não configurado');
+  }
+  return valor;
 }
-const JWT_SECRET = process.env.JWT_SECRET;
 
 // ─── Token de convite (sem conta) ───────────────────────────────────────────
 
@@ -34,12 +47,12 @@ export interface InviteTokenPayload {
 }
 
 export function signInviteToken(payload: Omit<InviteTokenPayload, 'exp'>, expiresIn = '48h'): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
+  return jwt.sign(payload, jwtSecret(), { expiresIn } as jwt.SignOptions);
 }
 
 export function verifyInviteToken(token: string): InviteTokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as InviteTokenPayload;
+    return jwt.verify(token, jwtSecret()) as InviteTokenPayload;
   } catch {
     return null;
   }

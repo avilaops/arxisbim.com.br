@@ -29,9 +29,9 @@ import { SINAPIImportPanel } from '../../app/components/SINAPIImportPanel.js';
 import '../../inspector/inspector.css';
 
 // Lazy load heavy modules
-let inspectorController: any = null;
-let selectionService: any = null;
-let batchSelectionService: any = null;
+const inspectorController: any = null;
+const selectionService: any = null;
+const batchSelectionService: any = null;
 
 // Utility to defer non-critical work to reduce main-thread blocking
 function deferNonCritical(callback: () => void, timeout = 0) {
@@ -59,7 +59,7 @@ window.addEventListener('arxisvr:project-selected', (e: Event) => {
   const id = (e as CustomEvent).detail?.projectId;
   if (id) PROJECT_ID = id;
 });
-let TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
+const TENANT_ID = localStorage.getItem('arxisvr_tenant_id') || 'default-tenant';
 
 let viewerHost: ViewerHost | null = null;
 let ifcLoader: IFCSimpleLoader | null = null;
@@ -75,8 +75,8 @@ const hasAuthToken = () => Boolean(localStorage.getItem('arxisvr_token'));
  */
 function enforceAuthOrRedirect(): boolean {
   if (isAuthenticated()) return true;
-  const next = encodeURIComponent('/app.html' + window.location.search + window.location.hash);
-  window.location.replace('/login.html?next=' + next);
+  const next = encodeURIComponent('/app' + window.location.search + window.location.hash);
+  window.location.replace('/login?next=' + next);
   return false;
 }
 
@@ -580,7 +580,7 @@ function updateModelInfoFromSelection(payload: any) {
         const s = box.getSize(new (window as any).THREE.Vector3());
         dims = { x: parseFloat(s.x.toFixed(2)), y: parseFloat(s.y.toFixed(2)), z: parseFloat(s.z.toFixed(2)) };
       }
-    } catch (_) {}
+    } catch (_) { /* ignora: falha aqui não impede o fluxo */ }
   }
 
   const volume = (dims.x * dims.y * dims.z).toFixed(2);

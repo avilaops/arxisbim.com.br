@@ -1,44 +1,161 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
+import {
+  adminService,
+  type AdminAuditLog,
+  type AdminStats,
+  type AdminTenant,
+  type AdminUser,
+} from '@/services/admin.service'
+
+/**
+ * Painel Admin. Até 08/09/2026 esta tela desenhava usuários, organizações e
+ * auditoria escritos à mão ("João Silva", "TechBuild", "5m atrás"). Agora lê
+ * `GET /admin/stats|users|tenants|audit`, que já existiam; sem dado, mostra
+ * estado vazio, nunca registro inventado.
+ */
+
+const ROLE_LABEL: Record<string, string> = {
+  owner: 'Dono',
+  admin: 'Admin',
+  member: 'Membro',
+  user: 'Usuário',
+  viewer: 'Visualizador',
+}
+
+const PLAN_LABEL: Record<string, string> = {
+  free: 'Gratuito',
+  starter: 'Starter',
+  professional: 'Professional',
+  enterprise: 'Enterprise',
+}
+
+function relativeDate(iso: string | null | undefined): string {
+  if (!iso) return 'nunca'
+  const ms = Date.now() - new Date(iso).getTime()
+  const min = Math.floor(ms / 60_000)
+  if (min < 1) return 'agora'
+  if (min < 60) return `${min} min atrás`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `${h} h atrás`
+  const d = Math.floor(h / 24)
+  if (d === 1) return 'ontem'
+  if (d < 30) return `${d} dias atrás`
+  if (d < 365) return `${Math.floor(d / 30)} meses atrás`
+  return `${Math.floor(d / 365)} anos atrás`
+}
+
+function formatBytes(bytes: number): string {
+  if (!bytes) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)))
+  const v = bytes / 1024 ** i
+  return `${v < 10 && i > 0 ? v.toFixed(1) : Math.round(v)} ${units[i]}`
+}
+
+const RESOURCE_LABEL: Record<string, string> = {
+  user: 'usuário',
+  tenant: 'organização',
+  project: 'projeto',
+  model: 'modelo',
+  scenario: 'cenário',
+  file: 'arquivo',
+  token: 'token',
+  subscription: 'assinatura',
+}
+
+/** `auth.email_verified` → "Auth: email verified". Sem tabela: a ação é o registro. */
+function actionLabel(action: string): string {
+  const [dominio, ...resto] = action.split('.')
+  const verbo = resto.join(' ').replace(/_/g, ' ')
+  return verbo ? `${dominio}: ${verbo}` : action
+}
+
+function isFailure(log: AdminAuditLog): boolean {
+  return /fail|error|denied|invalid|reject/i.test(log.action) || /fail|error|denied/i.test(JSON.stringify(log.details ?? ''))
+}
+
+const card: React.CSSProperties = {
+  background: 'var(--c-surface2)',
+  border: '1px solid var(--c-border)',
+  borderRadius: 'var(--r)',
+  overflow: 'hidden',
+}
+
+const cardHead: React.CSSProperties = { padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }
+const cardTitle: React.CSSProperties = { fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }
+const rowStyle = (last: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '10px 14px',
+  borderBottom: last ? 'none' : '1px solid var(--c-border)',
+})
+
+function Vazio({ children }: { children: string }) {
+  return <p style={{ padding: '18px 14px', fontSize: '12px', color: 'var(--c-text3)' }}>{children}</p>
+}
 
 export default function AdminPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [tenants, setTenants] = useState<AdminTenant[]>([])
+  const [logs, setLogs] = useState<AdminAuditLog[]>([])
+  const [storageBytes, setStorageBytes] = useState(0)
+  const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem('arxisvr_user')
-        if (!userData) {
-          navigate('/login')
-          return
-        }
-
-        const parsedUser = JSON.parse(userData)
-        const isAdmin = parsedUser.role === 'admin' || parsedUser.role === 'owner'
-
-        if (!isAdmin) {
-          navigate('/dashboard')
-          return
-        }
-
-        setUser(parsedUser)
-        setLoading(false)
-      } catch {
+    let parsedUser: { role?: string; permissions?: string[] } | null = null
+    try {
+      const userData = localStorage.getItem('arxisvr_user')
+      if (!userData) {
         navigate('/login')
+        return
       }
+      parsedUser = JSON.parse(userData)
+    } catch {
+      navigate('/login')
+      return
+    }
+    const isAdmin = parsedUser?.role === 'admin' || parsedUser?.role === 'owner' || parsedUser?.permissions?.includes('admin')
+    if (!isAdmin) {
+      navigate('/dashboard')
+      return
     }
 
-    checkAuth()
+    let cancelado = false
+    ;(async () => {
+      try {
+        const [s, u, t, a] = await Promise.all([
+          adminService.stats(),
+          adminService.users(8),
+          adminService.tenants(),
+          adminService.audit(10),
+        ])
+        if (cancelado) return
+        setStats(s)
+        setUsers(u.users)
+        setTenants(t.tenants)
+        setLogs(a.logs)
+        setStorageBytes(t.tenants.reduce((soma, x) => soma + (x.storageBytes || 0), 0))
+      } catch (e) {
+        if (!cancelado) setErro(e instanceof Error ? e.message : 'Não foi possível carregar o painel.')
+      } finally {
+        if (!cancelado) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelado = true
+    }
   }, [navigate])
 
   if (loading) {
     return (
       <div id="loading" style={{ position: 'fixed', inset: 0, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', zIndex: 9999 }}>
         <div
-          className="spin"
           style={{
             width: '28px',
             height: '28px',
@@ -53,10 +170,16 @@ export default function AdminPage() {
     )
   }
 
+  const kpis = [
+    { title: 'Usuários', value: stats ? String(stats.totalUsers) : '', sub: stats ? `${stats.activeUsers} ativos` : '' },
+    { title: 'Organizações', value: stats ? String(stats.totalTenants) : '', sub: stats ? `${stats.totalProjects} projetos` : '' },
+    { title: 'Modelos IFC', value: stats ? String(stats.totalModels) : '', sub: '' },
+    { title: 'Armazenamento', value: formatBytes(storageBytes), sub: 'somado por organização' },
+  ]
+
   return (
     <AppShell>
-      <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
-        {/* Page header */}
+      <div className="dash-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <div style={{ fontSize: '11px', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>
@@ -68,72 +191,32 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Admin stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-          {[
-            { title: 'Usuários', value: '42', change: '+8' },
-            { title: 'Organizações', value: '12', change: '+2' },
-            { title: 'Modelos IFC', value: '284', change: '+34' },
-            { title: 'Armazenamento', value: '128 GB', change: '+12 GB' },
-          ].map((stat, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: 'var(--c-surface2)',
-                border: '1px solid var(--c-border)',
-                borderRadius: 'var(--r)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}
-            >
-              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text2)' }}>
-                {stat.title}
-              </div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--c-text)' }}>
-                {stat.value}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--c-blue)', fontWeight: 600 }}>
-                {stat.change}
-              </div>
+        {erro && (
+          <div role="alert" style={{ ...card, padding: '12px 14px', fontSize: '12px', color: 'var(--c-red)' }}>
+            {erro}
+          </div>
+        )}
+
+        <div className="admin-kpis" style={{ display: 'grid', gap: '10px' }}>
+          {kpis.map((stat) => (
+            <div key={stat.title} style={{ ...card, padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text2)' }}>{stat.title}</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--c-text)' }}>{stat.value}</div>
+              {stat.sub && <div style={{ fontSize: '11px', color: 'var(--c-text3)', fontWeight: 500 }}>{stat.sub}</div>}
             </div>
           ))}
         </div>
 
-        {/* Sections */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          {/* Users section */}
-          <div
-            style={{
-              background: 'var(--c-surface2)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 'var(--r)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
-                Usuários recentes
-              </h3>
+        <div className="admin-duo" style={{ display: 'grid', gap: '10px' }}>
+          <div style={card}>
+            <div style={cardHead}>
+              <h3 style={cardTitle}>Usuários recentes</h3>
             </div>
-            <div>
-              {[
-                { name: 'João Silva', email: 'joao@example.com', role: 'owner', status: 'Ativo' },
-                { name: 'Maria Santos', email: 'maria@example.com', role: 'admin', status: 'Ativo' },
-                { name: 'Carlos Oliveira', email: 'carlos@example.com', role: 'member', status: 'Inativo' },
-                { name: 'Ana Costa', email: 'ana@example.com', role: 'member', status: 'Ativo' },
-              ].map((user, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 14px',
-                    borderBottom: idx < 3 ? '1px solid var(--c-border)' : 'none',
-                  }}
-                >
+            {users.length === 0 ? (
+              <Vazio>Nenhum usuário cadastrado.</Vazio>
+            ) : (
+              users.map((user, idx) => (
+                <div key={user.id} style={rowStyle(idx === users.length - 1)}>
                   <div
                     style={{
                       width: '28px',
@@ -149,147 +232,85 @@ export default function AdminPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {user.name.charAt(0)}
+                    {(user.name || user.email).charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
-                      {user.name}
+                    <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.name || user.email}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--c-text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {user.email}
+                      {!user.emailVerified && ' · e-mail não verificado'}
                     </div>
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--c-text2)', textTransform: 'capitalize' }}>
-                      {user.role}
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--c-text2)' }}>
+                      {ROLE_LABEL[user.role] ?? user.role}
                     </div>
-                    <div style={{ fontSize: '10px', color: user.status === 'Ativo' ? 'var(--c-green)' : 'var(--c-text3)' }}>
-                      {user.status}
+                    <div style={{ fontSize: '10px', color: user.isActive ? 'var(--c-green)' : 'var(--c-text3)' }}>
+                      {user.isActive ? 'Ativo' : 'Inativo'} · {relativeDate(user.lastLoginAt || user.createdAt)}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
 
-          {/* Organizations section */}
-          <div
-            style={{
-              background: 'var(--c-surface2)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 'var(--r)',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
-                Organizações
-              </h3>
+          <div style={card}>
+            <div style={cardHead}>
+              <h3 style={cardTitle}>Organizações</h3>
             </div>
-            <div>
-              {[
-                { name: 'AvilaOps', plan: 'Enterprise', users: 8, status: 'Ativo' },
-                { name: 'TechBuild', plan: 'Professional', users: 12, status: 'Ativo' },
-                { name: 'ArqStudio', plan: 'Starter', users: 3, status: 'Ativo' },
-                { name: 'EngenhariaX', plan: 'Free', users: 1, status: 'Inativo' },
-              ].map((org, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 14px',
-                    borderBottom: idx < 3 ? '1px solid var(--c-border)' : 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '4px',
-                      background: 'var(--c-surface3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '13px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    🏢
-                  </div>
+            {tenants.length === 0 ? (
+              <Vazio>Nenhuma organização.</Vazio>
+            ) : (
+              tenants.slice(0, 8).map((org, idx, arr) => (
+                <div key={org.id} style={rowStyle(idx === arr.length - 1)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
-                      {org.name}
+                    <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {org.name || org.tenantId}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
-                      {org.users} usuários • {org.plan}
+                      {org.userCount} {org.userCount === 1 ? 'usuário' : 'usuários'} · {org.modelCount} {org.modelCount === 1 ? 'modelo' : 'modelos'} · {formatBytes(org.storageBytes)} · {PLAN_LABEL[org.subscription?.plan ?? ''] ?? 'Sem plano'}
                     </div>
                   </div>
-                  <div style={{ flexShrink: 0, fontSize: '10px', color: org.status === 'Ativo' ? 'var(--c-green)' : 'var(--c-text3)', fontWeight: 600 }}>
-                    {org.status}
+                  <div style={{ flexShrink: 0, fontSize: '10px', color: org.isActive ? 'var(--c-green)' : 'var(--c-text3)', fontWeight: 600 }}>
+                    {org.isActive ? 'Ativa' : 'Inativa'}
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* System logs */}
-        <div
-          style={{
-            background: 'var(--c-surface2)',
-            border: '1px solid var(--c-border)',
-            borderRadius: 'var(--r)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
-              Logs do sistema
-            </h3>
+        <div style={card}>
+          <div style={cardHead}>
+            <h3 style={cardTitle}>Auditoria</h3>
           </div>
-          <div>
-            {[
-              { action: 'Usuário criado', user: 'admin@arxisvr.com', time: '5m atrás', status: 'sucesso' },
-              { action: 'Organização atualizada', user: 'Carlos Oliveira', time: '1h atrás', status: 'sucesso' },
-              { action: 'Modelo processado', user: 'Maria Santos', time: '2h atrás', status: 'sucesso' },
-              { action: 'Falha no envio de modelo', user: 'João Silva', time: '4h atrás', status: 'erro' },
-              { action: 'Backup concluído', user: 'sistema', time: '1d atrás', status: 'sucesso' },
-            ].map((log, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 14px',
-                  borderBottom: idx < 4 ? '1px solid var(--c-border)' : 'none',
-                }}
-              >
+          {logs.length === 0 ? (
+            <Vazio>Nenhum registro de auditoria.</Vazio>
+          ) : (
+            logs.map((log, idx) => (
+              <div key={log.id} style={{ ...rowStyle(idx === logs.length - 1), gap: '12px' }}>
                 <div
                   style={{
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    background: log.status === 'sucesso' ? 'var(--c-green)' : 'var(--c-red)',
+                    background: isFailure(log) ? 'var(--c-red)' : 'var(--c-green)',
                     flexShrink: 0,
                   }}
                 ></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
-                    {log.action}
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
-                    {log.user}
+                  <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>{actionLabel(log.action)}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--c-text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {log.userEmail}
+                    {log.resource ? ` · ${RESOURCE_LABEL[log.resource] ?? log.resource}` : ''}
                   </div>
                 </div>
-                <div style={{ flexShrink: 0, fontSize: '11px', color: 'var(--c-text3)' }}>
-                  {log.time}
-                </div>
+                <div style={{ flexShrink: 0, fontSize: '11px', color: 'var(--c-text3)' }}>{relativeDate(log.createdAt)}</div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </AppShell>

@@ -85,23 +85,34 @@ describe('VersionHistoryService', () => {
       const mainBranch = service.createBranch('project-1', 'main', 'user-1', v1.id);
       const featureBranch = service.createBranch('project-1', 'feature', 'user-1', v1.id);
 
+      // Cada lado precisa de versão criada COM o branch corrente: o serviço
+      // marca `version.branch` na criação, e `createBranch` só guarda o
+      // `baseVersionId` — a v1 acima pertence ao branch que estava ativo, não
+      // ao main recém-criado. Sem isto o merge devolvia null.
+      service.switchBranch(mainBranch.id);
+      service.createVersion('project-1', 'v1-main', 'user-1', 'John', [], v1.id);
+
       service.switchBranch(featureBranch.id);
-      const v2 = service.createVersion('project-1', 'v2', 'user-1', 'John', [], v1.id);
+      service.createVersion('project-1', 'v2', 'user-1', 'John', [], v1.id);
 
       const merged = service.mergeBranch(featureBranch.id, mainBranch.id);
-      expect(merged).toBeDefined();
+      expect(merged).not.toBeNull();
       expect(merged?.isMerged).toBe(true);
     });
   });
 
   describe('Version Revert', () => {
     it('should revert to previous version', () => {
-      const v1 = service.createVersion('project-1', 'v1', 'user-1', 'John', []);
-      const v2 = service.createVersion('project-1', 'v2', 'user-1', 'John', [], v1.id);
+      // Projeto próprio: `getVersionHistoryService()` é singleton e os casos
+      // acima já numeraram 'project-1'. Com projeto isolado a sequência é
+      // determinística — 1.0.0, 1.0.1 e a reversão em 1.0.2, acima das duas.
+      const v1 = service.createVersion('projeto-revert', 'v1', 'user-1', 'John', []);
+      service.createVersion('projeto-revert', 'v2', 'user-1', 'John', [], v1.id);
 
       const reverted = service.revertToVersion(v1.id, 'user-1', 'John');
-      expect(reverted).toBeDefined();
+      expect(reverted).not.toBeNull();
       expect(reverted?.version).toBe('1.0.2');
+      expect(reverted?.metadata?.revertedFrom).toBe(v1.id);
     });
   });
 

@@ -15,8 +15,6 @@ export const Dialog: React.FC<DialogProps> = ({
   children,
   size = 'md',
 }) => {
-  if (!open) return null;
-  
   const sizeStyles = {
     sm: 'max-w-sm w-full',
     md: 'max-w-md w-full',
@@ -36,16 +34,22 @@ export const Dialog: React.FC<DialogProps> = ({
     }
   };
   
+  // O `if (!open) return null` ficava ANTES deste efeito, então o hook só
+  // rodava com o diálogo aberto e sumia ao fechar. React conta hooks por
+  // posição: a contagem mudando entre renders é justamente o que dispara
+  // "Rendered fewer hooks than expected". O efeito agora roda sempre e a
+  // saída antecipada foi para depois dele, no return.
   React.useEffect(() => {
-    if (open) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
+    if (!open) return;
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  if (!open) return null;
   
   return (
     <div

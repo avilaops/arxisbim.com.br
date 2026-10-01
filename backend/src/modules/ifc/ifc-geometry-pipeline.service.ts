@@ -74,7 +74,14 @@ export class IfcGeometryPipelineService {
   private runWorker(req: GeometryRequest, timeoutMs: number): Promise<GeometryResult> {
     return new Promise((resolve, reject) => {
       let settled = false;
-      const worker = new Worker(fileURLToPath(new URL('./ifc-geometry.worker.js', import.meta.url)));
+      const isTs = import.meta.url.endsWith('.ts') || import.meta.url.includes('/src/');
+      let workerPath: string;
+      if (isTs) {
+        workerPath = fileURLToPath(new URL('./ifc-geometry.worker.js', import.meta.url.replace('/src/', '/dist/').replace('.ts', '.js')));
+      } else {
+        workerPath = fileURLToPath(new URL('./ifc-geometry.worker.js', import.meta.url));
+      }
+      const worker = new Worker(workerPath);
 
       const timer = setTimeout(() => {
         if (settled) return;
@@ -101,7 +108,7 @@ export class IfcGeometryPipelineService {
         reject(new IfcGeometryError('IFC_WORKER_EXIT', `worker saiu com código ${code} antes de responder`));
       });
 
-      worker.postMessage(req, [req.buffer]);
+      worker.postMessage(req);
     });
   }
 }

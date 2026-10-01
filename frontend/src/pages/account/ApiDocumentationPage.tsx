@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
 
 export default function ApiDocumentationPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>('auth');
+  // Mesma origem que o app de fato chama. Escrever o host na mao ja apontou
+  // para api.arxisvr.com, dominio sem registro A nem MX.
+  const apiBaseUrl = `${resolveApiBaseUrl()}/api/v1`;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -10,7 +14,7 @@ export default function ApiDocumentationPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Documentação da API</h1>
         <p className="text-lg text-gray-600">
-          Use tokens API para acessar os recursos do ArxisVR programaticamente
+          Use tokens API para acessar os recursos do Arxis programaticamente
         </p>
       </div>
 
@@ -19,13 +23,13 @@ export default function ApiDocumentationPage() {
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm text-gray-600 font-medium">Endpoint base</p>
           <button
-            onClick={() => navigator.clipboard.writeText('https://api.arxisvr.com/api/v1')}
+            onClick={() => navigator.clipboard.writeText(apiBaseUrl)}
             className="text-xs text-blue-600 hover:text-blue-800"
           >
             Copiar
           </button>
         </div>
-        <code className="text-gray-900 font-mono">https://api.arxisvr.com/api/v1</code>
+        <code className="text-gray-900 font-mono">{apiBaseUrl}</code>
       </div>
 
       {/* Sections */}
@@ -57,7 +61,7 @@ export default function ApiDocumentationPage() {
               <h4 className="text-md font-semibold text-gray-900 mt-4">Exemplo com curl:</h4>
               <div className="bg-gray-900 p-4 rounded-lg font-mono text-sm text-gray-100 overflow-x-auto">
                 {`curl -H "Authorization: Bearer arx_live_xxxxxxxxxxxxxxxxxx" \\
-  https://api.arxisvr.com/api/v1/projects`}
+  ${apiBaseUrl}/projects`}
               </div>
             </div>
           )}

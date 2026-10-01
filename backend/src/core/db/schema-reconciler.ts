@@ -39,6 +39,13 @@ const REQUIRED_COLUMNS: Array<{
   { table: 'user_sessions', column: 'revoke_reason',    type: 'varchar(50)' },
   { table: 'user_sessions', column: 'last_activity_at', type: 'timestamp', default: 'now()' },
   { table: 'user_sessions', column: 'is_active',        type: 'boolean',   default: 'true' },
+
+  // ifc_models
+  { table: 'ifc_models', column: 'status', type: 'varchar(50)', default: "'queued'" },
+  { table: 'ifc_models', column: 'processing_error', type: 'text' },
+  { table: 'ifc_models', column: 'processing_attempts', type: 'integer', default: '0' },
+  { table: 'ifc_models', column: 'processing_started_at', type: 'timestamp' },
+  { table: 'ifc_models', column: 'processing_completed_at', type: 'timestamp' },
 ];
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -98,6 +105,18 @@ export async function reconcileSchema(sql: postgres.Sql): Promise<ReconcileResul
       result.errors.push(`${key}: ${msg}`);
       console.error(`[schema-reconciler] ❌ Failed to add ${key}: ${msg}`);
     }
+  }
+
+  // Ensure composite index exists
+  try {
+    await sql.unsafe(
+      `CREATE INDEX IF NOT EXISTS "model_elements_ifc_model_express_idx" ON "model_elements" ("ifc_model_id", "express_id")`
+    );
+    console.log(`[schema-reconciler] ✅ Ensured composite index model_elements_ifc_model_express_idx exists`);
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    result.errors.push(`composite_index: ${msg}`);
+    console.error(`[schema-reconciler] ❌ Failed to ensure composite index: ${msg}`);
   }
 
   return result;

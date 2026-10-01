@@ -202,7 +202,7 @@ export class AboutModal {
       <div class="about-modal-container">
         <div class="about-modal-header">
           <div class="about-logo">BIM</div>
-          <div class="about-title">ArxisVR</div>
+          <div class="about-title">Arxis</div>
           <div class="about-subtitle">Plataforma BIM corporativa</div>
         </div>
         
@@ -242,7 +242,7 @@ export class AboutModal {
           </div>
           
           <div class="about-section" style="margin-top: 20px; text-align: center;">
-            <div class="about-subtitle">© 2026 ArxisVR</div>
+            <div class="about-subtitle">© 2026 Arxis</div>
             <div class="about-subtitle">Licenciado sob MIT</div>
           </div>
         </div>
@@ -264,7 +264,7 @@ export class AboutModal {
     this.modal.querySelector('[data-action="close"]')?.addEventListener('click', () => this.close());
     
     this.modal.querySelector('[data-action="github"]')?.addEventListener('click', () => {
-      window.open('https://github.com/avilaops/ArxisVR', '_blank');
+      window.open('https://github.com/avilaops/Arxis', '_blank');
     });
 
     // ESC fecha

@@ -37,7 +37,10 @@ describe('GDPRService', () => {
     });
 
     it('should return false for non-existent consent', () => {
-      const hasConsent = service.hasConsent('user-1', 'analytics');
+      // `getGDPRService()` devolve um singleton: o consentimento gravado nos
+      // testes acima continua lá. Um usuário próprio é o que o caso realmente
+      // descreve — ninguém registrou consentimento para ele.
+      const hasConsent = service.hasConsent('user-sem-consentimento', 'analytics');
       expect(hasConsent).toBe(false);
     });
   });
@@ -115,10 +118,14 @@ describe('GDPRService', () => {
     });
 
     it('should check if consent needs renewal', () => {
-      service.recordConsent('user-1', 'analytics', true);
-      service.updatePolicyVersion('2.0');
+      // O caso acima já move a política para 2.0 no mesmo singleton: o
+      // consentimento nascia com 2.0 e o `updatePolicyVersion('2.0')` daqui
+      // virava no-op, então nada precisava renovar. Usuário próprio e uma
+      // versão de fato nova deixam o caso independente da ordem dos testes.
+      service.recordConsent('user-renovacao', 'analytics', true);
+      service.updatePolicyVersion('3.0');
 
-      const needsRenewal = service.needsConsentRenewal('user-1', 'analytics');
+      const needsRenewal = service.needsConsentRenewal('user-renovacao', 'analytics');
       expect(needsRenewal).toBe(true);
     });
   });

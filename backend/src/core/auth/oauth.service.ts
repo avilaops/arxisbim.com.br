@@ -24,7 +24,7 @@ export class OAuthService {
   private db;
 
   constructor() {
-    const client = postgres(process.env.DATABASE_URL!);
+    const client = postgres(process.env.DATABASE_URL!, { max: 3 });
     this.db = drizzle(client, { schema: { users, tenants, userSessions } });
   }
 
@@ -57,7 +57,9 @@ export class OAuthService {
       const [byEmail] = await this.db
         .select()
         .from(users)
-        .where(eq(users.email, profile.email))
+        // lowercase para casar com a conta criada por senha (que tambem e
+        // normalizada); senao o Google nao vincula a conta "Nicolas@" existente.
+        .where(eq(users.email, profile.email.trim().toLowerCase()))
         .limit(1);
 
       if (byEmail) {

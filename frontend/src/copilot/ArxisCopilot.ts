@@ -163,7 +163,7 @@ export class ArxisCopilot {
   }
 
   private createWelcomeMessage(): string {
-    return 'Olá! Sou o Copilot do ArxisVR. Posso montar cenas, mudar câmera, preparar revisão BIM, sugerir fluxo 4D/5D e executar ações seguras no viewer. Experimente: “criar cena de coordenação BIM” ou “vista superior”.';
+    return 'Olá! Sou o Copilot do Arxis. Posso montar cenas, mudar câmera, preparar revisão BIM, sugerir fluxo 4D/5D e executar ações seguras no viewer. Experimente: “criar cena de coordenação BIM” ou “vista superior”.';
   }
 
   private createPanel(): HTMLDivElement {
@@ -172,7 +172,7 @@ export class ArxisCopilot {
     panel.innerHTML = `
       <div class="arxis-copilot__header">
         <div>
-          <div class="arxis-copilot__eyebrow">ArxisVR Copilot</div>
+          <div class="arxis-copilot__eyebrow">Arxis Copilot</div>
           <h2>Assistente BIM</h2>
         </div>
         <button class="arxis-copilot__close" type="button" aria-label="Fechar Copilot">×</button>
@@ -192,8 +192,8 @@ export class ArxisCopilot {
     button.className = 'arxis-copilot-toggle';
     // Ícone de assistente (bot) — sinaliza o assistente pessoal único.
     button.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="4" r="1.4"/><path d="M9 13h.01M15 13h.01"/><path d="M9.5 16.5h5"/></svg>';
-    button.setAttribute('aria-label', 'Assistente ArxisVR');
-    button.title = 'Assistente ArxisVR (Ctrl+K)';
+    button.setAttribute('aria-label', 'Assistente Arxis');
+    button.title = 'Assistente Arxis (Ctrl+K)';
     return button;
   }
 
