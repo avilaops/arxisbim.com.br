@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import { FRONTEND_URL, PRIVACY_EMAIL, frontendUrl } from '../config/domains.js';
 
 export interface EmailTemplate {
@@ -211,7 +212,7 @@ function buildTemplateContent(templateId: string, recipientName: string): { subj
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: Transporter;
 
   constructor() {
     this.transporter = nodemailer.createTransport({
