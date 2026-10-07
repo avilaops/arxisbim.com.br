@@ -34,7 +34,7 @@
         "npm": ">=10"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.713.0",
+        "@aws-sdk/client-s3": "^3.1143.0",
         "@aws-sdk/lib-storage": "^3.1064.0",
         "@aws-sdk/s3-request-presigner": "^3.713.0",
         "@fastify/cors": "^11.3.0",
