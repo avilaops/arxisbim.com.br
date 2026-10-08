@@ -33,6 +33,9 @@
      divida de classificacao, nao portao de qualidade. */
   "files": [
     "src/main.tsx",
+    "src/features/equipment-generator/index.ts",
+    "src/features/equipment-generator/viewer/EquipmentViewerView.tsx",
+    "src/features/equipment-generator/demo/main.ts",
     "src/env.d.ts",
     "src/global.d.ts",
     "src/node-shims.d.ts",
