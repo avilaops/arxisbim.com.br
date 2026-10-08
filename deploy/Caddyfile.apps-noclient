@@ -106,76 +106,10 @@ cdda.avilaops.com {
 	reverse_proxy 127.0.0.1:3120
 }
 
-# --- n8n (container n8n-n8n-1, /opt/n8n) ---
-# Veio do servidor de aplicacoes em 11/09/2026 (la vivia em swap; antes disso
-# no VPS de infra, removido em 08/09). Motor comercial: todo produto da casa
-# chama n8n.avilaops.com pelo nome publico, entao mudar de maquina nao muda
-# nenhuma configuracao deles.
-n8n.avilaops.com {
-	# Celular (11/09/2026): o n8n prende o cabecalho das listas e rola so a
-	# lista; num iPhone sobra menos da metade da tela para os fluxos. O HTML do
-	# editor passa por um template do Caddy que injeta /avila-n8n-mobile.css
-	# (em /opt/n8n/override). API, webhooks, assets e WebSocket vao direto.
-	# Doc: app.avilaops.com/docs/n8n-celular-cabecalho.md
-	@editor_html {
-		method GET
-		header Accept *text/html*
-		not path *.* /rest/* /webhook* /form* /chat* /mcp* /api/* /oauth* /sso* /push* /healthz* /metrics* /assets/* /static/* /__n8n_index
-	}
-	handle /__n8n_index {
-		rewrite * /
-		reverse_proxy 127.0.0.1:5678
-	}
-	handle /avila-n8n-mobile.css {
-		root * /opt/n8n/override
-		header Cache-Control "public, max-age=300"
-		file_server
-	}
-	handle /avila-n8n-credentials.css {
-		root * /opt/n8n/override
-		header Cache-Control "public, max-age=300"
-		file_server
-	}
-	handle /avila-n8n-credentials.js {
-		root * /opt/n8n/override
-		header Cache-Control "public, max-age=300"
-		file_server
-	}
-	handle /avila-credential-icons/* {
-		root * /opt/n8n/override
-		header Cache-Control "public, max-age=86400"
-		file_server
-	}
-	handle /avila-modules.css {
-		reverse_proxy 127.0.0.1:5679
-	}
-	handle /avila-modules.js {
-		reverse_proxy 127.0.0.1:5679
-	}
-	handle /avila {
-		redir * /avila/ 308
-	}
-	handle_path /avila/* {
-		reverse_proxy 127.0.0.1:5679
-	}
-	handle_path /avila-api/* {
-		reverse_proxy 127.0.0.1:5679
-	}
-	handle @editor_html {
-		root * /opt/n8n/override
-		rewrite * /index.html
-		header Cache-Control "no-store"
-		templates
-		file_server
-	}
-	handle {
-		reverse_proxy 127.0.0.1:5678 {
-			# O editor usa WebSocket para execucao ao vivo; sem cabecalho longo a
-			# tela fica "conectando" para sempre.
-			flush_interval -1
-		}
-	}
-}
+# --- n8n ---
+# Saiu deste servidor em 08/10/2026: roda nativo (systemd, sem Docker) no
+# servidor de aplicacoes, e o registro A de n8n.avilaops.com aponta para la.
+# O bloco do site esta em n8n.avilaops.com/ops/Caddyfile.n8n.
 
 # --- Notas (Outline, container notas-outline 3090, /opt/notas-avilaops-com) ---
 # Login pelo auth.avilaops.com (OIDC), que continua no servidor de aplicacoes.
