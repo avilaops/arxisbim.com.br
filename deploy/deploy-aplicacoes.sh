@@ -43,6 +43,54 @@ if command -v build-pesado >/dev/null 2>&1; then
   TETO=(--build-arg "NODE_OPTIONS=--max-old-space-size=${BUILD_PESADO_HEAP_MB:-1024}")
 fi
 
+# Type-check + build de cada alvo sao UMA etapa, que roda numa execucao interna
+# deste script (_api-local, _web-local) por dentro do build-pesado: uma trava
+# so em volta das duas coisas. Antes o `tsc` rodava fora da trava, somando com
+# o build de outra sessao, e so o build esperava a vez. Sem o build-pesado a
+# etapa roda do mesmo jeito, sem trava.
+sob_trava() {
+  ARXISVR_NODE_OPTIONS_DE_FORA="${NODE_OPTIONS-}" \
+    ${PESADO[@]+"${PESADO[@]}"} bash "$ROOT/deploy/deploy-aplicacoes.sh" "$1"
+}
+
+# O teto de heap que o build-pesado exporta vale para o build. O type-check
+# fica so com a trava, com o NODE_OPTIONS de quem chamou o deploy: o `tsc`
+# nunca foi medido com 1024 MB.
+sem_teto() {
+  if [ "${#PESADO[@]}" -gt 0 ] && [ "${ARXISVR_NODE_OPTIONS_DE_FORA+x}" = x ]; then
+    NODE_OPTIONS="$ARXISVR_NODE_OPTIONS_DE_FORA" "$@"
+  else
+    "$@"
+  fi
+}
+
+# Etapa interna _api-local (so com ARXISVR_BUILD_LOCAL=1).
+local_api() {
+  if [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
+    echo "==> [api] type-check (npm run type-check)"
+    (cd "$ROOT/backend" && sem_teto npm run type-check) || { echo "    tipos com erro: deploy parado antes de construir"; return 1; }
+  fi
+  echo "==> [api] build local"
+  docker build ${TETO[@]+"${TETO[@]}"} -t arxisvr-api:local "$ROOT/backend"
+}
+
+# Etapa interna _web-local.
+local_web() {
+  # Portao: tipos do frontend antes de empacotar (mesma regra do backend).
+  # O tsconfig cobre o grafo de src/main.tsx, o que entra no bundle.
+  if [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
+    echo "==> [web] type-check (npm run typecheck)"
+    (cd "$ROOT/frontend" && sem_teto npm run typecheck) || { echo "    tipos com erro: deploy parado antes de empacotar"; return 1; }
+  fi
+  echo "==> [web] build local (Vite, ~1 min: nao vale o tar de 14 MB de dist mais o node_modules no servidor)"
+  # VITE_SITE_URL entra no bundle em tempo de build (sitemap, robots, feed e
+  # canonical). A origem da API nao e mais fixada aqui: desde 17/09/2026 ela e
+  # resolvida em execucao por src/config/site.config.ts, para o mesmo bundle
+  # servir o dominio novo e o antigo. Para forcar uma origem (teste, staging):
+  # VITE_API_URL=... ./deploy/deploy-aplicacoes.sh web
+  (cd "$ROOT/frontend" && VITE_SITE_URL="$SITE_URL" npm run build)
+}
+
 deploy_api() {
   # Portao: tipos do backend ANTES de construir a imagem. O build e esbuild,
   # que remove os tipos sem checar: um erro de tipo viaja para producao sem
@@ -51,11 +99,8 @@ deploy_api() {
   # O type-check tambem roda no servidor (etapa do Dockerfile, abaixo), pelo
   # mesmo motivo do build: a maquina do Nicolas e dividida com outras sessoes
   # e um `tsc` local chegou a ficar 20 min sem terminar (11/09/2026).
-  # ARXISVR_BUILD_LOCAL=1 confere aqui, como antes.
-  if [ "${ARXISVR_BUILD_LOCAL:-0}" = "1" ] && [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
-    echo "==> [api] type-check (npm run type-check)"
-    (cd "$ROOT/backend" && npm run type-check) || { echo "    tipos com erro: deploy parado antes de construir"; return 1; }
-  fi
+  # ARXISVR_BUILD_LOCAL=1 confere aqui, como antes (em local_api, junto com
+  # o build, sob a mesma trava).
   # Build NO SERVIDOR, a partir do codigo enviado por tar (11/09/2026). No
   # servidor de aplicacoes o build era local porque a maquina dividia 3,7 GB
   # com clientes pagantes; o apps-noclient nao tem cliente, tem 2,4 GB livres,
@@ -65,8 +110,7 @@ deploy_api() {
   # ARXISVR_BUILD_LOCAL=1 volta ao caminho antigo, se um dia fizer falta.
   local marca
   if [ "${ARXISVR_BUILD_LOCAL:-0}" = "1" ]; then
-    echo "==> [api] build local"
-    ${PESADO[@]+"${PESADO[@]}"} docker build ${TETO[@]+"${TETO[@]}"} -t arxisvr-api:local "$ROOT/backend"
+    sob_trava _api-local
     marca="$(docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c')"
     echo "    marca do build (bytes de dist/index.js): $marca"
     echo "==> [api] enviando a imagem"
@@ -119,19 +163,8 @@ deploy_api() {
 }
 
 deploy_web() {
-  # Portao: tipos do frontend antes de empacotar (mesma regra do backend).
-  # O tsconfig cobre o grafo de src/main.tsx, o que entra no bundle.
-  if [ "${ARXISVR_SEM_CONFERIR:-0}" != "1" ]; then
-    echo "==> [web] type-check (npm run typecheck)"
-    (cd "$ROOT/frontend" && npm run typecheck) || { echo "    tipos com erro: deploy parado antes de empacotar"; return 1; }
-  fi
-  echo "==> [web] build local (Vite, ~1 min: nao vale o tar de 14 MB de dist mais o node_modules no servidor)"
-  # VITE_SITE_URL entra no bundle em tempo de build (sitemap, robots, feed e
-  # canonical). A origem da API nao e mais fixada aqui: desde 17/09/2026 ela e
-  # resolvida em execucao por src/config/site.config.ts, para o mesmo bundle
-  # servir o dominio novo e o antigo. Para forcar uma origem (teste, staging):
-  # VITE_API_URL=... ./deploy/deploy-aplicacoes.sh web
-  (cd "$ROOT/frontend" && VITE_SITE_URL="$SITE_URL" ${PESADO[@]+"${PESADO[@]}"} npm run build)
+  # Type-check + build, sob uma trava so (local_web).
+  sob_trava _web-local
 
   local bundle
   bundle="$(basename "$(ls "$ROOT"/frontend/dist/assets/pages-*.js | head -1)")"
@@ -158,6 +191,8 @@ deploy_web() {
 }
 
 case "${1:-tudo}" in
+  _api-local) local_api; exit 0 ;;
+  _web-local) local_web; exit 0 ;;
   api)  deploy_api ;;
   web)  deploy_web ;;
   tudo) deploy_api; deploy_web ;;
