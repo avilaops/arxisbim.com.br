@@ -30,6 +30,19 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 ssh_() { ssh -i "$KEY" -o StrictHostKeyChecking=no "root@$HOST" "$@"; }
 
+# Builds que rodam NESTA maquina passam pelo build-pesado quando ele existe (no
+# servidor dos agentes, 4 GB de RAM): um build pesado por vez, com teto de heap
+# no Node. Sem ele no PATH (maquina do Nicolas, CI) o comando e o de sempre.
+# Dentro do `docker build` o ambiente de quem chama nao entra: o teto vai por
+# --build-arg e o backend/Dockerfile o recebe. O build no servidor (padrao da
+# API) nao passa por aqui.
+PESADO=()
+TETO=()
+if command -v build-pesado >/dev/null 2>&1; then
+  PESADO=(build-pesado)
+  TETO=(--build-arg "NODE_OPTIONS=--max-old-space-size=${BUILD_PESADO_HEAP_MB:-1024}")
+fi
+
 deploy_api() {
   # Portao: tipos do backend ANTES de construir a imagem. O build e esbuild,
   # que remove os tipos sem checar: um erro de tipo viaja para producao sem
@@ -53,7 +66,7 @@ deploy_api() {
   local marca
   if [ "${ARXISVR_BUILD_LOCAL:-0}" = "1" ]; then
     echo "==> [api] build local"
-    docker build -t arxisvr-api:local "$ROOT/backend"
+    ${PESADO[@]+"${PESADO[@]}"} docker build ${TETO[@]+"${TETO[@]}"} -t arxisvr-api:local "$ROOT/backend"
     marca="$(docker run --rm --entrypoint sh arxisvr-api:local -c 'cat /app/dist/index.js | wc -c')"
     echo "    marca do build (bytes de dist/index.js): $marca"
     echo "==> [api] enviando a imagem"
@@ -118,7 +131,7 @@ deploy_web() {
   # resolvida em execucao por src/config/site.config.ts, para o mesmo bundle
   # servir o dominio novo e o antigo. Para forcar uma origem (teste, staging):
   # VITE_API_URL=... ./deploy/deploy-aplicacoes.sh web
-  (cd "$ROOT/frontend" && VITE_SITE_URL="$SITE_URL" npm run build)
+  (cd "$ROOT/frontend" && VITE_SITE_URL="$SITE_URL" ${PESADO[@]+"${PESADO[@]}"} npm run build)
 
   local bundle
   bundle="$(basename "$(ls "$ROOT"/frontend/dist/assets/pages-*.js | head -1)")"

@@ -29,6 +29,12 @@ COPY . .
 # checa tipos; sem isto um erro de tipo viaja para producao em silencio.
 # CONFERIR=1 pula (emergencia comprovada, nunca por rotina).
 ARG CONFERIR=0
+# Teto de heap do Node no type-check e no build, so nesta etapa: quem constroi
+# no servidor dos agentes passa --build-arg NODE_OPTIONS=--max-old-space-size=N
+# (deploy/deploy-aplicacoes.sh, via build-pesado). Sem o argumento fica vazio,
+# como antes. A etapa final nao herda.
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=$NODE_OPTIONS
 RUN if [ "$CONFERIR" != "1" ]; then npm run type-check; fi
 RUN npm run build && npm prune --omit=dev
 
