@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { publicSiteHref } from '../config/site.config'
 
 export default function SharedPage() {
   const [searchParams] = useSearchParams()
@@ -57,7 +58,7 @@ export default function SharedPage() {
             Este link de compartilhamento não é válido ou expirou
           </p>
           <a
-            href="/"
+            href={publicSiteHref()}
             style={{
               display: 'inline-block',
               padding: '8px 16px',
@@ -115,7 +116,7 @@ export default function SharedPage() {
     >
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
-          href="/"
+          href={publicSiteHref()}
           style={{
             display: 'inline-flex',
             alignItems: 'center',

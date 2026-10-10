@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 import SEO from '../components/SEO';
+import { publicSiteHref } from '../config/site.config'
 
 export default function ValidadorPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -442,7 +443,7 @@ export default function ValidadorPage() {
 
       {/* Back Link */}
       <a
-        href="/"
+        href={publicSiteHref()}
         style={{
           marginTop: '32px',
           color: 'rgba(255, 255, 255, 0.4)',

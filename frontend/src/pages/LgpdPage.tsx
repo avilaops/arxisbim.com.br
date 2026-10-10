@@ -1,4 +1,5 @@
 import SEO from '../components/SEO'
+import { publicSiteHref } from '../config/site.config'
 
 export default function LgpdPage() {
   return (
@@ -17,7 +18,7 @@ export default function LgpdPage() {
       />
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <a
-          href="/"
+          href={publicSiteHref()}
           style={{
             display: 'inline-flex',
             alignItems: 'center',

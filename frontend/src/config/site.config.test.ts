@@ -13,6 +13,7 @@ import {
   resolveRootRedirect,
   resolveSiteUrl,
   resolveWsUrl,
+  publicSiteHref,
 } from './site.config';
 
 // Os resolvers recebem env e host como argumento justamente para o teste poder
@@ -127,5 +128,17 @@ describe('isLegacyHost', () => {
     expect(isLegacyHost('arxisvr.avilaops.com')).toBe(true);
     expect(isLegacyHost('www.arxisvr.avilaops.com')).toBe(true);
     expect(isLegacyHost('arxisbim.com.br')).toBe(false);
+  });
+});
+
+describe('publicSiteHref', () => {
+  it('sai com a origem do site quando a página é servida no host do app', () => {
+    expect(publicSiteHref('app.arxisbim.com.br')).toBe('https://arxisbim.com.br/');
+  });
+
+  it('continua relativo nos demais hosts', () => {
+    expect(publicSiteHref('arxisbim.com.br')).toBe('/');
+    expect(publicSiteHref('arxisvr.avilaops.com')).toBe('/');
+    expect(publicSiteHref('localhost')).toBe('/');
   });
 });

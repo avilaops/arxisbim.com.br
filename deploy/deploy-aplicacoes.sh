@@ -25,6 +25,10 @@ KEY="${ARXISVR_SSH_KEY:-$HOME/.ssh/hetzner_avilaops}"
 # dominio antigo. Ver documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
 SITE_URL="${ARXISVR_SITE_URL:-https://arxisbim.com.br}"
 API_URL="${ARXISVR_API_URL:-https://api.arxisbim.com.br}"
+# Origem do app (login, validador, visualizador). Separada do site desde
+# 10/10/2026: o site publico vai para o CMS, e e aqui que a SPA deste
+# repositorio e conferida depois de publicar.
+APP_URL="${ARXISVR_APP_URL:-https://app.arxisbim.com.br}"
 REMOTE=/opt/arxisvr
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -182,7 +186,7 @@ deploy_web() {
 
   echo "==> [web] conferindo que o bundle PUBLICADO e o que acabei de construir"
   local publicado
-  publicado="$(curl -s --max-time 30 "$SITE_URL/" | grep -oE 'pages-[^"]*\.js' | head -1)"
+  publicado="$(curl -s --max-time 30 "$APP_URL/" | grep -oE 'pages-[^"]*\.js' | head -1)"
   if [ "$bundle" != "$publicado" ]; then
     echo "[web] ABORTADO: publicado '$publicado', esperado '$bundle'." >&2
     return 1
@@ -202,7 +206,7 @@ esac
 echo
 echo "==> conferindo no ar"
 falhou=0
-for u in "$API_URL/health" "$SITE_URL/" "$SITE_URL/validador" "$SITE_URL/app/compare"; do
+for u in "$API_URL/health" "$SITE_URL/" "$APP_URL/login" "$APP_URL/validador" "$APP_URL/app/compare"; do
   codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$u")"
   printf '  %-45s %s
 ' "$u" "$codigo"

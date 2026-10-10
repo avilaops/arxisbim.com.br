@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { authManager } from '../AuthManager';
+import { publicSiteHref } from '../../../config/site.config'
 
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '';
 
@@ -149,7 +150,7 @@ export default function RegisterPage() {
 
         <p className="auth-footer-text">
           Já tem conta?{' '}
-          <a className="auth-link" href="/">
+          <a className="auth-link" href={publicSiteHref()}>
             Entrar
           </a>
         </p>

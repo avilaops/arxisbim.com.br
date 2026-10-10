@@ -154,3 +154,13 @@ export function resolveRootRedirect(hasSession: boolean, host = currentHost()): 
 
   return hasSession ? APP_HOME_PATH : '/login';
 }
+
+/**
+ * Endereço da página inicial do site público, para links "voltar ao site".
+ *
+ * No host do app `/` leva ao login ou ao dashboard, então o link precisa sair
+ * com a origem do site; nos outros hosts continua relativo, como sempre foi.
+ */
+export function publicSiteHref(host = currentHost()): string {
+  return isAppHost(host) ? `${PRIMARY_SITE_URL}/` : '/';
+}
