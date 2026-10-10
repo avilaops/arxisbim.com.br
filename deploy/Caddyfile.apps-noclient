@@ -29,6 +29,15 @@ arxisbim.com.br {
 	reverse_proxy 127.0.0.1:3102
 }
 
+# App do Arxis (login, validador, visualizador): a mesma SPA do container
+# arxisvr-web. O site publico em arxisbim.com.br vai para o CMS.
+app.arxisbim.com.br {
+	encode zstd gzip
+	# O noindex do bundle depende de JavaScript; este vale para qualquer robo.
+	header X-Robots-Tag "noindex"
+	reverse_proxy 127.0.0.1:3102
+}
+
 # www manda para o apex: um endereco so indexado, um so no analytics.
 www.arxisbim.com.br {
 	redir https://arxisbim.com.br{uri} 308
