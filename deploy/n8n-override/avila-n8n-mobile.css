@@ -110,10 +110,6 @@
     overflow: visible !important;
     white-space: nowrap !important;
   }
-  /* O selo dos módulos próprios encosta no nome, em vez de ir para a borda. */
-  [data-test-id="settings-back"] + div .avila-owned-badge {
-    margin-left: 6px !important;
-  }
   /* O item aberto fica no começo da faixa, sempre à vista. */
   [data-test-id="settings-back"] + div > :has([data-test-id="menu-item"][aria-current="page"]) {
     order: -1 !important;
