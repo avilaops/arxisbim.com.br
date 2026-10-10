@@ -50,3 +50,79 @@
     margin-right: 0 !important;
   }
 }
+
+/* Ávila Ops · Settings no celular (10/10/2026)
+   Em Settings o n8n põe o menu numa coluna lateral de no mínimo 200px e dá
+   48px de respiro de cada lado ao conteúdo. Num iPhone o menu fica com metade
+   da tela e o conteúdo vira uma tira de uma palavra por linha. Aqui, até
+   820px, o menu vira uma faixa horizontal que rola de lado, no topo, e o
+   conteúdo usa a largura toda. O item aberto vai para o começo da faixa.
+   Âncora: [data-test-id="settings-back"], que só existe nessa tela. A grade
+   de Settings fica dentro da grade do aplicativo; "> #sidebar" escolhe só a
+   de dentro. */
+@media (max-width: 820px) {
+  /* A grade perde a coluna lateral: menu em cima, conteúdo embaixo. */
+  .app-grid:has(> #sidebar [data-test-id="settings-back"]) {
+    grid-template:
+      "banners" auto
+      "sidebar" auto
+      "header" auto
+      "content" minmax(0, 1fr)
+      "aside" auto
+      / minmax(0, 1fr) !important;
+  }
+  .app-grid:has(> #sidebar [data-test-id="settings-back"]) > #sidebar {
+    min-width: 0 !important;
+  }
+  /* O menu vira uma faixa de uma linha, com rolagem lateral. */
+  div:has(> [data-test-id="settings-back"]) {
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-right: 0 !important;
+    border-bottom: var(--border) !important;
+    scrollbar-width: none;
+  }
+  div:has(> [data-test-id="settings-back"])::-webkit-scrollbar {
+    display: none;
+  }
+  div:has(> [data-test-id="settings-back"]) > * {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  [data-test-id="settings-back"] + div {
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+  [data-test-id="settings-back"] + div > * {
+    flex: 0 0 auto !important;
+    width: auto !important;
+  }
+  [data-test-id="settings-back"] + div [data-test-id="menu-item"] {
+    width: auto !important;
+    white-space: nowrap !important;
+  }
+  [data-test-id="settings-back"] + div [data-test-id="menu-item"] * {
+    overflow: visible !important;
+    white-space: nowrap !important;
+  }
+  /* O selo dos módulos próprios encosta no nome, em vez de ir para a borda. */
+  [data-test-id="settings-back"] + div .avila-owned-badge {
+    margin-left: 6px !important;
+  }
+  /* O item aberto fica no começo da faixa, sempre à vista. */
+  [data-test-id="settings-back"] + div > :has([data-test-id="menu-item"][aria-current="page"]) {
+    order: -1 !important;
+  }
+  /* O conteúdo usa a largura toda, sem o respiro de tela grande. */
+  .app-grid:has(> #sidebar [data-test-id="settings-back"]) > #content > div:first-child > div {
+    padding-top: 16px !important;
+  }
+  .app-grid:has(> #sidebar [data-test-id="settings-back"]) > #content > div:first-child > div > div {
+    padding: 0 16px 24px !important;
+  }
+}
