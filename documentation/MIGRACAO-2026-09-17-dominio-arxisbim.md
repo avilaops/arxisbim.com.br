@@ -21,9 +21,12 @@ servidor em 05/10/2026, com imagens, volumes e o `.env`, e não havia cópia do
   `JWT_REFRESH_SECRET`, `API_TOKEN_PEPPER`, `INTERNAL_API_KEY` e a senha do
   papel `arxisvr` no Postgres são novos: sessões antigas e tokens de API
   emitidos antes (plugin do Revit) deixaram de valer.
-- Ficaram vazios, por não haver de onde recuperar: SMTP, Mercado Pago, OAuth do
+- Ficaram vazios, por não haver de onde recuperar: Mercado Pago, OAuth do
   Google e do GitHub, Turnstile, Sentry, LiveKit, Facebook, fiscal e chaves de
-  IA. Sem SMTP, cadastro novo não recebe o e-mail de verificação.
+  IA.
+- O e-mail sai por `noreply@avilaops.com` (SMTP `mail.avilaops.com:587`, os
+  mesmos dados do backend do Saúde Pet), configurado no mesmo dia. A API
+  autentica no SMTP ao subir; envio de ponta a ponta não foi testado.
 - O banco `arxisvr` (Postgres do host) não foi tocado além da senha. Os uploads
   voltaram de `/opt/backups/retidos-20261005/vol-arxisvr_uploads-20261005.tar.gz`.
 - A imagem da API foi construída fora do servidor
