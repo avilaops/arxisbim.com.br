@@ -21,9 +21,8 @@
 }
 
 # --- Arxis (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
-# Dominio proprio desde 17/09/2026. Aplicar SO DEPOIS que arxisbim.com.br e
-# api.arxisbim.com.br resolverem para 204.168.249.111: o Caddy so emite o
-# certificado quando o ACME alcanca a maquina pelo nome.
+# Dominio proprio desde 17/09/2026; aplicado aqui em 10/10/2026, com o DNS de
+# arxisbim.com.br, www e api apontando para esta maquina.
 # Runbook: documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
 arxisbim.com.br {
 	encode zstd gzip
@@ -52,7 +51,12 @@ arxisvr.avilaops.com, www.arxisvr.avilaops.com {
 # criterio de desligamento no runbook).
 api.arxisvr.avilaops.com {
 	encode zstd gzip
-	reverse_proxy 127.0.0.1:3101
+	handle_path /engineering-bim/v1/* {
+		reverse_proxy 127.0.0.1:3140
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3101
+	}
 }
 
 # --- CRM (container agenda-crm-app 3020, /opt/agenda-crm/current) ---
@@ -106,11 +110,6 @@ cdda.avilaops.com {
 	reverse_proxy 127.0.0.1:3120
 }
 
-# --- n8n ---
-# Saiu deste servidor em 08/10/2026: roda nativo (systemd, sem Docker) no
-# servidor de aplicacoes, e o registro A de n8n.avilaops.com aponta para la.
-# O bloco do site esta em n8n.avilaops.com/ops/Caddyfile.n8n.
-
 # --- Notas (Outline, container notas-outline 3090, /opt/notas-avilaops-com) ---
 # Login pelo auth.avilaops.com (OIDC), que continua no servidor de aplicacoes.
 notas.avilaops.com {
@@ -150,3 +149,64 @@ engops.avilaops.com {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3130
 }
+
+tuitecnologia.com.br {
+    root * /opt/tuitecnologia/current
+    encode zstd gzip
+    file_server
+}
+
+www.tuitecnologia.com.br {
+    redir https://tuitecnologia.com.br{uri} permanent
+}
+
+# --- PartsAgricola (systemd agricola-storefront 3006, /opt/agricola-storefront) ---
+# Veio do servidor de aplicacoes em 28/09/2026. Passa pelo proxy da Cloudflare com
+# "Always Use HTTPS", entao o desafio HTTP-01 nao chega aqui: o certificado e da
+# Origin CA da Cloudflare (valido ate 2041), em /etc/caddy/certs.
+partsagricola.com.br {
+	tls /etc/caddy/certs/partsagricola.crt /etc/caddy/certs/partsagricola.key
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3006
+}
+
+www.partsagricola.com.br {
+	tls /etc/caddy/certs/partsagricola.crt /etc/caddy/certs/partsagricola.key
+	redir https://partsagricola.com.br{uri} permanent
+}
+
+# Avila TV (Avila Link): painel da TV de casa. Migrado de applications em 01/10/2026.
+# O agente roda no PC do Nicolas (10.10.0.3:8790) e chega pela WireGuard, roteada via applications (10.10.0.2).
+tv.avilaops.com {
+	encode zstd gzip
+	# Descanso de tela da TV: estatico, servido daqui mesmo para nao depender do PC de casa.
+	handle_path /descanso* {
+		root * /var/www/avila-tv/descanso
+		# A Cloudflare guardaria este HTML por horas; a TV precisa ver a edicao.
+		header Cache-Control "no-cache, must-revalidate"
+		file_server
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+	}
+	reverse_proxy 10.10.0.3:8790 {
+		health_uri /
+		health_interval 10s
+		health_timeout 5s
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 40s
+		}
+	}
+	handle_errors {
+		respond "Agente da TV offline: o PC de casa precisa estar ligado e com o WireGuard ativo. ({err.status_code})" {err.status_code}
+	}
+}
+
+# --- ERP (container erp 3140, /opt/erp) ---
+# ERP multi-empresa da Ávila Ops. Login pelo auth.avilaops.com.
+# Fonte: ERP/deploy/Caddyfile.snippet.
+# erp.avilaops.com saiu daqui em 06/10/2026: o ERP roda no servidor applications.

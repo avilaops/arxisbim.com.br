@@ -8,9 +8,29 @@ Continua respondendo durante a janela de transição, por três motivos concreto
 links indexados e em e-mails já enviados, abas abertas com o bundle antigo
 carregado, e instalações do plugin do Revit apontando para a API antiga.
 
-**Estado deste commit:** o código já está pronto para o domínio novo. Nada muda
-em produção até o DNS apontar e o Caddyfile ser aplicado — as etapas 1 a 5
-abaixo.
+**Estado em 10/10/2026:** as etapas 1 a 5 foram executadas. `arxisbim.com.br`,
+`www` e `api` apontam para `204.168.249.111`, o Caddy emitiu os três
+certificados, site e API respondem no domínio novo e o antigo redireciona.
+As etapas 6 em diante (OAuth, webhook, e-mail) continuam abertas.
+
+O corte coincidiu com uma reconstrução: `/opt/arxisvr` tinha sido apagado do
+servidor em 05/10/2026, com imagens, volumes e o `.env`, e não havia cópia do
+`.env`. O que isso muda para quem ler este runbook:
+
+- O `.env` da etapa 3 foi **escrito do zero**. `JWT_SECRET`,
+  `JWT_REFRESH_SECRET`, `API_TOKEN_PEPPER`, `INTERNAL_API_KEY` e a senha do
+  papel `arxisvr` no Postgres são novos: sessões antigas e tokens de API
+  emitidos antes (plugin do Revit) deixaram de valer.
+- Ficaram vazios, por não haver de onde recuperar: SMTP, Mercado Pago, OAuth do
+  Google e do GitHub, Turnstile, Sentry, LiveKit, Facebook, fiscal e chaves de
+  IA. Sem SMTP, cadastro novo não recebe o e-mail de verificação.
+- O banco `arxisvr` (Postgres do host) não foi tocado além da senha. Os uploads
+  voltaram de `/opt/backups/retidos-20261005/vol-arxisvr_uploads-20261005.tar.gz`.
+- A imagem da API foi construída fora do servidor
+  (`ARXISVR_BUILD_LOCAL=1`), porque o disco de lá estava em 97%. No servidor
+  ela ocupa 1,3 GB e levou o disco a 100% por alguns minutos.
+
+O texto abaixo é o plano original, mantido como referência.
 
 ---
 
