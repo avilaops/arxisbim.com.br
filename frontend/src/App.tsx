@@ -22,13 +22,25 @@ import JoinPage from './pages/JoinPage'
 import SharedPage from './pages/SharedPage'
 import OAuthCallbackPage from './pages/OAuthCallbackPage'
 import ArCalibrationPage from './pages/ArCalibrationPage'
+import { isAppHost, resolveRootRedirect } from './config/site.config'
+
+// No host do app a raiz não é a landing: leva para o app ou para o login. A
+// sessão é lida do mesmo jeito que a LoginPage lê antes de pular o formulário.
+function RootRoute() {
+  const hasSession = Boolean(localStorage.getItem('arxisvr_user') && localStorage.getItem('arxisvr_token'))
+  const redirect = resolveRootRedirect(hasSession)
+
+  return redirect ? <Navigate to={redirect} replace /> : <LandingPage />
+}
 
 export default function App() {
   return (
     <BrowserRouter>
+      {/* O host do app não entra em busca; o site público é outro sistema. */}
+      {isAppHost() && <meta name="robots" content="noindex,follow" />}
       <Routes>
         {/* Public Pages */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogArticlePage />} />
         <Route path="/login" element={<LoginPage />} />

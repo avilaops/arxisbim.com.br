@@ -13,8 +13,15 @@
  * Runbook da migração: documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
  */
 
-/** Domínio canônico do site público e do app. */
+/** Domínio canônico do site público (landing, blog, páginas legais). */
 export const PRIMARY_SITE_URL = 'https://arxisbim.com.br';
+
+/**
+ * Domínio canônico do app. O site público passa a ser servido por um CMS em
+ * `PRIMARY_SITE_URL` e a SPA fica neste host; a partir da virada é o valor de
+ * `FRONTEND_URL` no `.env` do servidor.
+ */
+export const PRIMARY_APP_URL = 'https://app.arxisbim.com.br';
 
 /** Domínio canônico da API (o WebSocket sai do mesmo serviço). */
 export const PRIMARY_API_URL = 'https://api.arxisbim.com.br';
@@ -62,10 +69,12 @@ export const PRIVACY_EMAIL = process.env.PRIVACY_EMAIL || 'privacidade@arxisbim.
  *
  * Os dois domínios entram: durante a transição o app pode ser servido pelo
  * host antigo e falar com a API nova (e vice-versa), e um preflight recusado
- * aparece para o usuário como "erro de rede" sem nada no log.
+ * aparece para o usuário como "erro de rede" sem nada no log. O host do app
+ * entra pelo mesmo motivo: é de lá que a SPA chama a API depois da virada.
  */
 export function defaultCorsOrigins(): string[] {
   const origins = [
+    PRIMARY_APP_URL,
     PRIMARY_SITE_URL,
     'https://www.arxisbim.com.br',
     LEGACY_SITE_URL,

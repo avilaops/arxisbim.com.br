@@ -14,7 +14,8 @@ interface SEOProps {
 }
 
 // Canonical e og:url apontam sempre para o domínio próprio, mesmo quando o
-// host antigo serve a página.
+// host antigo serve a página. No host do app apontam para o próprio app; o
+// noindex de lá sai no App.tsx, para valer também nas telas sem <SEO>.
 export const siteUrl = resolveCanonicalSiteUrl()
 
 export default function SEO({ title, description, keywords, path = '', image = '/images/editorial/arquitetura.webp', imageAlt = 'Arxis · clareza para visualizar, analisar e decidir', type = 'website', publishedTime, structuredData, noindex }: SEOProps) {

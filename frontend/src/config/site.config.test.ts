@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  APP_HOME_PATH,
   PRIMARY_API_URL,
+  PRIMARY_APP_URL,
   PRIMARY_SITE_URL,
+  isAppHost,
   isLegacyHost,
   normalizeOrigin,
   resolveApiUrl,
   resolveCanonicalSiteUrl,
+  resolveRootRedirect,
   resolveSiteUrl,
   resolveWsUrl,
 } from './site.config';
@@ -42,6 +46,11 @@ describe('resolveApiUrl', () => {
     expect(resolveApiUrl(SEM_ENV, 'www.arxisvr.avilaops.com')).toBe('https://api.arxisvr.avilaops.com');
   });
 
+  it('servido pelo host do app, fala com a API canônica', () => {
+    expect(resolveApiUrl(SEM_ENV, 'app.arxisbim.com.br')).toBe(PRIMARY_API_URL);
+    expect(resolveWsUrl(SEM_ENV, 'app.arxisbim.com.br')).toBe('wss://api.arxisbim.com.br');
+  });
+
   it('host desconhecido cai no domínio canônico', () => {
     expect(resolveApiUrl(SEM_ENV, 'preview.pages.dev')).toBe(PRIMARY_API_URL);
   });
@@ -57,6 +66,42 @@ describe('resolveSiteUrl e resolveCanonicalSiteUrl', () => {
     const env = { VITE_SITE_URL: 'https://preview.exemplo.test/' };
     expect(resolveCanonicalSiteUrl(env)).toBe('https://preview.exemplo.test');
     expect(resolveSiteUrl(env, 'arxisvr.avilaops.com')).toBe('https://preview.exemplo.test');
+  });
+
+  it('no host do app o canônico é o próprio app, mesmo com VITE_SITE_URL do site público', () => {
+    expect(resolveCanonicalSiteUrl(SEM_ENV, 'app.arxisbim.com.br')).toBe(PRIMARY_APP_URL);
+    expect(resolveCanonicalSiteUrl({ VITE_SITE_URL: PRIMARY_SITE_URL }, 'app.arxisbim.com.br')).toBe(
+      PRIMARY_APP_URL,
+    );
+  });
+
+  it('fora do host do app o canônico continua sendo o site público', () => {
+    expect(resolveCanonicalSiteUrl(SEM_ENV, 'arxisbim.com.br')).toBe(PRIMARY_SITE_URL);
+    expect(resolveCanonicalSiteUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe(PRIMARY_SITE_URL);
+    expect(resolveCanonicalSiteUrl(SEM_ENV, 'localhost')).toBe(PRIMARY_SITE_URL);
+  });
+});
+
+describe('isAppHost e resolveRootRedirect', () => {
+  it('só o host do app é app', () => {
+    expect(isAppHost('app.arxisbim.com.br')).toBe(true);
+    expect(isAppHost('arxisbim.com.br')).toBe(false);
+    expect(isAppHost('www.arxisbim.com.br')).toBe(false);
+    expect(isAppHost('arxisvr.avilaops.com')).toBe(false);
+    expect(isAppHost('localhost')).toBe(false);
+    expect(isAppHost(undefined)).toBe(false);
+  });
+
+  it('no host do app a raiz leva para o app ou para o login', () => {
+    expect(resolveRootRedirect(true, 'app.arxisbim.com.br')).toBe(APP_HOME_PATH);
+    expect(resolveRootRedirect(false, 'app.arxisbim.com.br')).toBe('/login');
+  });
+
+  it('nos outros hosts a raiz continua sendo a landing, com ou sem sessão', () => {
+    for (const host of ['arxisbim.com.br', 'arxisvr.avilaops.com', 'www.arxisvr.avilaops.com', 'localhost']) {
+      expect(resolveRootRedirect(true, host)).toBeNull();
+      expect(resolveRootRedirect(false, host)).toBeNull();
+    }
   });
 });
 
