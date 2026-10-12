@@ -110,47 +110,10 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
       output: {
-        // Sem regra para `/pages/` nem pega-tudo de `node_modules`: as telas são
-        // carregadas sob demanda (App.tsx) e cada uma leva só o que usa. Com as
-        // duas regras, o esquema do web-ifc (3,5 MB) ia junto com a tela de login.
-        manualChunks: (id) => {
-          if (id.includes('node_modules/web-ifc')) {
-            return 'web-ifc'
-          }
-          if (id.includes('node_modules/three') && !id.includes('addons')) {
-            return 'three-vendor'
-          }
-          if (id.includes('three/addons')) {
-            return 'three-addons'
-          }
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor'
-          }
-          if (id.includes('/viewer/')) {
-            return 'viewer'
-          }
-          if (id.includes('/panels/')) {
-            return 'panels'
-          }
-          if (id.includes('/features/bim-4d')) {
-            return 'feature-bim-4d'
-          }
-          if (id.includes('/features/virtual-meetings')) {
-            return 'feature-virtual-meetings'
-          }
-          if (id.includes('/features/')) {
-            return 'features'
-          }
-          if (id.includes('/app/') && !id.includes('/app/entrypoints/')) {
-            return 'app-core'
-          }
-          if (id.includes('/engine/')) {
-            return 'engine'
-          }
-          if (id.includes('/commands/')) {
-            return 'commands'
-          }
-        },
+        // Sem `manualChunks`: as telas são carregadas sob demanda (App.tsx) e
+        // o empacotador separa sozinho o que cada uma usa. As regras por pasta
+        // que existiam aqui puxavam as dependências junto com o grupo, e o
+        // esquema do web-ifc (3,5 MB) acabava no caminho da tela de login.
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
