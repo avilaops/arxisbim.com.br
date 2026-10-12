@@ -143,6 +143,8 @@
 .app-layout h2, .app-layout h3 { font-weight: 600; }
 /* Painéis laterais do visualizador separados por linha, sem sombra. */
 .app-layout .viewer-panel { box-shadow: none !important; }
+/* O menu lateral também: fechado no celular, a sombra dele vazava na borda da tela. */
+.app-layout .sidebar { box-shadow: none !important; }
 /* O estado vazio fica em cima da área escura do modelo: texto claro. */
 .app-layout .viewer-canvas .viewer-empty-state,
 .app-layout .viewer-canvas .viewer-empty-state h2 { color: #fff; }

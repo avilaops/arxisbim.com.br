@@ -82,7 +82,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           background: '#1e1e1e',
           border: '1px solid var(--c-border2)',
           borderRadius: 'var(--r)',
-          boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
+          boxShadow: '0 8px 24px rgba(28,25,23,0.12)',
           zIndex: 9999,
           overflow: 'hidden',
         }}
