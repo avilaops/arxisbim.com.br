@@ -2,6 +2,23 @@
 
 /* ArxisVR Global Styles */
 
+/* Nome da marca: o símbolo é imagem, o nome "Arxis" é texto em Plus Jakarta
+   Sans ExtraBold (licença OFL em public/fonts/OFL-PlusJakartaSans.txt). Vale
+   para o app inteiro: menu lateral, barra do topo e telas de entrada. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('/fonts/PlusJakartaSans-ExtraBold-latin.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+.arx-wordmark {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1c1917;
+}
+
 :root {
   /* Colors */
   --c-bg: #0a0a0a;

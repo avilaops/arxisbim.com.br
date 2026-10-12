@@ -17,8 +17,9 @@ html.arxis-menu-open,html.arxis-menu-open body{overflow:hidden}
 .arx-site .arx-button--outline{background:transparent;border-color:#b8c6cf;color:var(--arx-ink)}
 .arx-site .arx-button--outline:hover{background:#eef5f7}
 .arx-site .arx-nav-cta{white-space:nowrap}
-.arx-brand{display:block;width:174px;height:53px;flex:none}
-.arx-brand img{width:100%;height:100%;object-fit:contain;object-position:left center}
+.arx-brand{display:inline-flex;align-items:center;gap:10px;flex:none}
+.arx-brand img{width:36px;height:36px;object-fit:contain}
+.arx-brand .arx-wordmark{font-size:24px;line-height:1}
 .arx-skip{position:fixed;top:0;left:24px;z-index:300;background:#fff;padding:14px 20px;transform:translateY(-120%);border:2px solid #0e6b8f}
 .arx-skip:focus{transform:translateY(0)}
 .arx-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--arx-line)}

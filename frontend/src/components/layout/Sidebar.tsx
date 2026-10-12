@@ -93,7 +93,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           }}
         >
           <img src="/images/brand/arxis-icon-192.png" alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-          <span className="brand-name">Arxis</span>
+          <span className="brand-name arx-wordmark">Arxis</span>
         </Link>
         {/* So no mobile (CSS): o "Recolher menu" do rodape e semantica de
             desktop e ficava a 1.500px de distancia do polegar. */}

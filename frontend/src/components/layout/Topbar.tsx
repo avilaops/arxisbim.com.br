@@ -55,7 +55,7 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
           o drawer fechado e o topo ficava so com o nome do usuario. */}
       <Link to="/dashboard" className="topbar__brand" aria-label="Arxis, página inicial">
         <img src="/images/brand/arxis-icon-192.png" alt="" width={28} height={28} />
-        <span>Arxis</span>
+        <span className="arx-wordmark">Arxis</span>
       </Link>
 
       <div className="topbar__mid" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
