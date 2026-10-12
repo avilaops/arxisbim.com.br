@@ -114,13 +114,13 @@ export default function ValidadorPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #060608 0%, #101014 100%)',
-        color: '#ffffff',
+        background: '#f6f5f2',
+        color: '#1c1917',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         padding: '60px 20px',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
       }}
     >
       <SEO
@@ -135,33 +135,30 @@ export default function ValidadorPage() {
         style={{
           width: '100%',
           maxWidth: '640px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '24px',
+          background: '#ffffff',
+          border: '1px solid #e7e5e4',
+          borderRadius: '8px',
           padding: '40px',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+          
+          boxShadow: 'none',
           textAlign: 'center',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '11px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '4px 12px', borderRadius: '100px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <span style={{ fontSize: '11px', background: 'rgba(14, 107, 143, 0.1)', color: '#0e6b8f', padding: '4px 12px', borderRadius: '100px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Grátis
-          </span>
-          <span style={{ fontSize: '11px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', padding: '4px 12px', borderRadius: '100px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Product-Led
           </span>
         </div>
 
         <h1
           style={{
             fontSize: 'clamp(28px, 4vw, 36px)',
-            fontWeight: 800,
+            fontWeight: 700,
             letterSpacing: '-0.8px',
             marginBottom: '12px',
-            background: 'linear-gradient(90deg, #ffffff 0%, #a855f7 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: '#1c1917',
+            
+            
           }}
         >
           Validador de Arquivos IFC
@@ -170,7 +167,7 @@ export default function ValidadorPage() {
         <p
           style={{
             fontSize: '15px',
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: '#57534e',
             lineHeight: '1.6',
             marginBottom: '32px',
           }}
@@ -184,7 +181,7 @@ export default function ValidadorPage() {
               background: 'rgba(239, 68, 68, 0.1)',
               border: '1px solid rgba(239, 68, 68, 0.2)',
               color: '#ef4444',
-              borderRadius: '12px',
+              borderRadius: '6px',
               padding: '12px 16px',
               marginBottom: '24px',
               fontSize: '14px',
@@ -203,13 +200,13 @@ export default function ValidadorPage() {
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: '2px dashed rgba(255, 255, 255, 0.15)',
-                borderRadius: '16px',
+                border: '2px dashed #d6d3d1',
+                borderRadius: '8px',
                 padding: '40px 20px',
                 textAlign: 'center',
                 cursor: 'pointer',
-                background: file ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
-                borderColor: file ? '#3b82f6' : 'rgba(255, 255, 255, 0.15)',
+                background: file ? 'rgba(14, 107, 143, 0.05)' : 'transparent',
+                borderColor: file ? '#0e6b8f' : '#d6d3d1',
                 transition: 'all 0.2s ease',
                 marginBottom: '28px',
               }}
@@ -224,10 +221,10 @@ export default function ValidadorPage() {
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
               {file ? (
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, color: '#3b82f6' }}>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, color: '#0e6b8f' }}>
                     {file.name}
                   </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#78716c' }}>
                     {(file.size / (1024 * 1024)).toFixed(2)} MB • Clique para trocar de arquivo
                   </p>
                 </div>
@@ -236,7 +233,7 @@ export default function ValidadorPage() {
                   <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600 }}>
                     Arraste seu arquivo IFC aqui
                   </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#78716c' }}>
                     Ou clique para selecionar um arquivo (.ifc) do seu computador
                   </p>
                 </div>
@@ -246,7 +243,7 @@ export default function ValidadorPage() {
             {/* Inputs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
                   Nome Completo *
                 </label>
                 <input
@@ -258,9 +255,9 @@ export default function ValidadorPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '6px',
+                    border: '1px solid #e7e5e4',
+                    background: '#ffffff',
                     color: '#fff',
                     outline: 'none',
                     fontSize: '14px',
@@ -270,7 +267,7 @@ export default function ValidadorPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
                   E-mail Corporativo *
                 </label>
                 <input
@@ -282,9 +279,9 @@ export default function ValidadorPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '6px',
+                    border: '1px solid #e7e5e4',
+                    background: '#ffffff',
                     color: '#fff',
                     outline: 'none',
                     fontSize: '14px',
@@ -294,7 +291,7 @@ export default function ValidadorPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: 'rgba(255, 255, 255, 0.8)' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
                   Nome da Empresa
                 </label>
                 <input
@@ -305,9 +302,9 @@ export default function ValidadorPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '6px',
+                    border: '1px solid #e7e5e4',
+                    background: '#ffffff',
                     color: '#fff',
                     outline: 'none',
                     fontSize: '14px',
@@ -323,15 +320,15 @@ export default function ValidadorPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                borderRadius: '50px',
-                background: '#ffffff',
-                color: '#000000',
+                borderRadius: '6px',
+                background: '#0e6b8f',
+                color: '#ffffff',
                 border: 'none',
                 fontWeight: 600,
                 fontSize: '15px',
                 cursor: 'pointer',
                 textAlign: 'center',
-                boxShadow: '0 4px 14px rgba(255, 255, 255, 0.1)',
+                boxShadow: 'none',
                 transition: 'opacity 0.2s ease',
               }}
             >
@@ -347,8 +344,8 @@ export default function ValidadorPage() {
               style={{
                 width: '100%',
                 height: '6px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
+                background: '#e7e5e4',
+                borderRadius: '6px',
                 overflow: 'hidden',
                 marginBottom: '20px',
               }}
@@ -357,8 +354,8 @@ export default function ValidadorPage() {
                 style={{
                   width: `${progress}%`,
                   height: '100%',
-                  background: 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)',
-                  borderRadius: '10px',
+                  background: '#0e6b8f',
+                  borderRadius: '6px',
                   transition: 'width 0.3s ease',
                 }}
               />
@@ -366,7 +363,7 @@ export default function ValidadorPage() {
             <p style={{ fontSize: '15px', fontWeight: 500, color: '#fff', marginBottom: '8px' }}>
               {progressMsg}
             </p>
-            <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>
+            <p style={{ fontSize: '12px', color: '#78716c' }}>
               Isso pode levar alguns segundos dependendo do tamanho do seu arquivo...
             </p>
           </div>
@@ -383,13 +380,13 @@ export default function ValidadorPage() {
                 width: '100px',
                 height: '100px',
                 borderRadius: '50%',
-                background: 'rgba(168, 85, 247, 0.1)',
-                border: '2px solid #a855f7',
+                background: 'rgba(14, 107, 143, 0.1)',
+                border: '2px solid #0e6b8f',
                 fontSize: '48px',
-                fontWeight: 800,
-                color: '#a855f7',
+                fontWeight: 700,
+                color: '#0e6b8f',
                 marginBottom: '24px',
-                boxShadow: '0 0 30px rgba(168, 85, 247, 0.2)',
+                boxShadow: 'none',
               }}
             >
               {result.grade}
@@ -398,7 +395,7 @@ export default function ValidadorPage() {
             <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
               Pontuação Geral: {result.score}/100
             </h3>
-            <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', maxWidth: '400px', margin: '0 auto 36px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '14px', color: '#57534e', maxWidth: '400px', margin: '0 auto 36px', lineHeight: '1.6' }}>
               Parabéns <strong>{result.name}</strong>! O arquivo <strong>{result.filename}</strong> foi analisado. Enviamos o relatório com recomendações detalhadas para o e-mail cadastrado.
             </p>
 
@@ -408,13 +405,13 @@ export default function ValidadorPage() {
                 style={{
                   display: 'block',
                   padding: '14px',
-                  borderRadius: '50px',
-                  background: 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)',
+                  borderRadius: '6px',
+                  background: '#0e6b8f',
                   color: '#ffffff',
                   fontWeight: 600,
                   fontSize: '15px',
                   textDecoration: 'none',
-                  boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
+                  boxShadow: 'none',
                 }}
               >
                 Acessar Plataforma Completa (Grátis) →
@@ -428,7 +425,7 @@ export default function ValidadorPage() {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'rgba(255, 255, 255, 0.4)',
+                  color: '#78716c',
                   fontSize: '13px',
                   cursor: 'pointer',
                   textDecoration: 'underline',
@@ -446,13 +443,13 @@ export default function ValidadorPage() {
         href={publicSiteHref()}
         style={{
           marginTop: '32px',
-          color: 'rgba(255, 255, 255, 0.4)',
+          color: '#78716c',
           fontSize: '13px',
           textDecoration: 'none',
           transition: 'color 0.2s ease',
         }}
         onMouseOver={(e) => (e.currentTarget.style.color = '#fff')}
-        onMouseOut={(e) => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)')}
+        onMouseOut={(e) => (e.currentTarget.style.color = '#78716c')}
       >
         ← Voltar para home
       </a>
