@@ -8,7 +8,7 @@ interface ApiTokenListProps {
 
 export default function ApiTokenList({ tokens, onRevoke }: ApiTokenListProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>

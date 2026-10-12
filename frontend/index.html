@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <!-- Google Tag Manager · container GTM-NFG6X7XF (TagFlow), publica o GA4
        G-68FTD7XXJL. O Meta Pixel continua em /meta-pixel.js e não no GTM: ele
        faz dedupe com a Conversions API por eventID, e mover a inicialização
-       para uma tag do container quebraria esse pareamento. -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-NFG6X7XF');</script>
-  <!-- End Google Tag Manager -->
-  <script src="/meta-pixel.js"></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+       para uma tag do container quebraria esse pareamento.
+       Os dois só baixam depois que a tela está pronta (primeiro toque, tecla
+       ou rolagem, ou 4 s depois do carregamento): antes disso disputavam o
+       processador com a própria tela. Os eventos disparados nesse intervalo
+       ficam na fila (dataLayer e fbq) e saem quando o script chega. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    window.arxisDepoisDaTela = (function () {
+      var fila = [], pronto = false, eventos = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+      function soltar() {
+        if (pronto) return;
+        pronto = true;
+        eventos.forEach(function (e) { window.removeEventListener(e, soltar, true); });
+        fila.forEach(function (f) { f(); });
+      }
+      eventos.forEach(function (e) { window.addEventListener(e, soltar, { capture: true, passive: true }); });
+      window.addEventListener('load', function () { setTimeout(soltar, 4000); });
+      return function (f) { if (pronto) f(); else fila.push(f); };
+    })();
+    window.arxisDepoisDaTela(function () {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-NFG6X7XF';
+      document.head.appendChild(s);
+    });
+  </script>
+  <script src="/meta-pixel.js" defer></script>
   <meta name="theme-color" content="#0E6B8F" />
   <!-- arxis-seo-start -->
   <title data-arxis-ssr="true">Arxis · Visualize. Analise. Decida.</title>
@@ -22,22 +42,8 @@
   <link rel="icon" type="image/png" href="/images/brand/arxis-icon-96.png" sizes="96x96" />
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/arxis-icon-180.png" />
   <meta name="apple-mobile-web-app-title" content="Arxis" />
-  <link rel="alternate" type="application/rss+xml" title="Blog Arxis" href="/feed.xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="/track.js" defer></script>
-  <script>
-    // GitHub Pages SPA fallback resolver
-    (function() {
-      const params = new URLSearchParams(window.location.search);
-      const redirectPath = params.get('path');
-      if (redirectPath) {
-        window.history.replaceState(null, null, redirectPath + window.location.hash);
-      }
-    })();
-  </script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->

@@ -159,7 +159,7 @@ export default function ComparePage() {
 
   if (comparando && cenarioA && cenarioB && modelo) {
     return (
-      <AppShell>
+      <AppShell title="Comparar cenários">
         <div className="compare-page">
           <header className="viewer-toolbar">
             <div className="viewer-toolbar__title">
@@ -297,7 +297,7 @@ export default function ComparePage() {
   }
 
   return (
-    <AppShell>
+    <AppShell title="Comparar cenários">
       <div className="compare-page">
         <header className="viewer-toolbar">
           <div className="viewer-toolbar__title">

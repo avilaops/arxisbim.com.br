@@ -4,10 +4,12 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 interface AppShellProps {
+  /** Nome da tela: vai para o título da aba do navegador. */
+  title: string
   children: ReactNode
 }
 
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ title, children }: AppShellProps) {
   // Desktop: recolhida ou expandida, persistida. E SO isso. Antes este mesmo
   // estado tambem decidia se o drawer mobile estava aberto: como "expandida" e
   // o padrao, o menu abria sozinho em toda visita nova pelo celular e, uma vez
@@ -51,9 +53,8 @@ export default function AppShell({ children }: AppShellProps) {
 
   if (!isReady) {
     return (
-      <div id="loading">
-        <div className="spin"></div>
-        <p>Carregando...</p>
+      <div className="arx-carregando" role="status" aria-label="Carregando">
+        <div className="arx-carregando__giro" />
       </div>
     )
   }
@@ -63,6 +64,10 @@ export default function AppShell({ children }: AppShellProps) {
       id="app"
       className={`app-layout ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'} ${mobileNavOpen ? 'mobile-nav-open' : ''}`}
     >
+      {/* O index.html sai sem título depois que o React assume (main.tsx):
+          cada tela do app declara o seu aqui. */}
+      <title>{`${title} · Arxis`}</title>
+      <meta name="description" content="Arxis: visualização e análise de modelos BIM." />
       {/* Backdrop do drawer mobile */}
       <div
         className="sidebar-backdrop"

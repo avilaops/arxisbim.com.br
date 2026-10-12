@@ -61,19 +61,20 @@ const MODULES: ModulePermissions[] = [
 ];
 
 /* ── color tokens ──────────────────────────────────────────── */
+// Mesma paleta clara do resto do app (styles/app-redesign.css).
 const C = {
-  bg:        '#151515',
-  card:      '#1a1a1a',
-  border:    '#2a2a2a',
-  borderLit: '#333',
-  text:      '#f5f5f5',
-  muted:     '#999',
-  mutedSoft: '#666',
-  accent:    '#0066ff',
-  accentDim: '#004dcc',
-  accentBg:  'rgba(0,102,255,0.08)',
-  danger:    '#ff6b6b',
-  dangerBg:  'rgba(255,60,60,0.08)',
+  bg:        '#ffffff',
+  card:      '#faf9f7',
+  border:    '#e7e5e4',
+  borderLit: '#d6d3d1',
+  text:      '#1c1917',
+  muted:     '#57534e',
+  mutedSoft: '#78716c',
+  accent:    '#0e6b8f',
+  accentDim: '#095574',
+  accentBg:  'rgba(14,107,143,0.08)',
+  danger:    '#b91c1c',
+  dangerBg:  '#fff3ef',
 } as const;
 
 export default function CreateApiTokenModal({
@@ -226,28 +227,29 @@ export default function CreateApiTokenModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'rgba(28,25,23,0.45)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 50,
         padding: 16,
-        backdropFilter: 'blur(4px)',
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Criar acesso de integração"
         style={{
           background: C.bg,
           border: `1px solid ${C.border}`,
           color: C.text,
-          borderRadius: 16,
+          borderRadius: 8,
           width: '100%',
           maxWidth: 680,
           maxHeight: '82vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)',
           overflow: 'hidden',
         }}
       >
@@ -262,7 +264,7 @@ export default function CreateApiTokenModal({
           }}
         >
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
               Criar acesso de integração
             </h2>
             <p style={{ color: C.muted, fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
@@ -307,7 +309,7 @@ export default function CreateApiTokenModal({
                 padding: '12px 16px',
                 borderRadius: 10,
                 background: C.dangerBg,
-                border: `1px solid rgba(255,60,60,0.2)`,
+                border: '1px solid #f6c7bc',
                 color: C.danger,
                 fontSize: 13,
               }}
@@ -384,7 +386,7 @@ export default function CreateApiTokenModal({
                         width: 36,
                         height: 36,
                         borderRadius: 10,
-                        background: selected ? C.accent : '#252525',
+                        background: selected ? C.accent : C.card,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -396,7 +398,7 @@ export default function CreateApiTokenModal({
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
-                        {selected && <span style={{ color: C.accent }}>✓ </span>}{label}
+                        {label}
                       </div>
                       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.4 }}>{desc}</div>
                     </div>
@@ -599,9 +601,9 @@ export default function CreateApiTokenModal({
               flex: 1,
               padding: '12px 20px',
               borderRadius: 10,
-              background: isValid ? C.accent : '#1a2a40',
-              border: `1px solid ${isValid ? C.accent : '#1a2a40'}`,
-              color: isValid ? '#fff' : '#4a6080',
+              background: isValid ? C.accent : C.card,
+              border: `1px solid ${isValid ? C.accent : C.border}`,
+              color: isValid ? '#fff' : C.mutedSoft,
               fontSize: 14,
               fontWeight: 600,
               cursor: !isValid || loading ? 'not-allowed' : 'pointer',
@@ -611,7 +613,7 @@ export default function CreateApiTokenModal({
             }}
             onMouseEnter={(e) => {
               if (isValid && !loading) {
-                e.currentTarget.style.background = '#1a75ff';
+                e.currentTarget.style.background = C.accentDim;
                 e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,102,255,0.45)';
               }
             }}

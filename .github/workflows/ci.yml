@@ -12,9 +12,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Portao real do frontend hoje: type-check e build. Lint e testes rodam, mas
-  # informativos — a main nao esta verde neles, e portao que nasce vermelho
-  # ensina o time a ignorar CI.
+  # Portao do frontend: lint (sem erros), type-check, testes e build. Lint e
+  # testes eram informativos enquanto a main estava vermelha neles; ficaram
+  # verdes (0 erros de lint, 77 de 77 arquivos de teste) e viraram portao em
+  # 12/10/2026. Os avisos de lint continuam so a vista: a maioria esta nos
+  # arquivos orfaos (documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md).
   frontend:
     name: Frontend — lint, type-check, testes e build
     runs-on: ubuntu-latest
@@ -38,13 +40,7 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      # Lint ainda NAO barra o merge: sao 100 erros no repo, a maioria nos 819
-      # arquivos orfaos que nem entram no build (ver
-      # documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md). O passo roda
-      # para o numero ficar visivel e cair junto com a limpeza; quando chegar a
-      # zero, tira-se o continue-on-error e ele vira portao como os outros.
-      - name: Lint frontend (informativo)
-        continue-on-error: true
+      - name: Lint frontend
         working-directory: frontend
         run: npm run lint
 
@@ -52,21 +48,22 @@ jobs:
         working-directory: frontend
         run: npm run typecheck
 
-      # Testes do frontend ainda NAO barram o merge: 17 dos 76 arquivos estao
-      # vermelhos na main, e nenhum por causa do codigo que roda em producao —
-      # sao dependencias que nunca entraram no package.json
-      # (`@testing-library/react`, `yjs`), 13 casos ainda escritos para Jest
-      # (`jest is not defined`) e asserts velhos, tudo na arvore orfa. Limpar
-      # isso e outro trabalho; aqui o passo roda para o numero ficar a vista.
-      # Quando os 17 cairem, tira-se o continue-on-error.
-      - name: Test frontend (vitest, informativo)
-        continue-on-error: true
+      - name: Test frontend (vitest)
         working-directory: frontend
         run: npm test
 
       - name: Build frontend (vite)
         working-directory: frontend
         run: npm run build
+
+      # O build fica disponivel por alguns dias para conferir as telas num
+      # navegador antes de publicar, sem compilar em servidor nenhum.
+      - name: Guardar o build do frontend
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 3
 
   backend:
     name: Backend — type-check, migrations, testes e smoke

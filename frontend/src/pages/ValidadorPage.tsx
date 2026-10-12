@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
+import { Upload } from 'lucide-react';
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 import SEO from '../components/SEO';
+import BrandLogo from '../components/public/BrandLogo';
 import { publicSiteHref } from '../config/site.config'
 
 export default function ValidadorPage() {
@@ -111,18 +113,7 @@ export default function ValidadorPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f6f5f2',
-        color: '#1c1917',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '60px 20px',
-        fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
+    <div className="arx-avulsa">
       <SEO
         title="Validador IFC Gratuito Online — Análise de Arquivos BIM"
         description="Suba seu arquivo IFC gratuitamente, analise a qualidade estrutural, metadados e compatibilidade do modelo 3D, e receba um relatório completo por e-mail."
@@ -130,328 +121,134 @@ export default function ValidadorPage() {
         path="/validador"
       />
 
-      {/* Main Container */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '640px',
-          background: '#ffffff',
-          border: '1px solid #e7e5e4',
-          borderRadius: '8px',
-          padding: '40px',
-          
-          boxShadow: 'none',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '11px', background: 'rgba(14, 107, 143, 0.1)', color: '#0e6b8f', padding: '4px 12px', borderRadius: '100px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Grátis
-          </span>
-        </div>
+      <a className="arx-avulsa__marca" href={publicSiteHref()} aria-label="Arxis, página inicial">
+        <BrandLogo />
+      </a>
 
-        <h1
-          style={{
-            fontSize: 'clamp(28px, 4vw, 36px)',
-            fontWeight: 700,
-            letterSpacing: '-0.8px',
-            marginBottom: '12px',
-            color: '#1c1917',
-            
-            
-          }}
-        >
-          Validador de Arquivos IFC
-        </h1>
-
-        <p
-          style={{
-            fontSize: '15px',
-            color: '#57534e',
-            lineHeight: '1.6',
-            marginBottom: '32px',
-          }}
-        >
-          Verifique a estrutura do seu modelo IFC e obtenha um diagnóstico detalhado de metadados, qualidade geométrica e compatibilidade 3D gratuitamente por e-mail.
+      <main className="arx-avulsa__cartao">
+        <span className="arx-avulsa__selo">Grátis</span>
+        <h1>Validador de arquivos IFC</h1>
+        <p className="arx-avulsa__texto">
+          Envie seu modelo IFC e receba por e-mail o diagnóstico de metadados, qualidade geométrica e compatibilidade 3D.
         </p>
 
         {error && (
-          <div
-            style={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              color: '#ef4444',
-              borderRadius: '6px',
-              padding: '12px 16px',
-              marginBottom: '24px',
-              fontSize: '14px',
-              textAlign: 'left',
-            }}
-          >
-            ⚠️ {error}
+          <div className="arx-avulsa__erro" role="alert">
+            {error}
           </div>
         )}
 
         {!loading && !result && (
-          <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
-            {/* Drag & Drop Zone */}
-            <div
+          <form onSubmit={handleSubmit}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".ifc"
+              hidden
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              className="arx-avulsa__solta"
+              data-com-arquivo={Boolean(file)}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                border: '2px dashed #d6d3d1',
-                borderRadius: '8px',
-                padding: '40px 20px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                background: file ? 'rgba(14, 107, 143, 0.05)' : 'transparent',
-                borderColor: file ? '#0e6b8f' : '#d6d3d1',
-                transition: 'all 0.2s ease',
-                marginBottom: '28px',
-              }}
             >
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".ifc"
-                style={{ display: 'none' }}
-              />
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>📦</div>
+              <Upload size={22} strokeWidth={1.75} aria-hidden="true" />
               {file ? (
-                <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, color: '#0e6b8f' }}>
-                    {file.name}
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#78716c' }}>
-                    {(file.size / (1024 * 1024)).toFixed(2)} MB • Clique para trocar de arquivo
-                  </p>
-                </div>
+                <>
+                  <strong>{file.name}</strong>
+                  <span className="arx-avulsa__apoio">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB. Toque para trocar de arquivo.
+                  </span>
+                </>
               ) : (
-                <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600 }}>
-                    Arraste seu arquivo IFC aqui
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#78716c' }}>
-                    Ou clique para selecionar um arquivo (.ifc) do seu computador
-                  </p>
-                </div>
+                <>
+                  <strong>Escolher arquivo IFC</strong>
+                  <span className="arx-avulsa__apoio">Toque para selecionar ou arraste o arquivo (.ifc) até aqui.</span>
+                </>
               )}
-            </div>
+            </button>
 
-            {/* Inputs */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
-                  Nome Completo *
-                </label>
+            <div className="arx-avulsa__campos">
+              <label className="arx-avulsa__campo">
+                <span>Nome completo</span>
                 <input
                   type="text"
                   required
-                  placeholder="Seu nome"
+                  autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid #e7e5e4',
-                    background: '#ffffff',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
                 />
-              </div>
+              </label>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
-                  E-mail Corporativo *
-                </label>
+              <label className="arx-avulsa__campo">
+                <span>E-mail de trabalho</span>
                 <input
                   type="email"
                   required
-                  placeholder="nome@empresa.com.br"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid #e7e5e4',
-                    background: '#ffffff',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
                 />
-              </div>
+              </label>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#1c1917' }}>
-                  Nome da Empresa
-                </label>
+              <label className="arx-avulsa__campo">
+                <span>Empresa (opcional)</span>
                 <input
                   type="text"
-                  placeholder="Sua construtora ou escritório"
+                  autoComplete="organization"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid #e7e5e4',
-                    background: '#ffffff',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
                 />
-              </div>
+              </label>
             </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '6px',
-                background: '#0e6b8f',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: 600,
-                fontSize: '15px',
-                cursor: 'pointer',
-                textAlign: 'center',
-                boxShadow: 'none',
-                transition: 'opacity 0.2s ease',
-              }}
-            >
-              Analisar IFC Gratuitamente →
+            <button type="submit" className="arx-avulsa__botao">
+              Analisar IFC gratuitamente
             </button>
           </form>
         )}
 
-        {/* Loading State */}
         {loading && (
-          <div style={{ padding: '40px 0' }}>
-            <div
-              style={{
-                width: '100%',
-                height: '6px',
-                background: '#e7e5e4',
-                borderRadius: '6px',
-                overflow: 'hidden',
-                marginBottom: '20px',
-              }}
-            >
-              <div
-                style={{
-                  width: `${progress}%`,
-                  height: '100%',
-                  background: '#0e6b8f',
-                  borderRadius: '6px',
-                  transition: 'width 0.3s ease',
-                }}
-              />
+          <div role="status">
+            <div className="arx-avulsa__barra">
+              <div style={{ width: `${progress}%` }} />
             </div>
-            <p style={{ fontSize: '15px', fontWeight: 500, color: '#fff', marginBottom: '8px' }}>
-              {progressMsg}
-            </p>
-            <p style={{ fontSize: '12px', color: '#78716c' }}>
-              Isso pode levar alguns segundos dependendo do tamanho do seu arquivo...
-            </p>
+            <h2>{progressMsg}</h2>
+            <p className="arx-avulsa__apoio">Pode levar alguns segundos, conforme o tamanho do arquivo.</p>
           </div>
         )}
 
-        {/* Result Success Screen */}
         {result && (
-          <div style={{ padding: '20px 0', textAlign: 'center' }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                background: 'rgba(14, 107, 143, 0.1)',
-                border: '2px solid #0e6b8f',
-                fontSize: '48px',
-                fontWeight: 700,
-                color: '#0e6b8f',
-                marginBottom: '24px',
-                boxShadow: 'none',
+          <div>
+            <div className="arx-avulsa__nota">{result.grade}</div>
+            <h2>Pontuação geral: {result.score}/100</h2>
+            <p className="arx-avulsa__texto">
+              <strong>{result.name}</strong>, o arquivo <strong>{result.filename}</strong> foi analisado. O relatório com as recomendações foi para o e-mail informado.
+            </p>
+            <a className="arx-avulsa__botao" href="/register">
+              Criar conta gratuita
+            </a>
+            <button
+              type="button"
+              className="arx-avulsa__ligacao"
+              onClick={() => {
+                setResult(null);
+                setFile(null);
+                setProgress(0);
               }}
             >
-              {result.grade}
-            </div>
-
-            <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
-              Pontuação Geral: {result.score}/100
-            </h3>
-            <p style={{ fontSize: '14px', color: '#57534e', maxWidth: '400px', margin: '0 auto 36px', lineHeight: '1.6' }}>
-              Parabéns <strong>{result.name}</strong>! O arquivo <strong>{result.filename}</strong> foi analisado. Enviamos o relatório com recomendações detalhadas para o e-mail cadastrado.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <a
-                href="/register"
-                style={{
-                  display: 'block',
-                  padding: '14px',
-                  borderRadius: '6px',
-                  background: '#0e6b8f',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  fontSize: '15px',
-                  textDecoration: 'none',
-                  boxShadow: 'none',
-                }}
-              >
-                Acessar Plataforma Completa (Grátis) →
-              </a>
-              <button
-                onClick={() => {
-                  setResult(null);
-                  setFile(null);
-                  setProgress(0);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#78716c',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                }}
-              >
-                Analisar outro arquivo IFC
-              </button>
-            </div>
+              Analisar outro arquivo IFC
+            </button>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Back Link */}
-      <a
-        href={publicSiteHref()}
-        style={{
-          marginTop: '32px',
-          color: '#78716c',
-          fontSize: '13px',
-          textDecoration: 'none',
-          transition: 'color 0.2s ease',
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.color = '#fff')}
-        onMouseOut={(e) => (e.currentTarget.style.color = '#78716c')}
-      >
-        ← Voltar para home
+      <a className="arx-avulsa__ligacao" href={publicSiteHref()}>
+        Voltar ao site
       </a>
     </div>
   );

@@ -33,26 +33,26 @@ export default function ApiTokensPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+      <div className="flex items-center justify-center py-12" role="status" aria-label="Carregando integrações">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Integrações</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Conecte o Arxis a outras ferramentas (n8n, Power BI, ERP, aplicativos próprios, etc.)
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-gray-900">Integrações</h2>
+          <p className="mt-1 text-xs text-gray-600">
+            Conecte o Arxis a outras ferramentas (n8n, Power BI, ERP, aplicativos próprios).
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          className="min-h-10 px-4 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition"
         >
-          + Nova integração
+          Nova integração
         </button>
       </div>
 
@@ -67,7 +67,7 @@ export default function ApiTokensPage() {
 
       {showCreateModal && (
         <CreateApiTokenModal
-          onClose={() => setShowCreateModal(true)}
+          onClose={() => setShowCreateModal(false)}
           onSuccess={handleCreateToken}
         />
       )}

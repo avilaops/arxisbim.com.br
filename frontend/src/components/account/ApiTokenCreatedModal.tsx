@@ -34,7 +34,7 @@ export default function ApiTokenCreatedModal({
         <div className="p-6 space-y-4">
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              <strong>⚠️ Importante:</strong> Esta é a única vez que você verá a chave de segurança.
+              <strong>Importante:</strong> Esta é a única vez que você verá a chave de segurança.
               Copie e guarde em local seguro. Você não conseguirá vê-la novamente.
             </p>
           </div>

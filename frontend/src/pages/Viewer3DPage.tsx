@@ -595,7 +595,7 @@ export default function Viewer3DPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell title="Visualizador 3D">
       <div className="viewer-page" ref={viewerPageRef}>
         <input
           ref={fileInputRef}

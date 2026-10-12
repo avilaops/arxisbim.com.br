@@ -518,6 +518,7 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
               type="button"
               onClick={onUpload}
               disabled={uploading}
+              aria-label={uploading ? 'Enviando modelo IFC' : 'Enviar modelo IFC'}
             >
               <ArxisIcon name="upload" size={18} />
               <span>{uploading ? 'Enviando…' : 'Enviar modelo IFC'}</span>

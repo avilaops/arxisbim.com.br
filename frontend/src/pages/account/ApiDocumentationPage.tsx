@@ -3,44 +3,44 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { resolveApiBaseUrl } from '../../config/apiBaseUrl';
 
 export default function ApiDocumentationPage() {
-  const [expandedSection, setExpandedSection] = useState<string | null>('auth');
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   // Mesma origem que o app de fato chama. Escrever o host na mao ja apontou
   // para api.arxisvr.com, dominio sem registro A nem MX.
   const apiBaseUrl = `${resolveApiBaseUrl()}/api/v1`;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Documentação da API</h1>
-        <p className="text-lg text-gray-600">
-          Use tokens API para acessar os recursos do Arxis programaticamente
+      <div className="mb-4">
+        <h2 className="text-base font-semibold text-gray-900 mb-1">Documentação da API</h2>
+        <p className="text-xs text-gray-600">
+          Use tokens de API para acessar os recursos do Arxis por programa.
         </p>
       </div>
 
       {/* Base URL */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm text-gray-600 font-medium">Endpoint base</p>
+          <p className="text-xs text-gray-600 font-medium">Endpoint base</p>
           <button
             onClick={() => navigator.clipboard.writeText(apiBaseUrl)}
-            className="text-xs text-blue-600 hover:text-blue-800"
+            className="min-h-6 px-2 text-xs font-semibold text-blue-700 hover:text-blue-800"
           >
             Copiar
           </button>
         </div>
-        <code className="text-gray-900 font-mono">{apiBaseUrl}</code>
+        <code className="text-sm text-gray-900 font-mono break-all">{apiBaseUrl}</code>
       </div>
 
       {/* Sections */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Authentication */}
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setExpandedSection(expandedSection === 'auth' ? null : 'auth')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition text-left"
           >
-            <h3 className="text-lg font-semibold text-gray-900">1. Autenticação</h3>
+            <h3 className="text-sm font-semibold text-gray-900">1. Autenticação</h3>
             {expandedSection === 'auth' ? (
               <ChevronUp className="h-5 w-5 text-gray-600" />
             ) : (
@@ -48,7 +48,7 @@ export default function ApiDocumentationPage() {
             )}
           </button>
           {expandedSection === 'auth' && (
-            <div className="p-4 bg-white space-y-4 border-t border-gray-200">
+            <div className="p-4 bg-white space-y-3 border-t border-gray-200 text-sm">
               <p className="text-gray-700">
                 Todos os requests à API devem incluir um token API no header de autorização:
               </p>
@@ -58,7 +58,7 @@ export default function ApiDocumentationPage() {
               <p className="text-gray-700">
                 O token pode ser <strong>live</strong> (produção) ou <strong>test</strong> (testes).
               </p>
-              <h4 className="text-md font-semibold text-gray-900 mt-4">Exemplo com curl:</h4>
+              <h4 className="text-sm font-semibold text-gray-900 mt-4">Exemplo com curl:</h4>
               <div className="bg-gray-900 p-4 rounded-lg font-mono text-sm text-gray-100 overflow-x-auto">
                 {`curl -H "Authorization: Bearer arx_live_xxxxxxxxxxxxxxxxxx" \\
   ${apiBaseUrl}/projects`}
@@ -71,9 +71,9 @@ export default function ApiDocumentationPage() {
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setExpandedSection(expandedSection === 'scopes' ? null : 'scopes')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition text-left"
           >
-            <h3 className="text-lg font-semibold text-gray-900">2. Escopos de Acesso</h3>
+            <h3 className="text-sm font-semibold text-gray-900">2. Escopos de Acesso</h3>
             {expandedSection === 'scopes' ? (
               <ChevronUp className="h-5 w-5 text-gray-600" />
             ) : (
@@ -112,9 +112,9 @@ export default function ApiDocumentationPage() {
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setExpandedSection(expandedSection === 'errors' ? null : 'errors')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition text-left"
           >
-            <h3 className="text-lg font-semibold text-gray-900">3. Tratamento de Erros</h3>
+            <h3 className="text-sm font-semibold text-gray-900">3. Tratamento de Erros</h3>
             {expandedSection === 'errors' ? (
               <ChevronUp className="h-5 w-5 text-gray-600" />
             ) : (
@@ -122,9 +122,9 @@ export default function ApiDocumentationPage() {
             )}
           </button>
           {expandedSection === 'errors' && (
-            <div className="p-4 bg-white space-y-4 border-t border-gray-200">
+            <div className="p-4 bg-white space-y-3 border-t border-gray-200 text-sm">
               <div>
-                <h4 className="text-md font-semibold text-gray-900 mb-2">401 Unauthorized</h4>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">401 Unauthorized</h4>
                 <p className="text-gray-700 mb-2">Token inválido, expirado ou revogado.</p>
                 <div className="bg-gray-900 p-4 rounded-lg font-mono text-sm text-gray-100 overflow-x-auto">
                   {`{
@@ -135,7 +135,7 @@ export default function ApiDocumentationPage() {
               </div>
 
               <div>
-                <h4 className="text-md font-semibold text-gray-900 mb-2">403 Forbidden</h4>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">403 Forbidden</h4>
                 <p className="text-gray-700 mb-2">Token não possui escopo para acessar este recurso.</p>
                 <div className="bg-gray-900 p-4 rounded-lg font-mono text-sm text-gray-100 overflow-x-auto">
                   {`{
@@ -152,9 +152,9 @@ export default function ApiDocumentationPage() {
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setExpandedSection(expandedSection === 'practices' ? null : 'practices')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition text-left"
           >
-            <h3 className="text-lg font-semibold text-gray-900">4. Boas Práticas</h3>
+            <h3 className="text-sm font-semibold text-gray-900">4. Boas Práticas</h3>
             {expandedSection === 'practices' ? (
               <ChevronUp className="h-5 w-5 text-gray-600" />
             ) : (

@@ -12,12 +12,13 @@ import {
   type BillingTier,
 } from '@/services/billing.service'
 
-const card: React.CSSProperties = {
-  background: 'var(--c-surface2)',
-  border: '1px solid var(--c-border)',
-  borderRadius: 'var(--r)',
-  padding: '20px',
-}
+type Parte = 'atual' | 'planos' | 'cobrancas'
+
+const PARTES: Array<{ id: Parte; label: string }> = [
+  { id: 'atual', label: 'Plano atual' },
+  { id: 'planos', label: 'Planos' },
+  { id: 'cobrancas', label: 'Cobranças' },
+]
 
 const label: React.CSSProperties = { fontSize: '12px', color: 'var(--c-text2)', marginBottom: '4px' }
 const value: React.CSSProperties = { fontSize: '16px', fontWeight: 700, color: 'var(--c-text)' }
@@ -72,6 +73,8 @@ export default function BillingPage() {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // No celular aparece uma parte por vez (CSS); no computador, as três juntas.
+  const [parte, setParte] = useState<Parte>('atual')
 
   const load = useCallback(async () => {
     setError(null)
@@ -153,13 +156,13 @@ export default function BillingPage() {
   }
 
   if (loading) {
-    return <div style={{ ...card, color: 'var(--c-text2)', fontSize: '12px' }}>Carregando cobrança...</div>
+    return <div className="cobranca-cartao" style={{ color: 'var(--c-text2)', fontSize: '12px' }}>Carregando cobrança...</div>
   }
 
   if (!current) {
     return (
-      <div style={card}>
-        <div style={{ fontSize: '12px', color: 'var(--c-red)', marginBottom: '12px' }}>{error}</div>
+      <div className="cobranca-cartao">
+        <div role="alert" style={{ fontSize: '12px', marginBottom: '12px', padding: '10px 12px', border: '1px solid', borderRadius: 'var(--r)' }}>{error}</div>
         <button style={button('ghost')} onClick={() => void load()}>Tentar de novo</button>
       </div>
     )
@@ -167,18 +170,19 @@ export default function BillingPage() {
 
   const { subscription, usage, pendingCheckout } = current
   const isPaid = subscription.amountCents > 0 && subscription.provider !== 'internal'
+  const sincronizar = () => run('sync', async () => { setCurrent(await billingService.sync()); setNotice('Situação atualizada.') })
 
   return (
-    <div style={{ display: 'grid', gap: '16px' }}>
+    <div className="cobranca">
       {notice && (
-        <div style={{ ...card, padding: '12px 14px', fontSize: '12px', color: 'var(--c-text)' }}>{notice}</div>
+        <div className="cobranca-cartao" role="status" style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--c-text)' }}>{notice}</div>
       )}
       {error && (
-        <div style={{ ...card, padding: '12px 14px', fontSize: '12px', color: 'var(--c-red)', borderColor: 'var(--c-red)' }}>{error}</div>
+        <div className="cobranca-cartao" role="alert" style={{ padding: '12px 14px', fontSize: '12px' }}>{error}</div>
       )}
 
       {pendingCheckout?.checkoutUrl && (
-        <div style={{ ...card, borderColor: 'var(--c-blue)' }}>
+        <div className="cobranca-cartao" style={{ borderColor: 'var(--c-blue)' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)', marginBottom: '6px' }}>
             Cadastro de cartão pendente
           </div>
@@ -189,30 +193,30 @@ export default function BillingPage() {
             <a href={pendingCheckout.checkoutUrl} style={{ ...button('primary'), textDecoration: 'none', display: 'inline-block' }}>
               Concluir cadastro do cartão
             </a>
-            <button
-              style={button('ghost', busy === 'sync')}
-              disabled={busy === 'sync'}
-              onClick={() => run('sync', async () => { setCurrent(await billingService.sync()); setNotice('Situação atualizada.') })}
-            >
+            <button style={button('ghost', busy === 'sync')} disabled={busy === 'sync'} onClick={() => void sincronizar()}>
               {busy === 'sync' ? 'Verificando...' : 'Já paguei, verificar agora'}
             </button>
           </div>
         </div>
       )}
 
-      <div style={card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>Plano atual</h3>
-          <button
-            style={button('ghost', busy === 'sync')}
-            disabled={busy === 'sync'}
-            onClick={() => run('sync', async () => { setCurrent(await billingService.sync()); setNotice('Situação atualizada.') })}
-          >
+      <div className="cobranca-nav" role="group" aria-label="Partes da cobrança">
+        {PARTES.map((p) => (
+          <button key={p.id} type="button" aria-pressed={parte === p.id} onClick={() => setParte(p.id)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <section className="cobranca-cartao cobranca-parte" data-ativa={parte === 'atual'} aria-labelledby="cobranca-atual">
+        <div className="cobranca-cabeca">
+          <h2 id="cobranca-atual">Plano atual</h2>
+          <button style={button('ghost', busy === 'sync')} disabled={busy === 'sync'} onClick={() => void sincronizar()}>
             {busy === 'sync' ? 'Verificando...' : 'Verificar agora'}
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+        <div className="cobranca-grade">
           <div>
             <div style={label}>Plano</div>
             <div style={value}>{plans.find((p) => p.tier === subscription.plan)?.name ?? subscription.plan}</div>
@@ -237,7 +241,7 @@ export default function BillingPage() {
         </div>
 
         {isPaid && (
-          <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
             {subscription.status === 'paused' ? (
               <button
                 style={button('ghost', busy === 'resume')}
@@ -267,15 +271,16 @@ export default function BillingPage() {
             </button>
           </div>
         )}
-      </div>
+      </section>
 
-      <div style={card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>Planos</h3>
+      <section className="cobranca-cartao cobranca-parte" data-ativa={parte === 'planos'} aria-labelledby="cobranca-planos">
+        <div className="cobranca-cabeca">
+          <h2 id="cobranca-planos">Planos</h2>
           <div style={{ display: 'flex', gap: '6px' }}>
             {(['monthly', 'yearly'] as BillingCycle[]).map((c) => (
               <button
                 key={c}
+                aria-pressed={cycle === c}
                 onClick={() => setCycle(c)}
                 style={{
                   ...button(cycle === c ? 'primary' : 'ghost'),
@@ -288,41 +293,30 @@ export default function BillingPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '12px' }}>
+        <div className="cobranca-planos">
           {plans.map((plan) => {
             const isCurrent = plan.tier === subscription.plan
             const cents = cycle === 'yearly' ? plan.yearlyAmountCents : plan.monthlyAmountCents
             return (
-              <div
-                key={plan.tier}
-                style={{
-                  border: `1px solid ${isCurrent ? 'var(--c-blue)' : 'var(--c-border)'}`,
-                  borderRadius: 'var(--r)',
-                  padding: '14px',
-                  background: 'var(--c-surface)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                }}
-              >
+              <div key={plan.tier} className="cobranca-plano" data-atual={isCurrent}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--c-text)' }}>{plan.name}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '2px' }}>{plan.description}</div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--c-text)' }}>{plan.name}</h3>
+                  <div style={{ fontSize: '11px', color: 'var(--c-text2)', marginTop: '2px' }}>{plan.description}</div>
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--c-text)' }}>
                   {cents === 0 ? 'Grátis' : formatBRL(cents)}
                   {cents > 0 && (
-                    <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--c-text3)' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--c-text2)' }}>
                       {cycle === 'yearly' ? '/ano' : '/mês'}
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--c-text2)', lineHeight: 1.7 }}>
-                  {formatLimit(plan.limits.maxUsers)} usuários<br />
-                  {formatLimit(plan.limits.maxProjects)} projetos<br />
-                  {formatLimit(plan.limits.maxStorageGB, ' GB')} de armazenamento<br />
-                  Arquivo de até {formatLimit(plan.limits.maxFileSizeMB, ' MB')}
-                </div>
+                <ul className="cobranca-plano__limites">
+                  <li>{formatLimit(plan.limits.maxUsers)} usuários</li>
+                  <li>{formatLimit(plan.limits.maxProjects)} projetos</li>
+                  <li>{formatLimit(plan.limits.maxStorageGB, ' GB')} no total</li>
+                  <li>{formatLimit(plan.limits.maxFileSizeMB, ' MB')} por arquivo</li>
+                </ul>
                 <button
                   style={{ ...button(isCurrent ? 'ghost' : 'primary', isCurrent || busy === `checkout:${plan.tier}`), marginTop: 'auto' }}
                   disabled={isCurrent || busy === `checkout:${plan.tier}`}
@@ -334,14 +328,14 @@ export default function BillingPage() {
             )
           })}
         </div>
-      </div>
+      </section>
 
-      <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+      <section className="cobranca-cartao cobranca-parte" data-ativa={parte === 'cobrancas'} aria-labelledby="cobranca-lista" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>Cobranças</h3>
+          <h2 id="cobranca-lista" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>Cobranças</h2>
         </div>
         {invoices.length === 0 ? (
-          <div style={{ padding: '14px', fontSize: '12px', color: 'var(--c-text3)' }}>Nenhuma cobrança ainda.</div>
+          <div style={{ padding: '14px', fontSize: '12px', color: 'var(--c-text2)' }}>Nenhuma cobrança ainda.</div>
         ) : (
           invoices.map((invoice, idx) => (
             <div
@@ -359,7 +353,7 @@ export default function BillingPage() {
                 <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
                   {formatBRL(invoice.totalCents)}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--c-text3)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--c-text2)' }}>
                   {invoice.paidAt ? `Pago em ${formatDate(invoice.paidAt)}` : `Vence em ${formatDate(invoice.dueAt)}`}
                 </div>
               </div>
@@ -372,16 +366,16 @@ export default function BillingPage() {
                     href={invoice.hostedInvoiceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ fontSize: '11px', color: 'var(--c-blue)', textDecoration: 'none' }}
+                    style={{ fontSize: '11px', color: 'var(--c-blue)' }}
                   >
-                    Ver
+                    Ver cobrança
                   </a>
                 )}
               </div>
             </div>
           ))
         )}
-      </div>
+      </section>
     </div>
   )
 }

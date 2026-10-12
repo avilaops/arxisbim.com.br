@@ -92,9 +92,9 @@ export default function MembersPage({ tenantId }: { tenantId: string | null }) {
 
       <div style={wrap}>
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--c-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
             Membros da organização{!loading && ` (${members.length})`}
-          </h3>
+          </h2>
           <button
             onClick={() => setShowInvite((v) => !v)}
             style={{

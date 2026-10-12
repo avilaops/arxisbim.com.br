@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
 import { CENTRAL_LOGIN_URL } from './LoginPage'
+import { PRIMARY_SITE_URL } from '../config/site.config'
 
 /**
  * Conta nova nasce no login central da Ávila Ops: a tela de lá tem "Criar
@@ -22,7 +23,7 @@ export default function RegisterPage() {
     <p className="auth-subtitle">A conta é criada no login da Ávila Ops. Na tela seguinte, escolha “Criar conta”, confirme seu e-mail e você volta direto para o Arxis.</p>
     <div className="auth-actions">
       <a className="auth-submit" href={CENTRAL_LOGIN_URL}>Criar conta com a Ávila Ops <ArrowRight size={16} /></a>
-      <p className="auth-check">Ao criar a conta, você concorda com os <Link to="/terms">Termos de Serviço</Link> e com a <Link to="/privacy">Política de Privacidade</Link>.</p>
+      <p className="auth-check">Ao criar a conta, você concorda com os <a href={`${PRIMARY_SITE_URL}/terms`}>Termos de Serviço</a> e com a <a href={`${PRIMARY_SITE_URL}/privacy`}>Política de Privacidade</a>.</p>
     </div>
     <div className="auth-links"><span>Já tem conta? <Link to="/login">Entrar</Link></span></div>
   </AuthLayout>

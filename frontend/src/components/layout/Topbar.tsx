@@ -14,6 +14,10 @@ interface TopbarProps {
   onOpenMobileNav?: () => void
 }
 
+// O endereço antigo (docs.arxisvr.com) não existe mais. O contato publicado
+// no site do produto é este e-mail.
+const SUPORTE_HREF = 'mailto:nicolas@avilaops.com?subject=Suporte%20Arxis'
+
 export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: TopbarProps) {
   const [user, setUser] = useState<User | null>(null)
 
@@ -77,9 +81,7 @@ export default function Topbar({ mobileNavOpen = false, onOpenMobileNav }: Topba
       <div className="topbar__end" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
         <a
           className="topbar__link"
-          href="https://docs.arxisvr.com"
-          target="_blank"
-          rel="noopener noreferrer"
+          href={SUPORTE_HREF}
           aria-label="Suporte"
           title="Suporte"
         >

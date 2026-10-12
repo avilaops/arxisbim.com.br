@@ -24,6 +24,22 @@ const ACTION_LABELS: Record<string, string> = {
   'PUT:/api/v1/budgets/:id': 'Orçamento atualizado',
   'POST:/api/v1/schedules': 'Cronograma criado',
   'PUT:/api/v1/schedules/:id': 'Cronograma atualizado',
+  // Eventos nomeados do registro de auditoria (backend: auditLogs.action).
+  'auth.oauth.login': 'Entrada na conta',
+  'auth.login.success': 'Entrada na conta',
+  'auth.login.failed': 'Tentativa de entrada recusada',
+  'auth.logout': 'Saída da conta',
+  'auth.register': 'Conta criada',
+  'auth.email_verified': 'E-mail confirmado',
+  'auth.session.revoked': 'Sessão encerrada',
+  'auth.token.refresh': 'Sessão renovada',
+  'billing.checkout.created': 'Assinatura iniciada',
+  'billing.subscription.changed': 'Plano alterado',
+  'billing.portal.created': 'Cobrança consultada',
+  'api_key.created': 'Token de API criado',
+  'api_key.updated': 'Token de API alterado',
+  'api_key.revoked': 'Token de API revogado',
+  'api_key.deleted': 'Token de API removido',
 }
 
 function translateAction(action: string): string {
@@ -41,7 +57,8 @@ function translateAction(action: string): string {
     const verb = { POST: 'Criado', PUT: 'Atualizado', PATCH: 'Atualizado', DELETE: 'Removido', GET: 'Consultado' }[match[1]] || ''
     return `${match[2].replace(/-/g, ' ')} ${verb}`.trim()
   }
-  return action
+  // Nome interno de evento nunca vai cru para a tela.
+  return 'Atividade registrada'
 }
 
 // ── Relative time ───────────────────────────────────────────
@@ -62,22 +79,22 @@ function timeAgo(isoDate: string): string {
 // ── Status label + color ────────────────────────────────────
 function statusLabel(status: string): { label: string; color: string } {
   const map: Record<string, { label: string; color: string }> = {
-    active: { label: 'Ativo', color: '#22c55e' },
-    draft: { label: 'Rascunho', color: '#f59e0b' },
+    active: { label: 'Ativo', color: '#15803d' },
+    draft: { label: 'Rascunho', color: '#b45309' },
     in_progress: { label: 'Em andamento', color: '#0e6b8f' },
     under_review: { label: 'Em revisão', color: '#b45309' },
-    completed: { label: 'Finalizado', color: '#6b7280' },
-    archived: { label: 'Arquivado', color: '#6b7280' },
+    completed: { label: 'Finalizado', color: '#57534e' },
+    archived: { label: 'Arquivado', color: '#57534e' },
     // Estados derivados da versao ativa do modelo (projects.service):
     // sem modelo, enviando, processando, pronto, falhou.
-    empty: { label: 'Sem modelo', color: '#6b7280' },
-    uploading: { label: 'Enviando', color: '#f59e0b' },
+    empty: { label: 'Sem modelo', color: '#57534e' },
+    uploading: { label: 'Enviando', color: '#b45309' },
     processing: { label: 'Processando', color: '#0e6b8f' },
-    ready: { label: 'Pronto', color: '#22c55e' },
-    failed: { label: 'Falhou', color: '#ef4444' },
+    ready: { label: 'Pronto', color: '#15803d' },
+    failed: { label: 'Falhou', color: '#b91c1c' },
   }
   // Valor desconhecido nunca vai cru para a tela: o usuario nao le enum.
-  return map[status] || { label: 'Sem status', color: '#6b7280' }
+  return map[status] || { label: 'Sem status', color: '#57534e' }
 }
 
 // ── Skeleton pulse ──────────────────────────────────────────
@@ -95,7 +112,7 @@ function Skeleton({ width, height, borderRadius = 6 }: { width: string | number;
         width,
         height,
         borderRadius,
-        background: 'rgba(255,255,255,0.06)',
+        background: 'var(--c-surface3)',
         animation: 'skeletonPulse 1.5s ease-in-out infinite',
       }}
     />
@@ -224,19 +241,8 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div id="loading" style={{ position: 'fixed', inset: 0, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', zIndex: 9999 }}>
-        <div
-          className="spin"
-          style={{
-            width: '28px',
-            height: '28px',
-            border: '2px solid rgba(255,255,255,0.06)',
-            borderTopColor: 'var(--c-blue)',
-            borderRadius: '50%',
-            animation: 'spin .7s linear infinite',
-          }}
-        ></div>
-        <p style={{ fontSize: '12px', color: 'var(--c-text3)' }}>Carregando...</p>
+      <div className="arx-carregando" role="status" aria-label="Carregando">
+        <div className="arx-carregando__giro" />
       </div>
     )
   }
@@ -251,17 +257,17 @@ export default function DashboardPage() {
     : null
 
   return (
-    <AppShell>
+    <AppShell title="Página inicial">
       <style>{pulseKeyframes}</style>
       <div className="dash-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         {/* Page header */}
         <div className="dash-head" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: '11px', color: 'var(--c-text3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '4px' }}>
               Bem-vindo de volta
             </div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.4px', color: 'var(--c-text)' }}>
-              {user?.name || user?.email || 'Dashboard'}
+              {user?.name || user?.email || 'Página inicial'}
             </h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -363,7 +369,7 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
                       {card.title}
                     </div>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0e6b8f', background: 'rgba(14,107,143,0.1)' }}>
+                    <div className="dash-kpi__icone" aria-hidden="true" style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0e6b8f', background: 'rgba(14,107,143,0.1)' }}>
                       <BarChart2 size={12} strokeWidth={2} />
                     </div>
                   </div>
@@ -371,7 +377,7 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px', color: 'var(--c-text)' }}>
                       {card.value}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
+                    <div className="dash-kpi__sub" style={{ fontSize: '11px', color: 'var(--c-text3)', marginTop: '1px' }}>
                       Total
                     </div>
                   </div>
@@ -379,9 +385,11 @@ export default function DashboardPage() {
               ))}
         </div>
 
+        <div className="dash-duo">
         {/* Recent projects */}
         <div
           id="recentes"
+          className="dash-card"
           style={{
             background: 'var(--c-surface2)',
             border: '1px solid var(--c-border)',
@@ -392,11 +400,11 @@ export default function DashboardPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
+              <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
                 Projetos recentes
-              </div>
+              </h2>
               {data && (
-                <span style={{ fontSize: '11px', color: 'var(--c-text3)', background: 'rgba(255,255,255,0.06)', padding: '0 6px', borderRadius: '999px', marginLeft: '6px', lineHeight: '18px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--c-text3)', background: 'var(--c-surface3)', padding: '0 6px', borderRadius: '999px', marginLeft: '6px', lineHeight: '18px' }}>
                   {data.recentProjects.length}
                 </span>
               )}
@@ -411,13 +419,13 @@ export default function DashboardPage() {
                 gap: '4px',
                 color: 'var(--c-blue)',
                 borderRadius: 'var(--r)',
-                border: '1px solid rgba(59,130,246,0.25)',
+                border: '1px solid var(--c-border)',
                 transition: 'background .12s',
                 background: 'transparent',
                 cursor: 'pointer',
               }}
             >
-              Ver tudo →
+              Ver tudo
             </button>
           </div>
 
@@ -447,10 +455,16 @@ export default function DashboardPage() {
               data.recentProjects.map((project, idx) => {
                 const st = statusLabel(project.status)
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={project.id}
                     onClick={() => openProject(project.id)}
                     style={{
+                      width: '100%',
+                      border: 'none',
+                      background: 'none',
+                      fontFamily: 'inherit',
+                      textAlign: 'left',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
@@ -459,7 +473,7 @@ export default function DashboardPage() {
                       cursor: 'pointer',
                       transition: 'background .1s',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.025)')}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--c-surface2)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                   >
                     <div
@@ -491,7 +505,7 @@ export default function DashboardPage() {
                         {st.label}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )
               })
             ) : (
@@ -524,6 +538,7 @@ export default function DashboardPage() {
 
         {/* Activity log */}
         <div
+          className="dash-card"
           style={{
             background: 'var(--c-surface2)',
             border: '1px solid var(--c-border)',
@@ -533,9 +548,9 @@ export default function DashboardPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid var(--c-border)' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
               Atividade recente
-            </div>
+            </h2>
           </div>
 
           <div>
@@ -570,7 +585,7 @@ export default function DashboardPage() {
                     cursor: 'default',
                     transition: 'background .1s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--c-surface2)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
                 >
                   <span style={{ fontWeight: 500, color: 'var(--c-text)', flexShrink: 0, minWidth: '140px' }}>
@@ -591,13 +606,14 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        </div>
 
         {createOpen && (
           <div className="viewer-modal-backdrop">
             <section className="viewer-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
               <div className="viewer-modal__header">
                 <div>
-                  <span className="viewer-panel__eyebrow">Workspace</span>
+                  <span className="viewer-panel__eyebrow">Área de trabalho</span>
                   <h2 id="dashboard-create-title">Novo projeto</h2>
                 </div>
                 <button className="viewer-panel__close viewer-modal__close" type="button" onClick={() => setCreateOpen(false)} aria-label="Fechar">×</button>
@@ -630,7 +646,7 @@ export default function DashboardPage() {
             <section className="viewer-modal dashboard-projects-modal" role="dialog" aria-modal="true" aria-labelledby="all-projects-title">
               <div className="viewer-modal__header">
                 <div>
-                  <span className="viewer-panel__eyebrow">Workspace</span>
+                  <span className="viewer-panel__eyebrow">Área de trabalho</span>
                   <h2 id="all-projects-title">Todos os projetos</h2>
                 </div>
                 <button className="viewer-panel__close viewer-modal__close" type="button" onClick={() => setAllProjectsOpen(false)} aria-label="Fechar">×</button>

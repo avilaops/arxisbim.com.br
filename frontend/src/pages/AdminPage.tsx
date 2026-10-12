@@ -154,18 +154,8 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div id="loading" style={{ position: 'fixed', inset: 0, background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', zIndex: 9999 }}>
-        <div
-          style={{
-            width: '28px',
-            height: '28px',
-            border: '2px solid rgba(255,255,255,0.06)',
-            borderTopColor: 'var(--c-blue)',
-            borderRadius: '50%',
-            animation: 'spin .7s linear infinite',
-          }}
-        ></div>
-        <p style={{ fontSize: '12px', color: 'var(--c-text3)' }}>Carregando...</p>
+      <div className="arx-carregando" role="status" aria-label="Carregando">
+        <div className="arx-carregando__giro" />
       </div>
     )
   }
@@ -178,7 +168,7 @@ export default function AdminPage() {
   ]
 
   return (
-    <AppShell>
+    <AppShell title="Admin">
       <div className="dash-page" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1280px', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
           <div>

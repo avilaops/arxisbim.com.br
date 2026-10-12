@@ -118,9 +118,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
 
       <div style={{ padding: '12px 0 4px', borderTop: '1px solid var(--c-border)', marginTop: '4px' }}>
         <div className="sidebar-section-title" style={{ padding: '0 14px 4px', fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--c-text3)', whiteSpace: 'nowrap' }}>
-          Workspace
+          Área de trabalho
         </div>
-        <NavItem href="/app" icon="viewer" label="Viewer 3D" active={location.pathname === '/app'} />
+        <NavItem href="/app" icon="viewer" label="Visualizador 3D" active={location.pathname === '/app'} />
         <NavItem href="/app/compare" icon="compare" label="Comparar cenários" active={location.pathname === '/app/compare'} />
         {/* Planejamento 4D, Reunioes XR, Orcamento 5D e Consulta BIM sairam em
             08/09/2026: apontavam para /app#... e nada lia o hash. Voltam quando
@@ -239,7 +239,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
                 e.currentTarget.style.color = 'var(--c-text2)'
               }}
             >
-              Plano & Cobrança
+              Plano e cobrança
             </Link>
             <Link
               to="/account?tab=tokens"

@@ -110,8 +110,11 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
       output: {
+        // Sem regra para `/pages/` nem pega-tudo de `node_modules`: as telas são
+        // carregadas sob demanda (App.tsx) e cada uma leva só o que usa. Com as
+        // duas regras, o esquema do web-ifc (3,5 MB) ia junto com a tela de login.
         manualChunks: (id) => {
-          if (id.includes('web-ifc-three')) {
+          if (id.includes('node_modules/web-ifc')) {
             return 'web-ifc'
           }
           if (id.includes('node_modules/three') && !id.includes('addons')) {
@@ -122,9 +125,6 @@ export default defineConfig({
           }
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'react-vendor'
-          }
-          if (id.includes('node_modules')) {
-            return 'vendor'
           }
           if (id.includes('/viewer/')) {
             return 'viewer'
@@ -149,9 +149,6 @@ export default defineConfig({
           }
           if (id.includes('/commands/')) {
             return 'commands'
-          }
-          if (id.includes('/pages/')) {
-            return 'pages'
           }
         },
         chunkFileNames: 'assets/[name]-[hash].js',
