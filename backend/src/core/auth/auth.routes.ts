@@ -5,6 +5,21 @@ import { AuthService, getLoginFailCount, recordIpFailure, isIpBlocked } from './
 import { verifyTurnstileToken } from './turnstile.js';
 import { oauthService } from './oauth.service.js';
 import { authRateLimits } from './rate-limiter.js';
+import {
+  CAMINHO_DO_FLUXO,
+  COOKIE_DO_FLUXO,
+  assinarState,
+  buscarPerfil,
+  cookieDoFluxo,
+  cookieDoFluxoVencido,
+  desafioDe,
+  enderecoDeAutorizacao,
+  lerConfiguracao,
+  lerCookie,
+  novoVerificador,
+  somenteLoginCentral,
+  stateConfere,
+} from './avilaops-oidc.js';
 
 // Safe error message — never expose DB queries or stack traces to clients.
 // Auth-domain errors (with a .code) keep their message; everything else → generic.
@@ -62,6 +77,24 @@ export async function authRoutes(fastify: FastifyInstance) {
       if (ct?.includes('application/json') && !request.headers['content-length']) {
         delete (request.headers as any)['content-type'];
       }
+    }
+  });
+
+  /**
+   * Com AUTH_SSO_ONLY=true a única porta de entrada é o login central
+   * (rotas /auth/avilaops, abaixo). As rotas que criam ou usam senha do
+   * próprio Arxis respondem 410, para nenhum cliente antigo continuar abrindo
+   * sessão por fora. Sem a variável (dev e testes) tudo segue como antes.
+   */
+  const ROTAS_DE_SENHA = ['/login', '/register', '/forgot-password', '/reset-password'];
+  fastify.addHook('preHandler', async (request, reply) => {
+    if (request.method !== 'POST' || !somenteLoginCentral()) return;
+    const caminho = request.url.split('?')[0];
+    if (ROTAS_DE_SENHA.some((rota) => caminho.endsWith(`/auth${rota}`))) {
+      return reply.status(410).send({
+        error: 'O acesso ao Arxis é feito pelo login da Ávila Ops.',
+        loginUrl: `${process.env.BACKEND_URL || 'http://localhost:3001'}${CAMINHO_DO_FLUXO}`,
+      });
     }
   });
 
@@ -723,6 +756,61 @@ export async function authRoutes(fastify: FastifyInstance) {
       `${frontendUrl}/oauth-callback#token=${tokens!.token}&refreshToken=${tokens!.refreshToken}`,
     );
   }
+
+  /**
+   * GET /auth/avilaops
+   * Leva a pessoa ao login central da Ávila Ops (ida do fluxo OIDC com PKCE).
+   */
+  fastify.get('/avilaops', {
+    schema: { description: 'Redirect to Avila Ops login (OIDC)', tags: ['auth'] },
+    handler: async (_request: FastifyRequest, reply: FastifyReply) => {
+      const config = lerConfiguracao();
+      const segredo = process.env.JWT_SECRET;
+      if (!config || !segredo) return reply.status(501).send({ error: 'Login central não configurado' });
+
+      const verificador = novoVerificador();
+      const seguro = config.redirectUri.startsWith('https://');
+      reply.header('Set-Cookie', cookieDoFluxo(verificador, seguro));
+      // A resposta carrega o cookie do fluxo: não pode ser guardada por proxy.
+      reply.header('Cache-Control', 'no-store');
+      return reply.redirect(enderecoDeAutorizacao(config, assinarState(verificador, segredo), desafioDe(verificador)));
+    },
+  });
+
+  /**
+   * GET /auth/avilaops/callback
+   * Volta do login central: confere o state contra o cookie deste navegador,
+   * troca o código e abre a sessão do Arxis.
+   */
+  fastify.get('/avilaops/callback', {
+    schema: { description: 'Avila Ops login callback (OIDC)', tags: ['auth'] },
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      const config = lerConfiguracao();
+      const segredo = process.env.JWT_SECRET;
+      if (!config || !segredo) return oauthRedirect(reply, null, 'Login central não configurado');
+
+      const seguro = config.redirectUri.startsWith('https://');
+      reply.header('Set-Cookie', cookieDoFluxoVencido(seguro));
+      reply.header('Cache-Control', 'no-store');
+      try {
+        const { code, state, error } = request.query as Record<string, string>;
+        if (error || !code) return oauthRedirect(reply, null, error || 'No code received');
+
+        const verificador = lerCookie(request.headers.cookie, COOKIE_DO_FLUXO);
+        if (!verificador || !stateConfere(state, verificador, segredo)) {
+          return oauthRedirect(reply, null, 'Não foi possível confirmar o login. Tente de novo.');
+        }
+
+        const profile = await buscarPerfil(config, code, verificador);
+        const ip = request.headers['cf-connecting-ip'] as string | undefined ?? request.ip;
+        const result = await oauthService.loginOrCreate(profile, ip, request.headers['user-agent']);
+        return oauthRedirect(reply, result);
+      } catch (err: any) {
+        fastify.log.error(err);
+        return oauthRedirect(reply, null, safeAuthError(err));
+      }
+    },
+  });
 
   /**
    * GET /auth/google

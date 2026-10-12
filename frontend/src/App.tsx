@@ -4,8 +4,6 @@ import BlogPage from './pages/BlogPage'
 import BlogArticlePage from './pages/BlogArticlePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import ValidadorPage from './pages/ValidadorPage'
 import DashboardPage from './pages/DashboardPage'
@@ -45,8 +43,9 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogArticlePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* A senha é do login central: os links antigos de recuperação caem na entrada. */}
+        <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+        <Route path="/reset-password" element={<Navigate to="/login" replace />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/validador" element={<ValidadorPage />} />
 

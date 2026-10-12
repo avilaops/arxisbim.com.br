@@ -9,7 +9,7 @@ import { observabilityService } from '../observability/service.js';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 
-type OAuthProvider = 'google' | 'github' | 'facebook';
+type OAuthProvider = 'google' | 'github' | 'facebook' | 'avilaops';
 
 interface OAuthProfile {
   id: string;
