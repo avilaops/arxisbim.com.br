@@ -138,6 +138,17 @@
 .app-layout .dash-page [style*="color: #fff"],
 .app-layout .dash-page [style*="color:#fff"] { color: var(--c-text) !important; }
 
+/* Títulos com o mesmo peso do site. */
+.app-layout h1 { font-weight: 700; }
+.app-layout h2, .app-layout h3 { font-weight: 600; }
+/* Painéis laterais do visualizador separados por linha, sem sombra. */
+.app-layout .viewer-panel { box-shadow: none !important; }
+/* O estado vazio fica em cima da área escura do modelo: texto claro. */
+.app-layout .viewer-canvas .viewer-empty-state,
+.app-layout .viewer-canvas .viewer-empty-state h2 { color: #fff; }
+.app-layout .viewer-canvas .viewer-empty-state p { color: rgba(255, 255, 255, .72); }
+.app-layout .viewer-canvas .viewer-empty-state__icon { color: #fff; border-color: rgba(255, 255, 255, .24); background: rgba(255, 255, 255, .06); }
+
 @media (max-width: 768px) {
   .app-layout .main-content,
   .app-layout.sidebar-collapsed .main-content { margin-left: 0 !important; }

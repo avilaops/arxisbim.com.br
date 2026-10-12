@@ -222,7 +222,7 @@ export default function AdminPage() {
                       width: '28px',
                       height: '28px',
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                      background: 'linear-gradient(135deg, #0e6b8f 0%, #0e6b8f 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

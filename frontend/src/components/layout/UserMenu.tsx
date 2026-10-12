@@ -54,7 +54,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           width: '28px',
           height: '28px',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+          background: '#0e6b8f',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

@@ -64,15 +64,15 @@ function statusLabel(status: string): { label: string; color: string } {
   const map: Record<string, { label: string; color: string }> = {
     active: { label: 'Ativo', color: '#22c55e' },
     draft: { label: 'Rascunho', color: '#f59e0b' },
-    in_progress: { label: 'Em andamento', color: '#3b82f6' },
-    under_review: { label: 'Em revisão', color: '#a855f7' },
+    in_progress: { label: 'Em andamento', color: '#0e6b8f' },
+    under_review: { label: 'Em revisão', color: '#b45309' },
     completed: { label: 'Finalizado', color: '#6b7280' },
     archived: { label: 'Arquivado', color: '#6b7280' },
     // Estados derivados da versao ativa do modelo (projects.service):
     // sem modelo, enviando, processando, pronto, falhou.
     empty: { label: 'Sem modelo', color: '#6b7280' },
     uploading: { label: 'Enviando', color: '#f59e0b' },
-    processing: { label: 'Processando', color: '#3b82f6' },
+    processing: { label: 'Processando', color: '#0e6b8f' },
     ready: { label: 'Pronto', color: '#22c55e' },
     failed: { label: 'Falhou', color: '#ef4444' },
   }
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--c-text)' }}>
                       {card.title}
                     </div>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', background: 'rgba(59,130,246,0.15)' }}>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0e6b8f', background: 'rgba(14,107,143,0.1)' }}>
                       <BarChart2 size={12} strokeWidth={2} />
                     </div>
                   </div>
