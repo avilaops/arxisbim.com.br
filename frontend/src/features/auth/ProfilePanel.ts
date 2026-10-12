@@ -289,26 +289,6 @@ export class ProfilePanel {
               <i class="iconoir-edit"></i>
               <span>Editar Perfil</span>
             </button>
-
-            <button class="change-password-button" style="
-              flex: 1;
-              padding: 14px;
-              background: rgba(255, 255, 255, 0.1);
-              border: 1px solid rgba(255, 255, 255, 0.2);
-              border-radius: 8px;
-              color: #fff;
-              font-size: 14px;
-              font-weight: 600;
-              cursor: pointer;
-              transition: all 0.3s;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-            ">
-              <i class="iconoir-lock"></i>
-              <span>Alterar Senha</span>
-            </button>
           </div>
         </div>
       </div>
@@ -321,11 +301,6 @@ export class ProfilePanel {
         .edit-profile-button:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
-        }
-
-        .change-password-button:hover {
-          background: rgba(255, 255, 255, 0.15);
-          border-color: rgba(255, 255, 255, 0.3);
         }
       </style>
     `;
@@ -366,14 +341,6 @@ export class ProfilePanel {
       console.log('✏️ Edit profile clicked');
       // TODO: Implement profile editing
       alert('Edição de perfil será implementada em breve!');
-    });
-
-    // Change password button
-    const passwordButton = this.overlay.querySelector('.change-password-button') as HTMLButtonElement;
-    passwordButton?.addEventListener('click', () => {
-      console.log('🔒 Change password clicked');
-      // TODO: Implement password change
-      alert('Alteração de senha será implementada em breve!');
     });
 
     // Listen to ShowProfile event

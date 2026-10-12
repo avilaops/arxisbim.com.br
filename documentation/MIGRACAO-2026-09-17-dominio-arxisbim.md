@@ -304,5 +304,24 @@ AUTH_SSO_ONLY=true                # fecha /login, /register, /forgot-password e 
 - Domínio novo para a API muda o endereço de retorno, que precisa ser
   atualizado na integração do Auth (igualdade exata).
 - Sem `AUTH_SSO_ONLY` (dev e testes) as rotas de senha seguem funcionando.
-- `POST /auth/change-password` e o 2FA próprio continuam no código e não têm
-  mais uso com a entrada única; ficaram para limpeza.
+- A troca de senha e o 2FA próprios foram removidos do código em 12/10/2026
+  (rotas `/auth/change-password` e `/auth/2fa/*`, `totp.service.ts`, as telas
+  de recuperação de senha e as dependências `otplib` e `qrcode`): senha e
+  segundo fator são do Auth. As colunas `two_factor_*` da tabela `users`
+  ficaram no banco, sem uso; removê-las pede migração própria.
+
+## Virada do site público para o CMS (12/10/2026)
+
+- `arxisbim.com.br` aponta para o servidor de aplicações (`178.105.82.48`) e é
+  servido pelo CMS (site `arxis`). O endereço provisório
+  `arxis.sites.avilaops.com` redireciona para ele.
+- As rotas do app nesse domínio (`/login`, `/register`, `/validador`,
+  `/dashboard`, `/app`, `/app/*`, `/account`, `/admin`, `/verify-email`,
+  `/accept-invite`, `/join`, `/shared`, `/forgot-password`,
+  `/reset-password`) são redirecionamentos 301 cadastrados no CMS para
+  `app.arxisbim.com.br`. O CMS não repassa a query.
+- `www`, `app` e `api` continuam no `apps-noclient`.
+- O registro DNS de `arxisvr.avilaops.com` e de `www.arxisvr.avilaops.com` não
+  existe mais (removido por fora deste trabalho, entre 10 e 12/10/2026): o
+  bloco de redirecionamento no Caddy segue pronto, mas o nome não resolve. A
+  API antiga (`api.arxisvr.avilaops.com`) continua resolvendo e servindo.

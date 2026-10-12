@@ -51,5 +51,4 @@ export const authRateLimits = {
   resetPassword:  make(10, 60_000),
   verifyEmail:    make(10, 60_000),
   refresh:        make(20, 60_000),
-  changePassword: make(5,  60_000),
 } as const;

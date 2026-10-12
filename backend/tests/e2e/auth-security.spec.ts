@@ -334,27 +334,21 @@ describe('Auth Security Tests (S-series)', () => {
   });
 
   // ── 2FA endpoints exist ────────────────────────────────────────────────
-  it('B2: 2FA endpoints return 401 without auth (not 404)', async () => {
-    for (const url of ['/api/v1/auth/2fa/setup', '/api/v1/auth/2fa/verify-setup', '/api/v1/auth/2fa/disable']) {
-      const res = await app.inject({ method: 'POST', url, payload: { code: '123456' } });
-      expect(res.statusCode).toBe(401);
+  // As rotas de 2FA e de troca de senha próprias saíram em 12/10/2026: a
+  // entrada do produto é o login central, que cuida de senha e de segundo fator.
+  it('rotas de 2FA e de troca de senha próprias não existem mais (404)', async () => {
+    for (const url of [
+      '/api/v1/auth/2fa/setup',
+      '/api/v1/auth/2fa/verify-setup',
+      '/api/v1/auth/2fa/disable',
+      '/api/v1/auth/2fa/verify-login',
+      '/api/v1/auth/change-password',
+    ]) {
+      const res = await app.inject({ method: 'POST', url, payload: {} });
+      expect(res.statusCode).toBe(404);
     }
   });
 
-  // ── /auth/2fa/verify-login rejects invalid challenge ──────────────────
-  // O timeout nao e folga a toa: o handler faz `await import('./totp.service.js')`
-  // e esta e a primeira vez que esse modulo carrega. Com o suite inteiro rodando
-  // em paralelo, a transformacao desse import sozinha passa dos 5s padrao.
-  it('B2: verify-login with invalid challengeToken returns 401', { timeout: 30000 }, async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/v1/auth/2fa/verify-login',
-      payload: { challengeToken: 'invalid.jwt.here', code: '123456' },
-    });
-    expect(res.statusCode).toBe(401);
-  });
-
-  // ── S03 — IP reputation layer 3 blocks after 20 cross-email failures ───
   it('S03: IP blocked after 20 failed login attempts across different emails (M2 layer 3)', { timeout: 30000 }, async () => {
     const ip = '10.99.0.1';
     // 20 failures from same IP, different emails

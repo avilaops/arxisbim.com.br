@@ -215,7 +215,7 @@ export class AuthService {
       whereClauses.push(eq(users.tenantId, validated.tenantId));
     }
 
-    // Explicit column list — never fails due to optional columns (oauth_*, two_factor_*)
+    // Explicit column list — never fails due to optional columns (oauth_*)
     // that may be missing in older DB instances without all migrations applied.
     const [user] = await this.db
       .select({
@@ -229,8 +229,6 @@ export class AuthService {
         permissions: users.permissions,
         emailVerified: users.emailVerified,
         emailVerifiedAt: users.emailVerifiedAt,
-        twoFactorEnabled: users.twoFactorEnabled,
-        twoFactorSecret: users.twoFactorSecret,
         isActive: users.isActive,
         lastLoginAt: users.lastLoginAt,
       })
@@ -289,17 +287,6 @@ export class AuthService {
 
     observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.success', resource: 'auth', resourceId: user.id, metadata: { ip: credentials.ip, userAgent: credentials.userAgent } }).catch(() => {});
     observabilityService.incrementCounter(user.tenantId, 'auth.login.total', { success: 'true' }).catch(() => {});
-
-    // B2 — 2FA: se ativo, emitir challenge token em vez de tokens reais
-    if (user.twoFactorEnabled) {
-      const { totpService } = await import('./totp.service.js');
-      const challengeToken = totpService.issueChallengeToken(user.id, user.tenantId);
-      return {
-        user: { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, companyId: user.companyId || undefined, role: user.role, permissions: user.permissions || [] },
-        requires2FA: true,
-        challengeToken,
-      } as any;
-    }
 
     // Gerar tokens
     const token = this.generateAccessToken({
@@ -762,22 +749,6 @@ export class AuthService {
   }
 
   /**
-   * Alterar senha (usuário autenticado)
-   */
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    const [user] = await this.db.select({ id: users.id, passwordHash: users.passwordHash, tenantId: users.tenantId }).from(users).where(eq(users.id, userId)).limit(1);
-    if (!user) throw new Error('Usuário não encontrado');
-
-    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!isValid) throw new Error('Senha atual incorreta');
-
-    strongPassword.parse(newPassword);
-    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    await this.checkAndSavePasswordHistory(userId, user.tenantId, newPassword, newHash);
-    await this.db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
-  }
-
-  /**
    * Solicitar reset de senha (forgot password)
    */
   async forgotPassword(rawEmail: string): Promise<void> {
@@ -896,55 +867,6 @@ export class AuthService {
     for (const id of toDelete) {
       await this.db.delete(passwordHistory).where(eq(passwordHistory.id, id));
     }
-  }
-
-  /**
-   * B2 — Completar login após 2FA verificado.
-   * Chamado pelo /auth/2fa/verify-login depois de validar o TOTP.
-   */
-  async completeLogin(userId: string, tenantId: string, ip?: string, userAgent?: string): Promise<{ user: any; token: string; refreshToken: string }> {
-    const [user] = await this.db
-      .select({ id: users.id, email: users.email, name: users.name, tenantId: users.tenantId, companyId: users.companyId, role: users.role, permissions: users.permissions, isActive: users.isActive })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user || !user.isActive) throw new Error('Usuário inativo');
-
-    const token = this.generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      tenantId: user.tenantId,
-      companyId: user.companyId || undefined,
-      role: user.role,
-      permissions: user.permissions || [],
-    });
-
-    const refreshToken = this.generateRefreshToken({
-      userId: user.id,
-      email: user.email,
-      tenantId: user.tenantId,
-    });
-
-    await this.db.insert(userSessions).values({
-      userId: user.id,
-      tenantId: user.tenantId,
-      refreshToken,
-      ipAddress: ip,
-      userAgent,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      isRevoked: false,
-      isActive: true,
-    });
-
-    observabilityService.logAudit({ tenantId: user.tenantId, userId: user.id, action: 'auth.login.2fa_complete', resource: 'auth', resourceId: user.id }).catch(() => {});
-
-    return {
-      user: { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, companyId: user.companyId || undefined, role: user.role, permissions: user.permissions || [] },
-      token,
-      refreshToken,
-    };
   }
 
   /**

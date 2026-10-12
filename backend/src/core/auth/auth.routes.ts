@@ -44,7 +44,6 @@ const forgotPasswordLimit   = authRateLimits.forgotPassword;
 const resetPasswordLimit    = authRateLimits.resetPassword;
 const verifyEmailLimit      = authRateLimits.verifyEmail;
 const refreshLimit          = authRateLimits.refresh;
-const changePasswordLimit   = authRateLimits.changePassword;
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -465,40 +464,6 @@ export async function authRoutes(fastify: FastifyInstance) {
   });
 
   /**
-   * POST /auth/change-password
-   * Alterar senha (autenticado)
-   */
-  fastify.post('/change-password', {
-    preHandler: [changePasswordLimit, fastify.authenticate],
-    schema: {
-      description: 'Alterar senha do usuário autenticado',
-      tags: ['auth'],
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['currentPassword', 'newPassword'],
-        properties: {
-          currentPassword: { type: 'string', minLength: 8 },
-          newPassword: { type: 'string', minLength: 8 },
-        },
-      },
-      response: {
-        200: { type: 'object', properties: { message: { type: 'string' } } },
-      },
-    },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { userId } = (request as any).user;
-        const { currentPassword, newPassword } = request.body as any;
-        await authService.changePassword(userId, currentPassword, newPassword);
-        return reply.send({ message: 'Senha alterada com sucesso' });
-      } catch (error: any) {
-        return reply.status(400).send({ error: safeAuthError(error) });
-      }
-    },
-  });
-
-  /**
    * POST /auth/forgot-password
    * Solicitar reset de senha
    */
@@ -595,148 +560,6 @@ export async function authRoutes(fastify: FastifyInstance) {
       } catch (error) {
         fastify.log.error(error);
         return reply.status(404).send({ error: 'User not found' });
-      }
-    },
-  });
-
-  // =====================================
-  // B2 — 2FA / TOTP endpoints
-  // =====================================
-
-  /**
-   * POST /auth/2fa/setup
-   * Initiate TOTP setup — returns secret + QR code (requires auth)
-   */
-  fastify.post('/2fa/setup', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      description: 'Iniciar configuração de 2FA TOTP',
-      tags: ['auth'],
-      security: [{ bearerAuth: [] }],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            qrCodeDataUrl: { type: 'string' },
-            backupCodes: { type: 'array', items: { type: 'string' } },
-          },
-        },
-      },
-    },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { userId } = (request as any).user;
-        const { totpService } = await import('./totp.service.js');
-        const result = await totpService.setupTotp(userId);
-        // Never expose raw secret to client — only QR + backup codes
-        return reply.send({ qrCodeDataUrl: result.qrCodeDataUrl, backupCodes: result.backupCodes });
-      } catch (error: any) {
-        return reply.status(400).send({ error: safeAuthError(error) });
-      }
-    },
-  });
-
-  /**
-   * POST /auth/2fa/verify-setup
-   * Confirm TOTP setup with first code — enables 2FA
-   */
-  fastify.post('/2fa/verify-setup', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      description: 'Confirmar configuração de 2FA com primeiro código',
-      tags: ['auth'],
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['code'],
-        properties: { code: { type: 'string', minLength: 6, maxLength: 6 } },
-      },
-      response: {
-        200: { type: 'object', properties: { message: { type: 'string' } } },
-      },
-    },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { userId } = (request as any).user;
-        const { code } = request.body as any;
-        const { totpService } = await import('./totp.service.js');
-        await totpService.verifySetup(userId, code);
-        return reply.send({ message: '2FA ativado com sucesso.' });
-      } catch (error: any) {
-        return reply.status(400).send({ error: safeAuthError(error) });
-      }
-    },
-  });
-
-  /**
-   * POST /auth/2fa/disable
-   * Disable 2FA with current TOTP code or backup code
-   */
-  fastify.post('/2fa/disable', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      description: 'Desativar 2FA',
-      tags: ['auth'],
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['code'],
-        properties: { code: { type: 'string', minLength: 4 } },
-      },
-      response: {
-        200: { type: 'object', properties: { message: { type: 'string' } } },
-      },
-    },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { userId } = (request as any).user;
-        const { code } = request.body as any;
-        const { totpService } = await import('./totp.service.js');
-        await totpService.disable(userId, code);
-        return reply.send({ message: '2FA desativado.' });
-      } catch (error: any) {
-        return reply.status(400).send({ error: safeAuthError(error) });
-      }
-    },
-  });
-
-  /**
-   * POST /auth/2fa/verify-login
-   * Complete login with TOTP code + challenge token
-   */
-  fastify.post('/2fa/verify-login', {
-    schema: {
-      description: 'Completar login com código 2FA',
-      tags: ['auth'],
-      body: {
-        type: 'object',
-        required: ['challengeToken', 'code'],
-        properties: {
-          challengeToken: { type: 'string' },
-          code: { type: 'string', minLength: 4 },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            token: { type: 'string' },
-            refreshToken: { type: 'string' },
-          },
-        },
-      },
-    },
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const { challengeToken, code } = request.body as any;
-        const { totpService } = await import('./totp.service.js');
-        const { userId, tenantId } = await totpService.verifyLoginCode(challengeToken, code);
-        // Complete auth flow — get user and issue real tokens
-        const result = await authService.completeLogin(userId, tenantId, request.ip, request.headers['user-agent']);
-        return reply.send(result);
-      } catch (error: any) {
-        fastify.log.error(error);
-        return reply.status(401).send({ error: safeAuthError(error) });
       }
     },
   });
