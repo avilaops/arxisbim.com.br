@@ -170,8 +170,13 @@ deploy_web() {
   # Type-check + build, sob uma trava so (local_web).
   sob_trava _web-local
 
+  # O arquivo de entrada que o index.html do build aponta: o nome leva o hash
+  # do conteudo, entao muda a cada build. (Ate 12/10/2026 a conferencia usava
+  # `pages-*.js`, pedaco que deixou de existir quando as telas passaram a ser
+  # carregadas sob demanda.)
   local bundle
-  bundle="$(basename "$(ls "$ROOT"/frontend/dist/assets/pages-*.js | head -1)")"
+  bundle="$(grep -oE 'assets/main-[^"]*\.js' "$ROOT/frontend/dist/index.html" | head -1)"
+  [ -n "$bundle" ] || { echo "[web] ABORTADO: o build nao tem arquivo de entrada no index.html." >&2; return 1; }
   echo "    bundle: $bundle"
 
   echo "==> [web] enviando o dist"
@@ -186,7 +191,7 @@ deploy_web() {
 
   echo "==> [web] conferindo que o bundle PUBLICADO e o que acabei de construir"
   local publicado
-  publicado="$(curl -s --max-time 30 "$APP_URL/" | grep -oE 'pages-[^"]*\.js' | head -1)"
+  publicado="$(curl -s --max-time 30 "$APP_URL/" | grep -oE 'assets/main-[^"]*\.js' | head -1)"
   if [ "$bundle" != "$publicado" ]; then
     echo "[web] ABORTADO: publicado '$publicado', esperado '$bundle'." >&2
     return 1
