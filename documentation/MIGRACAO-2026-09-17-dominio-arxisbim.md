@@ -270,3 +270,39 @@ antigo servindo em vez de redirecionar) e reconstruir o frontend com
 `ARXISVR_SITE_URL`/`ARXISVR_API_URL` do domínio antigo. O DNS novo pode ficar de
 pé sem prejuízo. Nada no banco muda nesta migração, então não há dump a
 restaurar.
+
+---
+
+## Entrada pelo login central (12/10/2026)
+
+Desde 12/10/2026 o Arxis só abre sessão pelo `auth.avilaops.com`, por OIDC. O
+Arxis continua dono dos próprios usuários, espaços de trabalho e sessão (JWT e
+refresh); o Auth responde quem é a pessoa.
+
+| Peça | Onde |
+|---|---|
+| Rotas | `GET /api/v1/auth/avilaops` (ida) e `/api/v1/auth/avilaops/callback` (volta), em `backend/src/core/auth/auth.routes.ts` |
+| Regras do fluxo | `backend/src/core/auth/avilaops-oidc.ts`: PKCE S256, `state` assinado e cookie `arx_oidc` que amarra a volta ao navegador da ida |
+| Telas | `frontend/src/pages/LoginPage.tsx` e `RegisterPage.tsx` levam à rota de ida; `/forgot-password` e `/reset-password` caem em `/login` |
+| No Auth | aplicação `arxis` (host `app.arxisbim.com.br`, aberta, sem papel exigido) e integração `arxis` em `clientes_oidc`, com o retorno `https://api.arxisbim.com.br/api/v1/auth/avilaops/callback` |
+
+Variáveis no `/opt/arxisvr/.env`:
+
+```
+AVILAOPS_OIDC_CLIENT_ID=arxis
+AVILAOPS_OIDC_CLIENT_SECRET=...   # o Auth guarda só o hash
+AUTH_SSO_ONLY=true                # fecha /login, /register, /forgot-password e /reset-password (410)
+```
+
+- Conta que já existia é reaproveitada pelo e-mail no primeiro acesso; conta
+  nova nasce com espaço de trabalho próprio, como no login social.
+- Cadastro de conta nova e recuperação de senha são do Auth. Google, Microsoft
+  e Facebook também: os botões de lá substituem as credenciais de OAuth que o
+  Arxis tinha.
+- Sair do Arxis não encerra a sessão do Auth. É de propósito: sair daqui não
+  pode derrubar os outros produtos da casa.
+- Domínio novo para a API muda o endereço de retorno, que precisa ser
+  atualizado na integração do Auth (igualdade exata).
+- Sem `AUTH_SSO_ONLY` (dev e testes) as rotas de senha seguem funcionando.
+- `POST /auth/change-password` e o 2FA próprio continuam no código e não têm
+  mais uso com a entrada única; ficaram para limpeza.
