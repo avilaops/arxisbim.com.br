@@ -7,7 +7,7 @@ import ApiTokenEmptyState from '@/components/account/ApiTokenEmptyState';
 import type { CreatedApiToken } from '@/types/apiToken';
 
 export default function ApiTokensPage() {
-  const { tokens, loading, fetchTokens, revokeToken } = useApiTokens();
+  const { tokens, loading, error, fetchTokens, revokeToken } = useApiTokens();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createdToken, setCreatedToken] = useState<CreatedApiToken | null>(null);
 
@@ -48,15 +48,23 @@ export default function ApiTokensPage() {
             Conecte o Arxis a outras ferramentas (n8n, Power BI, ERP, aplicativos próprios).
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="min-h-10 px-4 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition"
-        >
-          Nova integração
-        </button>
+        {!error && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="min-h-10 px-4 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition"
+          >
+            Nova integração
+          </button>
+        )}
       </div>
 
-      {tokens.length === 0 ? (
+      {error ? (
+        // Sem isto, a lista que não carregou (403 para quem não administra a
+        // conta, por exemplo) aparecia como "nenhuma integração".
+        <div role="alert" className="rounded-lg border px-4 py-3 text-sm">
+          Não foi possível carregar as integrações desta conta. Só quem administra a conta pode vê-las.
+        </div>
+      ) : tokens.length === 0 ? (
         <ApiTokenEmptyState />
       ) : (
         <ApiTokenList

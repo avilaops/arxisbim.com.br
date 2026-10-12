@@ -38,6 +38,11 @@ function button(kind: 'primary' | 'ghost' | 'danger', disabled = false): React.C
   }
 }
 
+/** Linha de limite do cartão de plano; -1 é "sem limite" no backend. */
+function limiteDoPlano(valor: number, unidade: string, semLimite: string): string {
+  return valor === -1 ? semLimite : `${valor} ${unidade}`
+}
+
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('pt-BR')
@@ -312,10 +317,10 @@ export default function BillingPage() {
                   )}
                 </div>
                 <ul className="cobranca-plano__limites">
-                  <li>{formatLimit(plan.limits.maxUsers)} usuários</li>
-                  <li>{formatLimit(plan.limits.maxProjects)} projetos</li>
-                  <li>{formatLimit(plan.limits.maxStorageGB, ' GB')} no total</li>
-                  <li>{formatLimit(plan.limits.maxFileSizeMB, ' MB')} por arquivo</li>
+                  <li>{limiteDoPlano(plan.limits.maxUsers, 'usuários', 'Usuários ilimitados')}</li>
+                  <li>{limiteDoPlano(plan.limits.maxProjects, 'projetos', 'Projetos ilimitados')}</li>
+                  <li>{limiteDoPlano(plan.limits.maxStorageGB, 'GB no total', 'Espaço ilimitado')}</li>
+                  <li>{limiteDoPlano(plan.limits.maxFileSizeMB, 'MB por arquivo', 'Arquivo sem limite')}</li>
                 </ul>
                 <button
                   style={{ ...button(isCurrent ? 'ghost' : 'primary', isCurrent || busy === `checkout:${plan.tier}`), marginTop: 'auto' }}

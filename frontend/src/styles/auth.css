@@ -10,3 +10,6 @@ html:has(.auth-page) #root{height:auto;min-height:100vh;display:block}
 @media(max-width:850px){.auth-header{height:76px;padding:0 22px}.auth-main{grid-template-columns:1fr;min-height:calc(100vh - 76px)}.auth-context{display:none}.auth-panel-inner{width:min(430px,calc(100% - 44px));padding:50px 0}.auth-panel h2{font-size:31px}.auth-links{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.auth-page *{transition:none!important;animation:none!important}}
 .auth-page .auth-field input[type='text'],.auth-page .auth-field input[type='email'],.auth-page .auth-field input[type='password']{background:#fff!important;color:#1c1917!important;border-color:#d6d3d1!important}
+/* Tela de entrada inteira numa tela de computador: a ilustração encolhe com a altura da janela em vez de empurrar a página. */
+@media(min-width:851px){.auth-context-inner{padding:48px 0 32px}.auth-model{width:clamp(180px,calc(100dvh - 500px),520px);max-width:100%;margin-top:24px}}
+.auth-back{min-height:44px}
