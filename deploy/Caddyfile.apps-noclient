@@ -21,16 +21,13 @@
 }
 
 # --- Arxis (containers arxisvr-web 3102 e arxisvr-api 3101, /opt/arxisvr) ---
-# Dominio proprio desde 17/09/2026; aplicado aqui em 10/10/2026, com o DNS de
-# arxisbim.com.br, www e api apontando para esta maquina.
+# Desde 12/10/2026 o site publico (arxisbim.com.br) e servido pelo CMS, no
+# servidor de aplicacoes: o apex nao aponta mais para ca. Aqui ficam o app, a
+# API e os redirecionamentos.
 # Runbook: documentation/MIGRACAO-2026-09-17-dominio-arxisbim.md
-arxisbim.com.br {
-	encode zstd gzip
-	reverse_proxy 127.0.0.1:3102
-}
 
-# App do Arxis (login, validador, visualizador): a mesma SPA do container
-# arxisvr-web. O site publico em arxisbim.com.br vai para o CMS.
+# App do Arxis (login, validador, visualizador): a SPA do container
+# arxisvr-web.
 app.arxisbim.com.br {
 	encode zstd gzip
 	# O noindex do bundle depende de JavaScript; este vale para qualquer robo.
@@ -48,10 +45,17 @@ api.arxisbim.com.br {
 	reverse_proxy 127.0.0.1:3101
 }
 
-# Dominio anterior: o site redireciona (308 preserva metodo e passa o sinal de
-# SEO para o canonico), preservando caminho e query de links ja publicados.
+# Dominio anterior. As paginas publicas vao para o site (CMS); todo o resto e
+# rota do app e vai direto para ele, com caminho e query preservados (links de
+# e-mail antigos carregam token na query, e o CMS nao repassa query).
 arxisvr.avilaops.com, www.arxisvr.avilaops.com {
-	redir https://arxisbim.com.br{uri} 308
+	@site path / /blog /blog/* /privacy /terms /cookies /lgpd
+	handle @site {
+		redir https://arxisbim.com.br{uri} 308
+	}
+	handle {
+		redir https://app.arxisbim.com.br{uri} 308
+	}
 }
 
 # A API antiga NAO redireciona. Redirecionar quebraria o preflight do CORS e os
