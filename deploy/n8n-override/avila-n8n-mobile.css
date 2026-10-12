@@ -122,3 +122,53 @@
     padding: 0 16px 24px !important;
   }
 }
+
+/* Ávila Ops · janela de credencial no celular (12/10/2026)
+   Na janela de uma credencial o n8n põe o menu (Connection, Sharing, Details)
+   numa coluna lateral que cresce, e o conteúdo fica com o que sobrar. Num
+   iPhone o menu tomava 304px e o formulário ficava numa tira de 8px, sem como
+   preencher nada. Aqui, até 820px, o menu vira uma faixa de uma linha no topo
+   e o conteúdo usa a largura toda. Âncoras: [data-test-id="editCredential-modal"]
+   (a janela) e [data-test-id="credential-edit-dialog"] (menu + conteúdo). */
+@media (max-width: 820px) {
+  /* A janela usa quase a tela toda. */
+  [data-test-id="editCredential-modal"] {
+    width: calc(100dvw - 56px) !important;
+    height: 86dvh !important;
+    max-height: none !important;
+  }
+  /* Menu em cima, conteúdo embaixo. */
+  [data-test-id="credential-edit-dialog"] {
+    flex-direction: column !important;
+    padding-top: 8px !important;
+  }
+  /* O menu (primeiro bloco, quando há conteúdo depois dele) vira uma faixa de uma linha. */
+  [data-test-id="credential-edit-dialog"] > div:first-child:not(:last-child) {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    gap: 4px;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 0 12px !important;
+    padding-bottom: 8px;
+    overflow-x: auto !important;
+    border-bottom: var(--border) !important;
+    scrollbar-width: none;
+  }
+  [data-test-id="credential-edit-dialog"] > div:first-child:not(:last-child)::-webkit-scrollbar {
+    display: none;
+  }
+  [data-test-id="credential-edit-dialog"] > div:first-child:not(:last-child) > * {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    white-space: nowrap !important;
+  }
+  /* O conteúdo usa a largura toda e rola por conta própria. */
+  [data-test-id="credential-edit-dialog"] > div:first-child:not(:last-child) ~ * {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    overflow: auto !important;
+  }
+}
