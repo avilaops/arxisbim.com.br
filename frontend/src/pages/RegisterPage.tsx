@@ -20,7 +20,7 @@ export default function RegisterPage() {
     <span className="auth-kicker">Comece gratuitamente</span>
     <h2>Criar sua conta</h2>
     <p className="auth-subtitle">A conta é criada no login da Ávila Ops. Na tela seguinte, escolha “Criar conta”, confirme seu e-mail e você volta direto para o Arxis.</p>
-    <div className="auth-form">
+    <div className="auth-actions">
       <a className="auth-submit" href={CENTRAL_LOGIN_URL}>Criar conta com a Ávila Ops <ArrowRight size={16} /></a>
       <p className="auth-check">Ao criar a conta, você concorda com os <Link to="/terms">Termos de Serviço</Link> e com a <Link to="/privacy">Política de Privacidade</Link>.</p>
     </div>

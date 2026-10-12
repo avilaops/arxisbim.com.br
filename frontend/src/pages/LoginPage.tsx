@@ -30,7 +30,7 @@ export default function LoginPage() {
     <span className="auth-kicker">Bem-vindo de volta</span>
     <h2>Entrar na Arxis</h2>
     <p className="auth-subtitle">O acesso é feito com a sua conta Ávila Ops, a mesma dos outros produtos da casa.</p>
-    <div className="auth-form">
+    <div className="auth-actions">
       {error && <div className="auth-error" role="alert">Não foi possível entrar: {error}</div>}
       <a className="auth-submit" href={CENTRAL_LOGIN_URL}>Entrar com a conta Ávila Ops <ArrowRight size={16} /></a>
     </div>
