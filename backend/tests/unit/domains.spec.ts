@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  LEGACY_SITE_URL,
   PRIMARY_APP_URL,
   PRIMARY_SITE_URL,
   defaultCorsOrigins,
@@ -13,11 +12,11 @@ describe('domains', () => {
     expect(PRIMARY_SITE_URL).toBe('https://arxisbim.com.br');
   });
 
-  it('a allowlist padrão libera o app, o site público e o domínio anterior', () => {
+  it('a allowlist padrão libera o app e o site público, e nada do domínio aposentado', () => {
     const origins = defaultCorsOrigins();
     expect(origins).toContain(PRIMARY_APP_URL);
     expect(origins).toContain(PRIMARY_SITE_URL);
-    expect(origins).toContain(LEGACY_SITE_URL);
+    expect(origins.join(' ')).not.toContain('avilaops.com');
   });
 
   it('sem CORS_ORIGIN vale a allowlist padrão', () => {

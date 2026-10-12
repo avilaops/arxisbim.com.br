@@ -505,7 +505,7 @@ export class QRCodeScanner extends EventTarget {
         return this.parseArxisURL(rawData);
       }
       
-      // Tenta HTTP URL: https://arxisvr.avilaops.com/ar?project=xxx&marker=yyy
+      // Tenta HTTP URL: https://app.arxisbim.com.br/ar?project=xxx&marker=yyy
       if (rawData.startsWith('http://') || rawData.startsWith('https://')) {
         return this.parseWebURL(rawData);
       }

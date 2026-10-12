@@ -1,10 +1,9 @@
 /**
  * domains.ts — único lugar do backend que sabe os endereços públicos do Arxis.
  *
- * O domínio próprio `arxisbim.com.br` foi comprado em 17/09/2026 e passa a ser
- * o canônico. O anterior (`arxisvr.avilaops.com`) continua respondendo durante
- * a transição: há links em e-mails já enviados, sessões abertas e instalações
- * do plugin do Revit apontando para ele.
+ * O produto vive em `arxisbim.com.br`: site público no CMS, app em `app.` e
+ * API em `api.`. O domínio anterior (`arxisvr.avilaops.com`) foi aposentado em
+ * 12/10/2026.
  *
  * Regra: nenhum módulo escreve um domínio literal. Quem monta link para o
  * usuário usa `frontendUrl()`; quem precisa liberar origem usa
@@ -25,10 +24,6 @@ export const PRIMARY_APP_URL = 'https://app.arxisbim.com.br';
 
 /** Domínio canônico da API (o WebSocket sai do mesmo serviço). */
 export const PRIMARY_API_URL = 'https://api.arxisbim.com.br';
-
-/** Domínio anterior, ainda no ar durante a transição. */
-export const LEGACY_SITE_URL = 'https://arxisvr.avilaops.com';
-export const LEGACY_API_URL = 'https://api.arxisvr.avilaops.com';
 
 /** Origens de desenvolvimento (Vite, preview do Vite, app legado). */
 const DEV_ORIGINS = [
@@ -67,18 +62,14 @@ export const PRIVACY_EMAIL = process.env.PRIVACY_EMAIL || 'privacidade@arxisbim.
 /**
  * Origens liberadas no CORS quando `CORS_ORIGIN` não está definido.
  *
- * Os dois domínios entram: durante a transição o app pode ser servido pelo
- * host antigo e falar com a API nova (e vice-versa), e um preflight recusado
- * aparece para o usuário como "erro de rede" sem nada no log. O host do app
- * entra pelo mesmo motivo: é de lá que a SPA chama a API depois da virada.
+ * Entram o app, de onde a SPA chama a API, e o site público: um preflight
+ * recusado aparece para o usuário como "erro de rede" sem nada no log.
  */
 export function defaultCorsOrigins(): string[] {
   const origins = [
     PRIMARY_APP_URL,
     PRIMARY_SITE_URL,
     'https://www.arxisbim.com.br',
-    LEGACY_SITE_URL,
-    'https://www.arxisvr.avilaops.com',
   ];
 
   if (process.env.NODE_ENV !== 'production') origins.push(...DEV_ORIGINS);

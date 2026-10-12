@@ -3,7 +3,7 @@
  * 
  * Funcionalidades:
  * - Processa deep links: arxisvr://...
- * - Processa web URLs: https://arxisvr.avilaops.com/ar?...
+ * - Processa web URLs: https://app.arxisbim.com.br/ar?...
  * - Integra com eventos web do navegador
  * - Roteamento automático para AR mode
  * 
@@ -210,7 +210,7 @@ export class DeepLinkHandler extends EventTarget {
       }
     }
     
-    // https://arxisvr.avilaops.com/ar?project=xxx&marker=yyy
+    // https://app.arxisbim.com.br/ar?project=xxx&marker=yyy
     else if (urlObj.pathname === '/ar' || params.has('ar')) {
       if (params.has('marker')) {
         type = 'ar-marker';
@@ -224,7 +224,7 @@ export class DeepLinkHandler extends EventTarget {
       }
     }
     
-    // https://arxisvr.avilaops.com/?project=xxx
+    // https://app.arxisbim.com.br/?project=xxx
     else if (params.has('project')) {
       type = 'project';
       data = this.parseProjectParams(params);

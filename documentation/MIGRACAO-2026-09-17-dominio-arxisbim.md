@@ -325,3 +325,14 @@ AUTH_SSO_ONLY=true                # fecha /login, /register, /forgot-password e 
   existe mais (removido por fora deste trabalho, entre 10 e 12/10/2026): o
   bloco de redirecionamento no Caddy segue pronto, mas o nome não resolve. A
   API antiga (`api.arxisvr.avilaops.com`) continua resolvendo e servindo.
+
+## Domínio anterior aposentado (12/10/2026)
+
+Decisão do Nicolas: `arxisvr.avilaops.com` não é mais usado. Ele removeu os
+registros DNS do site; no mesmo dia saíram o tratamento do host antigo no
+frontend (`site.config.ts`, `track.js`, os dois painéis do visualizador que
+chamavam `api.arxisvr.avilaops.com` direto), as origens antigas do CORS, os
+blocos do Caddy e o registro DNS de `api.arxisvr.avilaops.com`. O plugin do
+Revit instalado com a API antiga precisa ser reconfigurado para
+`api.arxisbim.com.br`. As seções acima que falam em janela de transição ficam
+como histórico.

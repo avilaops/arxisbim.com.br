@@ -3,9 +3,7 @@ import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
 const dist = path.join(root, 'dist')
-// Domínio canônico do produto (comprado em 17/09/2026). O antigo
-// (arxisvr.avilaops.com) redireciona para cá; sitemap, robots e feed só
-// anunciam o canônico, senão o buscador indexa as duas origens.
+// Domínio canônico do produto. Sitemap, robots e feed só anunciam o canônico.
 const siteUrl = (process.env.VITE_SITE_URL || 'https://arxisbim.com.br').replace(/\/$/, '')
 const routes = ['/', '/blog', '/blog/bim-alem-do-3d', '/blog/o-que-e-ifc', '/blog/checklist-revisao-modelo-bim']
 const template = await fs.readFile(path.join(dist, 'index.html'), 'utf8')

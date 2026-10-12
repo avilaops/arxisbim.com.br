@@ -1,6 +1,6 @@
 // Baseline do viewer vivo, sem tocar no codigo: tempos, long tasks, heap e
 // frame time parado e em orbita. Ver documentation/BASELINE-VIEWER-2026.md.
-// Uso: BASE=https://arxisvr.avilaops.com TOKEN=<jwt> USERJSON=<json do user> PID=<projectId> RODADAS=3 HEADED=1 node deploy/bench/bench-viewer.mjs
+// Uso: BASE=https://app.arxisbim.com.br TOKEN=<jwt> USERJSON=<json do user> PID=<projectId> RODADAS=3 HEADED=1 node deploy/bench/bench-viewer.mjs
 // HEADED=1 abre janela (GPU real). Headless usa SwiftShader e trava em ~5 FPS: serve para carga, nao para frame time.
 // Precisa de `playwright` e `pngjs` instalados ao lado (npm i -D playwright pngjs).
 import { chromium } from 'playwright';

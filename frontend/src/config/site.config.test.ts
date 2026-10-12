@@ -6,7 +6,6 @@ import {
   PRIMARY_APP_URL,
   PRIMARY_SITE_URL,
   isAppHost,
-  isLegacyHost,
   normalizeOrigin,
   resolveApiUrl,
   resolveCanonicalSiteUrl,
@@ -42,9 +41,8 @@ describe('resolveApiUrl', () => {
     expect(resolveApiUrl(SEM_ENV, 'arxisbim.com.br')).toBe(PRIMARY_API_URL);
   });
 
-  it('servido pelo domínio antigo, continua na API antiga (um bundle só serve os dois)', () => {
-    expect(resolveApiUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe('https://api.arxisvr.avilaops.com');
-    expect(resolveApiUrl(SEM_ENV, 'www.arxisvr.avilaops.com')).toBe('https://api.arxisvr.avilaops.com');
+  it('o domínio aposentado não tem mais tratamento próprio: cai na API canônica', () => {
+    expect(resolveApiUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe(PRIMARY_API_URL);
   });
 
   it('servido pelo host do app, fala com a API canônica', () => {
@@ -58,15 +56,15 @@ describe('resolveApiUrl', () => {
 });
 
 describe('resolveSiteUrl e resolveCanonicalSiteUrl', () => {
-  it('o canônico é sempre o domínio próprio, mesmo no host antigo', () => {
+  it('sem variável de build, os dois são o domínio próprio', () => {
     expect(resolveCanonicalSiteUrl(SEM_ENV)).toBe(PRIMARY_SITE_URL);
-    expect(resolveSiteUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe('https://arxisvr.avilaops.com');
+    expect(resolveSiteUrl(SEM_ENV)).toBe(PRIMARY_SITE_URL);
   });
 
   it('VITE_SITE_URL manda nos dois', () => {
     const env = { VITE_SITE_URL: 'https://preview.exemplo.test/' };
     expect(resolveCanonicalSiteUrl(env)).toBe('https://preview.exemplo.test');
-    expect(resolveSiteUrl(env, 'arxisvr.avilaops.com')).toBe('https://preview.exemplo.test');
+    expect(resolveSiteUrl(env)).toBe('https://preview.exemplo.test');
   });
 
   it('no host do app o canônico é o próprio app, mesmo com VITE_SITE_URL do site público', () => {
@@ -78,7 +76,6 @@ describe('resolveSiteUrl e resolveCanonicalSiteUrl', () => {
 
   it('fora do host do app o canônico continua sendo o site público', () => {
     expect(resolveCanonicalSiteUrl(SEM_ENV, 'arxisbim.com.br')).toBe(PRIMARY_SITE_URL);
-    expect(resolveCanonicalSiteUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe(PRIMARY_SITE_URL);
     expect(resolveCanonicalSiteUrl(SEM_ENV, 'localhost')).toBe(PRIMARY_SITE_URL);
   });
 });
@@ -88,7 +85,6 @@ describe('isAppHost e resolveRootRedirect', () => {
     expect(isAppHost('app.arxisbim.com.br')).toBe(true);
     expect(isAppHost('arxisbim.com.br')).toBe(false);
     expect(isAppHost('www.arxisbim.com.br')).toBe(false);
-    expect(isAppHost('arxisvr.avilaops.com')).toBe(false);
     expect(isAppHost('localhost')).toBe(false);
     expect(isAppHost(undefined)).toBe(false);
   });
@@ -99,7 +95,7 @@ describe('isAppHost e resolveRootRedirect', () => {
   });
 
   it('nos outros hosts a raiz continua sendo a landing, com ou sem sessão', () => {
-    for (const host of ['arxisbim.com.br', 'arxisvr.avilaops.com', 'www.arxisvr.avilaops.com', 'localhost']) {
+    for (const host of ['arxisbim.com.br', 'www.arxisbim.com.br', 'localhost']) {
       expect(resolveRootRedirect(true, host)).toBeNull();
       expect(resolveRootRedirect(false, host)).toBeNull();
     }
@@ -109,7 +105,6 @@ describe('isAppHost e resolveRootRedirect', () => {
 describe('resolveWsUrl', () => {
   it('deriva do host da API em produção (não há signaling separado)', () => {
     expect(resolveWsUrl(SEM_ENV, 'arxisbim.com.br')).toBe('wss://api.arxisbim.com.br');
-    expect(resolveWsUrl(SEM_ENV, 'arxisvr.avilaops.com')).toBe('wss://api.arxisvr.avilaops.com');
   });
 
   it('em dev aponta para o signaling local', () => {
@@ -123,14 +118,6 @@ describe('resolveWsUrl', () => {
   });
 });
 
-describe('isLegacyHost', () => {
-  it('reconhece os hosts do domínio anterior', () => {
-    expect(isLegacyHost('arxisvr.avilaops.com')).toBe(true);
-    expect(isLegacyHost('www.arxisvr.avilaops.com')).toBe(true);
-    expect(isLegacyHost('arxisbim.com.br')).toBe(false);
-  });
-});
-
 describe('publicSiteHref', () => {
   it('sai com a origem do site quando a página é servida no host do app', () => {
     expect(publicSiteHref('app.arxisbim.com.br')).toBe('https://arxisbim.com.br/');
@@ -138,7 +125,6 @@ describe('publicSiteHref', () => {
 
   it('continua relativo nos demais hosts', () => {
     expect(publicSiteHref('arxisbim.com.br')).toBe('/');
-    expect(publicSiteHref('arxisvr.avilaops.com')).toBe('/');
     expect(publicSiteHref('localhost')).toBe('/');
   });
 });

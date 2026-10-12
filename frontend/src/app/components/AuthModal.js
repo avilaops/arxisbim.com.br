@@ -8,7 +8,7 @@ const API_BASE_URL = (() => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3001';
-    return 'https://api.arxisvr.avilaops.com';
+    return 'https://api.arxisbim.com.br';
   }
   return 'http://localhost:3001';
 })();

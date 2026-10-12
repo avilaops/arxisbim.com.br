@@ -9,14 +9,11 @@
   'use strict';
 
   // Não passa pelo bundle (é servido cru de /public), então repete a regra de
-  // src/config/site.config.ts: o host que serviu a página decide a API, para o
-  // domínio antigo não mandar evento para o novo durante a transição.
+  // src/config/site.config.ts: localhost fala com a API local, o resto com a
+  // API canônica.
   var API_BASE = (function () {
     var h = location.hostname;
     if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3001';
-    if (h === 'arxisvr.avilaops.com' || h === 'www.arxisvr.avilaops.com') {
-      return 'https://api.arxisvr.avilaops.com';
-    }
     return 'https://api.arxisbim.com.br';
   })();
   var ENDPOINT = API_BASE + '/api/v1/track';

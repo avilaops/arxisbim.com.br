@@ -2,10 +2,9 @@
  * site.config.ts — único lugar do frontend que sabe os endereços públicos do
  * Arxis.
  *
- * O domínio próprio `arxisbim.com.br` foi comprado em 17/09/2026 e passa a ser
- * o canônico do produto. O anterior (`arxisvr.avilaops.com`) continua
- * respondendo durante a transição: existem links indexados, e-mails já
- * enviados e instalações do plugin do Revit apontando para ele.
+ * O produto vive em `arxisbim.com.br`: o site público é servido pelo CMS, o
+ * app em `app.` e a API em `api.`. O domínio anterior (`arxisvr.avilaops.com`)
+ * foi aposentado em 12/10/2026 e não aparece mais em lugar nenhum.
  *
  * Regra: nenhum outro arquivo escreve um domínio literal. Quem precisa de URL
  * pública importa daqui (ou de `apiBaseUrl.ts`, que deriva daqui).
@@ -15,9 +14,8 @@
 export const PRIMARY_SITE_URL = 'https://arxisbim.com.br';
 
 /**
- * Domínio canônico do app. O site público sai deste repositório e passa a ser
- * servido por um CMS em `PRIMARY_SITE_URL`; a SPA fica neste host. Enquanto a
- * virada não acontece, o mesmo bundle ainda atende os dois.
+ * Domínio canônico do app. O site público é servido pelo CMS em
+ * `PRIMARY_SITE_URL`; a SPA deste repositório fica neste host.
  */
 export const PRIMARY_APP_URL = 'https://app.arxisbim.com.br';
 
@@ -26,19 +24,6 @@ export const APP_HOME_PATH = '/dashboard';
 
 /** Domínio canônico da API (o WebSocket é servido pelo mesmo serviço). */
 export const PRIMARY_API_URL = 'https://api.arxisbim.com.br';
-
-/**
- * Hosts do domínio anterior, com a API correspondente.
- *
- * Enquanto os dois domínios respondem, o mesmo bundle atende os dois: quem
- * entrar pelo host antigo continua falando com a API antiga, e o par
- * site+API permanece no mesmo domínio de falha. É o que permite publicar um
- * build só, sem depender de rebuild na hora do corte.
- */
-export const LEGACY_API_BY_HOST: Record<string, string> = {
-  'arxisvr.avilaops.com': 'https://api.arxisvr.avilaops.com',
-  'www.arxisvr.avilaops.com': 'https://api.arxisvr.avilaops.com',
-};
 
 const DEV_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
@@ -90,11 +75,9 @@ export function resolveCanonicalSiteUrl(env: SiteEnv = readEnv(), host = current
 }
 
 /** Origem do site que está de fato servindo a página (links relativos/absolutos). */
-export function resolveSiteUrl(env: SiteEnv = readEnv(), host = currentHost()): string {
+export function resolveSiteUrl(env: SiteEnv = readEnv()): string {
   const fromEnv = pick(env, 'VITE_SITE_URL');
   if (fromEnv) return normalizeOrigin(fromEnv);
-
-  if (host && LEGACY_API_BY_HOST[host]) return `https://${host}`;
 
   return PRIMARY_SITE_URL;
 }
@@ -102,14 +85,13 @@ export function resolveSiteUrl(env: SiteEnv = readEnv(), host = currentHost()): 
 /**
  * Origem da API.
  *
- * Ordem: `VITE_API_URL` (injetado no build) → host legado servindo a página →
- * localhost em dev → domínio canônico.
+ * Ordem: `VITE_API_URL` (injetado no build) → localhost em dev → domínio
+ * canônico.
  */
 export function resolveApiUrl(env: SiteEnv = readEnv(), host = currentHost()): string {
   const fromEnv = pick(env, 'VITE_API_URL');
   if (fromEnv) return normalizeOrigin(fromEnv);
 
-  if (host && LEGACY_API_BY_HOST[host]) return LEGACY_API_BY_HOST[host];
   if (host && DEV_HOSTS.has(host)) return 'http://localhost:3001';
 
   return PRIMARY_API_URL;
@@ -132,11 +114,6 @@ export function resolveWsUrl(env: SiteEnv = readEnv(), host = currentHost()): st
   return api.replace(/^http/, 'ws');
 }
 
-/** True quando a página está sendo servida pelo domínio anterior. */
-export function isLegacyHost(host = currentHost()): boolean {
-  return Boolean(host && LEGACY_API_BY_HOST[host]);
-}
-
 /** True quando a página está sendo servida pelo host do app. */
 export function isAppHost(host = currentHost()): boolean {
   return host === new URL(PRIMARY_APP_URL).hostname;
@@ -146,8 +123,8 @@ export function isAppHost(host = currentHost()): boolean {
  * Para onde a rota `/` leva, ou `null` quando ela mostra a landing.
  *
  * No host do app não existe landing: quem tem sessão vai para a tela inicial
- * do app, quem não tem vai para o login. Nos outros hosts (site público até a
- * virada, domínio anterior, localhost) `/` continua sendo a landing.
+ * do app, quem não tem vai para o login. Fora dele (localhost, prévias) `/`
+ * continua sendo a landing.
  */
 export function resolveRootRedirect(hasSession: boolean, host = currentHost()): string | null {
   if (!isAppHost(host)) return null;
