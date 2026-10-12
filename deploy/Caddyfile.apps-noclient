@@ -45,33 +45,6 @@ api.arxisbim.com.br {
 	reverse_proxy 127.0.0.1:3101
 }
 
-# Dominio anterior. As paginas publicas vao para o site (CMS); todo o resto e
-# rota do app e vai direto para ele, com caminho e query preservados (links de
-# e-mail antigos carregam token na query, e o CMS nao repassa query).
-arxisvr.avilaops.com, www.arxisvr.avilaops.com {
-	@site path / /blog /blog/* /privacy /terms /cookies /lgpd
-	handle @site {
-		redir https://arxisbim.com.br{uri} 308
-	}
-	handle {
-		redir https://app.arxisbim.com.br{uri} 308
-	}
-}
-
-# A API antiga NAO redireciona. Redirecionar quebraria o preflight do CORS e os
-# POST do plugin do Revit ja instalado, que nao seguem 3xx com corpo. Ela
-# continua servindo o mesmo backend ate o fim da janela de transicao (prazo e
-# criterio de desligamento no runbook).
-api.arxisvr.avilaops.com {
-	encode zstd gzip
-	handle_path /engineering-bim/v1/* {
-		reverse_proxy 127.0.0.1:3140
-	}
-	handle {
-		reverse_proxy 127.0.0.1:3101
-	}
-}
-
 # --- CRM (container agenda-crm-app 3020, /opt/agenda-crm/current) ---
 crm.avilaops.com {
 	reverse_proxy 127.0.0.1:3020
