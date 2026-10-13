@@ -172,3 +172,91 @@
     overflow: auto !important;
   }
 }
+
+/* Ávila Ops · janelas do n8n no celular (13/10/2026)
+   As janelas simples do n8n (escolher o tipo de credencial, configurações do
+   workflow, duplicar etc.) têm largura em porcentagem e um mínimo fixo de
+   420px. Num iPhone de 390px a janela passava da tela e o botão de fechar e a
+   ponta dos campos ficavam cortados. Aqui a janela fica com a largura da tela
+   menos 8px de cada lado. Vale só até 436px (420 + 16), e não até 820px como o
+   resto da folha: acima disso o mínimo de 420px já cabe e nada muda.
+   Âncora: .el-dialog[data-test-id$="-modal"]; toda janela desse tipo no n8n
+   recebe um data-test-id terminado em "-modal". */
+@media (max-width: 436px) {
+  .el-dialog[data-test-id$="-modal"] {
+    min-width: calc(100dvw - 16px) !important;
+    max-width: calc(100dvw - 16px) !important;
+  }
+}
+
+/* Ávila Ops · painel do nó no celular (13/10/2026)
+   Com um nó aberto o n8n mostra três colunas lado a lado: entrada, parâmetros
+   e saída. Num iPhone a entrada e a saída ficavam em tiras de 62px e os
+   parâmetros em 215px. Aqui, até 820px, cada coluna ocupa quase a largura
+   toda do painel e as três rolam de lado, com encaixe: parâmetros primeiro,
+   depois saída, depois entrada. Sobra uma beirada da coluna seguinte à vista,
+   para mostrar que há mais ao lado.
+   Âncoras: [data-test-id="ndv"] (o painel), o <main> dele (as três colunas),
+   [data-test-id="ndv-input-panel"] e [data-test-id="output-panel"]. */
+@media (max-width: 820px) {
+  [data-test-id="ndv"] main {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  [data-test-id="ndv"] main::-webkit-scrollbar {
+    display: none;
+  }
+  /* Cada coluna com a largura do painel menos a beirada da seguinte. */
+  [data-test-id="ndv"] main > div {
+    flex: 0 0 calc(100% - 28px) !important;
+    width: calc(100% - 28px) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    scroll-snap-align: center;
+  }
+  /* Parâmetros primeiro, depois saída, depois entrada. */
+  [data-test-id="ndv"] main > div:has(> [data-test-id="output-panel"]) {
+    order: 1;
+  }
+  [data-test-id="ndv"] main > div:has(> [data-test-id="ndv-input-panel"]) {
+    order: 2;
+  }
+  /* Entrada e saída usam a largura da coluna, em vez dos 280px fixos. */
+  [data-test-id="ndv-input-panel"],
+  [data-test-id="output-panel"] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Ávila Ops · editor de workflow no celular (13/10/2026)
+   No canvas o botão "Execute workflow" fica no canto de baixo, à direita, na
+   mesma linha dos controles de zoom. Num iPhone os dois não cabem lado a lado
+   e o botão cobria o último controle (organizar). Aqui, até 820px, o botão
+   sobe uma linha e fica acima dos controles.
+   Âncoras: [data-test-id="canvas-wrapper"] e
+   [data-test-id="execute-workflow-button"]. */
+@media (max-width: 820px) {
+  [data-test-id="canvas-wrapper"] > div:has([data-test-id="execute-workflow-button"]) {
+    bottom: 64px !important;
+  }
+}
+
+/* Ávila Ops · credencial OAuth no celular (13/10/2026)
+   Na janela de uma credencial OAuth2, o aviso "Connect your account to use
+   this credential" fica ao lado do botão de conectar (Sign in with Google e
+   afins). Num iPhone o botão toma a maior parte da linha e o texto quebrava
+   em cinco linhas de uma palavra. Aqui, até 820px, o texto fica em cima e o
+   botão embaixo.
+   Âncora: [data-test-id="oauth-not-connected-banner"] (texto + botão). */
+@media (max-width: 820px) {
+  [data-test-id="oauth-not-connected-banner"] > span > div {
+    flex-wrap: wrap !important;
+    row-gap: 8px;
+  }
+  [data-test-id="oauth-not-connected-banner"] > span > div > div:first-child {
+    flex: 1 1 100% !important;
+  }
+}
