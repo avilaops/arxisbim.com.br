@@ -89,7 +89,6 @@ export function setupObservability(): void {
         queues: false,
         graphQL: { document: false, variables: false },
       },
-      enableLogs: true,
       attachStacktrace: true,
       tracesSampleRate: Number(
         process.env.SENTRY_TRACES_SAMPLE_RATE
