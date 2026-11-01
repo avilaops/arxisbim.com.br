@@ -74,7 +74,21 @@ export function setupObservability(): void {
       dsn: process.env.SENTRY_DSN,
       environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
       release: getRelease(),
-      sendDefaultPii: false,
+      // Keep automatic collection restricted when upgrading from Sentry 10.
+      dataCollection: {
+        userInfo: false,
+        cookies: false,
+        httpHeaders: {
+          request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+          response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+        },
+        httpBodies: [],
+        urlQueryParams: false,
+        genAI: { inputs: false, outputs: false },
+        databaseQueryData: false,
+        queues: false,
+        graphQL: { document: false, variables: false },
+      },
       enableLogs: true,
       attachStacktrace: true,
       tracesSampleRate: Number(
