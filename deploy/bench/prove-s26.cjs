@@ -77,6 +77,14 @@ const record=(step,data={})=>{steps.push({step,...data});console.log(JSON.string
   const scenarioRoute=`/projects/${manifest.projectId}/scenarios`;
   const changedPixels=(a,b)=>JSON.parse(execFileSync('python',['-c',"import sys,json;from PIL import Image,ImageChops;a=Image.open(sys.argv[1]).convert('RGB');b=Image.open(sys.argv[2]).convert('RGB');assert a.size==b.size;d=ImageChops.difference(a,b);n=sum(max(p)>20 for p in d.get_flattened_data());print(json.dumps({'changed':n,'ratio':n/(a.width*a.height)}))",a,b],{encoding:'utf8'}));
   const snapshot=async(name,locator=page.locator('.viewer-canvas__host canvas'))=>{const file=path.join(evidence,name+'.png');await locator.screenshot({path:file});return file};
+  const snapshotModel=async name=>{
+   const file=path.join(evidence,name+'.png');
+   await expect.poll(async()=>{
+    await page.locator('.viewer-canvas__host canvas').screenshot({path:file});
+    return Number(execFileSync('python',['-c',"import sys;from PIL import Image;a=Image.open(sys.argv[1]).convert('RGB');a=a.crop((0,0,a.width,max(1,a.height-80)));print(sum(max(p)>80 for p in a.get_flattened_data())/(a.width*a.height))",file],{encoding:'utf8'}));
+   },{timeout:30000,message:'A fixture deve estar renderizada, não apenas o fundo do canvas'}).toBeGreaterThan(.01);
+   return file;
+  };
   const rotate=async(canvas,dx)=>{const box=await canvas.boundingBox();const x=box.x+box.width*.5,y=box.y+box.height*.5;await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+dx,y+35,{steps:18});await page.mouse.up();await page.waitForTimeout(800)};
   const ensureScenario=async(name,variant)=>{
    let scenarios=await apiGet(scenarioRoute);let scenario=scenarios.find(s=>s.name===name);
@@ -109,11 +117,13 @@ const record=(step,data={})=>{steps.push({step,...data});console.log(JSON.string
   await expect(page.locator('.viewer-loading-state')).toHaveCount(0,{timeout:120000});
   await page.getByRole('button',{name:'Abrir cenários',exact:true}).click();
   await scenarioPanel.getByRole('button',{name:scenarioA.name,exact:true}).click();
+  await page.getByText(`Cenário "${scenarioA.name}" aplicado.`,{exact:true}).waitFor();
   await scenarioPanel.getByRole('button',{name:'Ocultar Janelas',exact:true}).waitFor();
-  await page.waitForTimeout(500);const aImage=await snapshot('05-reload-alternativa-a');
+  const aImage=await snapshotModel('05-reload-alternativa-a');
   await scenarioPanel.getByRole('button',{name:scenarioB.name,exact:true}).click();
+  await page.getByText(`Cenário "${scenarioB.name}" aplicado.`,{exact:true}).waitFor();
   await scenarioPanel.getByRole('button',{name:'Mostrar Janelas',exact:true}).waitFor();
-  await page.waitForTimeout(500);const bImage=await snapshot('06-reload-alternativa-b');
+  const bImage=await snapshotModel('06-reload-alternativa-b');
   const scenarioPixels=changedPixels(aImage,bImage);assert.ok(scenarioPixels.ratio>.01,'Trocar cenário deve alterar a imagem');
   const reloaded=await apiGet(scenarioRoute);
   for(const original of [scenarioA,scenarioB]){const loaded=reloaded.find(s=>s.id===original.id);assert.deepEqual(loaded.camera,original.camera);assert.deepEqual(loaded.metadata,original.metadata)}

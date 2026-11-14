@@ -21,7 +21,7 @@ para reprodução. Credenciais e estado autenticado ficam fora do repositório.
 | Prova | Evidência |
 |---|---|
 | S12 • dois cenários com câmera e visibilidade diferentes | Alternativas A e B criadas e salvas na tela; B oculta Janelas. |
-| S12 • persistência e reaplicação após reload | Câmeras e metadados relidos iguais ao que foi salvo; troca A/B altera 50,60% dos pixels do canvas. |
+| S12 • persistência e reaplicação após reload | Câmeras e metadados relidos iguais ao que foi salvo; com o modelo renderizado nos dois lados, a troca A/B altera 37,37% dos pixels do canvas. |
 | S18 • comparação visual | Split com dois canvas, legenda de diferença por categoria e bloqueio de A contra A. |
 | S18 • sincronização real | Arrastar A altera B quando sincronizado; B permanece estável com o vínculo solto. |
 | S18 • exportação | PNG da comparação baixado pelo botão da tela. |
@@ -36,6 +36,10 @@ para reprodução. Credenciais e estado autenticado ficam fora do repositório.
 O resultado final registrou zero erros JavaScript e zero respostas HTTP de erro
 observadas no fluxo temporal. Medição por pixels comprova mudança visual; não é
 benchmark de desempenho nem validação de grandes modelos.
+
+As capturas de S12 esperam a confirmação de aplicação do cenário e verificam
+presença de geometria visível da fixture antes de registrar os pixels. Essa
+trava substituiu uma espera fixa que podia capturar somente o fundo entre frames.
 
 ## Defeito encontrado e corrigido
 
@@ -58,6 +62,7 @@ que abas antigas ainda podem solicitar. A API permaneceu no ar.
 ## Artefatos e reprodução
 
 • [Resultado final em JSON](provas/s26/resultado-20261114.json).
+• [Regressões S12/S18 em JSON](provas/s26/regressoes-20261114.json).
 • [Mesma data, prazos diferentes](provas/s26/19-mesma-data-prazos-diferentes.png).
 • [Celular](provas/s26/24-mobile-390.png).
 • [Imagem exportada da comparação](provas/s26/12-exportacao-comparacao.png).
@@ -73,6 +78,10 @@ local deve ser `user`. Os scripts conferem identidade e papel antes de seguir.
 Se Playwright estiver instalado fora do projeto, informar o módulo em
 `ARXIS_PLAYWRIGHT_MODULE`. O primeiro script registra recursos e estado privado
 para a segunda etapa. `S26_RESUME=1` permite retomar apenas os cronogramas.
+
+Ao encerrar, as oito sessões de refresh criadas para a conta sintética foram
+revogadas. A conta e seus dados foram preservados; repetir a prova exige uma
+nova entrada pelo fluxo oficial, como os scripts já fazem.
 
 ```powershell
 node deploy/bench/prove-s26.cjs
