@@ -5,6 +5,7 @@
 
 import type { Sql } from 'postgres';
 import type { CostCalculation } from './cost-calculator.service.js';
+import { lockCostProject } from './cost-transaction.js';
 
 interface CacheEntry {
   data: CostCalculation;
@@ -58,12 +59,14 @@ export class CostCacheService {
 
     // Also invalidate parent project cache if it exists
     // (project-level summaries would include this scenario)
-    await this.sql`
-      UPDATE scenarios
-      SET cached_cost_updated_at = NULL
-      WHERE id = ${scenarioId}
-    `.catch(() => {
-      // Silent - cache invalidation is best-effort
+    await this.sql.begin(async tx => {
+      const [scenario] = await tx`SELECT project_id FROM scenarios WHERE id = ${scenarioId}`;
+      if (!scenario) return;
+      await lockCostProject(tx as unknown as Sql, scenario.project_id);
+      await tx`
+        UPDATE scenarios SET cached_total_cost = NULL, cached_cost_updated_at = NULL
+        WHERE id = ${scenarioId}
+      `;
     });
   }
 
@@ -88,7 +91,7 @@ export class CostCacheService {
    * Periodic cleanup of expired entries
    */
   private cleanupInterval(): void {
-    setInterval(() => {
+    const timer = setInterval(() => {
       const now = Date.now();
       let removed = 0;
 
@@ -103,6 +106,7 @@ export class CostCacheService {
         console.log(`[CostCache] Cleaned up ${removed} expired entries`);
       }
     }, 60 * 1000); // Cleanup every minute
+    timer.unref();
   }
 
   /**

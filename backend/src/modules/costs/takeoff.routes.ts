@@ -1,11 +1,13 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { TakeoffService } from './takeoff.service.js';
 import type { Sql } from 'postgres';
+import { installCostAccess } from './cost-access.js';
 
 export function createTakeoffRoutes(sql: Sql) {
   const takeoffService = new TakeoffService(sql);
 
   return async (fastify: FastifyInstance) => {
+    installCostAccess(fastify, sql);
     // POST /api/v1/scenarios/:scenarioId/takeoff
     fastify.post<{ Params: { scenarioId: string } }>(
       '/scenarios/:scenarioId/takeoff',
@@ -37,6 +39,9 @@ export function createTakeoffRoutes(sql: Sql) {
           reply.code(200).send(result);
         } catch (err) {
           fastify.log.error(err);
+          if ((err as { statusCode?: number }).statusCode === 409) {
+            return reply.code(409).send({ error: (err as Error).message });
+          }
           reply.code(400).send({ error: 'Failed to run takeoff' });
         }
       }

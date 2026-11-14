@@ -1,13 +1,15 @@
 # ArxisVR
 
-Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINAPI integrado.
+Plataforma de decisão baseada em modelos BIM, IFC nativo, planejamento 4D e orçamento 5D por cenário.
 
 > **Estado verificado • 14/11/2026:** S12/S18 revalidados e S26 comprovado na
-> aplicação publicada, com comparação temporal, reload e celular. Três dos
-> quatro marcos funcionais estão comprovados; S30 continua pendente. App/API em
+> aplicação publicada, com comparação temporal, reload e celular. Os módulos
+> Planejamento 4D e Orçamento 5D estão publicados no menu, com quantitativos IFC,
+> preços, comparação financeira A/B e PDF comprovados. S30 ainda tem a matriz de
+> N cenários pendente; três marcos estão completos e o quarto tem fluxo A/B provado. App/API em
 > `apps-noclient`, banco no PostgreSQL de `applications` via rede privada e
 > entrada pelo Auth oficial. Consulte o [roadmap atual](documentation/roadmap/ROADMAP.md),
-> a [prova do S26](documentation/S26-PROVA-BROWSER.md) e o
+> a [entrega 4D/5D](documentation/MODULOS-4D-5D.md), a [prova do S26](documentation/S26-PROVA-BROWSER.md) e o
 > [registro operacional](documentation/REATIVACAO-2026-11-14.md).
 > As descrições de infraestrutura de setembro abaixo são históricas e não
 > substituem esse registro.

@@ -1,0 +1,39 @@
+.app-layout:has(.bim-page) {height:100dvh;min-height:0;overflow:hidden}
+.app-layout:has(.bim-page) .main-content {height:100%;min-height:0}
+.app-layout:has(.bim-page) .main,.app-layout:has(.bim-page) .content {min-height:0}
+.bim-page {width:100%;max-width:1440px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:22px;min-width:0;flex-shrink:0;color:var(--c-text);background:var(--c-bg)}
+.bim-heading {display:flex;justify-content:space-between;align-items:center;gap:20px}
+.bim-heading h1 {margin:5px 0 8px;font-size:28px;letter-spacing:-.8px;line-height:1.2}
+.bim-heading p {margin:0;max-width:720px;color:var(--c-text2);font-size:14px;line-height:1.6}
+.bim-eyebrow {font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:650;color:var(--c-blue)}
+.bim-context {display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;background:var(--c-surface);border:1px solid var(--c-border);padding:18px;border-radius:8px}
+.bim-context label,.bim-form label {display:grid;gap:7px;font-size:12px;font-weight:600;min-width:0}
+.bim-page select,.bim-page input {width:100%;min-width:0;min-height:42px;padding:9px 11px;border:1px solid var(--c-border);border-radius:5px;background:var(--c-surface);color:var(--c-text);font:inherit;font-size:13px}
+.bim-button {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 16px;border:1px solid var(--c-blue);border-radius:5px;background:var(--c-blue);color:#fff;font:inherit;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;white-space:normal;text-align:center}
+.bim-button--secondary {background:var(--c-surface);color:var(--c-blue);border-color:var(--c-border)}
+.bim-button:disabled {opacity:.5;cursor:wait}
+.bim-empty {padding:42px 24px;text-align:center;border:1px dashed var(--c-border);border-radius:8px;background:var(--c-surface)}
+.bim-empty h2 {font-size:19px;margin:0 0 10px}.bim-empty p {font-size:14px;color:var(--c-text2);line-height:1.65;max-width:640px;margin:0 auto 20px}
+.bim-loading {padding:24px;color:var(--c-text2)}
+.bim-alert {padding:14px 16px;border:1px solid #f0b8b5;background:#fff4f3;color:#9f2420;border-radius:6px;font-size:13px;line-height:1.5}
+.bim-notice {padding:14px 16px;border:1px solid #bbded7;background:#eff9f6;color:#175d4b;border-radius:6px;font-size:13px}
+.bim-kpis {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.bim-kpi {background:var(--c-surface);border:1px solid var(--c-border);border-radius:7px;padding:20px;display:grid;gap:8px;min-width:0}
+.bim-kpi span {color:var(--c-text2);font-size:12px}.bim-kpi strong {font-size:25px;font-weight:650;letter-spacing:-.6px;overflow-wrap:anywhere}.bim-kpi small {font-size:11px;color:var(--c-text3)}
+.bim-panel {background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:22px;min-width:0}
+.bim-panel h2 {font-size:17px;margin:0 0 8px}.bim-panel p {font-size:13px;color:var(--c-text2);line-height:1.6}
+.bim-panel-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.bim-actions {display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.bim-form {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:end}
+.bim-form-wide {grid-column:1/-1}.bim-table-scroll {width:100%;overflow-x:auto}
+.bim-table {width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.bim-table th {font-size:10px;text-transform:uppercase;letter-spacing:.055em;color:var(--c-text3);font-weight:650;padding:12px;border-bottom:1px solid var(--c-border);white-space:nowrap}
+.bim-table td {padding:13px 12px;border-bottom:1px solid var(--c-border2);vertical-align:middle}.bim-table td small {display:block;margin-top:4px;color:var(--c-text3);font-size:11px}
+.bim-muted {font-size:12px;color:var(--c-text3)}.bim-split {display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.bim-page :focus-visible {outline:3px solid rgba(14,107,143,.3);outline-offset:2px}
+.dash-modules {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dash-module {display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid var(--c-border);border-top:3px solid var(--c-blue);border-radius:7px;background:var(--c-surface);text-decoration:none;color:var(--c-text);transition:border-color .15s}
+.dash-module:hover {border-color:var(--c-blue)}.dash-module h2 {font-size:19px;letter-spacing:-.4px;margin:0}.dash-module p {font-size:12px;line-height:1.65;color:var(--c-text2);margin:0;flex:1}.dash-module strong {font-size:12px;color:var(--c-blue);margin-top:6px}
+@media(max-width:900px){.bim-split{grid-template-columns:1fr}.bim-heading{align-items:flex-start;flex-direction:column}}
+@media(max-width:768px){.dash-modules{grid-template-columns:1fr}.dash-module{padding:18px}}
+@media(max-width:600px){.bim-page{padding:18px 14px;gap:16px}.bim-heading h1{font-size:24px}.bim-context{grid-template-columns:1fr;padding:14px;gap:12px}.bim-kpis{grid-template-columns:1fr;gap:10px}.bim-kpi{padding:16px}.bim-kpi strong{font-size:23px}.bim-panel{padding:16px}.bim-form{grid-template-columns:1fr}.bim-panel-heading{align-items:flex-start;flex-direction:column}.bim-button{min-height:44px}.bim-table th,.bim-table td{padding:10px 8px}}

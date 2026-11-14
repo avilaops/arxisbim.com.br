@@ -7,8 +7,25 @@ import { IfcDomainsController } from './ifc-domains.controller.js';
 import { IfcComparisonController } from './ifc-comparison.controller.js';
 import { IfcService } from './ifc.service.js';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { Ifc5dService, Ifc5dError } from './ifc-5d.service.js';
 
 export async function ifcRoutes(fastify: FastifyInstance) {
+  const prepare5d = new Ifc5dService();
+  fastify.post<{ Params: { modelId: string }; Body: { scenarioId: string } }>('/:modelId/prepare-5d', {
+    preHandler: authenticateRequest,
+    schema: {
+      params: { type: 'object', required: ['modelId'], properties: { modelId: { type: 'string', format: 'uuid' } } },
+      body: { type: 'object', additionalProperties: false, required: ['scenarioId'], properties: { scenarioId: { type: 'string', format: 'uuid' } } },
+    },
+  }, async (request, reply) => {
+    try {
+      return await prepare5d.prepare(request.params.modelId, request.body.scenarioId, request.user!.tenantId);
+    } catch (error) {
+      if (error instanceof Ifc5dError) return reply.code(error.statusCode).send({ error: error.message });
+      request.log.error({ err: error }, 'Falha no preparo IFC 5D');
+      return reply.code(500).send({ error: 'Não foi possível preparar o IFC para orçamento' });
+    }
+  });
   const ifcService = new IfcService();
   await ifcService.initialize(); // Create upload directory
   

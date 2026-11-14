@@ -121,10 +121,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
           Área de trabalho
         </div>
         <NavItem href="/app" icon="viewer" label="Visualizador 3D" active={location.pathname === '/app'} />
+        <NavItem href="/planejamento" icon="planning" label="Planejamento 4D" active={location.pathname === '/planejamento'} />
+        <NavItem href="/orcamento" icon="budget" label="Orçamento 5D" active={location.pathname === '/orcamento'} />
         <NavItem href="/app/compare" icon="compare" label="Comparar cenários" active={location.pathname === '/app/compare'} />
-        {/* Planejamento 4D, Reunioes XR, Orcamento 5D e Consulta BIM sairam em
-            08/09/2026: apontavam para /app#... e nada lia o hash. Voltam quando
-            cada tela existir (S24/S26/S15/S31). */}
+        {/* Reunioes XR e Consulta BIM dependem de telas funcionais proprias. */}
       </div>
 
       {isAdmin && (
