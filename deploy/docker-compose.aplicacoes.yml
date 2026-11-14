@@ -3,18 +3,19 @@
 # Diferente do compose antigo (deploy/docker-compose.yml, escrito para o
 # orquestrador), porque a maquina e outra e as restricoes tambem:
 #
-#   - Nao ha container de banco. O host ja roda PostgreSQL 18.6 nativo, a mesma
-#     versao que validamos, e subir um segundo Postgres so para o ArxisVR
-#     custaria ~60 MB de RAM numa maquina com menos de 800 MB livres. O banco
-#     `arxisvr` e o usuario de mesmo nome foram criados la.
+#   - Nao ha container de banco. Desde 14/11/2026 o banco `arxisvr` fica no
+#     PostgreSQL 18 do servidor applications, em 10.10.0.2:5432 via WireGuard.
+#     DATABASE_URL no .env do servidor usa o usuario arxisvr_service. A copia
+#     antiga no PostgreSQL local foi preservada para recuperacao e deixou de
+#     ser usada pela API. Ver documentation/REATIVACAO-2026-11-14.md.
 #
 #   - As portas SAO publicadas em 127.0.0.1. Aqui o Caddy roda nativo no host
 #     (nao em container), entao ele nao alcanca a rede docker por nome de
 #     servico: alcanca por porta local. Ficam fechadas para fora pelo firewall,
 #     porque o bind e 127.0.0.1 e nao 0.0.0.0.
 #
-#   - `host.docker.internal` precisa de `extra_hosts`, que e como os outros
-#     projetos desta maquina (Odoo, lojas) falavam com o Postgres do host.
+#   - `host.docker.internal` continua disponivel para integracoes locais.
+#     A conexao de banco do Arxis usa o endereco privado de applications.
 #
 #   - A sub-rede e FIXA em 172.23.0.0/16, e isso nao e detalhe. O firewall
 #     libera a 5432 so para 172.16.0.0/12; se o Docker escolher a faixa

@@ -1,8 +1,25 @@
 # ArxisVR — o que falta executar
 
 **Levantado em:** 04/09/2026, conferindo servidor, repo e produção.
-**Atualizado em:** 11/09/2026 — migração operacional fechada; S26 levantado (item 3.1).
-**Estado:** produção no ar (`/`, `/app`, API, todos 200). S12 ★ atingido.
+**Atualizado em:** 14/11/2026 • reativação e aceite S26 em produção.
+**Estado:** app/API operacionais; banco no `applications`; S12/S18 revalidados e S26 atingido.
+
+## Pendências atuais • 14/11/2026
+
+1. Integrar seleção de elementos, propriedades reais e quantitativos à interface.
+2. Disponibilizar entrada de custos por cenário e comparação financeira/PDF S30.
+3. Validar hardening, grandes modelos e desempenho antes de declarar S32.
+4. Reconciliar a documentação histórica remanescente com o ambiente atual.
+
+A prova temporal foi concluída: `S26-PROVA-BROWSER.md`. A aplicação usa o Auth
+oficial; o banco do app fica no PostgreSQL de `applications`, pela rede privada.
+O S26 não está mais bloqueado por falta de prova ou pela régua comprimida.
+
+## Registro histórico • setembro de 2026
+
+As seções seguintes preservam o diagnóstico da época. Endereços, estados de
+infraestrutura, contagens e pendências antigas não devem ser usados como leitura
+do ambiente atual; as atualizações acima e as provas datadas têm precedência.
 
 ---
 
