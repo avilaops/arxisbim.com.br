@@ -3,9 +3,18 @@
 > Artefato de memória pós-execução. Cada afirmação aqui é checável (diff, build, teste).
 
 **Sprint:** S26 · comparação temporal (4D)
-**Status:** Parcial — código entregue e no bundle; **marco ★ ainda não caiu**, falta a prova em browser na aplicação publicada.
-**Data:** 2026-09-19
+**Status atual:** marco funcional ★ atingido em produção em 14/11/2026.
+**Implementação original:** 2026-09-19 • aceite: 2026-11-14.
 **Branch:** `claude/stoic-heisenberg-vjdtw4`
+
+**Atualização de 14/11/2026:** o fluxo completo foi exercitado pelo Auth oficial
+com conta comum, IFC enviado pela tela, cronogramas A/B, predecessoras, diferença
+de dez dias, régua alterando a imagem de cada lado, reload, reprodução e celular.
+O layout da régua precisou de correção antes do aceite. Evidências e limites em
+[`../S26-PROVA-BROWSER.md`](../S26-PROVA-BROWSER.md).
+
+O relato abaixo preserva o estado histórico da entrega de setembro; suas
+menções à prova pendente foram superadas pelo aceite acima.
 
 ---
 

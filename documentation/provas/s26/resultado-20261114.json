@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-11-14T19:20:59.725Z",
+  "app": "https://app.arxisbim.com.br",
+  "steps": [
+    {
+      "step": "S26 • dois cronogramas na tela e delta de 10 dias"
+    },
+    {
+      "step": "Régua altera geometria e cores conforme o cronograma de cada cenário",
+      "changedRatioA": 0.27432500778089014,
+      "changedRatioB": 0,
+      "date": "2026-12-15"
+    },
+    {
+      "step": "Reload preserva par A/B, modo 4D, data, diferença de prazo e imagem"
+    },
+    {
+      "step": "Reprodução automática avança e para no fim sem reiniciar"
+    },
+    {
+      "step": "Comparação 4D reaberta em viewport móvel sem overflow"
+    }
+  ],
+  "errors": [],
+  "failedRequests": [],
+  "deltaDays": 10,
+  "fixtureId": "450506da-cab3-4c16-b472-ad9cbc1fa149",
+  "projectId": "7f8ff7f8-b16f-4e6c-94ea-b4adbe687daf"
+}

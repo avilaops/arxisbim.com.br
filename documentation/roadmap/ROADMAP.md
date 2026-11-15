@@ -1,23 +1,24 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 04/09/2026 (S12 e S18 ★ atingidos; infra congelada)
+**Última atualização:** 14/11/2026 • S12/S18 revalidados e S26 ★ atingido.
 **Versão:** 3.0, 32 sprints atômicos
-**Status:** Backend à frente da interface. Os 4 marcos ★ estão zerados: o que
-foi construído não chega ao usuário. Ver `AUDIT-2026-09-02-sprints-e-codigo-morto.md`.
+**Status:** três dos quatro marcos funcionais comprovados. O backend continua
+à frente da interface em propriedades, quantitativos e custos. A auditoria de
+02/09 é histórica; a situação atual está nas provas por marco.
 
-**S12 ★ (03/09) e S18 ★ (04/09) atingidos**, os dois provados em browser real na
-aplicação publicada, não em teste de API. A cadeia da tese já anda até
-"comparar cenários visualmente".
+**S12, S18 e S26 atingidos**, com prova no navegador da aplicação publicada.
+S12/S18 foram revalidados em 14/11, e o S26 demonstrou cronogramas distintos,
+propagação, diferença de dez dias, estado visual por data, reload e celular.
+Evidência: `documentation/S26-PROVA-BROWSER.md`.
 
-Próximo alvo: **S26 ★** (comparação temporal). O código foi entregue em
-19/09/2026 e o marco **continua zerado**: marco só cai com a prova em browser na
-aplicação publicada. Ver `documentation/sprints/S26-RESULT.md` e
-`documentation/PENDENCIAS.md`.
+Próxima frente: tornar propriedades e quantitativos utilizáveis na interface,
+seguida da entrada de custos por cenário e do marco **S30 ★**. Não há percentual
+global inferido da contagem de marcos.
 
-**Infra congelada** (decisão de 02/09/2026). Produção roda em Docker no
-orquestrador `23.88.60.193`, com **Postgres 18.6**. A saída do Docker foi medida
-e recusada: `documentation/DECISAO-saida-do-docker.md`. Nada de PM2, nada de
-Postgres no host, nada de mexer no Caddy sem necessidade medida.
+**Infra atual:** app e API em Docker no `apps-noclient`; banco `arxisvr` no
+PostgreSQL 18 de `applications`, via WireGuard; autenticação pelo Auth oficial.
+O Auth continua hospedado no Render. A decisão de setembro sobre o antigo
+orquestrador não descreve esta topologia. Ver `documentation/REATIVACAO-2026-11-14.md`.
 
 ---
 
@@ -38,23 +39,20 @@ A cadeia de cenários é o ativo intransferível.
 
 ## Marcos Críticos: Não Movem
 
-> **Dois dos quatro marcos caíram**, os dois provados em browser real: S12 em
-> 03/09/2026 e S18 em 04/09/2026. Faltam S26 e S30 (auditoria de 02/09/2026,
-> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`). Nenhum foi
-> atingido. Marco só cai quando o usuário consegue fazer aquilo na tela, e
-> hoje nenhum consegue: o backend existe, a interface não é alcançada pelo
-> build. Não remarque nenhum sem abrir a aplicação e fazer o fluxo.
+> **Três dos quatro marcos comprovados:** S12 e S18 revalidados em 14/11/2026;
+> S26 atingido nesta mesma data. Falta S30. Marco só fecha com fluxo real na
+> aplicação publicada, incluindo recarga; existência de backend não basta.
 
 | Marco | Sprint | Valida | Estado | Por quê |
 |---|---|---|---|---|
 | ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
 | ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
-| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ☐ **não atingido** · código entregue 19/09/2026 | A tela existe agora: cronograma por cenário no viewer, régua de data pintando o modelo e split A\|B com `deltaDays`. Falta **só** a prova em browser na aplicação publicada, que é o que fecha um marco. Ver `documentation/sprints/S26-RESULT.md`. |
-| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Backend gera o PDF (`scenario-pdf.service.ts`). Não há rota nem tela que chegue nele. |
+| ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ✅ **ATINGIDO 14/11/2026** | Dois cronogramas criados na tela, categorias IFC vinculadas, predecessoras propagadas, dez dias de diferença, régua alterando a imagem de cada cenário, reload e celular. Ver `documentation/S26-PROVA-BROWSER.md`. |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Há rotas de comparação financeira e PDF no backend. Faltam entrada de custos utilizável e integração à tela, seguidas da prova em produção. |
 
-**O viewer vivo** (`/app` → `Viewer3DPage`, 356 linhas) oferece quatro botões:
-projetos e modelos, redefinir visualização, tela cheia e informações. É todo o
-alcance da interface hoje.
+**O viewer vivo** oferece projetos, upload IFC, cenários com câmera e
+visibilidade, comparação visual e cronograma 4D por cenário. O painel de
+informações ainda é um estado vazio; propriedades e custos não estão concluídos.
 
 ---
 

@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-11-14T19:33:27.4434118Z",
+  "steps": [
+    {
+      "step": "Login oficial OIDC concluído"
+    },
+    {
+      "step": "Identidade sintética comum confirmada",
+      "role": "user"
+    },
+    {
+      "step": "Modelo IFC renderizado"
+    },
+    {
+      "step": "S12 • cenários distintos, persistência após reload e reaplicação visual",
+      "changedPixelRatio": 0.3737082756831546
+    },
+    {
+      "step": "S18 • split, diferença por categoria, câmera sincronizada/independente e exportação PNG"
+    },
+    {
+      "step": "Cronograma A criado pela interface com vínculos IFC e predecessora"
+    },
+    {
+      "step": "Cronograma B criado pela interface com vínculos IFC e predecessora"
+    },
+    {
+      "step": "CPM e comparação temporal conferidos",
+      "deltaDays": 10
+    }
+  ],
+  "errors": [],
+  "failedRequests": []
+}

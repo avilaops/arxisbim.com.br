@@ -2,6 +2,16 @@
 
 Plataforma de decisão baseada em modelos BIM, IFC nativo, cenários 4D/5D, SINAPI integrado.
 
+> **Estado verificado • 14/11/2026:** S12/S18 revalidados e S26 comprovado na
+> aplicação publicada, com comparação temporal, reload e celular. Três dos
+> quatro marcos funcionais estão comprovados; S30 continua pendente. App/API em
+> `apps-noclient`, banco no PostgreSQL de `applications` via rede privada e
+> entrada pelo Auth oficial. Consulte o [roadmap atual](documentation/roadmap/ROADMAP.md),
+> a [prova do S26](documentation/S26-PROVA-BROWSER.md) e o
+> [registro operacional](documentation/REATIVACAO-2026-11-14.md).
+> As descrições de infraestrutura de setembro abaixo são históricas e não
+> substituem esse registro.
+
 **Produção:** [arxisbim.com.br](https://arxisbim.com.br) · API: `api.arxisbim.com.br`
 
 > **Domínio próprio desde 17/09/2026.** `arxisvr.avilaops.com` e
@@ -50,10 +60,10 @@ PostgreSQL (container arxisvr-db) · storage local em volume
 > dois lados, mais os 358 testes do backend contra um Postgres de verdade. Ver
 > `documentation/CI-CD-ESTRATEGIA.md`.
 
-> **Estado do produto (02/09/2026):** o backend está à frente da interface. Os
-> quatro marcos ★ estão **zerados**, e 819 dos 867 arquivos do frontend não
-> entram no build. Antes de continuar qualquer sprint, ler
-> `documentation/AUDIT-2026-09-02-sprints-e-codigo-morto.md`. Foco único: **S12**.
+> **Histórico de 02/09/2026:** a auditoria encontrou os quatro marcos ainda
+> não comprovados e grande volume de frontend fora do build. Esse diagnóstico
+> orientou as entregas seguintes; os estados atuais de S12/S18/S26 estão nas
+> provas datadas e no roadmap atualizado.
 
 > **Domínios canônicos:** o produto é `arxisbim.com.br`; a casa é
 > `avilaops.com`. Nunca usar `avila.inc`.
