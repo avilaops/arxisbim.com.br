@@ -13,6 +13,8 @@ em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
    cadastre atividades e predecessoras. O Gantt utiliza as datas calculadas pelo
    CPM. O acesso à simulação abre o modelo e o cenário selecionados; vincule
    elementos às atividades no visualizador para usar a régua temporal.
+   Desde 16/11, a visão [Kanban](KANBAN-PLANEJAMENTO.md) organiza essas mesmas
+   atividades por etapas editáveis, sem registrar avanço físico.
 3. Em `/orcamento`, prepare os quantitativos do IFC. A extração ocorre no
    servidor e registra a versão usada pelo cenário. Confira áreas, volumes,
    comprimentos e contagem por categoria.

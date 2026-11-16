@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-16T13:13:58.838Z",
+  "steps": [
+    "Gantt e Kanban no mesmo cronograma • movimento por seletor persistido após reload",
+    "Movimento por arraste persistido",
+    "Criação, renomeação, ordem e remoção de etapa • cartões preservados",
+    "Datas, progresso, predecessoras e vínculos inalterados • save da câmera preserva Kanban",
+    "Celular390px • rolagem interna e seletor acessível"
+  ],
+  "errors": [],
+  "unchangedSchedule": true
+}
