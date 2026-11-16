@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 /**
@@ -97,7 +98,7 @@ export const schedulesService = {
   /** Cronogramas do projeto. A rota mistura os legados (`isLegacy`), que o S26 ignora. */
   async listarDoProjeto(projectId: string): Promise<Cronograma[]> {
     const url = buildApiV1Url(`/projects/${projectId}/schedules`)
-    const lista = await parse<Cronograma[]>(await fetch(url, { headers: authHeaders() }), 'Listar cronogramas')
+    const lista = await parse<Cronograma[]>(await sessionFetch(url, { headers: authHeaders() }), 'Listar cronogramas')
     return Array.isArray(lista) ? lista.filter((c) => !c.isLegacy) : []
   },
 
@@ -121,11 +122,11 @@ export const schedulesService = {
    */
   async calcular(scheduleId: string): Promise<Cronograma> {
     const url = buildApiV1Url(`/schedules/${scheduleId}/cpm`)
-    return parse<Cronograma>(await fetch(url, { headers: authHeaders() }), 'Abrir cronograma')
+    return parse<Cronograma>(await sessionFetch(url, { headers: authHeaders() }), 'Abrir cronograma')
   },
 
   async criar(projectId: string, nome: string, dataInicio: string, scenarioId: string): Promise<Cronograma> {
-    const response = await fetch(buildApiV1Url(`/projects/${projectId}/schedules`), {
+    const response = await sessionFetch(buildApiV1Url(`/projects/${projectId}/schedules`), {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ name: nome, startDate: dataInicio, scenarioId, source: 'manual' }),
@@ -134,7 +135,7 @@ export const schedulesService = {
   },
 
   async apagar(scheduleId: string): Promise<void> {
-    const response = await fetch(buildApiV1Url(`/schedules/${scheduleId}`), {
+    const response = await sessionFetch(buildApiV1Url(`/schedules/${scheduleId}`), {
       method: 'DELETE',
       headers: authHeaders(),
     })
@@ -145,7 +146,7 @@ export const schedulesService = {
     scheduleId: string,
     dados: { name: string; plannedStart: string; plannedEnd: string; sortOrder?: number },
   ): Promise<Atividade> {
-    const response = await fetch(buildApiV1Url(`/schedules/${scheduleId}/activities`), {
+    const response = await sessionFetch(buildApiV1Url(`/schedules/${scheduleId}/activities`), {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify(dados),
@@ -157,7 +158,7 @@ export const schedulesService = {
     activityId: string,
     dados: Partial<{ name: string; plannedStart: string; plannedEnd: string; sortOrder: number }>,
   ): Promise<Atividade> {
-    const response = await fetch(buildApiV1Url(`/activities/${activityId}`), {
+    const response = await sessionFetch(buildApiV1Url(`/activities/${activityId}`), {
       method: 'PUT',
       headers: authHeaders(),
       body: JSON.stringify(dados),
@@ -166,7 +167,7 @@ export const schedulesService = {
   },
 
   async apagarAtividade(activityId: string): Promise<void> {
-    const response = await fetch(buildApiV1Url(`/activities/${activityId}`), {
+    const response = await sessionFetch(buildApiV1Url(`/activities/${activityId}`), {
       method: 'DELETE',
       headers: authHeaders(),
     })
@@ -180,7 +181,7 @@ export const schedulesService = {
    */
   async vincularElementos(activityId: string, globalIds: string[]): Promise<number> {
     if (!globalIds.length) return 0
-    const response = await fetch(buildApiV1Url(`/activities/${activityId}/elements/bulk`), {
+    const response = await sessionFetch(buildApiV1Url(`/activities/${activityId}/elements/bulk`), {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ elements: globalIds.map((globalId) => ({ globalId, stateDuring: 'active' })) }),
@@ -196,7 +197,7 @@ export const schedulesService = {
     predecessorId: string,
     opcoes: { lagDays?: number; type?: 'FS' | 'SS' | 'FF' | 'SF' } = {},
   ): Promise<PredecessoraVinculada> {
-    const response = await fetch(buildApiV1Url(`/activities/${activityId}/predecessors`), {
+    const response = await sessionFetch(buildApiV1Url(`/activities/${activityId}/predecessors`), {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
@@ -210,13 +211,13 @@ export const schedulesService = {
 
   async desvincularPredecessora(activityId: string, predecessorId: string): Promise<void> {
     const url = buildApiV1Url(`/activities/${activityId}/predecessors/${predecessorId}`)
-    const response = await fetch(url, { method: 'DELETE', headers: authHeaders() })
+    const response = await sessionFetch(url, { method: 'DELETE', headers: authHeaders() })
     if (!response.ok) throw new Error(`Desvincular predecessora falhou (HTTP ${response.status})`)
   },
 
   /** Comparação temporal A×B: CPM dos dois lados e a diferença de prazo. */
   async compararPrazo(idA: string, idB: string): Promise<ComparacaoTemporal> {
     const url = buildApiV1Url(`/scenarios/${idA}/${idB}/timeline-comparison`)
-    return parse<ComparacaoTemporal>(await fetch(url, { headers: authHeaders() }), 'Comparar prazos')
+    return parse<ComparacaoTemporal>(await sessionFetch(url, { headers: authHeaders() }), 'Comparar prazos')
   },
 }

@@ -33,6 +33,7 @@ export default function UserMenu({ user }: UserMenuProps) {
   }, [])
 
   function handleLogout() {
+    sessionStorage.removeItem('arxisvr_return_to')
     localStorage.removeItem('arxisvr_user')
     localStorage.removeItem('arxisvr_token')
     localStorage.removeItem('arxisvr_refresh_token')

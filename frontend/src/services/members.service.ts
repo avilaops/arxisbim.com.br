@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 
 export interface TenantMember {
@@ -35,7 +36,7 @@ async function readError(response: Response, fallback: string): Promise<never> {
 
 export const membersService = {
   async list(tenantId: string): Promise<TenantMember[]> {
-    const response = await fetch(buildApiV1Url(`/tenants/${encodeURIComponent(tenantId)}/users`), {
+    const response = await sessionFetch(buildApiV1Url(`/tenants/${encodeURIComponent(tenantId)}/users`), {
       headers: authHeaders(),
     });
     if (!response.ok) await readError(response, 'Não foi possível carregar os membros');
@@ -44,7 +45,7 @@ export const membersService = {
 
   /** Só owner e admin conseguem; a API responde 403 para o resto. */
   async invite(tenantId: string, email: string, role: InviteRole): Promise<void> {
-    const response = await fetch(buildApiV1Url(`/workspaces/${encodeURIComponent(tenantId)}/invites`), {
+    const response = await sessionFetch(buildApiV1Url(`/workspaces/${encodeURIComponent(tenantId)}/invites`), {
       method: 'POST',
       headers: authHeaders(true),
       body: JSON.stringify({ email, role }),

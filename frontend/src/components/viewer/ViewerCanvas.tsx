@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AlertTriangle, Loader2, X } from 'lucide-react'
 import ArxisIcon from '@/components/ui/ArxisIcon'
@@ -161,10 +162,9 @@ const ViewerCanvas = forwardRef<ViewerHandle, ViewerCanvasProps>(function Viewer
         scene.add(grid)
 
         const token = localStorage.getItem('arxisvr_token')
-        if (!token) throw new Error('Sessão expirada. Entre novamente para abrir o modelo.')
 
         setLoadProgress(15)
-        const response = await fetch(buildApiV1Url(`/ifc/${modelId}/download`), {
+        const response = await sessionFetch(buildApiV1Url(`/ifc/${modelId}/download`), {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!response.ok) {

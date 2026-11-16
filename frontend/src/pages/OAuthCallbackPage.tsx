@@ -1,18 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { AlertTriangle, Check } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
+import {consumeReturnTo} from '@/core/auth/session-redirect'
+import {clearSession} from '@/core/auth/session'
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
+  const handled = useRef(false)
 
   const code = searchParams.get('code')
   const error = searchParams.get('error')
 
   useEffect(() => {
+    if(handled.current)return
+    handled.current=true
     const handleCallback = async () => {
       try {
         if (error) {
@@ -41,6 +46,7 @@ export default function OAuthCallbackPage() {
             const meResponse = await fetch(buildApiV1Url('/auth/me'), {
               headers: { Authorization: `Bearer ${token}` },
             })
+            if(!meResponse.ok)throw new Error('Não foi possível confirmar a sessão. Tente entrar novamente.')
             if (meResponse.ok) {
               const user = await meResponse.json()
               localStorage.setItem('arxisvr_user', JSON.stringify(user))
@@ -49,7 +55,8 @@ export default function OAuthCallbackPage() {
 
           setStatus('success')
           setMessage('Sua conta foi reconhecida.')
-          setTimeout(() => navigate('/dashboard'), 800)
+          const destination=consumeReturnTo()
+          setTimeout(() => navigate(destination,{replace:true}), 800)
           return
         }
 
@@ -62,6 +69,7 @@ export default function OAuthCallbackPage() {
         setStatus('error')
         setMessage('O retorno do login veio incompleto. Tente entrar de novo.')
       } catch (err: any) {
+        clearSession()
         setStatus('error')
         setMessage(err.message || 'Não foi possível concluir a entrada. Tente de novo.')
       }
@@ -91,7 +99,7 @@ export default function OAuthCallbackPage() {
             </div>
             <h1>Acesso confirmado</h1>
             <p className="arx-avulsa__texto">{message}</p>
-            <p className="arx-avulsa__apoio">Abrindo a página inicial.</p>
+            <p className="arx-avulsa__apoio">Retomando seu acesso.</p>
           </div>
         )}
 
