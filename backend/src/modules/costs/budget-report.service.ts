@@ -35,6 +35,8 @@ export interface BudgetReport {
     ifcType: string;
     storeyId: number | null;
     code: string | null;
+    sinapiItemId: string | null;
+    notes: string | null;
     description: string;
     tableName: string;
     quantity: string;
@@ -77,6 +79,7 @@ export class BudgetReportService {
         : [];
       const costs = await tx`
         SELECT ecl.element_global_id AS global_id,ep.ifc_type,ep.storey_id,ci.code,ci.description,ct.name AS table_name,
+          ci.sinapi_item_id,ci.notes,
           ecl.quantity,ci.unit,COALESCE(ecl.override_price,ci.unit_price) AS unit_price,
           ROUND(ecl.quantity*COALESCE(ecl.override_price,ci.unit_price),2)::numeric(18,2) AS total_cost
         FROM element_cost_links ecl JOIN cost_items ci ON ci.id=ecl.cost_item_id JOIN cost_tables ct ON ct.id=ci.cost_table_id
@@ -128,6 +131,8 @@ export class BudgetReportService {
           code: c.code,
           description: c.description,
           tableName: c.table_name,
+          sinapiItemId: c.sinapi_item_id,
+          notes: c.notes,
           quantity: String(c.quantity),
           unit: c.unit,
           unitPrice: String(c.unit_price),
@@ -207,6 +212,7 @@ export function buildBudgetWorkbook(report: BudgetReport): Buffer {
         Código: c.code,
         Serviço: c.description,
         'Tabela de preços': c.tableName,
+        'Referência SINAPI': c.sinapiItemId ? c.notes : null,
         Quantidade: c.quantity,
         Unidade: c.unit,
         'Preço efetivo (BRL)': c.unitPrice,

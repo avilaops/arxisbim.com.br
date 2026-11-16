@@ -59,6 +59,7 @@ import { createBudgetReportRoutes } from './modules/costs/budget-report.routes.j
 import { registerTakeoffRoutes } from './modules/costs/takeoff.routes.js';
 import { registerCostCalculationRoutes } from './modules/costs/cost-calculation.routes.js';
 import { registerSINAPIImportRoutes, registerSINAPISearchRoutes } from './modules/sinapi/index.js';
+import { createSinapiBudgetRoutes } from './modules/costs/sinapi-budget.routes.js';
 import { registerStreamingRoutes } from './modules/streaming/streaming.routes.js';
 import { streamingOrchestrator } from './modules/streaming/streaming-orchestrator.service.js';
 import { apiTokensRoutes } from './modules/api-tokens/api-tokens.routes.js';
@@ -697,6 +698,7 @@ await registerTakeoffRoutes(server, sql);
 await registerCostCalculationRoutes(server, sql);
 await registerSINAPIImportRoutes(server, sql);
 await registerSINAPISearchRoutes(server, sql);
+await server.register(createSinapiBudgetRoutes(sql), { prefix: '/api/v1' });
 await registerStreamingRoutes(server);
 streamingOrchestrator.startReclamationLoop();
 

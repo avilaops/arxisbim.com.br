@@ -247,11 +247,15 @@ export class SINAPIImportService {
       code: string;
       description: string;
       unit: string;
+      price_with_tax: string;
       price_without_tax: string;
+      state_code: string;
+      reference_month: string;
     }>
   > {
     let sql = this.sql`
-      SELECT id, code, description, unit, price_without_tax
+      SELECT id, code, description, unit, price_with_tax, price_without_tax,
+        state_code, reference_month::text AS reference_month
       FROM sinapi_items
       WHERE 1=1
     `;
@@ -259,23 +263,23 @@ export class SINAPIImportService {
     // Busca por código (exato) ou descrição (full-text)
     if (query) {
       const trimmedQuery = query.trim();
-      if (/^\d+\/\d+$/.test(trimmedQuery)) {
-        // Código SINAPI
+      if (/^[\d./-]+$/.test(trimmedQuery)) {
         sql = this.sql`
           ${sql}
-          AND code = ${trimmedQuery}
+          AND code ILIKE ${`%${trimmedQuery}%`}
         `;
       } else {
-        // Descrição (full-text search em português)
+        // Full-text plus substring search supports short service names.
         sql = this.sql`
           ${sql}
-          AND to_tsvector('portuguese', description) @@ plainto_tsquery('portuguese', ${trimmedQuery})
+          AND (to_tsvector('portuguese', description) @@ plainto_tsquery('portuguese', ${trimmedQuery})
+            OR description ILIKE ${`%${trimmedQuery}%`})
         `;
       }
     }
 
     if (stateCode) {
-      sql = this.sql`${sql} AND state_code = ${stateCode}`;
+      sql = this.sql`${sql} AND state_code = ${stateCode.toUpperCase()}`;
     }
 
     if (referenceMonth) {
@@ -296,8 +300,8 @@ export class SINAPIImportService {
     return this.sql`
       SELECT
         state_code,
-        reference_month,
-        COUNT(*) as item_count
+        reference_month::text AS reference_month,
+        COUNT(*)::integer as item_count
       FROM sinapi_items
       GROUP BY state_code, reference_month
       ORDER BY reference_month DESC, state_code

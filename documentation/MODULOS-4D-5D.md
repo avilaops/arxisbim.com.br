@@ -19,7 +19,10 @@ em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
 3. Em `/orcamento`, prepare os quantitativos do IFC. A extração ocorre no
    servidor e registra a versão usada pelo cenário. Confira áreas, volumes,
    comprimentos e contagem por categoria.
-4. Crie a tabela do cenário, cadastre serviços com unidade e preço e aplique
+4. Crie a tabela do cenário, pesquise serviços SINAPI por descrição/código, UF
+   e referência, ou cadastre preços próprios. Escolha a base com ou sem
+   desoneração; a tela copia o valor e mantém a origem e a versão SINAPI no item.
+   A cópia é um snapshot e não muda quando o catálogo é atualizado. Aplique
    cada serviço à categoria IFC correspondente. Medidas ausentes são informadas
    e não recebem quantidades inventadas. `un` utiliza uma unidade por elemento.
    O relatório por pavimento e a memória de custos por serviço podem ser exportados
@@ -27,10 +30,19 @@ em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
 5. Precifique outra alternativa e compare os custos e os prazos. Os dois
    cenários precisam de preços e cronogramas com atividades. Exporte o PDF.
 
-Os preços são fornecidos pelo usuário. Esta entrega não importa uma tabela
-SINAPI oficial. O total corresponde aos vínculos efetivamente orçados e não
-representa automaticamente o custo completo da obra. Um elemento pode receber
-vários serviços; por isso o indicador conta vínculos de custo.
+O catálogo SINAPI consultado é global e sua atualização por planilha permanece
+restrita à administração; a tela de orçamento apenas pesquisa e copia preços
+da referência selecionada para a tabela do projeto. O total corresponde aos
+vínculos efetivamente orçados e não representa automaticamente o custo completo
+da obra. Um elemento pode receber vários serviços; por isso o indicador conta
+vínculos de custo.
+
+A curva S do 5D distribui o custo dos elementos pelas datas planejadas das
+atividades ligadas ao GlobalId do IFC, em parcelas lineares por duração. Se um
+elemento estiver vinculado a várias atividades, divide seu custo igualmente.
+Custos sem atividade vinculada são distribuídos linearmente ao longo de todo o
+cronograma. A visão é uma projeção planejada; não mede avanço físico, custos
+realizados, produtividade ou calendário de trabalho.
 
 ## Persistência e consistência
 
@@ -99,3 +111,7 @@ usar a recomendação. Calendários de trabalho da importação MS Project/Prima
 branching, Presentation Studio e critérios de carga/SLA do release continuam
 fora desta entrega. O painel de propriedades do visualizador não foi concluído
 por estes módulos.
+
+Desde 16/11/2026, o 5D também oferece consulta ao SINAPI e curva S de custo
+planejado. A evidência desta etapa e as limitações de catálogo estão em
+`documentation/SINAPI-CURVA-S-5D.md`.
