@@ -25,6 +25,8 @@ export interface BudgetReportData {
     ifcType: string;
     storeyId: number | null;
     code: string | null;
+    sinapiItemId?: string | null;
+    notes?: string | null;
     description: string;
     tableName: string;
     quantity: string;

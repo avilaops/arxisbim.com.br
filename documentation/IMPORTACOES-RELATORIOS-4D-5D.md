@@ -68,4 +68,4 @@ Publicado em 16/11/2026 e comprovado em `documentation/provas/importacoes-relato
 
 ## Continuidade do roadmap
 
-Esta etapa não conclui a importação SINAPI na interface, curva acumulada de custos ou visualização de custos no 3D. Também permanecem as provas de precisão contra referência manual e desempenho com 50 mil elementos. O Kanban continua restrito à organização do planejamento, conforme a escolha do usuário.
+SINAPI e curva S planejada foram integrados em uma etapa posterior, documentada em `documentation/SINAPI-CURVA-S-5D.md`. Ainda faltam custos no 3D, prova de precisão contra referência manual e desempenho com 50 mil elementos. O Kanban continua restrito à organização do planejamento, conforme a escolha do usuário.

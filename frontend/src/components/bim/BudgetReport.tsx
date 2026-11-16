@@ -155,6 +155,7 @@ export default function BudgetReport({ scenarioId }: { scenarioId: string }) {
                             <small>
                               {c.code || 'Sem código'} • {c.tableName}
                             </small>
+                            {c.sinapiItemId && <small>{c.notes || 'Referência SINAPI vinculada'}</small>}
                           </td>
                           <td>{quantity(c.quantity)}</td>
                           <td>{c.unit}</td>
