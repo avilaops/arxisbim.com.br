@@ -15,12 +15,15 @@ em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
    elementos às atividades no visualizador para usar a régua temporal.
    Desde 16/11, a visão [Kanban](KANBAN-PLANEJAMENTO.md) organiza essas mesmas
    atividades por etapas editáveis, sem registrar avanço físico.
+   Também é possível [importar e reimportar CSV, MS Project XML e Primavera XER](IMPORTACOES-RELATORIOS-4D-5D.md), com prévia e preservação de vínculos.
 3. Em `/orcamento`, prepare os quantitativos do IFC. A extração ocorre no
    servidor e registra a versão usada pelo cenário. Confira áreas, volumes,
    comprimentos e contagem por categoria.
 4. Crie a tabela do cenário, cadastre serviços com unidade e preço e aplique
    cada serviço à categoria IFC correspondente. Medidas ausentes são informadas
    e não recebem quantidades inventadas. `un` utiliza uma unidade por elemento.
+   O relatório por pavimento e a memória de custos por serviço podem ser exportados
+   em XLSX completo, incluindo todas as medições da versão do cenário.
 5. Precifique outra alternativa e compare os custos e os prazos. Os dois
    cenários precisam de preços e cronogramas com atividades. Exporte o PDF.
 
@@ -92,7 +95,7 @@ segunda foi validada após a espera. Nenhuma migração nova foi necessária.
 Desde 16/11/2026, a [matriz S30](MATRIZ-FINANCEIRA-S30.md) compara de 2 a 20
 alternativas, além da comparação A/B anterior; pesos de 60% para custo e
 40% para prazo. A cobertura dos itens orçados precisa ser considerada antes de
-usar a recomendação. Importação MS Project/Primavera, histórico completo de
+usar a recomendação. Calendários de trabalho da importação MS Project/Primavera, histórico completo de
 branching, Presentation Studio e critérios de carga/SLA do release continuam
 fora desta entrega. O painel de propriedades do visualizador não foi concluído
 por estes módulos.

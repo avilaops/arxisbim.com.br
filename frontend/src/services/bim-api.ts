@@ -21,7 +21,7 @@ export async function bimRequest<T>(
           : body?.error ||
             body?.message ||
             `Não foi possível concluir a operação (HTTP ${response.status}).`
-    throw Object.assign(new Error(message), { status: response.status })
+    throw Object.assign(new Error(message), { status: response.status, details: Array.isArray(body?.errors) ? body.errors.filter((value:unknown)=>typeof value==='string') : [] })
   }
   if (response.status === 204) return undefined as T
   return response.json()

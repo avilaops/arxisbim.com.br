@@ -3,6 +3,7 @@ import {beforeEach,describe,it,expect,vi} from 'vitest'
 import Budget5DPage from '../Budget5DPage'
 import {bimCosts} from '@/services/bim-costs.service'
 vi.mock('@/components/bim/FinancialMatrix',()=>({default:()=> <h2>Matriz de teste</h2>}))
+vi.mock('@/components/bim/BudgetReport',()=>({default:()=> <h2>Relatório de teste</h2>}))
 import {schedulesService} from '@/services/schedules.service'
 vi.mock('@/services/schedules.service',()=>({schedulesService:{doCenario:vi.fn()}}))
 vi.mock('@/services/bim-costs.service',async importOriginal=>({...await importOriginal<any>(),bimCosts:{quantities:vi.fn(),tables:vi.fn(),calculation:vi.fn(),items:vi.fn(),prepare:vi.fn(),createTable:vi.fn(),createItem:vi.fn(),priceCategory:vi.fn(),recalculate:vi.fn()}}))
