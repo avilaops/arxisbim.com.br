@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
@@ -203,7 +204,7 @@ export default function DashboardPage() {
     setCreating(true)
     setError(null)
     try {
-      const response = await fetch(buildApiV1Url('/projects'), {
+      const response = await sessionFetch(buildApiV1Url('/projects'), {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ name }),
@@ -227,7 +228,7 @@ export default function DashboardPage() {
     setAllProjectsOpen(true)
     setAllProjectsLoading(true)
     try {
-      const response = await fetch(buildApiV1Url('/projects?pageSize=100'), {
+      const response = await sessionFetch(buildApiV1Url('/projects?pageSize=100'), {
         headers: authHeaders(),
       })
       const result = await response.json().catch(() => ({}))

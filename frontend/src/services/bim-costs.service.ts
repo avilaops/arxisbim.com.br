@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { bimRequest } from './bim-api'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 
@@ -174,7 +175,7 @@ export const bimCosts = {
       `/scenarios/${a}/compare/${b}/financial?projectId=${encodeURIComponent(projectId)}`,
     ),
   async pdf(projectId: string, a: string, b: string): Promise<Blob> {
-    const response = await fetch(
+    const response = await sessionFetch(
       buildApiV1Url(
         `/scenarios/${a}/compare/${b}/pdf?projectId=${encodeURIComponent(projectId)}`,
       ),

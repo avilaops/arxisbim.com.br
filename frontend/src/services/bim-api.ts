@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 export async function bimRequest<T>(
@@ -6,12 +7,10 @@ export async function bimRequest<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers)
   const token = localStorage.getItem('arxisvr_token')
-  if (!token)
-    throw new Error('Sua sessão expirou. Entre novamente para continuar.')
   headers.set('Authorization', `Bearer ${token}`)
   if (typeof init.body === 'string')
     headers.set('Content-Type', 'application/json')
-  const response = await fetch(buildApiV1Url(path), { ...init, headers })
+  const response = await sessionFetch(buildApiV1Url(path), { ...init, headers })
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     const message =

@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
@@ -202,9 +203,8 @@ const ComparisonCanvas = forwardRef<ComparisonHandle, ComparisonCanvasProps>(fun
         const { IFCLoader } = await import('web-ifc-three')
 
         const token = localStorage.getItem('arxisvr_token')
-        if (!token) throw new Error('Sessão expirada. Entre novamente.')
 
-        const resposta = await fetch(buildApiV1Url(`/ifc/${modelId}/download`), {
+        const resposta = await sessionFetch(buildApiV1Url(`/ifc/${modelId}/download`), {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!resposta.ok) throw new Error(`Falha ao baixar IFC (${resposta.status}).`)

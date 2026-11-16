@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { isAppHost, PRIMARY_SITE_URL, resolveRootRedirect } from './config/site.config'
+import RequireSession from './components/auth/RequireSession'
 
 // Cada tela é um pedaço próprio do build: quem abre o login não baixa o
 // visualizador 3D nem o esquema IFC.
@@ -81,6 +82,7 @@ export default function App() {
           <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
 
           {/* Protected Pages */}
+          <Route element={<RequireSession />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/app" element={<Viewer3DPage />} />
           <Route path="/app/compare" element={<ComparePage />} />
@@ -88,6 +90,7 @@ export default function App() {
           <Route path="/orcamento" element={<Budget5DPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

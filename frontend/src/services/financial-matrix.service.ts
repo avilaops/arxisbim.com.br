@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { bimRequest } from './bim-api'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 export interface MatrixRow {
@@ -37,7 +38,7 @@ export const financialMatrixApi = {
     baselineId: string,
     revision: string,
   ): Promise<Blob> {
-    const response = await fetch(
+    const response = await sessionFetch(
       buildApiV1Url(`/projects/${projectId}/financial-matrix/pdf`),
       {
         method: 'POST',

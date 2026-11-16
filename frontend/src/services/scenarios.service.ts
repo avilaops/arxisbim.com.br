@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 
 /**
@@ -58,14 +59,14 @@ async function parse<T>(response: Response, acao: string): Promise<T> {
 export const scenariosService = {
   async list(projectId: string): Promise<Scenario[]> {
     const url = buildApiV1Url(`/projects/${projectId}/scenarios`)
-    const body = await parse<any>(await fetch(url, { headers: authHeaders() }), 'Listar cenários')
+    const body = await parse<any>(await sessionFetch(url, { headers: authHeaders() }), 'Listar cenários')
     // A rota devolve a lista crua; tolera envelope caso isso mude.
     const lista = Array.isArray(body) ? body : (body?.data ?? body?.scenarios ?? [])
     return Array.isArray(lista) ? lista : []
   },
 
   async create(projectId: string, name: string, camera: CameraState | null): Promise<Scenario> {
-    const response = await fetch(buildApiV1Url(`/projects/${projectId}/scenarios`), {
+    const response = await sessionFetch(buildApiV1Url(`/projects/${projectId}/scenarios`), {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
@@ -82,7 +83,7 @@ export const scenariosService = {
 
   async getById(projectId: string, scenarioId: string): Promise<Scenario> {
     const url = buildApiV1Url(`/projects/${projectId}/scenarios/${scenarioId}`)
-    return parse<Scenario>(await fetch(url, { headers: authHeaders() }), 'Abrir cenário')
+    return parse<Scenario>(await sessionFetch(url, { headers: authHeaders() }), 'Abrir cenário')
   },
 
   /**
@@ -96,7 +97,7 @@ export const scenariosService = {
     camera: CameraState,
     hiddenIfcCategories: string[],
   ): Promise<Scenario> {
-    const response = await fetch(
+    const response = await sessionFetch(
       buildApiV1Url(`/projects/${projectId}/scenarios/${scenarioId}`),
       {
         method: 'PUT',
@@ -115,7 +116,7 @@ export const scenariosService = {
 
   async remove(projectId: string, scenarioId: string): Promise<void> {
     const url = buildApiV1Url(`/projects/${projectId}/scenarios/${scenarioId}`)
-    const response = await fetch(url, { method: 'DELETE', headers: authHeaders() })
+    const response = await sessionFetch(url, { method: 'DELETE', headers: authHeaders() })
     if (!response.ok) throw new Error(`Apagar cenário falhou (HTTP ${response.status})`)
   },
 }

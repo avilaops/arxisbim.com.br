@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
@@ -29,12 +30,11 @@ export interface ViewerModel {
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const token = localStorage.getItem('arxisvr_token')
-  if (!token) throw new Error('Sessão expirada. Entre novamente para enviar modelos.')
 
   const headers = new Headers(init?.headers)
   headers.set('Authorization', `Bearer ${token}`)
 
-  const response = await fetch(buildApiV1Url(path), { ...init, headers })
+  const response = await sessionFetch(buildApiV1Url(path), { ...init, headers })
   if (!response.ok) {
     const data = await response.json().catch(() => null)
     const planMessage =
