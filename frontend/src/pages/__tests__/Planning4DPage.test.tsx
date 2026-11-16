@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import {MemoryRouter} from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Planning4DPage from '../Planning4DPage';
@@ -16,7 +17,7 @@ const fixture = vi.hoisted(() => ({
 }));
 vi.mock('@/components/bim/BimWorkspace', () => ({
   default: ({ children }: { children: (workspace: WorkspaceFixture) => ReactNode }) =>
-    children(fixture.workspace),
+    <MemoryRouter>{children(fixture.workspace)}</MemoryRouter>,
 }));
 vi.mock('@/services/schedules.service', () => ({
   schedulesService: {

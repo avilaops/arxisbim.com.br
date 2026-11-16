@@ -19,6 +19,9 @@ cenário e comparação A/B com PDF, reload e celular. Evidências e limites em
 Em 16/11, S30 foi comprovado com três cenários, referência trocável, deltas,
 ranking, pendências, reload, PDF e celular. A matriz aceita de 2 a 20 cenários.
 Ver `documentation/MATRIZ-FINANCEIRA-S30.md`.
+O planejamento também oferece Kanban por etapas editáveis, integrado às mesmas
+atividades do Gantt, com persistência e prova em 16/11. É organização do
+planejamento; não registra execução real. Ver `documentation/KANBAN-PLANEJAMENTO.md`.
 Próximas frentes: propriedades no viewer e demais critérios de importação,
 branching e release. Não há percentual global inferido.
 
