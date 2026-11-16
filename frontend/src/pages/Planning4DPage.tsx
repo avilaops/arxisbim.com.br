@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {useSearchParams} from 'react-router-dom';
 import PlanningKanban from '@/components/bim/PlanningKanban';
+import PlanningImport from '@/components/bim/PlanningImport';
 import BimWorkspace, { type BimSelection } from '@/components/bim/BimWorkspace';
 import {
   schedulesService,
@@ -250,6 +251,7 @@ function PlanningContent({ workspace }: { workspace: BimSelection }) {
           {notice}
         </p>
       )}
+      <PlanningImport projectId={projectId} scenarioId={scenarioId} scheduleName={schedule?.name||''} onImported={()=>{resetActivity();setComparison(null);setAttempt(value=>value+1);}}/>
       {!schedule ? (
         <section className="planning4d-card">
           <h2>O cenário ainda não tem cronograma</h2>

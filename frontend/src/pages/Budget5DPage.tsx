@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import BimWorkspace, { type BimSelection } from '@/components/bim/BimWorkspace'
 import FinancialMatrix from '@/components/bim/FinancialMatrix'
+import BudgetReport from '@/components/bim/BudgetReport'
 import { schedulesService } from '@/services/schedules.service'
 import {
   bimCosts,
@@ -697,6 +698,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
           </div>
         </section>
       )}
+      {!loading && <BudgetReport key={`report:${budgetRevision}`} scenarioId={w.scenarioId}/>}
       {!loading && <FinancialMatrix key={budgetRevision} projectId={w.projectId} scenarioId={w.scenarioId} scenarios={w.scenarios}/>}
       <section className="bim-panel">
         <h2>Comparação financeira de cenários</h2>

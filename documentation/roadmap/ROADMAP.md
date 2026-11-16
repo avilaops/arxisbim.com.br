@@ -22,6 +22,11 @@ Ver `documentation/MATRIZ-FINANCEIRA-S30.md`.
 O planejamento também oferece Kanban por etapas editáveis, integrado às mesmas
 atividades do Gantt, com persistência e prova em 16/11. É organização do
 planejamento; não registra execução real. Ver `documentation/KANBAN-PLANEJAMENTO.md`.
+Na mesma data foram publicados importação e reimportação CSV/MS Project XML/Primavera XER
+com prévia, preservação de vínculos e recusa de arquivos inválidos; o 5D ganhou resumo por
+pavimento, memória por serviço e XLSX completo. A prova publicada conferiu os três formatos,
+reload, vínculos IFC/Kanban e as quatro abas do XLSX. Limites e evidências em
+`documentation/IMPORTACOES-RELATORIOS-4D-5D.md` e `documentation/provas/importacoes-relatorios/`.
 Próximas frentes: propriedades no viewer e demais critérios de importação,
 branching e release. Não há percentual global inferido.
 
