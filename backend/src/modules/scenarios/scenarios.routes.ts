@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import type { Sql } from 'postgres';
 import { authenticateRequest } from '../../core/auth/middleware.js';
+import { registerFinancialMatrixRoutes } from './financial-matrix.routes.js';
 import {
   createScenarioHandler,
   getScenariosHandler,
@@ -17,6 +18,7 @@ import {
 export function createScenariosRoutes(sql: Sql) {
   return async (fastify: FastifyInstance) => {
     const auth = { preHandler: authenticateRequest };
+    registerFinancialMatrixRoutes(fastify,sql);
 
     // Existing scenarios endpoints
     fastify.get('/projects/:projectId/scenarios', auth, getScenariosHandler);

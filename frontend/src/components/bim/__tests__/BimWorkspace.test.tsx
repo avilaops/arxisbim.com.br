@@ -1,5 +1,5 @@
 import {fireEvent,render,screen,waitFor} from '@testing-library/react'
-import {MemoryRouter} from 'react-router-dom'
+import {MemoryRouter,useLocation} from 'react-router-dom'
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest'
 import BimWorkspace from '../BimWorkspace'
 
@@ -8,6 +8,14 @@ beforeEach(()=>localStorage.setItem('arxisvr_token','synthetic-test-token'))
 afterEach(()=>{vi.unstubAllGlobals();localStorage.clear()})
 const mount=()=>render(<MemoryRouter><BimWorkspace title="Orçamento 5D" description="Custos reais">{w=><p>{w.projectId} • {w.scenarioId} • {w.modelId}</p>}</BimWorkspace></MemoryRouter>)
 describe('contexto compartilhado BIM',()=>{
+ it('preserva parâmetros da matriz ao atualizar o contexto do projeto',async()=>{
+  vi.stubGlobal('fetch',vi.fn(async(input:any)=>{const p=new URL(String(input),'http://localhost').pathname;return {ok:true,json:async()=>p.endsWith('/projects')?{items:[{id:'p1',name:'Torre'}]}:p.includes('/ifc/project/')?[{id:'m1',originalName:'Modelo.ifc'}]:[{id:'s1',name:'Base'}]}}))
+  function Location(){return <output aria-label="URL">{useLocation().search}</output>}
+  render(<MemoryRouter initialEntries={['/orcamento?projeto=p1&matriz=s1,s2&referencia=s2']}><BimWorkspace title="5D" description="Custos">{()=> <p>Carregado</p>}</BimWorkspace><Location/></MemoryRouter>)
+  await screen.findByText('Carregado')
+  expect(new URLSearchParams(screen.getByLabelText('URL').textContent||'').get('matriz')).toBe('s1,s2')
+  expect(new URLSearchParams(screen.getByLabelText('URL').textContent||'').get('referencia')).toBe('s2')
+ })
  it('troca projeto e carrega somente seus cenários e modelos',async()=>{
   vi.stubGlobal('fetch',vi.fn(async(input:any)=>{const url=new URL(String(input),'http://localhost');const p=url.pathname;const id=p.includes('/p2')?'p2':'p1';return {ok:true,json:async()=>p.endsWith('/projects')?{items:[{id:'p1',name:'Torre A'},{id:'p2',name:'Torre B'}]}:p.includes('/ifc/project/')?[{id:'m-'+id,originalName:id+'.ifc'}]:[{id:'s-'+id,name:'Cenário '+id}]}}))
   mount();await screen.findByText('p1 • s-p1 • m-p1')

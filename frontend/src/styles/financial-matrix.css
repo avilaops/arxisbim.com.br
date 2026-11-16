@@ -1,0 +1,85 @@
+.financial-matrix {
+  display: grid;
+  gap: 18px;
+}
+.financial-matrix .bim-panel-heading {
+  margin-bottom: 0;
+}
+.financial-matrix-selection {
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+.financial-matrix-selection legend {
+  font-size: 12px;
+  color: var(--c-text2);
+  padding: 0 6px;
+}
+.financial-matrix-selection label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  cursor: pointer;
+}
+.bim-page .financial-matrix-selection input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  flex: 0 0 18px;
+  accent-color: var(--c-blue);
+}
+.financial-matrix caption {
+  text-align: left;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.financial-matrix .bim-table {
+  min-width: 1050px;
+}
+.financial-matrix .bim-table tbody th {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 13px;
+  color: var(--c-text);
+  white-space: normal;
+  min-width: 190px;
+}
+.financial-matrix .bim-table small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--c-text3);
+  white-space: normal;
+}
+.financial-matrix .bim-table .financial-matrix-issue {
+  color: #9f2420;
+}
+.financial-matrix-warnings {
+  padding-left: 20px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-text2);
+  line-height: 1.7;
+}
+@media (max-width: 800px) {
+  .financial-matrix-selection {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 500px) {
+  .financial-matrix-selection {
+    grid-template-columns: 1fr;
+  }
+  .financial-matrix {
+    gap: 14px;
+  }
+}

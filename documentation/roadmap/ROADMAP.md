@@ -1,13 +1,13 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 14/11/2026 • módulos 4D/5D publicados e comparação financeira A/B comprovada.
+**Última atualização:** 16/11/2026 • S30 atingido com matriz financeira de 2 a 20 cenários e PDF.
 **Versão:** 3.0, 32 sprints atômicos
-**Status:** três marcos completos e S30 parcialmente comprovado entre duas
-alternativas. Planejamento, quantitativos e custos agora têm áreas próprias
-na interface. O painel de propriedades e a matriz financeira com N cenários
-continuam pendentes. A auditoria de 02/09 é histórica.
+**Status:** quatro marcos funcionais comprovados. Planejamento, quantitativos,
+custos e matriz financeira estão disponíveis na interface. Isso não conclui
+todos os sprints: propriedades, importações, branching e release ainda têm
+critérios pendentes. A auditoria de 02/09 é histórica.
 
-**S12, S18 e S26 atingidos**, com prova no navegador da aplicação publicada.
+**S12, S18, S26 e S30 atingidos**, com prova no navegador da aplicação publicada.
 S12/S18 foram revalidados em 14/11, e o S26 demonstrou cronogramas distintos,
 propagação, diferença de dez dias, estado visual por data, reload e celular.
 Evidência: `documentation/S26-PROVA-BROWSER.md`.
@@ -16,8 +16,11 @@ Os módulos `/planejamento` e `/orcamento` oferecem Gantt/CPM, edição de
 atividades e predecessoras, preparo de quantitativos reais do IFC, preços por
 cenário e comparação A/B com PDF, reload e celular. Evidências e limites em
 `documentation/MODULOS-4D-5D.md` e `documentation/provas/modulos-4d-5d/`.
-Próximas frentes: propriedades no viewer, matriz com N cenários e demais
-critérios de importação, branching e release. Não há percentual global inferido.
+Em 16/11, S30 foi comprovado com três cenários, referência trocável, deltas,
+ranking, pendências, reload, PDF e celular. A matriz aceita de 2 a 20 cenários.
+Ver `documentation/MATRIZ-FINANCEIRA-S30.md`.
+Próximas frentes: propriedades no viewer e demais critérios de importação,
+branching e release. Não há percentual global inferido.
 
 **Infra atual:** app e API em Docker no `apps-noclient`; banco `arxisvr` no
 PostgreSQL 18 de `applications`, via WireGuard; autenticação pelo Auth oficial.
@@ -43,8 +46,8 @@ A cadeia de cenários é o ativo intransferível.
 
 ## Marcos Críticos: Não Movem
 
-> **Três dos quatro marcos comprovados:** S12 e S18 revalidados em 14/11/2026;
-> S26 atingido nesta mesma data. S30 tem fluxo A/B real; falta sua matriz com N cenários. Marco só fecha com fluxo real na
+> **Quatro marcos comprovados:** S12 e S18 revalidados em 14/11/2026;
+> S26 atingido nesta mesma data e S30 em 16/11/2026. Marco só fecha com fluxo real na
 > aplicação publicada, incluindo recarga; existência de backend não basta.
 
 | Marco | Sprint | Valida | Estado | Por quê |
@@ -52,7 +55,7 @@ A cadeia de cenários é o ativo intransferível.
 | ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
 | ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
 | ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ✅ **ATINGIDO 14/11/2026** | Dois cronogramas criados na tela, categorias IFC vinculadas, predecessoras propagadas, dez dias de diferença, régua alterando a imagem de cada cenário, reload e celular. Ver `documentation/S26-PROVA-BROWSER.md`. |
-| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ⚠️ **A/B comprovado 14/11/2026 • matriz N pendente** | Quantitativos, preços e cálculo persistido pela tela; A R$ 1.631,50, B R$ 2.281,50, delta R$ 650,00 e dez dias; recomendação e PDF. Comparação de duas alternativas por vez. Ver `documentation/MODULOS-4D-5D.md`. |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ✅ **ATINGIDO 16/11/2026** | Matriz de 2 a 20 cenários; prova com três alternativas, referência A/B, deltas, ranking e pendências, reload, PDF e celular. Cenários incompletos não recebem vantagem no ranking. Ver `documentation/MATRIZ-FINANCEIRA-S30.md`. |
 
 **O viewer vivo** oferece projetos, upload IFC, cenários com câmera e
 visibilidade, comparação visual e cronograma 4D por cenário. O painel de

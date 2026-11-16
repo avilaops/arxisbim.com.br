@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import BimWorkspace, { type BimSelection } from '@/components/bim/BimWorkspace'
+import FinancialMatrix from '@/components/bim/FinancialMatrix'
 import { schedulesService } from '@/services/schedules.service'
 import {
   bimCosts,
@@ -61,6 +62,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
   const [otherScenario, setOtherScenario] = useState('')
   const [comparison, setComparison] = useState<FinancialComparison | null>(null)
   const [offset, setOffset] = useState(0)
+  const [budgetRevision, setBudgetRevision] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -94,6 +96,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
           : qs.categories?.[0]?.ifcType || '',
       )
       setError('')
+      setBudgetRevision(value=>value+1)
     } catch (e) {
       setError(
         e instanceof Error ? e.message : 'Não foi possível abrir o orçamento.',
@@ -694,6 +697,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
           </div>
         </section>
       )}
+      {!loading && <FinancialMatrix key={budgetRevision} projectId={w.projectId} scenarioId={w.scenarioId} scenarios={w.scenarios}/>}
       <section className="bim-panel">
         <h2>Comparação financeira de cenários</h2>
         <p>

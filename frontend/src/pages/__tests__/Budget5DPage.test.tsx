@@ -2,6 +2,7 @@ import {render,screen,fireEvent,waitFor} from '@testing-library/react'
 import {beforeEach,describe,it,expect,vi} from 'vitest'
 import Budget5DPage from '../Budget5DPage'
 import {bimCosts} from '@/services/bim-costs.service'
+vi.mock('@/components/bim/FinancialMatrix',()=>({default:()=> <h2>Matriz de teste</h2>}))
 import {schedulesService} from '@/services/schedules.service'
 vi.mock('@/services/schedules.service',()=>({schedulesService:{doCenario:vi.fn()}}))
 vi.mock('@/services/bim-costs.service',async importOriginal=>({...await importOriginal<any>(),bimCosts:{quantities:vi.fn(),tables:vi.fn(),calculation:vi.fn(),items:vi.fn(),prepare:vi.fn(),createTable:vi.fn(),createItem:vi.fn(),priceCategory:vi.fn(),recalculate:vi.fn()}}))
@@ -14,6 +15,14 @@ beforeEach(()=>{
  vi.mocked(bimCosts.items).mockResolvedValue([])
 })
 describe('Orçamento 5D',()=>{
+ it('aguarda a carga inicial antes de oferecer a matriz para evitar descartar uma comparação em andamento',async()=>{
+  let resolve!: (value:any)=>void
+  vi.mocked(bimCosts.calculation).mockReturnValue(new Promise(done=>{resolve=done}))
+  render(<Budget5DPage/>);await screen.findByRole('button',{name:'Preparar quantitativos do IFC'})
+  expect(screen.queryByRole('heading',{name:'Matriz de teste'})).not.toBeInTheDocument()
+  resolve({scenario_id:'scenario',total_cost:'0.00',element_count:0,elements:[],breakdown:{by_type:{}}})
+  expect(await screen.findByRole('heading',{name:'Matriz de teste'})).toBeInTheDocument()
+ })
  it('identifica origem divergente e impede aplicar preço ao IFC diferente',async()=>{
   vi.mocked(bimCosts.quantities).mockResolvedValue({items:[],total:1,categories:[{ifcType:'IFCWALL',elementCount:1,areaM2:'10',volumeM3:null,lengthM:null}],modelVersionId:'v2',ifcModelId:'other-model'})
   vi.mocked(bimCosts.tables).mockResolvedValue([{id:'table',project_id:'project',scenario_id:'scenario',name:'Tabela base'}])
