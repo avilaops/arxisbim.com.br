@@ -52,7 +52,7 @@
         "@opentelemetry/exporter-trace-otlp-proto": "^0.301.1",
         "@opentelemetry/sdk-metrics": "^3.1.1",
         "@opentelemetry/sdk-node": "^0.301.1",
-        "@react-pdf/renderer": "^4.0.0",
+        "@react-pdf/renderer": "^4.9.0",
         "@sentry/node": "^11.10.0",
         "bcrypt": "^6.0.0",
         "bcryptjs": "^3.0.3",
