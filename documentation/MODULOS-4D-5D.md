@@ -87,7 +87,8 @@ segunda foi validada após a espera. Nenhuma migração nova foi necessária.
 
 ## Limites desta entrega
 
-Comparação financeira de duas alternativas por vez; pesos de 60% para custo e
+Desde 16/11/2026, a [matriz S30](MATRIZ-FINANCEIRA-S30.md) compara de 2 a 20
+alternativas, além da comparação A/B anterior; pesos de 60% para custo e
 40% para prazo. A cobertura dos itens orçados precisa ser considerada antes de
 usar a recomendação. Importação MS Project/Primavera, histórico completo de
 branching, Presentation Studio e critérios de carga/SLA do release continuam

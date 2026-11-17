@@ -132,9 +132,12 @@ export default function BimWorkspace({
   useEffect(() => {
     if (!projectId) return
     localStorage.setItem('arxisvr_project_id', projectId)
-    const next = new URLSearchParams({ projeto: projectId })
+    const next = new URLSearchParams(query)
+    next.set('projeto', projectId)
     if (scenarioId) next.set('cenario', scenarioId)
+    else next.delete('cenario')
     if (modelId) next.set('modelo', modelId)
+    else next.delete('modelo')
     if (query.toString() !== next.toString()) setQuery(next, { replace: true })
   }, [projectId, scenarioId, modelId, query, setQuery])
 
