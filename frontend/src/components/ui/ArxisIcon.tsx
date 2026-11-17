@@ -5,6 +5,8 @@ export type ArxisIconName =
   | 'recent'
   | 'viewer'
   | 'compare'
+  | 'planning'
+  | 'budget'
   | 'account'
   | 'admin'
   | 'projects'
@@ -38,6 +40,8 @@ export default function ArxisIcon({ name, size = 18, ...props }: ArxisIconProps)
   }
 
   const drawings: Record<ArxisIconName, ReactNode> = {
+    planning: <><rect x="3" y="5" width="18" height="16" rx="2" {...common}/><path d="M7 3v4M17 3v4M3 10h18M7 14h5M10 17h7" {...common}/><path d="M7 14h2" {...common} stroke="#f36b21"/></>,
+    budget: <><path d="m4 7 8-4 8 4-8 4-8-4Z M4 7v10l8 4 8-4V7M12 11v10" {...common}/><path d="M16 12v5M14.5 13.5h3M14.5 16h3" {...common} stroke="#f36b21"/></>,
     home: <><path d="M3.5 10.5 12 3l8.5 7.5" {...common} /><path d="M5.5 9.5V20h13V9.5M9 20v-5h6v5" {...common} /><path d="m9.6 7.8 2.4-2.1 2.4 2.1" {...common} stroke="#f36b21" /></>,
     recent: <><circle cx="12" cy="12" r="8.5" {...common} /><path d="M12 7v5l3.4 2" {...common} /><path d="M5.8 5.8 4.5 4.5" {...common} stroke="#f36b21" /></>,
     viewer: <><path d="m12 2.8 8 4.6v9.2l-8 4.6-8-4.6V7.4l8-4.6Z" {...common} /><path d="M4.4 7.6 12 12l7.6-4.4M12 12v9" {...common} /><path d="m12 2.8 2.3 1.3" {...common} stroke="#f36b21" /></>,

@@ -1,19 +1,23 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 14/11/2026 • S12/S18 revalidados e S26 ★ atingido.
+**Última atualização:** 14/11/2026 • módulos 4D/5D publicados e comparação financeira A/B comprovada.
 **Versão:** 3.0, 32 sprints atômicos
-**Status:** três dos quatro marcos funcionais comprovados. O backend continua
-à frente da interface em propriedades, quantitativos e custos. A auditoria de
-02/09 é histórica; a situação atual está nas provas por marco.
+**Status:** três marcos completos e S30 parcialmente comprovado entre duas
+alternativas. Planejamento, quantitativos e custos agora têm áreas próprias
+na interface. O painel de propriedades e a matriz financeira com N cenários
+continuam pendentes. A auditoria de 02/09 é histórica.
 
 **S12, S18 e S26 atingidos**, com prova no navegador da aplicação publicada.
 S12/S18 foram revalidados em 14/11, e o S26 demonstrou cronogramas distintos,
 propagação, diferença de dez dias, estado visual por data, reload e celular.
 Evidência: `documentation/S26-PROVA-BROWSER.md`.
 
-Próxima frente: tornar propriedades e quantitativos utilizáveis na interface,
-seguida da entrada de custos por cenário e do marco **S30 ★**. Não há percentual
-global inferido da contagem de marcos.
+Os módulos `/planejamento` e `/orcamento` oferecem Gantt/CPM, edição de
+atividades e predecessoras, preparo de quantitativos reais do IFC, preços por
+cenário e comparação A/B com PDF, reload e celular. Evidências e limites em
+`documentation/MODULOS-4D-5D.md` e `documentation/provas/modulos-4d-5d/`.
+Próximas frentes: propriedades no viewer, matriz com N cenários e demais
+critérios de importação, branching e release. Não há percentual global inferido.
 
 **Infra atual:** app e API em Docker no `apps-noclient`; banco `arxisvr` no
 PostgreSQL 18 de `applications`, via WireGuard; autenticação pelo Auth oficial.
@@ -40,7 +44,7 @@ A cadeia de cenários é o ativo intransferível.
 ## Marcos Críticos: Não Movem
 
 > **Três dos quatro marcos comprovados:** S12 e S18 revalidados em 14/11/2026;
-> S26 atingido nesta mesma data. Falta S30. Marco só fecha com fluxo real na
+> S26 atingido nesta mesma data. S30 tem fluxo A/B real; falta sua matriz com N cenários. Marco só fecha com fluxo real na
 > aplicação publicada, incluindo recarga; existência de backend não basta.
 
 | Marco | Sprint | Valida | Estado | Por quê |
@@ -48,11 +52,13 @@ A cadeia de cenários é o ativo intransferível.
 | ★ Primeiro cenário salvo | **S12** | "Usuários querem comparar alternativas?" | ✅ **ATINGIDO 03/09/2026** | Provado em browser real na aplicação publicada, 9/9 passos: cria cenário, guarda a câmera, um segundo cenário guarda câmera **diferente**, sobrevivem ao reload e a troca A↔B reaplica o estado. Evidência: `documentation/S12-PROVA-BROWSER.md`. |
 | ★ Primeira comparação visual | **S18** | "Side-by-side resolve a decisão visual?" | ✅ **ATINGIDO 09/09/2026** (split em 04/09; estado real em 09/09) | Provado em browser real: cenários que diferem em **visibilidade por categoria IFC** (não só câmera), split A\|B com o que só um lado mostra destacado, legenda vinda do estado, câmera sincronizada, PNG exportado com a diferença, reload mantém. 28 passos em três rodadas. Evidência: `documentation/S18-PROVA-BROWSER.md`. |
 | ★ Primeira comparação temporal | **S26** | "Diferença de prazo entre cenários importa?" | ✅ **ATINGIDO 14/11/2026** | Dois cronogramas criados na tela, categorias IFC vinculadas, predecessoras propagadas, dez dias de diferença, régua alterando a imagem de cada cenário, reload e celular. Ver `documentation/S26-PROVA-BROWSER.md`. |
-| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ☐ **não atingido** | Há rotas de comparação financeira e PDF no backend. Faltam entrada de custos utilizável e integração à tela, seguidas da prova em produção. |
+| ★ Primeira comparação financeira | **S30** | "Tabela custo+prazo fecha venda?" | ⚠️ **A/B comprovado 14/11/2026 • matriz N pendente** | Quantitativos, preços e cálculo persistido pela tela; A R$ 1.631,50, B R$ 2.281,50, delta R$ 650,00 e dez dias; recomendação e PDF. Comparação de duas alternativas por vez. Ver `documentation/MODULOS-4D-5D.md`. |
 
 **O viewer vivo** oferece projetos, upload IFC, cenários com câmera e
 visibilidade, comparação visual e cronograma 4D por cenário. O painel de
-informações ainda é um estado vazio; propriedades e custos não estão concluídos.
+informações ainda é um estado vazio. Os novos módulos oferecem planejamento e
+orçamento por cenário; preços são fornecidos pelo usuário, sem importação de
+tabela SINAPI oficial nesta entrega.
 
 ---
 

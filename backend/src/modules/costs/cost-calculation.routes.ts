@@ -2,12 +2,14 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { CostCalculatorService } from './cost-calculator.service.js';
 import { CostCacheService } from './cost-cache.service.js';
 import type { Sql } from 'postgres';
+import { installCostAccess } from './cost-access.js';
 
 export function createCostCalculationRoutes(sql: Sql) {
   const calculatorService = new CostCalculatorService(sql);
   const cacheService = new CostCacheService(sql);
 
   return async (fastify: FastifyInstance) => {
+    installCostAccess(fastify, sql);
     // POST /api/v1/scenarios/:scenarioId/cost-calculation/recalculate
     fastify.post<{ Params: { scenarioId: string } }>(
       '/scenarios/:scenarioId/cost-calculation/recalculate',
@@ -42,6 +44,9 @@ export function createCostCalculationRoutes(sql: Sql) {
           reply.code(200).send(result);
         } catch (err) {
           fastify.log.error(err);
+          if ((err as { statusCode?: number }).statusCode === 409) {
+            return reply.code(409).send({ error: (err as Error).message });
+          }
           reply
             .code(500)
             .send({ error: 'Failed to calculate scenario cost' });
@@ -86,6 +91,9 @@ export function createCostCalculationRoutes(sql: Sql) {
           reply.send(calculation);
         } catch (err) {
           fastify.log.error(err);
+          if ((err as { statusCode?: number }).statusCode === 409) {
+            return reply.code(409).send({ error: (err as Error).message });
+          }
           reply
             .code(500)
             .send({ error: 'Failed to fetch cost calculation' });
@@ -133,6 +141,9 @@ export function createCostCalculationRoutes(sql: Sql) {
           });
         } catch (err) {
           fastify.log.error(err);
+          if ((err as { statusCode?: number }).statusCode === 409) {
+            return reply.code(409).send({ error: (err as Error).message });
+          }
           reply
             .code(500)
             .send({ error: 'Failed to fetch cost breakdown' });

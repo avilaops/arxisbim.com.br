@@ -39,6 +39,7 @@ export const CostItemSchema = z.object({
 
 export const CreateCostItemSchema = CostItemSchema.omit({
   id: true,
+  cost_table_id: true,
   created_at: true,
   updated_at: true,
 });

@@ -1,4 +1,5 @@
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
 import ViewerToolbar from '@/components/viewer/ViewerToolbar'
 import ProjectModelsPanel from '@/components/viewer/ProjectModelsPanel'
@@ -62,6 +63,11 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export default function Viewer3DPage() {
+  const [contextQuery] = useSearchParams()
+  const requestedModelId = contextQuery.get('model') || ''
+  const requestedScenarioId = contextQuery.get('scenario') || ''
+  const appliedRouteContext = useRef('')
+  const animatedRouteContext = useRef('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [projectsOpen, setProjectsOpen] = useState(false)
   const [propertiesOpen, setPropertiesOpen] = useState(false)
@@ -157,13 +163,13 @@ export default function Viewer3DPage() {
       const result = await apiRequest<ViewerModel[]>(`/ifc/project/${projectId}`)
       setModels(result)
       setSelectedModelId((current) =>
-        result.some((model) => model.id === current) ? current : '',
+        result.some((model) => model.id === requestedModelId) ? requestedModelId : result.some((model) => model.id === current) ? current : '',
       )
     } catch (loadError) {
       setModels([])
       setError(loadError instanceof Error ? loadError.message : 'Falha ao carregar modelos.')
     }
-  }, [])
+  }, [requestedModelId])
 
   useEffect(() => {
     let cancelled = false
@@ -212,7 +218,7 @@ export default function Viewer3DPage() {
   // --- S12: cenários -------------------------------------------------------
 
   /** Põe o viewer no estado guardado no cenário. */
-  const aplicarCenario = (scenario: Scenario) => {
+  const aplicarCenario = useCallback((scenario: Scenario) => {
     const viewer = viewerRef.current
     if (!viewer?.pronto()) {
       setError('Abra um modelo IFC antes de trocar de cenário.')
@@ -224,7 +230,17 @@ export default function Viewer3DPage() {
     setOcultos(ocultosDoCenario)
     setActiveScenarioId(scenario.id)
     setMessage(`Cenário "${scenario.name}" aplicado.`)
-  }
+  }, [])
+
+  useEffect(() => {
+    const key = `${selectedModelId}:${requestedScenarioId}`
+    if (!selectedModelId || !requestedScenarioId || !categorias.length || appliedRouteContext.current === key) return
+    const scenario = scenarios.find(item => item.id === requestedScenarioId)
+    if (!scenario || !viewerRef.current?.pronto()) return
+    appliedRouteContext.current = key
+    aplicarCenario(scenario)
+    setCronogramaAberto(true)
+  }, [selectedModelId, requestedScenarioId, categorias, scenarios, aplicarCenario])
 
   const selecionarCenario = async (scenarioId: string) => {
     const local = scenarios.find((item) => item.id === scenarioId)
@@ -333,7 +349,16 @@ export default function Viewer3DPage() {
     void carregarCronograma(selectedProjectId, activeScenarioId)
   }, [selectedProjectId, activeScenarioId, carregarCronograma])
 
-  const janela = janelaDoCronograma(cronograma?.activities ?? [])
+  const janela = useMemo(() => janelaDoCronograma(cronograma?.activities ?? []), [cronograma])
+
+  useEffect(() => {
+    const key = `${selectedModelId}:${requestedScenarioId}`
+    if (!requestedScenarioId || activeScenarioId !== requestedScenarioId || cronograma?.scenarioId !== requestedScenarioId || !janela || animatedRouteContext.current === key) return
+    if (!cronograma.activities?.some(activity => activity.elements?.length)) return
+    animatedRouteContext.current = key
+    setDataRegua(janela.inicio)
+    setRegua(true)
+  }, [selectedModelId, requestedScenarioId, activeScenarioId, cronograma, janela])
 
   /** Traduz categoria IFC para GlobalId e grava o vínculo da atividade. */
   const vincularCategoria = async (activityId: string, tiposIfc: string[]) => {

@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, BarChart2, Box, Inbox, ClipboardList } from 'lucide-react'
 import AppShell from '@/components/layout/AppShell'
 import { dashboardService, type DashboardData } from '@/services/dashboard.service'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
+import '@/styles/bim-workspace.css'
 
 // ── Action label translation map ────────────────────────────
 const ACTION_LABELS: Record<string, string> = {
@@ -330,6 +331,12 @@ export default function DashboardPage() {
             </button>
           </div>
         )}
+
+        <section className="dash-modules" aria-label="Módulos do projeto BIM">
+          <Link className="dash-module" to="/app"><span className="bim-eyebrow">01 • Modelo</span><h2>Visualizador 3D</h2><p>Abra seu IFC e salve alternativas com câmera e visibilidade.</p><strong>Abrir modelos →</strong></Link>
+          <Link className="dash-module" to="/planejamento"><span className="bim-eyebrow">02 • Prazo</span><h2>Planejamento 4D</h2><p>Organize atividades, encadeie etapas e acompanhe o Gantt do cenário.</p><strong>Planejar a obra →</strong></Link>
+          <Link className="dash-module" to="/orcamento"><span className="bim-eyebrow">03 • Custo</span><h2>Orçamento 5D</h2><p>Extraia quantitativos do IFC, aplique preços e compare o custo das alternativas.</p><strong>Orçar o projeto →</strong></Link>
+        </section>
 
         {/* Analytics cards */}
         <div className="dash-kpis" style={{ display: 'grid', gap: '10px' }}>

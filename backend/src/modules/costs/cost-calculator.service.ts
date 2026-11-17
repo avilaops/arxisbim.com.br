@@ -1,7 +1,9 @@
 import type { Sql } from 'postgres';
-import { Decimal } from 'decimal.js';
-import { CostCacheService } from './cost-cache.service.js';
+import { Decimal as BaseDecimal } from 'decimal.js';
 import { CostBillingService } from './cost-billing.service.js';
+import { lockCostProject, assertUnambiguousCostIdentity } from './cost-transaction.js';
+const Decimal = BaseDecimal.clone({ precision: 40, rounding: BaseDecimal.ROUND_HALF_UP });
+type Decimal = BaseDecimal;
 
 export interface CostElement {
   global_id: string;
@@ -33,26 +35,22 @@ export interface CostCalculation {
 }
 
 export class CostCalculatorService {
-  // Configurar Decimal.js para finanças (2 casas decimais)
-  private readonly DECIMAL_CONFIG = { precision: 14, rounding: 1 as const }; // ROUND_HALF_UP
-  private cache: CostCacheService;
-  private billing: CostBillingService;
-
-  constructor(private sql: Sql) {
-    Decimal.set(this.DECIMAL_CONFIG);
-    this.cache = new CostCacheService(sql);
-    this.billing = new CostBillingService(sql);
-  }
+  constructor(private sql: Sql, private inTransaction = false) {}
 
   /**
    * Calcula custo total do cenário
    * Junta: quantity (S20) × unit_price (S19/S21)
    */
   async calculateScenarioCost(scenarioId: string): Promise<CostCalculation> {
-    // Verificar cache válido
-    const cached = this.cache.get(scenarioId);
-    if (cached) return cached;
-
+    if (!this.inTransaction) {
+      return this.sql.begin(async tx => {
+        const [scenario] = await tx`SELECT project_id FROM scenarios WHERE id = ${scenarioId}`;
+        if (!scenario) throw Object.assign(new Error('Scenario not found'), { statusCode: 404 });
+        await lockCostProject(tx as unknown as Sql, scenario.project_id);
+        return new CostCalculatorService(tx as unknown as Sql, true).calculateScenarioCost(scenarioId);
+      });
+    }
+    await assertUnambiguousCostIdentity(this.sql, scenarioId);
     const startTime = Date.now();
 
     // Passo 1: Ler element_cost_links com preços
@@ -78,14 +76,19 @@ export class CostCalculatorService {
         COALESCE(ecl.override_price, ci.unit_price) as unit_price,
         ecl.override_price
       FROM element_cost_links ecl
+      JOIN scenarios s ON s.id = ecl.scenario_id
       JOIN cost_items ci ON ecl.cost_item_id = ci.id
+      JOIN cost_tables ct ON ct.id = ci.cost_table_id
       JOIN element_properties ep ON
         ep.global_id = ecl.element_global_id
+        AND ep.model_version_id = s.model_version_id
       WHERE ecl.scenario_id = ${scenarioId}
-      LIMIT 100000
+        AND ct.project_id = s.project_id
+        AND (ct.scenario_id IS NULL OR ct.scenario_id = s.id)
     `;
 
     if (links.length === 0) {
+      await this.saveCostCalculation(scenarioId, '0.00', { by_type: {}, by_storey: {}, by_category: {} }, 0);
       return {
         scenario_id: scenarioId,
         total_cost: '0.00',
@@ -130,7 +133,7 @@ export class CostCalculatorService {
         quantity: link.quantity,
         unit: link.quantity_unit,
         unit_price: link.unit_price,
-        total_cost: cost.toString(),
+        total_cost: cost.toFixed(2),
       });
 
       // Agregação por tipo
@@ -204,7 +207,7 @@ export class CostCalculatorService {
     };
 
     // Passo 4: Guardar no histórico
-    await this.saveCostCalculation(scenarioId, totalCost.toFixed(2), breakdown);
+    await this.saveCostCalculation(scenarioId, totalCost.toFixed(2), breakdown, links.length);
 
     const result: CostCalculation = {
       scenario_id: scenarioId,
@@ -216,19 +219,17 @@ export class CostCalculatorService {
       calculated_at: new Date(),
     };
 
-    // Passo 5: Cache result (5 min TTL)
-    this.cache.set(scenarioId, result);
-
     // Passo 6: Record billing snapshot
     try {
       const projectId = await this.getProjectIdForScenario(scenarioId);
       if (projectId) {
-        await this.billing.recordCostSnapshot(
-          scenarioId,
-          projectId,
-          result.total_cost,
-          result.element_count
-        );
+        // Optional billing failure must not abort the transaction that persists the budget.
+        const tx = this.sql as unknown as {
+          savepoint<T>(operation: (sql: Sql) => Promise<T>): Promise<T>;
+        };
+        await tx.savepoint(sql => new CostBillingService(sql).recordCostSnapshot(
+          scenarioId, projectId, result.total_cost, result.element_count
+        ));
       }
     } catch (err) {
       console.warn('[CostCalculator] Billing snapshot failed:', err);
@@ -278,33 +279,29 @@ export class CostCalculatorService {
   private async saveCostCalculation(
     scenarioId: string,
     totalCost: string,
-    breakdown: CostBreakdown
+    breakdown: CostBreakdown,
+    elementCount: number
   ): Promise<void> {
-    try {
-      await this.sql`
-        INSERT INTO cost_calculations (
-          scenario_id, total_cost, breakdown_by_type,
-          breakdown_by_storey, breakdown_by_category, element_count
-        ) VALUES (
-          ${scenarioId}, ${totalCost},
-          ${JSON.stringify(breakdown.by_type)},
-          ${JSON.stringify(breakdown.by_storey)},
-          ${JSON.stringify(breakdown.by_category)},
-          0
-        )
-      `;
+    await this.sql`
+      INSERT INTO cost_calculations (
+        scenario_id, total_cost, breakdown_by_type,
+        breakdown_by_storey, breakdown_by_category, element_count
+      ) VALUES (
+        ${scenarioId}, ${totalCost},
+        ${JSON.stringify(breakdown.by_type)}::text::jsonb,
+        ${JSON.stringify(breakdown.by_storey)}::text::jsonb,
+        ${JSON.stringify(breakdown.by_category)}::text::jsonb,
+        ${elementCount}
+      )
+    `;
 
-      // Denormalizar em scenarios para query rápida
-      await this.sql`
-        UPDATE scenarios
-        SET cached_total_cost = ${totalCost},
-            cached_cost_updated_at = NOW()
-        WHERE id = ${scenarioId}
-      `;
-    } catch (err) {
-      console.warn('[CostCalculator] Failed to save calculation:', err);
-      // Continua mesmo se falhar (não é crítico)
-    }
+    // Denormalizar em scenarios para query rápida
+    await this.sql`
+      UPDATE scenarios
+      SET cached_total_cost = ${totalCost},
+          cached_cost_updated_at = NOW()
+      WHERE id = ${scenarioId}
+    `;
   }
 
   /**
@@ -316,6 +313,7 @@ export class CostCalculatorService {
     const result = await this.sql<
       Array<{
         total_cost: string;
+        element_count: number;
         breakdown_by_type: Record<string, any>;
         breakdown_by_storey: Record<string, any>;
         breakdown_by_category: Record<string, any>;
@@ -323,11 +321,14 @@ export class CostCalculatorService {
       }>
     >`
       SELECT
-        total_cost, breakdown_by_type, breakdown_by_storey,
-        breakdown_by_category, calculated_at
-      FROM cost_calculations
-      WHERE scenario_id = ${scenarioId}
-      ORDER BY calculated_at DESC
+        cc.total_cost, cc.breakdown_by_type, cc.breakdown_by_storey,
+        cc.breakdown_by_category, cc.calculated_at, cc.element_count
+      FROM cost_calculations cc
+      JOIN scenarios s ON s.id = cc.scenario_id
+      WHERE cc.scenario_id = ${scenarioId}
+        AND s.cached_cost_updated_at IS NOT NULL
+        AND cc.total_cost = s.cached_total_cost
+      ORDER BY cc.calculated_at DESC
       LIMIT 1
     `;
 
@@ -343,7 +344,7 @@ export class CostCalculatorService {
         by_category: calc.breakdown_by_category,
       },
       elements: [], // não guardamos elementos no histórico
-      element_count: 0,
+      element_count: calc.element_count,
       execution_time_ms: 0,
       calculated_at: calc.calculated_at,
     };

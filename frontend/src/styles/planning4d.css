@@ -1,0 +1,352 @@
+.planning4d {
+  color: #173832;
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  font-size: 14px;
+}
+.planning4d *,
+.planning4d *::before,
+.planning4d *::after {
+  box-sizing: border-box;
+}
+.planning4d h2,
+.planning4d h3,
+.planning4d h4,
+.planning4d p {
+  margin: 0;
+}
+.planning4d h2 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+.planning4d h3 {
+  font-size: 17px;
+}
+.planning4d h4 {
+  font-size: 14px;
+}
+.planning4d p {
+  color: #526a65;
+  line-height: 1.6;
+}
+.planning4d-card,
+.planning4d-empty {
+  background: white;
+  border: 1px solid #deebe6;
+  border-radius: 14px;
+  padding: 22px;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.planning4d-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.planning4d-toolbar > div {
+  display: grid;
+  gap: 6px;
+}
+.planning4d-eyebrow {
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  color: #60766f;
+  font-weight: 700;
+}
+.planning4d button,
+.planning4d-primary {
+  background: #fff;
+  border: 1px solid #cbded6;
+  color: #205249;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 14px;
+  min-height: 42px;
+  border-radius: 8px;
+  text-decoration: none;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+.planning4d button:hover,
+.planning4d-primary:hover {
+  background: #ecf7f2;
+}
+.planning4d .planning4d-primary {
+  background: #087f6a;
+  border-color: #087f6a;
+  color: white;
+}
+.planning4d .planning4d-primary:hover {
+  background: #086958;
+}
+.planning4d button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.planning4d :is(button, a, input, select):focus-visible,
+.planning4d-table-scroll:focus-visible {
+  outline: 3px solid #2ba68b;
+  outline-offset: 3px;
+}
+.planning4d-kpis {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.planning4d-kpis > div {
+  border: 1px solid #deebe6;
+  border-radius: 12px;
+  padding: 18px;
+  background: #fff;
+  min-width: 0;
+}
+.planning4d-kpis dt {
+  color: #5b736b;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.planning4d-kpis dd {
+  margin: 0;
+  font-weight: 650;
+  font-size: clamp(18px, 2vw, 26px);
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.planning4d-kpis small {
+  font-size: 13px;
+  color: #62776f;
+  letter-spacing: 0;
+}
+.planning4d-badge {
+  background: #e8f5ef;
+  color: #08705c;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.planning4d-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.planning4d table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1060px;
+  text-align: left;
+  font-size: 12px;
+}
+.planning4d th,
+.planning4d td {
+  border-bottom: 1px solid #e8efec;
+  padding: 14px 10px;
+  vertical-align: middle;
+}
+.planning4d thead th {
+  background: #f5f9f7;
+  font-size: 11px;
+  color: #597169;
+  font-weight: 600;
+}
+.planning4d tbody th {
+  min-width: 130px;
+  max-width: 220px;
+  overflow-wrap: anywhere;
+}
+.planning4d tbody th small {
+  display: block;
+  font-weight: 400;
+  color: #6b7d76;
+  margin-top: 6px;
+}
+.planning4d-dependency {
+  display: block;
+  min-width: 120px;
+  max-width: 200px;
+  line-height: 1.5;
+}
+.planning4d-timeline-column {
+  min-width: 230px;
+}
+.planning4d-track {
+  height: 24px;
+  position: relative;
+  background: repeating-linear-gradient(
+    to right,
+    #f3f8f5 0,
+    #f3f8f5 calc(25% - 1px),
+    #dfece5 calc(25% - 1px),
+    #dfece5 25%
+  );
+  border-radius: 5px;
+  overflow: hidden;
+}
+.planning4d-track span {
+  position: absolute;
+  top: 5px;
+  height: 14px;
+  background: #18987c;
+  border-radius: 3px;
+  min-width: 3px;
+}
+.planning4d-row-actions {
+  display: flex;
+  gap: 6px;
+}
+.planning4d-row-actions button {
+  padding: 7px 9px;
+  font-size: 12px;
+  min-height: 38px;
+}
+.planning4d-columns {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.planning4d-side {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.planning4d-form,
+.planning4d-form fieldset {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.planning4d-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.planning4d-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+}
+.planning4d-form input,
+.planning4d-form select {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid #cbded6;
+  border-radius: 8px;
+  background: #fff;
+  color: #173832;
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+}
+.planning4d-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
+}
+.planning4d-predecessors {
+  border-top: 1px solid #e0ebe6;
+  padding-top: 20px;
+  display: grid;
+  gap: 14px;
+}
+.planning4d-predecessors p {
+  font-size: 12px;
+}
+.planning4d-predecessors ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.planning4d-predecessors li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.planning4d-predecessors li span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.planning4d-predecessors li button {
+  font-size: 12px;
+  padding: 7px 9px;
+}
+.planning4d-viewer {
+  background: #f1faf6;
+}
+.planning4d .planning4d-error {
+  padding: 14px 18px;
+  color: #9d2c27;
+  background: #fff1ef;
+  border: 1px solid #f3c8c1;
+  border-radius: 10px;
+}
+.planning4d .planning4d-notice {
+  padding: 12px 18px;
+  color: #176550;
+  background: #e9f7f0;
+  border-radius: 10px;
+}
+.planning4d-confirm {
+  border-color: #ebbc9a;
+}
+.planning4d-comparison {
+  background: #f1f8f4;
+  padding: 14px;
+  border-radius: 8px;
+  display: grid;
+  gap: 7px;
+}
+.planning4d-text-link {
+  color: #087f6a;
+  text-underline-offset: 3px;
+  line-height: 1.6;
+}
+@media (max-width: 1000px) {
+  .planning4d-columns {
+    grid-template-columns: 1fr;
+  }
+  .planning4d-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .planning4d {
+    gap: 14px;
+  }
+  .planning4d-card,
+  .planning4d-empty {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .planning4d-kpis {
+    gap: 10px;
+  }
+  .planning4d-kpis > div {
+    padding: 14px;
+  }
+  .planning4d-dates {
+    grid-template-columns: 1fr;
+  }
+  .planning4d-primary {
+    width: 100%;
+  }
+  .planning4d h2 {
+    font-size: 21px;
+  }
+}

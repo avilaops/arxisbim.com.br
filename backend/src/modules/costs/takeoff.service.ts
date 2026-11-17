@@ -1,4 +1,6 @@
 import type { Sql } from 'postgres';
+import { normalizeCostUnit } from './cost-access.js';
+import { lockCostProject, assertUnambiguousCostIdentity } from './cost-transaction.js';
 import { extractQuantity, buildSummaryByTypeAndStorey, type ExtractedQuantity, type TakeoffSummary, type QuantitySource } from './quantity-extractor.js';
 
 export interface TakeoffResult {
@@ -12,7 +14,7 @@ export interface TakeoffResult {
 }
 
 export class TakeoffService {
-  constructor(private sql: Sql) {}
+  constructor(private sql: Sql, private inTransaction = false) {}
 
   /**
    * Executa takeoff automático para um cenário
@@ -22,6 +24,15 @@ export class TakeoffService {
    * 4. Registra fonte e confiança
    */
   async runTakeoffForScenario(scenarioId: string): Promise<TakeoffResult> {
+    if (!this.inTransaction) return this.sql.begin(async tx => {
+      const [scenario] = await tx`SELECT project_id FROM scenarios WHERE id = ${scenarioId}`;
+      if (!scenario) throw Object.assign(new Error('Scenario not found'), { statusCode: 404 });
+      await lockCostProject(tx as unknown as Sql, scenario.project_id);
+      const result = await new TakeoffService(tx as unknown as Sql, true).runTakeoffForScenario(scenarioId);
+      await tx`UPDATE scenarios SET cached_total_cost = NULL, cached_cost_updated_at = NULL WHERE id = ${scenarioId}`;
+      return result;
+    });
+    await assertUnambiguousCostIdentity(this.sql, scenarioId);
     const startTime = Date.now();
 
     // Passo 1: Obter cenário + versão de modelo
@@ -43,8 +54,8 @@ export class TakeoffService {
     const costTableData = await this.sql<
       Array<{ id: string }>
     >`
-      SELECT id FROM cost_tables
-      WHERE scenario_id = ${scenarioId}
+      SELECT ct.id FROM cost_tables ct JOIN scenarios s ON s.id = ct.scenario_id
+      WHERE ct.scenario_id = ${scenarioId} AND ct.project_id = s.project_id
       LIMIT 1
     `;
     const cost_table_id = costTableData[0]?.id || null;
@@ -151,9 +162,9 @@ export class TakeoffService {
 
     // Obter cost_items da tabela (agrupados por tipo)
     const costItems = await this.sql<
-      Array<{ id: string; ifc_type_hint: string | null }>
+      Array<{ id: string; unit: string; ifc_type_hint: string | null }>
     >`
-      SELECT id, notes as ifc_type_hint
+      SELECT id, unit, notes as ifc_type_hint
       FROM cost_items
       WHERE cost_table_id = ${costTableId}
       LIMIT 1000
@@ -168,7 +179,7 @@ export class TakeoffService {
     // Criar mapping simples: cada elemento tenta linkar ao primeiro item compatível
     for (const qty of quantities) {
       // Se houver cost_item para este tipo, vincular
-      const item = costItems[0]; // simplificado: usar primeiro item
+      const item = costItems.find(item => item.ifc_type_hint?.trim().toLowerCase() === qty.ifc_type.toLowerCase() && normalizeCostUnit(item.unit) === normalizeCostUnit(qty.quantity.unit));
       if (!item) continue;
 
       try {
@@ -247,9 +258,11 @@ export class TakeoffService {
         ep.storey_id,
         ep.name as storey_name
       FROM element_cost_links ecl
+      JOIN scenarios s ON s.id = ecl.scenario_id
       JOIN cost_items ci ON ecl.cost_item_id = ci.id
       JOIN element_properties ep ON
         ep.global_id = ecl.element_global_id
+        AND ep.model_version_id = s.model_version_id
       WHERE ecl.scenario_id = ${scenarioId}
       GROUP BY ep.ifc_type, ep.storey_id, ep.name, ci.unit, ecl.quantity_source
       ORDER BY ep.storey_id, ep.ifc_type
@@ -295,8 +308,9 @@ export class TakeoffService {
           ELSE 'Estimado (Geometria)'
         END as confidence
       FROM element_cost_links ecl
+      JOIN scenarios s ON s.id = ecl.scenario_id
       JOIN cost_items ci ON ecl.cost_item_id = ci.id
-      JOIN element_properties ep ON ep.global_id = ecl.element_global_id
+      JOIN element_properties ep ON ep.global_id = ecl.element_global_id AND ep.model_version_id = s.model_version_id
       WHERE ecl.scenario_id = ${scenarioId}
       ORDER BY ep.storey_id, ep.ifc_type, ep.name
       LIMIT 10000

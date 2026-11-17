@@ -1,6 +1,9 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { CostsService } from './costs.service.js';
 import type { Sql } from 'postgres';
+import { z } from 'zod';
+import { installCostAccess } from './cost-access.js';
+import { ScenarioQuantitiesService } from './scenario-quantities.service.js';
 import {
   CreateCostTableSchema,
   UpdateCostTableSchema,
@@ -14,6 +17,18 @@ export function createCostsRoutes(sql: Sql) {
   const costsService = new CostsService(sql);
 
   return async (fastify: FastifyInstance) => {
+    installCostAccess(fastify, sql);
+    const quantities = new ScenarioQuantitiesService(sql);
+    fastify.get<{ Params: { scenarioId: string }; Querystring: { limit?: string; offset?: string } }>('/scenarios/:scenarioId/quantities', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+      const parsed = z.object({ limit: z.coerce.number().int().min(1).max(10000).default(1000), offset: z.coerce.number().int().min(0).default(0) }).safeParse(request.query);
+      if (!parsed.success) return reply.code(400).send({ error: 'Invalid pagination' });
+      return quantities.list(request.params.scenarioId, parsed.data.limit, parsed.data.offset);
+    });
+    fastify.post<{ Params: { scenarioId: string } }>('/scenarios/:scenarioId/price-category', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+      const parsed = z.object({ costItemId: z.string().uuid(), ifcType: z.string().regex(/^Ifc[A-Za-z0-9]+$/), quantityUnit: z.enum(['m2', 'm3', 'm²', 'm³', 'm', 'un']) }).safeParse(request.body);
+      if (!parsed.success) return reply.code(400).send({ error: 'Invalid category pricing request' });
+      return quantities.priceCategory(request.params.scenarioId, request.user!.userId, parsed.data);
+    });
     // ==================== COST TABLES ====================
 
     // POST /api/v1/cost-tables
