@@ -58,15 +58,13 @@ export function createSINAPISearchRoutes(sql: Sql) {
       ) => {
         try {
           const { q, state, month, limit } = request.query;
-
-          if (!q || q.trim().length === 0) {
-            return reply.code(400).send({ error: 'Query (q) is required' });
+          const monthIsValid = !month || (/^(?:19\d{2}|20\d{2}|21\d{2}|2200)-\d{2}-\d{2}$/.test(month) && !Number.isNaN(Date.parse(`${month}T00:00:00Z`)) && new Date(`${month}T00:00:00Z`).toISOString().slice(0, 10) === month);
+          if (!q || q.trim().length < 2 || q.trim().length > 120 || (state && !/^[A-Za-z]{2}$/.test(state)) || !monthIsValid) {
+            return reply.code(400).send({ error: 'Informe busca com pelo menos 2 caracteres e filtros válidos.' });
           }
-
-          const limitNum = Math.min(
-            parseInt(limit || '50', 10) || 50,
-            200 // max limit
-          );
+          const parsedLimit = limit === undefined ? 50 : Number(limit);
+          if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 200) return reply.code(400).send({ error: 'Limite inválido.' });
+          const limitNum = parsedLimit;
 
           const results = await sinapiService.searchItems(
             q,
@@ -75,9 +73,9 @@ export function createSINAPISearchRoutes(sql: Sql) {
             limitNum
           );
 
-          reply.send({
+          return reply.send({
             query: q,
-            state: state || null,
+            state: state?.toUpperCase() || null,
             month: month || null,
             count: results.length,
             items: results,

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/layout/AppShell'
 import { bimRequest } from '@/services/bim-api'
 import type { Scenario } from '@/services/scenarios.service'
+import { scenariosService } from '@/services/scenarios.service'
 import '@/styles/bim-workspace.css'
 
 export interface BimProject {
@@ -35,10 +36,12 @@ export interface BimSelection {
 export default function BimWorkspace({
   title,
   description,
+  allowDocumentOnly = false,
   children,
 }: {
   title: string
   description: string
+  allowDocumentOnly?: boolean
   children: (selection: BimSelection) => ReactNode
 }) {
   const [query, setQuery] = useSearchParams()
@@ -58,6 +61,8 @@ export default function BimWorkspace({
   const [loadingContext, setLoadingContext] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
+  const [creating,setCreating] = useState(false)
+  const [createError,setCreateError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -245,6 +250,19 @@ export default function BimWorkspace({
           <p className="bim-loading" role="status">
             Carregando seu projeto…
           </p>
+        ) : !error && allowDocumentOnly && !projectId ? (
+          <form className="bim-panel" onSubmit={async event=>{
+            event.preventDefault()
+            const name=String(new FormData(event.currentTarget).get('name')??'').trim()
+            if(creating||name.length<2)return
+            setCreating(true);setCreateError('')
+            try{
+              const project=await bimRequest<BimProject>('/projects',{method:'POST',body:JSON.stringify({name})})
+              setProjects(list=>[project,...list]); setProjectId(project.id)
+            }catch(c){setCreateError(c instanceof Error?c.message:'Falha ao criar a obra.')}
+            finally{setCreating(false)}
+          }}><h2>Criar obra</h2><label>Nome do projeto <input name="name" minLength={2} maxLength={200} required/></label>
+            <button className="bim-button" disabled={creating}>Criar projeto</button>{createError&&<p role="alert">{createError}</p>}</form>
         ) : !error && !projectId ? (
           <section className="bim-empty">
             <h2>Comece pelo seu projeto BIM</h2>
@@ -256,7 +274,26 @@ export default function BimWorkspace({
               Criar projeto e enviar IFC
             </Link>
           </section>
-        ) : !error && (!modelId || !scenarioId) ? (
+        ) : !error && allowDocumentOnly && !scenarioId ? (
+          <form className="bim-panel" onSubmit={async event=>{
+            event.preventDefault()
+            if (creating) return
+            const name=String(new FormData(event.currentTarget).get('name') || '').trim()
+            if (!name) return
+            setCreating(true); setCreateError('')
+            try {
+              const scenario=await scenariosService.create(projectId,name,null)
+              requested.current.scenario=scenario.id
+              setRevision(value=>value+1)
+            } catch(e) { setCreateError(e instanceof Error?e.message:'Falha ao criar o cenário.') }
+            finally { setCreating(false) }
+          }}>
+            <h2>Primeiro cenário da obra</h2>
+            <label>Nome do cenário <input name="name" required maxLength={200} defaultValue="Orçamento base"/></label>
+            <button className="bim-button" disabled={creating}>Criar cenário</button>
+            {createError && <p role="alert">{createError}</p>}
+          </form>
+        ) : !error && ((!modelId && !allowDocumentOnly) || !scenarioId) ? (
           <section className="bim-empty">
             <h2>
               {!modelId
@@ -271,6 +308,7 @@ export default function BimWorkspace({
             <Link className="bim-button" to="/app">
               Preparar projeto no visualizador
             </Link>
+            {title==='Orçamento 5D' && <Link className="bim-button bim-button--secondary" to={'/orcamento/obra?projeto='+encodeURIComponent(projectId)}>Iniciar orçamento com PDFs</Link>}
           </section>
         ) : !error ? (
           children(selection)

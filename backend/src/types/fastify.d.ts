@@ -1,4 +1,5 @@
 import 'fastify';
+import type { UserContext } from '../core/tenancy/context.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -6,6 +7,7 @@ declare module 'fastify' {
       userId: string;
       tenantId: string;
       email: string;
+      role?: UserContext['role'];
       permissions?: string[];
     };
     apiKey?: {

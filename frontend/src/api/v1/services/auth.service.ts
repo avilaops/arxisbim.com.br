@@ -84,9 +84,9 @@ export class AuthService {
   /**
    * Faz logout (invalida tokens no servidor)
    */
-  async logout(): Promise<void> {
+  async logout(refreshToken: string): Promise<void> {
     const client = getAPIClient();
-    await client.post(`${this.endpoint}/logout`);
+    await client.post(`${this.endpoint}/logout`, { refreshToken });
   }
 
   /**

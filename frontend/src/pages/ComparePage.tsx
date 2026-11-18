@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CalendarClock, Download, GitCompare, Layers, Link2, Unlink } from 'lucide-react'
@@ -93,7 +94,7 @@ export default function ComparePage() {
     setCarregando(true)
     try {
       const token = localStorage.getItem('arxisvr_token')
-      const resposta = await fetch(buildApiV1Url(`/ifc/project/${projectId}`), {
+      const resposta = await sessionFetch(buildApiV1Url(`/ifc/project/${projectId}`), {
         headers: { Authorization: `Bearer ${token}` },
       })
       const modelos: ModeloResumo[] = resposta.ok ? await resposta.json() : []

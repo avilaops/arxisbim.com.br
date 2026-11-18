@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import type { ApiToken, ApiTokenScope } from '@/types/apiToken';
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 
@@ -10,7 +11,7 @@ export interface CreateApiTokenInput {
 
 export const apiTokensService = {
   async list(): Promise<ApiToken[]> {
-    const response = await fetch(buildApiV1Url('/api-tokens'), {
+    const response = await sessionFetch(buildApiV1Url('/api-tokens'), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
       },
@@ -20,7 +21,7 @@ export const apiTokensService = {
   },
 
   async create(input: CreateApiTokenInput) {
-    const response = await fetch(buildApiV1Url('/api-tokens'), {
+    const response = await sessionFetch(buildApiV1Url('/api-tokens'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +34,7 @@ export const apiTokensService = {
   },
 
   async revoke(tokenId: string): Promise<void> {
-    const response = await fetch(buildApiV1Url(`/api-tokens/${tokenId}`), {
+    const response = await sessionFetch(buildApiV1Url(`/api-tokens/${tokenId}`), {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,

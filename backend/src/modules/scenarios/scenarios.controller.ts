@@ -10,6 +10,7 @@ import { ScenarioMergeService } from './scenario-merge.service.js';
 import { assertCanCreateScenario } from '../../core/billing/plan-limits.js';
 import { FinancialComparisonService } from './financial-comparison.service.js';
 import { ScenarioPdfService } from './scenario-pdf.service.js';
+import { presentationMetadata } from './scenario-metadata.js';
 
 // Um pool por modulo, criado na primeira chamada. Ate 09/09/2026 isto abria
 // um `postgres()` NOVO a cada requisicao e nunca o fechava: cada chamada
@@ -109,7 +110,7 @@ export async function updateScenarioHandler(request: FastifyRequest, reply: Fast
         camera: body.camera,
         player: body.player,
         config: body.config,
-        metadata: body.metadata,
+        metadata: body.metadata===undefined?undefined:presentationMetadata(body.metadata),
         updatedAt: new Date(),
       })
       .where(and(eq(scenarios.id, scenarioId), eq(scenarios.tenantId, tenantId)))

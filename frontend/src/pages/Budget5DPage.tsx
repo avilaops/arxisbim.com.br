@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import BimWorkspace, { type BimSelection } from '@/components/bim/BimWorkspace'
 import FinancialMatrix from '@/components/bim/FinancialMatrix'
+import BudgetReport from '@/components/bim/BudgetReport'
+import BudgetCurve from '@/components/bim/BudgetCurve'
+import SinapiCatalog from '@/components/bim/SinapiCatalog'
 import { schedulesService } from '@/services/schedules.service'
 import {
   bimCosts,
@@ -241,6 +244,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
 
   return (
     <>
+      <a className="bim-button bim-button--secondary" href={'/orcamento/obra?'+new URLSearchParams({projeto:w.projectId,cenario:w.scenarioId,modelo:w.modelId})}>Orçar por serviço • PDFs, programação e medições</a>
       {!loading && modelMismatch && quantities.total > 0 && (
         <div className="bim-alert" role="status">
           Os quantitativos pertencem a {sourceName || 'outro modelo ou versão ainda não identificada'}. Prepare o IFC selecionado para orçar este modelo no cenário.
@@ -473,6 +477,16 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
                 </select>
               </label>
             )}
+            <SinapiCatalog
+              scenarioId={w.scenarioId}
+              tableId={tableId}
+              disabled={busy || modelMismatch}
+              onAdded={() => run(async () => {
+                await bimCosts.recalculate(w.scenarioId)
+                await load()
+                setNotice('Serviço SINAPI adicionado e orçamento recalculado.')
+              })}
+            />
             <form
               className="bim-form"
               onSubmit={(e) => {
@@ -537,6 +551,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
                         <td>
                           {item.description}
                           {item.code && <small>{item.code}</small>}
+                          {item.sinapi_item_id && <small>{item.notes || 'Referência SINAPI vinculada'}</small>}
                         </td>
                         <td>{item.unit}</td>
                         <td>
@@ -697,6 +712,8 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
           </div>
         </section>
       )}
+      {!loading && <BudgetReport key={`report:${budgetRevision}`} scenarioId={w.scenarioId}/>}
+      {!loading && <BudgetCurve projectId={w.projectId} scenarioId={w.scenarioId} revision={budgetRevision}/>}
       {!loading && <FinancialMatrix key={budgetRevision} projectId={w.projectId} scenarioId={w.scenarioId} scenarios={w.scenarios}/>}
       <section className="bim-panel">
         <h2>Comparação financeira de cenários</h2>

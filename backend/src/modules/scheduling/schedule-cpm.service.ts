@@ -1,6 +1,6 @@
 import { db } from '../../shared/database/db.js';
 import { schedules, activities, activityPredecessors, activityElements } from '../../shared/database/schema/scheduling.js';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { CPMService } from './cpm.service.js';
 
 export interface CronogramaCalculado {
@@ -54,6 +54,17 @@ export async function calcularCronograma(scheduleId: string): Promise<Cronograma
       globalId: el.activity_elements.globalId,
       stateDuring: el.activity_elements.stateDuring,
     });
+  }
+  const serviceLinks = await db.execute(sql`
+    SELECT DISTINCT os.activity_id,os.global_id FROM obra_services os
+    JOIN scenarios s ON s.id=os.scenario_id AND s.model_version_id=os.version_id
+    JOIN activities a ON a.id=os.activity_id
+    WHERE a.schedule_id=${scheduleId} AND os.scenario_id=${sched.scenarioId} AND os.global_id IS NOT NULL`);
+  for (const link of serviceLinks) {
+    const activityId=String(link.activity_id), globalId=String(link.global_id);
+    const elements=elementMap.get(activityId) ?? [];
+    if (!elements.some(e=>e.globalId===globalId)) elements.push({globalId,stateDuring:'active'});
+    elementMap.set(activityId,elements);
   }
 
   const predecessorMap = new Map<string, any[]>();
