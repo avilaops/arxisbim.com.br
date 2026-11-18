@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-16T14:58:17.777Z",
+  "steps": [
+    "CSV pela interface • prévia e confirmação antes da persistência",
+    "MS Project XML • mesmos IDs e vínculos IFC/Kanban; avanço do arquivo ignorado",
+    "Primavera XER • datas civis preservadas e recarga sem duplicar atividades",
+    "Arquivo inválido recusado sem alterar cronograma",
+    "5D • relatório por pavimento, memória por serviço e XLSX completo conferido; celular sem overflow"
+  ],
+  "totalElements": 82,
+  "totalLinks": 13,
+  "totalCost": "1631.50",
+  "errors": []
+}

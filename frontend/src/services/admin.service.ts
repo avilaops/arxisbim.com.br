@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 
 /**
@@ -54,7 +55,7 @@ function authHeaders(): Record<string, string> {
 }
 
 async function get<T>(path: string, fallback: string): Promise<T> {
-  const response = await fetch(buildApiV1Url(`/admin${path}`), { headers: authHeaders() });
+  const response = await sessionFetch(buildApiV1Url(`/admin${path}`), { headers: authHeaders() });
   if (!response.ok) {
     let detail = '';
     try {

@@ -1,4 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import {useSearchParams} from 'react-router-dom';
+import PlanningKanban from '@/components/bim/PlanningKanban';
+import PlanningImport from '@/components/bim/PlanningImport';
 import BimWorkspace, { type BimSelection } from '@/components/bim/BimWorkspace';
 import {
   schedulesService,
@@ -23,6 +26,7 @@ export default function Planning4DPage() {
   return (
     <BimWorkspace
       title="Planejamento 4D"
+      allowDocumentOnly
       description="Organize atividades, conecte predecessoras e acompanhe os prazos do cenário."
     >
       {(workspace) => (
@@ -36,6 +40,8 @@ export default function Planning4DPage() {
 }
 
 function PlanningContent({ workspace }: { workspace: BimSelection }) {
+  const [query,setQuery]=useSearchParams();
+  const kanban=query.get('visualizacao')==='kanban';
   const { projectId, scenarioId, modelId } = workspace;
   const [schedule, setSchedule] = useState<Cronograma | null>(null);
   const [loading, setLoading] = useState(true);
@@ -246,6 +252,7 @@ function PlanningContent({ workspace }: { workspace: BimSelection }) {
           {notice}
         </p>
       )}
+      <PlanningImport projectId={projectId} scenarioId={scenarioId} scheduleName={schedule?.name||''} onImported={()=>{resetActivity();setComparison(null);setAttempt(value=>value+1);}}/>
       {!schedule ? (
         <section className="planning4d-card">
           <h2>O cenário ainda não tem cronograma</h2>
@@ -311,7 +318,8 @@ function PlanningContent({ workspace }: { workspace: BimSelection }) {
               <dd>{predecessorCount}</dd>
             </div>
           </dl>
-          <section className="planning4d-card">
+          <nav className="planning4d-view-controls" aria-label="Visualização do cronograma">{['gantt','kanban'].map(view=><button key={view} type="button" aria-pressed={kanban===(view==='kanban')} onClick={()=>{const next=new URLSearchParams(query);next.set('visualizacao',view);setQuery(next,{replace:true})}}>{view==='kanban'?'Kanban':'Gantt'}</button>)}</nav>
+          {kanban?<PlanningKanban scheduleId={schedule.id} activities={activities}/>:<section className="planning4d-card">
             <div className="planning4d-toolbar">
               <div>
                 <h3>Gantt • datas CPM</h3>
@@ -436,6 +444,7 @@ function PlanningContent({ workspace }: { workspace: BimSelection }) {
               </div>
             )}
           </section>
+          }
           {removing && (
             <section
               className="planning4d-card planning4d-confirm"

@@ -6,26 +6,75 @@ Publicado em `https://app.arxisbim.com.br/planejamento` e
 `https://app.arxisbim.com.br/orcamento`. API e frontend em `apps-noclient`, banco
 em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
 
-## Uso
+## Orçamento da obra por serviço
+
+Em `/orcamento/obra`, selecione o projeto e o cenário. É possível começar com
+PDFs antes de receber o IFC. Informe área, início, prazo, escopo e BDI. A
+tabela IFC de `/orcamento` fornece preços próprios ou SINAPI para o diagnóstico.
+
+1. Em **Documentos e IFC**, envie pranchas com listas de materiais ou relatórios
+   com tabela analítica. Confira a disciplina, a página e a memória de cada
+   quantidade reconhecida. O servidor guarda o original. PDFs idênticos no
+   mesmo cenário reutilizam a importação. Preços ausentes exigem revisão.
+2. Para um serviço IFC, selecione categoria, unidade de preço e, se necessário,
+   pavimento e propriedades. A regra aceita `Conjunto.Propriedade` ou
+   `Conjunto.Propriedade=Valor`. A lista identifica o GlobalId e a pendência.
+   É possível registrar um pedido de correção nos comentários do projeto ou
+   aprovar uma premissa documentada. Quantidades pendentes ficam fora do total.
+3. Em **Planejamento**, distribua os serviços por atividades. Uma etapa pode
+   criar sua atividade no cronograma e cada serviço pode ser reatribuído
+   individualmente. O saldo **A programar** indica o custo aprovado ainda sem
+   atividade. A curva usa as datas calculadas pelo CPM e preserva os centavos.
+4. Em **Canteiro**, registre a quantidade incremental executada e o pagamento
+   efetivo. A tela mostra previsto, medido e saldo por serviço e pavimento.
+   No visualizador, **Execução medida** mostra o estado até a data escolhida.
+5. Em **Relatório**, baixe o PDF com orçamento analítico, BDI, desembolso
+   mensal por etapa, curvas acumuladas, medições, fontes e premissas.
+
+A extração usa Poppler (`pdftotext` e `pdftoppm`) e Tesseract com idioma
+português. A imagem da API instala esses executáveis. No desenvolvimento
+local, disponibilize-os no `PATH`. Cada PDF admite 20 MiB, 300 páginas e até
+30 páginas sem texto para OCR. Uma planta que só contém traçados ou símbolos
+precisa de medição complementar. Preços unitários arredondados no documento
+podem produzir diferenças ao recalcular os totais.
+
+## Uso do orçamento por vínculos IFC
 
 1. Crie um projeto no visualizador, envie um IFC e salve os cenários.
 2. Em `/planejamento`, selecione projeto, cenário e modelo. Crie o cronograma,
    cadastre atividades e predecessoras. O Gantt utiliza as datas calculadas pelo
    CPM. O acesso à simulação abre o modelo e o cenário selecionados; vincule
    elementos às atividades no visualizador para usar a régua temporal.
+   Desde 16/11, a visão [Kanban](KANBAN-PLANEJAMENTO.md) organiza essas mesmas
+   atividades por etapas editáveis, sem registrar avanço físico.
+   Também é possível [importar e reimportar CSV, MS Project XML e Primavera XER](IMPORTACOES-RELATORIOS-4D-5D.md), com prévia e preservação de vínculos.
 3. Em `/orcamento`, prepare os quantitativos do IFC. A extração ocorre no
    servidor e registra a versão usada pelo cenário. Confira áreas, volumes,
    comprimentos e contagem por categoria.
-4. Crie a tabela do cenário, cadastre serviços com unidade e preço e aplique
+4. Crie a tabela do cenário, pesquise serviços SINAPI por descrição/código, UF
+   e referência, ou cadastre preços próprios. Escolha a base com ou sem
+   desoneração; a tela copia o valor e mantém a origem e a versão SINAPI no item.
+   A cópia é um snapshot e não muda quando o catálogo é atualizado. Aplique
    cada serviço à categoria IFC correspondente. Medidas ausentes são informadas
    e não recebem quantidades inventadas. `un` utiliza uma unidade por elemento.
+   O relatório por pavimento e a memória de custos por serviço podem ser exportados
+   em XLSX completo, incluindo todas as medições da versão do cenário.
 5. Precifique outra alternativa e compare os custos e os prazos. Os dois
    cenários precisam de preços e cronogramas com atividades. Exporte o PDF.
 
-Os preços são fornecidos pelo usuário. Esta entrega não importa uma tabela
-SINAPI oficial. O total corresponde aos vínculos efetivamente orçados e não
-representa automaticamente o custo completo da obra. Um elemento pode receber
-vários serviços; por isso o indicador conta vínculos de custo.
+O catálogo SINAPI consultado é global e sua atualização por planilha permanece
+restrita à administração; a tela de orçamento apenas pesquisa e copia preços
+da referência selecionada para a tabela do projeto. O total corresponde aos
+vínculos efetivamente orçados e não representa automaticamente o custo completo
+da obra. Um elemento pode receber vários serviços; por isso o indicador conta
+vínculos de custo.
+
+Em cenários sem orçamento da obra configurado, a curva S do 5D distribui o custo dos elementos pelas datas planejadas das
+atividades ligadas ao GlobalId do IFC, em parcelas lineares por duração. Se um
+elemento estiver vinculado a várias atividades, divide seu custo igualmente.
+Custos sem atividade vinculada são distribuídos linearmente ao longo de todo o
+cronograma. A visão é uma projeção planejada; não mede avanço físico, custos
+realizados, produtividade ou calendário de trabalho.
 
 ## Persistência e consistência
 
@@ -90,7 +139,11 @@ segunda foi validada após a espera. Nenhuma migração nova foi necessária.
 Desde 16/11/2026, a [matriz S30](MATRIZ-FINANCEIRA-S30.md) compara de 2 a 20
 alternativas, além da comparação A/B anterior; pesos de 60% para custo e
 40% para prazo. A cobertura dos itens orçados precisa ser considerada antes de
-usar a recomendação. Importação MS Project/Primavera, histórico completo de
+usar a recomendação. Calendários de trabalho da importação MS Project/Primavera, histórico completo de
 branching, Presentation Studio e critérios de carga/SLA do release continuam
 fora desta entrega. O painel de propriedades do visualizador não foi concluído
 por estes módulos.
+
+Desde 16/11/2026, o 5D também oferece consulta ao SINAPI e curva S de custo
+planejado. A evidência desta etapa e as limitações de catálogo estão em
+`documentation/SINAPI-CURVA-S-5D.md`.

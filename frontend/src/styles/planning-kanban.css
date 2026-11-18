@@ -1,0 +1,126 @@
+.planning-kanban {
+  min-width: 0;
+}
+.planning-kanban-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.planning-kanban-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+.planning-kanban-column {
+  flex: 0 0 280px;
+  background: #f4f7f6;
+  border: 1px solid #deebe6;
+  border-radius: 9px;
+  padding: 14px;
+  min-height: 240px;
+  display: grid;
+  gap: 12px;
+}
+.planning-kanban-column > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.planning-kanban-column > header > span {
+  font-size: 12px;
+  color: #526a65;
+}
+.planning-kanban-column-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.planning-kanban .planning-kanban-column-actions button {
+  padding: 5px 7px;
+  font-size: 11px;
+  min-height: 32px;
+}
+.planning-kanban-card {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #d8e5e1;
+  border-radius: 7px;
+  display: grid;
+  gap: 9px;
+  cursor: grab;
+  min-width: 0;
+}
+.planning-kanban-card:active {
+  cursor: grabbing;
+}
+.planning-kanban-card h5 {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.planning-kanban-card p,
+.planning-kanban-card small {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #526a65;
+}
+.planning-kanban-card label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+}
+.planning-kanban-card select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  background: white;
+  border: 1px solid #d8e5e1;
+  border-radius: 5px;
+  padding: 7px;
+  color: #173832;
+}
+.planning-kanban-empty {
+  font-size: 12px !important;
+}
+.planning-kanban-stage-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.planning-kanban-stage-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.planning-kanban-stage-form input {
+  min-height: 40px;
+  padding: 8px;
+  border: 1px solid #d8e5e1;
+  border-radius: 5px;
+}
+.planning4d-view-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.planning4d-view-controls button[aria-pressed='true'] {
+  background: #057f6a;
+  color: white;
+  border-color: #057f6a;
+}
+@media (max-width: 600px) {
+  .planning-kanban-column {
+    flex-basis: 260px;
+  }
+  .planning-kanban .planning4d-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .planning-kanban-stage-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

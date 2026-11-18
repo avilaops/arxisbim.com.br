@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 
 export type BillingTier = 'free' | 'starter' | 'professional' | 'enterprise';
@@ -103,13 +104,13 @@ export const billingService = {
   },
 
   async getCurrent(): Promise<BillingCurrent> {
-    const response = await fetch(buildApiV1Url('/billing/current'), { headers: authHeaders() });
+    const response = await sessionFetch(buildApiV1Url('/billing/current'), { headers: authHeaders() });
     if (!response.ok) await readError(response, 'Não foi possível carregar sua assinatura');
     return response.json();
   },
 
   async listInvoices(): Promise<BillingInvoice[]> {
-    const response = await fetch(buildApiV1Url('/billing/invoices'), { headers: authHeaders() });
+    const response = await sessionFetch(buildApiV1Url('/billing/invoices'), { headers: authHeaders() });
     if (!response.ok) await readError(response, 'Não foi possível carregar as cobranças');
     const body = await response.json();
     return body.invoices ?? [];
@@ -120,7 +121,7 @@ export const billingService = {
    * cartão. Nenhum dado de cartão passa pelo ArxisVR.
    */
   async createCheckout(plan: BillingTier, billingCycle: BillingCycle): Promise<{ checkoutUrl: string | null }> {
-    const response = await fetch(buildApiV1Url('/billing/checkout'), {
+    const response = await sessionFetch(buildApiV1Url('/billing/checkout'), {
       method: 'POST',
       headers: authHeaders(true),
       body: JSON.stringify({ plan, billingCycle }),
@@ -136,7 +137,7 @@ export const billingService = {
    * plano ativar na hora.
    */
   async sync(): Promise<BillingCurrent> {
-    const response = await fetch(buildApiV1Url('/billing/sync'), {
+    const response = await sessionFetch(buildApiV1Url('/billing/sync'), {
       method: 'POST',
       headers: authHeaders(true),
       body: '{}',
@@ -147,7 +148,7 @@ export const billingService = {
   },
 
   async subscriptionAction(action: 'pause' | 'resume' | 'cancel'): Promise<BillingCurrent> {
-    const response = await fetch(buildApiV1Url(`/billing/subscription/${action}`), {
+    const response = await sessionFetch(buildApiV1Url(`/billing/subscription/${action}`), {
       method: 'POST',
       headers: authHeaders(true),
       body: '{}',

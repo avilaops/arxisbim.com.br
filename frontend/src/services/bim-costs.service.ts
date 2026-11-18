@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { bimRequest } from './bim-api'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 
@@ -37,6 +38,8 @@ export interface CostItem {
   description: string
   unit: string
   unit_price: string
+  sinapi_item_id?: string | null
+  notes?: string | null
 }
 export interface CostCalculation {
   scenario_id: string
@@ -63,6 +66,7 @@ export interface FinancialDetail {
   totalCost: string
   durationDays: number
   completionDate: string | null
+  sCurve?: Array<{ month: string; cost: string; cumulative: string }>
 }
 export interface FinancialComparison {
   scenarioA: FinancialDetail
@@ -130,6 +134,19 @@ export const bimCosts = {
     }),
   items: (tableId: string) =>
     bimRequest<CostItem[]>(`/cost-tables/${tableId}/items`),
+  sinapiVersions: () =>
+    bimRequest<SINAPIVersion[]>('/sinapi/versions'),
+  searchSinapi: (query: string, state: string, month: string) => {
+    const params = new URLSearchParams({ q: query, limit: '40' })
+    if (state) params.set('state', state)
+    if (month) params.set('month', month)
+    return bimRequest<{ items: SINAPIItem[]; count: number }>(`/sinapi/search?${params}`)
+  },
+  addSinapiItem: (scenarioId: string, tableId: string, sinapiItemId: string, priceBasis: 'with_tax' | 'without_tax') =>
+    bimRequest<CostItem>(`/scenarios/${scenarioId}/sinapi-items`, {
+      method: 'POST',
+      body: JSON.stringify({ tableId, sinapiItemId, priceBasis }),
+    }),
   createItem: (
     tableId: string,
     data: {
@@ -174,7 +191,7 @@ export const bimCosts = {
       `/scenarios/${a}/compare/${b}/financial?projectId=${encodeURIComponent(projectId)}`,
     ),
   async pdf(projectId: string, a: string, b: string): Promise<Blob> {
-    const response = await fetch(
+    const response = await sessionFetch(
       buildApiV1Url(
         `/scenarios/${a}/compare/${b}/pdf?projectId=${encodeURIComponent(projectId)}`,
       ),
@@ -190,4 +207,21 @@ export const bimCosts = {
       )
     return response.blob()
   },
+}
+
+export interface SINAPIVersion {
+  state_code: string
+  reference_month: string
+  item_count: number
+}
+
+export interface SINAPIItem {
+  id: string
+  code: string
+  description: string
+  unit: string
+  price_with_tax: string
+  price_without_tax: string
+  state_code: string
+  reference_month: string
 }

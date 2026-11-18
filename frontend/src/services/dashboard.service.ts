@@ -1,3 +1,4 @@
+import {sessionFetch} from '@/core/auth/session-redirect'
 import { buildApiV1Url } from '@/config/apiBaseUrl';
 
 export interface DashboardData {
@@ -22,7 +23,7 @@ export interface DashboardData {
 
 export const dashboardService = {
   async get(): Promise<DashboardData> {
-    const response = await fetch(buildApiV1Url('/dashboard'), {
+    const response = await sessionFetch(buildApiV1Url('/dashboard'), {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('arxisvr_token')}`,
       },

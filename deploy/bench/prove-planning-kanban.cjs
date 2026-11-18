@@ -1,0 +1,53 @@
+const {chromium,expect:baseExpect}=require(process.env.ARXIS_PLAYWRIGHT_MODULE||'@playwright/test');
+const expect=baseExpect.configure({timeout:30000});
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const privateDir=process.env.ARXIS_ACCEPTANCE_PRIVATE_DIR;
+if(!privateDir)throw new Error('Informe o diretório privado da conta sintética.');
+const evidence=path.resolve(__dirname,'../../documentation/provas/kanban-planejamento');
+const app='https://app.arxisbim.com.br',api='https://api.arxisbim.com.br/api/v1';
+(async()=>{
+ await fs.mkdir(evidence,{recursive:true});
+ const account=JSON.parse(await fs.readFile(path.join(privateDir,'access.json'),'utf8'));
+ const fixture=JSON.parse(await fs.readFile(path.join(privateDir,'resources.json'),'utf8'));
+ assert.match(account.email,/^arxis\.s26\.[a-f0-9]{8}@example\.test$/);
+ const browser=await chromium.launch({headless:true});let page;const steps=[],errors=[];
+ try{
+  const context=await browser.newContext({viewport:{width:1440,height:1000},storageState:path.join(privateDir,'browser-state.json')});
+  page=await context.newPage();page.setDefaultTimeout(30000);page.setDefaultNavigationTimeout(60000);page.on('pageerror',e=>errors.push(e.message.replace(/https?:\/\/\S+/g,'[URL omitida]')));page.on('dialog',d=>d.accept());
+  await page.goto(api+'/auth/avilaops');await page.waitForURL(u=>(u.hostname==='auth.avilaops.com'&&u.pathname==='/login')||(u.origin===app&&u.pathname==='/dashboard'));
+  if(new URL(page.url()).hostname==='auth.avilaops.com'){await page.getByLabel('E-mail ou CPF').fill(account.email);await page.getByLabel('Senha',{exact:true}).fill(account.password);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(app+'/dashboard',{timeout:90000})}
+  const request=(route,body,method='GET')=>page.evaluate(async({url,body,method})=>{const r=await fetch(url,{method,headers:{Authorization:`Bearer ${localStorage.getItem('arxisvr_token')}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()},{url:api+route,body,method});
+  const user=await request('/auth/me');assert.equal(user.email,account.email);assert.equal(user.role,'user');
+  const before=await request(`/schedules/${fixture.scheduleA}/cpm`);
+  const scenarios=await request(`/projects/${fixture.projectId}/scenarios`);const original=scenarios.find(s=>s.id===fixture.scenarioA);assert.ok(original);
+  const url=new URL(app+'/planejamento');url.searchParams.set('projeto',fixture.projectId);url.searchParams.set('cenario',fixture.scenarioA);url.searchParams.set('modelo',fixture.modelId);
+  await page.goto(url.toString());await page.getByRole('table',{name:'Gantt do cronograma'}).waitFor();
+  await page.getByRole('button',{name:'Kanban',exact:true}).click();
+  const board=page.getByRole('region',{name:'Kanban do planejamento'});const walls=await board.getByLabel('Etapa de Paredes A');await walls.selectOption('structure');
+  await expect(board.getByRole('region',{name:'Etapa Estrutura'}).getByText('Paredes A',{exact:true})).toBeVisible();
+  await page.reload();await expect(page.getByRole('button',{name:'Kanban',exact:true})).toHaveAttribute('aria-pressed','true');await expect(board.getByLabel('Etapa de Paredes A')).toHaveValue('structure');
+  steps.push('Gantt e Kanban no mesmo cronograma • movimento por seletor persistido após reload');
+  const floors=board.locator('article').filter({has:page.getByRole('heading',{name:'Pisos A',exact:true})});
+  await floors.dragTo(board.getByRole('region',{name:'Etapa Fundações'}));
+  await expect(board.getByLabel('Etapa de Pisos A')).toHaveValue('foundations');steps.push('Movimento por arraste persistido');
+  await board.getByRole('button',{name:'Nova etapa',exact:true}).click();await board.getByLabel('Nome da etapa').fill('Revisão do planejamento • teste');await board.getByRole('button',{name:'Salvar etapa',exact:true}).click();
+  await expect(board.getByRole('region',{name:'Etapa Revisão do planejamento • teste'})).toBeVisible();
+  const saved=await request(`/schedules/${fixture.scheduleA}/planning-board`);const custom=saved.columns.find(c=>c.name==='Revisão do planejamento • teste');assert.ok(custom);
+  await board.getByLabel('Etapa de Paredes A').selectOption(custom.id);await expect(board.getByLabel('Etapa de Paredes A')).toHaveValue(custom.id);
+  await board.getByRole('button',{name:'Renomear etapa Revisão do planejamento • teste',exact:true}).click();await board.getByLabel('Nome da etapa').fill('Planejamento revisado • teste');await board.getByRole('button',{name:'Salvar etapa',exact:true}).click();
+  await board.getByRole('button',{name:'Mover etapa Planejamento revisado • teste para esquerda',exact:true}).click();
+  await expect(board.getByRole('button',{name:'Remover etapa Planejamento revisado • teste',exact:true})).toBeEnabled();
+  await board.getByRole('button',{name:'Remover etapa Planejamento revisado • teste',exact:true}).click();await expect(board.getByLabel('Etapa de Paredes A')).toHaveValue('unassigned');
+  await board.getByLabel('Etapa de Paredes A').selectOption('structure');await expect(board.getByLabel('Etapa de Paredes A')).toHaveValue('structure');steps.push('Criação, renomeação, ordem e remoção de etapa • cartões preservados');
+  await board.getByLabel('Etapas com rolagem horizontal').evaluate(el=>{el.scrollLeft=0});await board.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(evidence,'01-kanban-desktop.png')});
+  const persisted=await request(`/schedules/${fixture.scheduleA}/planning-board`);
+  await request(`/projects/${fixture.projectId}/scenarios/${fixture.scenarioA}`,{camera:original.camera,player:original.player,config:original.config,metadata:original.metadata},'PUT');
+  assert.deepEqual(await request(`/schedules/${fixture.scheduleA}/planning-board`),persisted);
+  assert.deepEqual(await request(`/schedules/${fixture.scheduleA}/cpm`),before);steps.push('Datas, progresso, predecessoras e vínculos inalterados • save da câmera preserva Kanban');
+  await page.getByRole('button',{name:'Gantt',exact:true}).click();await page.getByRole('table',{name:'Gantt do cronograma'}).waitFor();await page.screenshot({path:path.join(evidence,'02-gantt-preservado.png')});
+  await page.getByRole('button',{name:'Kanban',exact:true}).click();await board.getByLabel('Etapa de Paredes A').waitFor();await page.setViewportSize({width:390,height:844});await board.scrollIntoViewIfNeeded();
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(evidence,'03-kanban-mobile.png')});
+  await board.getByLabel('Etapas com rolagem horizontal').evaluate(el=>{el.scrollLeft=el.scrollWidth});await page.screenshot({path:path.join(evidence,'04-kanban-mobile-etapas.png')});steps.push('Celular390px • rolagem interna e seletor acessível');
+  assert.deepEqual(errors,[]);await fs.writeFile(path.join(evidence,'resultado.json'),JSON.stringify({at:new Date().toISOString(),steps,errors,unchangedSchedule:true},null,2));console.log(JSON.stringify({steps}));await context.storageState({path:path.join(privateDir,'browser-state.json')});
+ }catch(e){if(page){await page.screenshot({path:path.join(evidence,'falha.png')}).catch(()=>{});console.error(JSON.stringify({path:new URL(page.url()).pathname,alerts:await page.getByRole('alert').allTextContents().catch(()=>[])}))}throw e}finally{await browser.close()}
+})().catch(e=>{console.error(String(e.stack||e).replace(/https?:\/\/\S+/g,'[URL omitida]'));process.exitCode=1});

@@ -79,10 +79,10 @@ export class FinancialComparisonService {
     const scB = scRows.find(r => r.id === scenarioIdB) || scRows[0];
 
     // 2. Fetch costs & schedules
-    const [detailA, detailB] = await Promise.all([
-      this.getScenarioDetails(scenarioIdA, scA.name),
-      this.getScenarioDetails(scenarioIdB, scB.name)
-    ]);
+    const detailA = await this.getScenarioDetails(scenarioIdA, scA.name);
+    const detailB = scenarioIdA === scenarioIdB
+      ? detailA
+      : await this.getScenarioDetails(scenarioIdB, scB.name);
 
     const costA = new Decimal(detailA.totalCost);
     const costB = new Decimal(detailB.totalCost);
@@ -372,11 +372,29 @@ export class FinancialComparisonService {
 
     // 7. Sort months and build cumulative S-curve points
     const sortedMonths = Array.from(monthlyCosts.keys()).sort();
+    if (sortedMonths.length === 0) return [];
     const sCurvePoints: SCurvePoint[] = [];
     let cumulative = new Decimal(0);
+    const targetTotal = elements.reduce(
+      (total: Decimal, element: any) => total.plus(element.total_cost || 0),
+      new Decimal(0),
+    ).toDecimalPlaces(2);
+    const roundedMonthly = sortedMonths.map((month) => monthlyCosts.get(month)!.toDecimalPlaces(2, Decimal.ROUND_DOWN));
+    const residualCents = Math.round(targetTotal.minus(roundedMonthly.reduce((total, cost) => total.plus(cost), new Decimal(0))).times(100).toNumber());
+    const residualOrder = sortedMonths.map((month, index) => ({
+      index,
+      remainder: monthlyCosts.get(month)!.minus(roundedMonthly[index]),
+    })).sort((a, b) => {
+      const difference = b.remainder.comparedTo(a.remainder);
+      return difference === 0 ? a.index - b.index : difference!;
+    });
+    for (let cent = 0; cent < residualCents; cent++) {
+      const target = residualOrder[cent % residualOrder.length];
+      roundedMonthly[target.index] = roundedMonthly[target.index].plus('0.01');
+    }
 
-    for (const month of sortedMonths) {
-      const cost = monthlyCosts.get(month)!;
+    for (const [index, month] of sortedMonths.entries()) {
+      const cost = roundedMonthly[index];
       cumulative = cumulative.plus(cost);
       sCurvePoints.push({
         month,

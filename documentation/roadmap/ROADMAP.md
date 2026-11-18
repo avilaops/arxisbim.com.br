@@ -1,10 +1,10 @@
 # ROADMAP: ArxisVR
 
-**Última atualização:** 16/11/2026 • S30 atingido com matriz financeira de 2 a 20 cenários e PDF.
+**Última atualização:** 16/11/2026 • consulta SINAPI no 5D e curva S de custo planejado integradas.
 **Versão:** 3.0, 32 sprints atômicos
 **Status:** quatro marcos funcionais comprovados. Planejamento, quantitativos,
 custos e matriz financeira estão disponíveis na interface. Isso não conclui
-todos os sprints: propriedades, importações, branching e release ainda têm
+todos os sprints: propriedades, validações de importação, branching e release ainda têm
 critérios pendentes. A auditoria de 02/09 é histórica.
 
 **S12, S18, S26 e S30 atingidos**, com prova no navegador da aplicação publicada.
@@ -19,8 +19,21 @@ cenário e comparação A/B com PDF, reload e celular. Evidências e limites em
 Em 16/11, S30 foi comprovado com três cenários, referência trocável, deltas,
 ranking, pendências, reload, PDF e celular. A matriz aceita de 2 a 20 cenários.
 Ver `documentation/MATRIZ-FINANCEIRA-S30.md`.
-Próximas frentes: propriedades no viewer e demais critérios de importação,
-branching e release. Não há percentual global inferido.
+O planejamento também oferece Kanban por etapas editáveis, integrado às mesmas
+atividades do Gantt, com persistência e prova em 16/11. É organização do
+planejamento; não registra execução real. Ver `documentation/KANBAN-PLANEJAMENTO.md`.
+Na mesma data foram publicados importação e reimportação CSV/MS Project XML/Primavera XER
+com prévia, preservação de vínculos e recusa de arquivos inválidos; o 5D ganhou resumo por
+pavimento, memória por serviço e XLSX completo. A prova publicada conferiu os três formatos,
+reload, vínculos IFC/Kanban e as quatro abas do XLSX. Limites e evidências em
+`documentation/IMPORTACOES-RELATORIOS-4D-5D.md` e `documentation/provas/importacoes-relatorios/`.
+O orçamento também permite pesquisar referências SINAPI importadas pela
+administração, copiar o preço com ou sem desoneração para a tabela do cenário
+com vínculo à versão e visualizar curva S planejada por atividade. Essa curva
+distribui custo linearmente no tempo; não representa execução real. Próximas
+frentes: comparação de quantitativos com referência manual, desempenho em
+modelos de 50 mil elementos, custos no viewer, propriedades, branching e
+release. Não há percentual global inferido.
 
 **Infra atual:** app e API em Docker no `apps-noclient`; banco `arxisvr` no
 PostgreSQL 18 de `applications`, via WireGuard; autenticação pelo Auth oficial.
@@ -60,8 +73,9 @@ A cadeia de cenários é o ativo intransferível.
 **O viewer vivo** oferece projetos, upload IFC, cenários com câmera e
 visibilidade, comparação visual e cronograma 4D por cenário. O painel de
 informações ainda é um estado vazio. Os novos módulos oferecem planejamento e
-orçamento por cenário; preços são fornecidos pelo usuário, sem importação de
-tabela SINAPI oficial nesta entrega.
+orçamento por cenário. O 5D consulta o catálogo SINAPI abastecido pela
+administração e copia preços selecionados para a tabela do cenário; a carga de
+planilhas continua no fluxo administrativo.
 
 ---
 
