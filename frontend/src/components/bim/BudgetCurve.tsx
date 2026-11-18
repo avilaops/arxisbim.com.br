@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { bimCosts, money, type FinancialComparison } from '@/services/bim-costs.service'
+import { bimRequest } from '@/services/bim-api'
+import { obraPath } from '@/services/obra.service'
 
 interface Props { projectId: string; scenarioId: string; revision: number }
 const width = 760
@@ -8,6 +10,7 @@ const padding = { top: 22, right: 24, bottom: 48, left: 76 }
 
 export default function BudgetCurve({ projectId, scenarioId, revision }: Props) {
   const [comparison, setComparison] = useState<FinancialComparison | null>(null)
+  const [obra,setObra]=useState<{unallocated:string;points:{month:string;cost:string;cumulative:string}[]}|null>(null)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -16,11 +19,18 @@ export default function BudgetCurve({ projectId, scenarioId, revision }: Props) 
     let active = true
     setLoading(true)
     setError('')
-    bimCosts.compare(projectId, scenarioId, scenarioId)
-      .then((result) => { if (active) setComparison(result) })
+    bimRequest<({configured:true} & NonNullable<typeof obra>)|{configured:false}>(obraPath(scenarioId)+'/curve')
+      .then(async result=>{
+        if(!active)return
+        setObra(result.configured?result:null)
+        if(result.configured){setComparison(null);return}
+        const legacy=await bimCosts.compare(projectId, scenarioId, scenarioId)
+        if(active)setComparison(legacy)
+      })
       .catch((cause) => {
         if (active) {
           setComparison(null)
+          setObra(null)
           setError(cause instanceof Error ? cause.message : 'Não foi possível calcular a curva planejada.')
         }
       })
@@ -28,7 +38,7 @@ export default function BudgetCurve({ projectId, scenarioId, revision }: Props) 
     return () => { active = false }
   }, [projectId, scenarioId, revision, attempt])
 
-  const points = comparison?.scenarioA.sCurve || []
+  const points = obra?.points ?? comparison?.scenarioA.sCurve ?? []
   const max = Math.max(0, ...points.map((point) => Number(point.cumulative)))
   const innerWidth = width - padding.left - padding.right
   const innerHeight = height - padding.top - padding.bottom
@@ -44,7 +54,8 @@ export default function BudgetCurve({ projectId, scenarioId, revision }: Props) 
     <section className="bim-panel" aria-busy={loading}>
       <h2>Curva S • custo planejado acumulado</h2>
       <p>
-        Projeção distribuída pelas datas planejadas das atividades vinculadas ao IFC. O custo de um elemento ligado a várias atividades é dividido igualmente; itens sem atividade são distribuídos ao longo do cronograma.
+        {obra ? 'Custos da obra distribuídos por serviço nas datas da atividade. A programar • '+money(obra.unallocated) :
+          'Projeção dos vínculos IFC por elemento. Elementos com várias atividades têm o custo dividido entre elas. Configure o orçamento da obra para programar cada serviço individualmente.'}
       </p>
       {loading && <p role="status">Calculando distribuição planejada…</p>}
       {error && <div className="bim-alert" role="alert">{error} <button type="button" onClick={() => setAttempt((value) => value + 1)}>Tentar novamente</button></div>}

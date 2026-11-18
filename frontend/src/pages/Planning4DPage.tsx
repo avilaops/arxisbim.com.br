@@ -26,6 +26,7 @@ export default function Planning4DPage() {
   return (
     <BimWorkspace
       title="Planejamento 4D"
+      allowDocumentOnly
       description="Organize atividades, conecte predecessoras e acompanhe os prazos do cenário."
     >
       {(workspace) => (

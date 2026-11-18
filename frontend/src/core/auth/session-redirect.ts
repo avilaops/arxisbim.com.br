@@ -7,7 +7,7 @@ function safeReturnTo(value:string):string{
   try{
     if(!value.startsWith('/')||value.startsWith('//')||decodeURIComponent(value).includes('\\')||value.length>4096)return '/dashboard'
     const url=new URL(value,window.location.origin)
-    if(url.origin!==window.location.origin||!/^\/(dashboard|app(?:\/compare)?|planejamento|orcamento|account|admin)$/.test(url.pathname))return '/dashboard'
+    if(url.origin!==window.location.origin||!/^\/(dashboard|app(?:\/compare)?|planejamento|orcamento(?:\/obra)?|account|admin)$/.test(url.pathname))return '/dashboard'
     for(const key of [...url.searchParams.keys()])if(['token','accesstoken','access_token','refreshtoken','refresh_token','id_token','code','state','user'].includes(key.toLowerCase()))url.searchParams.delete(key)
     return url.pathname+url.search
   }catch{return '/dashboard'}

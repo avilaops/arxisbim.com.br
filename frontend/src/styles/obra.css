@@ -1,0 +1,71 @@
+.obra-work {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.obra .bim-panel,
+.obra nav {
+  margin-bottom: 1rem;
+}
+.obra-form,
+.obra-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.9rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+.obra-form label,
+.obra-actions label {
+  display: grid;
+  gap: 0.35rem;
+}
+.obra :is(input:not([type='checkbox']), select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem;
+  font: inherit;
+  border: 1px solid var(--c-border, #94a3b8);
+  border-radius: 0.35rem;
+}
+.obra textarea {
+  min-height: 5rem;
+}
+.obra-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: end;
+}
+.obra button {
+  cursor: pointer;
+}
+.obra-actions button,
+.obra td button,
+.obra li button {
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--c-border, #94a3b8);
+  border-radius: 0.4rem;
+}
+.obra nav button[aria-pressed='true'] {
+  background: #194a60;
+  color: white;
+}
+.obra-stats strong,
+.obra small {
+  display: block;
+}
+.obra-stats strong {
+  font-size: 1.35rem;
+}
+.obra .bim-table-scroll {
+  overflow: auto;
+}
+.obra .bim-table td {
+  vertical-align: top;
+}

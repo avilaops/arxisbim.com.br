@@ -12,6 +12,8 @@ import type { Categoria } from '@/components/viewer/visibilidadeIfc'
 import { estadosNaData, janelaDoCronograma, resumirEstados } from '@/components/viewer/estado4d'
 import { scenariosService, type Scenario } from '@/services/scenarios.service'
 import { schedulesService, type Cronograma } from '@/services/schedules.service'
+import { bimRequest } from '@/services/bim-api'
+import type { Estado4d } from '@/components/viewer/estado4d'
 import ViewerPropertiesPanel from '@/components/viewer/ViewerPropertiesPanel'
 import { buildApiV1Url } from '@/config/apiBaseUrl'
 import '@/styles/viewer.css'
@@ -66,6 +68,9 @@ export default function Viewer3DPage() {
   const [contextQuery] = useSearchParams()
   const requestedModelId = contextQuery.get('model') || ''
   const requestedScenarioId = contextQuery.get('scenario') || ''
+  const [actualView,setActualView]=useState(contextQuery.get('execucao')==='1')
+  const [actualDate,setActualDate]=useState(()=>new Date().toLocaleDateString('sv-SE'))
+  const [actualInfo,setActualInfo]=useState('')
   const appliedRouteContext = useRef('')
   const animatedRouteContext = useRef('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -488,6 +493,7 @@ export default function Viewer3DPage() {
   }
 
   const alternarRegua = () => {
+    setActualView(false)
     if (regua) {
       setRegua(false)
       setTocando(false)
@@ -511,6 +517,18 @@ export default function Viewer3DPage() {
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer?.pronto()) return
+    if (actualView && activeScenarioId && selectedModelId && actualDate) {
+      let active=true
+      setActualInfo('Carregando medições…')
+      void viewer.aplicar4d(null)
+      bimRequest<{elements:{globalId:string;state:Estado4d}[]}>('/scenarios/'+activeScenarioId+'/obra/execution?'+new URLSearchParams({date:actualDate,model:selectedModelId}))
+        .then(async result=>{
+          if(!active)return
+          await viewer.aplicar4d(new Map(result.elements.map(e=>[e.globalId,e.state])))
+          if(active)setActualInfo(result.elements.length+' elementos acompanhados')
+        }).catch(c=>{if(active)setActualInfo(c.message)})
+      return ()=>{active=false}
+    }
     if (!regua || !dataRegua || !cronograma?.activities?.length) {
       void viewer.aplicar4d(null)
       return
@@ -520,7 +538,7 @@ export default function Viewer3DPage() {
       void viewer.aplicar4d(estadosNaData(atividades, dataRegua))
     }, 120)
     return () => clearTimeout(espera)
-  }, [regua, dataRegua, cronograma, selectedModelId])
+  }, [regua, dataRegua, cronograma, selectedModelId, activeScenarioId, actualView, actualDate, categorias])
 
   const selectProject = (projectId: string) => {
     setSelectedProjectId(projectId)
@@ -694,7 +712,11 @@ export default function Viewer3DPage() {
           />
           {/* S26: a regua fica sobre o canvas, como a barra de um player. Ela
               so existe com cronograma ligado, para nao roubar area do modelo. */}
-          {regua && janela && cronograma?.activities?.length ? (
+          {activeScenarioId && selectedModel && <div className="viewer-execution">
+            <label><input type="checkbox" checked={actualView} onChange={e=>{setActualView(e.target.checked);setTocando(false);setRegua(false)}}/> Execução medida</label>
+            {actualView && <><label> Até <input type="date" value={actualDate} onChange={e=>setActualDate(e.target.value)}/></label><small role="status">{actualInfo}</small></>}
+          </div>}
+          {!actualView && regua && janela && cronograma?.activities?.length ? (
             <ReguaTempo
               janela={janela}
               data={dataRegua || janela.inicio}
