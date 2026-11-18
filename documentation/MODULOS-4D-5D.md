@@ -6,7 +6,39 @@ Publicado em `https://app.arxisbim.com.br/planejamento` e
 `https://app.arxisbim.com.br/orcamento`. API e frontend em `apps-noclient`, banco
 em `applications` via WireGuard e entrada pelo Auth oficial da Avila.
 
-## Uso
+## Orçamento da obra por serviço
+
+Em `/orcamento/obra`, selecione o projeto e o cenário. É possível começar com
+PDFs antes de receber o IFC. Informe área, início, prazo, escopo e BDI. A
+tabela IFC de `/orcamento` fornece preços próprios ou SINAPI para o diagnóstico.
+
+1. Em **Documentos e IFC**, envie pranchas com listas de materiais ou relatórios
+   com tabela analítica. Confira a disciplina, a página e a memória de cada
+   quantidade reconhecida. O servidor guarda o original. PDFs idênticos no
+   mesmo cenário reutilizam a importação. Preços ausentes exigem revisão.
+2. Para um serviço IFC, selecione categoria, unidade de preço e, se necessário,
+   pavimento e propriedades. A regra aceita `Conjunto.Propriedade` ou
+   `Conjunto.Propriedade=Valor`. A lista identifica o GlobalId e a pendência.
+   É possível registrar um pedido de correção nos comentários do projeto ou
+   aprovar uma premissa documentada. Quantidades pendentes ficam fora do total.
+3. Em **Planejamento**, distribua os serviços por atividades. Uma etapa pode
+   criar sua atividade no cronograma e cada serviço pode ser reatribuído
+   individualmente. O saldo **A programar** indica o custo aprovado ainda sem
+   atividade. A curva usa as datas calculadas pelo CPM e preserva os centavos.
+4. Em **Canteiro**, registre a quantidade incremental executada e o pagamento
+   efetivo. A tela mostra previsto, medido e saldo por serviço e pavimento.
+   No visualizador, **Execução medida** mostra o estado até a data escolhida.
+5. Em **Relatório**, baixe o PDF com orçamento analítico, BDI, desembolso
+   mensal por etapa, curvas acumuladas, medições, fontes e premissas.
+
+A extração usa Poppler (`pdftotext` e `pdftoppm`) e Tesseract com idioma
+português. A imagem da API instala esses executáveis. No desenvolvimento
+local, disponibilize-os no `PATH`. Cada PDF admite 20 MiB, 300 páginas e até
+30 páginas sem texto para OCR. Uma planta que só contém traçados ou símbolos
+precisa de medição complementar. Preços unitários arredondados no documento
+podem produzir diferenças ao recalcular os totais.
+
+## Uso do orçamento por vínculos IFC
 
 1. Crie um projeto no visualizador, envie um IFC e salve os cenários.
 2. Em `/planejamento`, selecione projeto, cenário e modelo. Crie o cronograma,
@@ -37,7 +69,7 @@ vínculos efetivamente orçados e não representa automaticamente o custo comple
 da obra. Um elemento pode receber vários serviços; por isso o indicador conta
 vínculos de custo.
 
-A curva S do 5D distribui o custo dos elementos pelas datas planejadas das
+Em cenários sem orçamento da obra configurado, a curva S do 5D distribui o custo dos elementos pelas datas planejadas das
 atividades ligadas ao GlobalId do IFC, em parcelas lineares por duração. Se um
 elemento estiver vinculado a várias atividades, divide seu custo igualmente.
 Custos sem atividade vinculada são distribuídos linearmente ao longo de todo o

@@ -123,6 +123,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onMob
         <NavItem href="/app" icon="viewer" label="Visualizador 3D" active={location.pathname === '/app'} />
         <NavItem href="/planejamento" icon="planning" label="Planejamento 4D" active={location.pathname === '/planejamento'} />
         <NavItem href="/orcamento" icon="budget" label="Orçamento 5D" active={location.pathname === '/orcamento'} />
+        <NavItem href="/orcamento/obra" icon="planning" label="Orçamento da obra" active={location.pathname === '/orcamento/obra'} />
         <NavItem href="/app/compare" icon="compare" label="Comparar cenários" active={location.pathname === '/app/compare'} />
         {/* Reunioes XR e Consulta BIM dependem de telas funcionais proprias. */}
       </div>

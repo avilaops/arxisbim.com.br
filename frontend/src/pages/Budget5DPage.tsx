@@ -244,6 +244,7 @@ function BudgetContent({ workspace: w }: { workspace: BimSelection }) {
 
   return (
     <>
+      <a className="bim-button bim-button--secondary" href={'/orcamento/obra?'+new URLSearchParams({projeto:w.projectId,cenario:w.scenarioId,modelo:w.modelId})}>Orçar por serviço • PDFs, programação e medições</a>
       {!loading && modelMismatch && quantities.total > 0 && (
         <div className="bim-alert" role="status">
           Os quantitativos pertencem a {sourceName || 'outro modelo ou versão ainda não identificada'}. Prepare o IFC selecionado para orçar este modelo no cenário.

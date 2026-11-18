@@ -4,6 +4,7 @@ import type { Sql } from 'postgres';
 import { z } from 'zod';
 import { installCostAccess } from './cost-access.js';
 import { ScenarioQuantitiesService } from './scenario-quantities.service.js';
+import { registerObraRoutes } from './obra.routes.js';
 import {
   CreateCostTableSchema,
   UpdateCostTableSchema,
@@ -18,6 +19,13 @@ export function createCostsRoutes(sql: Sql) {
 
   return async (fastify: FastifyInstance) => {
     installCostAccess(fastify, sql);
+    fastify.register(async app => {
+      app.setErrorHandler((error: Error & { statusCode?: number }, _req, reply) => {
+        if (error.statusCode && error.statusCode < 500) return reply.code(error.statusCode).send({error:error.message});
+        throw error;
+      });
+      registerObraRoutes(app, sql);
+    });
     const quantities = new ScenarioQuantitiesService(sql);
     fastify.get<{ Params: { scenarioId: string }; Querystring: { limit?: string; offset?: string } }>('/scenarios/:scenarioId/quantities', { onRequest: [fastify.authenticate] }, async (request, reply) => {
       const parsed = z.object({ limit: z.coerce.number().int().min(1).max(10000).default(1000), offset: z.coerce.number().int().min(0).default(0) }).safeParse(request.query);

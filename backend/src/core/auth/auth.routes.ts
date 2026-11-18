@@ -292,11 +292,9 @@ export async function authRoutes(fastify: FastifyInstance) {
    * Logout — revoga refresh token da sessão atual
    */
   fastify.post('/logout', {
-    preHandler: [fastify.authenticate],
     schema: {
       description: 'Logout — revoga sessão atual',
       tags: ['auth'],
-      security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
         required: ['refreshToken'],

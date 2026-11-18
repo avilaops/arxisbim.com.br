@@ -3,6 +3,14 @@
   "application": "avila-arxisbim-com-br",
   "members": [],
   "tasks": [],
-  "decisions": [],
+  "decisions": [
+    {
+      "id": "D-0001",
+      "decision": "Permitir orçamento por cenário a partir de PDF ou IFC e programar o custo pela atividade do serviço.",
+      "reason": "A origem e a premissa de cada quantidade precisam permanecer verificáveis. A execução física e o pagamento são registros independentes.",
+      "status": "active",
+      "evidence": "backend/tests/integration/obra-workflow.spec.ts e backend/migrations/057_obra_5d.sql. Ambiente local."
+    }
+  ],
   "integrations": []
 }

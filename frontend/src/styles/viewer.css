@@ -1352,3 +1352,5 @@
   }
   .viewer-cronograma-panel { width: min(320px, calc(100% - 32px)); }
 }
+.viewer-execution { position: absolute; bottom: 1rem; right: 1rem; z-index: 6; max-width: min(90%, 24rem); padding: .5rem .7rem; border-radius: .4rem; color: white; background: #173847; }
+.viewer-execution small { display: block; }

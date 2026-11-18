@@ -17,6 +17,7 @@ const Viewer3DPage = lazy(() => import('./pages/Viewer3DPage'))
 const ComparePage = lazy(() => import('./pages/ComparePage'))
 const Planning4DPage = lazy(() => import('./pages/Planning4DPage'))
 const Budget5DPage = lazy(() => import('./pages/Budget5DPage'))
+const ObraPage = lazy(() => import('./pages/ObraPage'))
 const AccountPage = lazy(() => import('./pages/AccountPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const OAuthCallbackPage = lazy(() => import('./pages/OAuthCallbackPage'))
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/app/compare" element={<ComparePage />} />
           <Route path="/planejamento" element={<Planning4DPage />} />
           <Route path="/orcamento" element={<Budget5DPage />} />
+          <Route path="/orcamento/obra" element={<ObraPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/admin" element={<AdminPage />} />
           </Route>

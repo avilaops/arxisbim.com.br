@@ -2,20 +2,29 @@ import {render,screen,fireEvent,waitFor} from '@testing-library/react'
 import {beforeEach,describe,it,expect,vi} from 'vitest'
 import Budget5DPage from '../Budget5DPage'
 import {bimCosts} from '@/services/bim-costs.service'
+import {bimRequest} from '@/services/bim-api'
+vi.mock('@/services/bim-api',()=>({bimRequest:vi.fn()}))
 vi.mock('@/components/bim/FinancialMatrix',()=>({default:()=> <h2>Matriz de teste</h2>}))
 vi.mock('@/components/bim/BudgetReport',()=>({default:()=> <h2>Relatório de teste</h2>}))
 import {schedulesService} from '@/services/schedules.service'
 vi.mock('@/services/schedules.service',()=>({schedulesService:{doCenario:vi.fn()}}))
-vi.mock('@/services/bim-costs.service',async importOriginal=>({...await importOriginal<any>(),bimCosts:{quantities:vi.fn(),tables:vi.fn(),calculation:vi.fn(),items:vi.fn(),prepare:vi.fn(),createTable:vi.fn(),createItem:vi.fn(),priceCategory:vi.fn(),recalculate:vi.fn()}}))
+vi.mock('@/services/bim-costs.service',async importOriginal=>({...await importOriginal<any>(),bimCosts:{quantities:vi.fn(),tables:vi.fn(),calculation:vi.fn(),items:vi.fn(),prepare:vi.fn(),createTable:vi.fn(),createItem:vi.fn(),priceCategory:vi.fn(),recalculate:vi.fn(),sinapiVersions:vi.fn().mockResolvedValue([]),compare:vi.fn().mockResolvedValue({scenarioA:{sCurve:[]}})}}))
 vi.mock('@/components/bim/BimWorkspace',()=>({default:({children}:any)=>children({projectId:'project',scenarioId:'scenario',modelId:'model',models:[{id:'model',originalName:'A.ifc'},{id:'other-model',originalName:'B.ifc'}],project:{id:'project',name:'Torre'},scenario:{id:'scenario',name:'Base'},scenarios:[{id:'scenario',name:'Base'},{id:'other',name:'Alternativa'}]})}))
 beforeEach(()=>{
  vi.clearAllMocks()
+ vi.mocked(bimRequest).mockResolvedValue({configured:false})
  vi.mocked(bimCosts.quantities).mockResolvedValue({items:[],total:0,categories:[]})
  vi.mocked(bimCosts.tables).mockResolvedValue([])
  vi.mocked(bimCosts.calculation).mockResolvedValue({scenario_id:'scenario',total_cost:'0.00',element_count:0,elements:[],breakdown:{by_type:{}}})
  vi.mocked(bimCosts.items).mockResolvedValue([])
 })
 describe('Orçamento 5D',()=>{
+ it('usa a programação por serviço quando há um orçamento de obra',async()=>{
+  vi.mocked(bimRequest).mockResolvedValue({configured:true,unallocated:'30.00',points:[{month:'2027-01',cost:'20.00',cumulative:'20.00'}]})
+  render(<Budget5DPage/>)
+  expect(await screen.findByText(/Custos da obra distribuídos por serviço/)).toHaveTextContent('30,00')
+  expect(bimCosts.compare).not.toHaveBeenCalled()
+ })
  it('aguarda a carga inicial antes de oferecer a matriz para evitar descartar uma comparação em andamento',async()=>{
   let resolve!: (value:any)=>void
   vi.mocked(bimCosts.calculation).mockReturnValue(new Promise(done=>{resolve=done}))
